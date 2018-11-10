@@ -30,7 +30,7 @@ module.exports = {
   },
   solc: {
     optimizer: {
-      enabled: false
+      enabled: true
     },
   },
 };
