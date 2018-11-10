@@ -46,12 +46,12 @@ contract RecurringTransfersModule is Module {
     }
 
     /// @dev Adds a recurring transfer struct to this module.
-    /// @param receiver The address that will receive tokens.
-    /// @param delegate Additional address that can execute the recurring transfer (0 for none).
-    /// @param token Address of the token that should be transfered (0 for Ether).
-    /// @param rate Address of a token used to calculate the amount transfered (0 for none). For example, set this to DAI for consistent payment amounts in USD.
+    /// @param receiver The address receiving the recurring transfer.
+    /// @param delegate Address that can execute the recurring transfer in addition to owners (0 for none).
+    /// @param token Address of the token that will be transfered (0 for Ether).
+    /// @param rate Address of the token used to calculate the amount transfered (0 for none). For example, set this to DAI for consistent payment amounts in USD.
     /// @param amount The amount of tokens transfered. This will vary upon execution if a rate is provided.
-    /// @param transferDay Day of the month when the recurring transfer can be executed (1-31).
+    /// @param transferDay Day of the month when the recurring transfer can be executed (1-28).
     /// @param transferHourStart Time of the day when transfer can be executed (0-22).
     /// @param transferHourEnd Time of the day when transfer can no longer be executed (1-23).
     function addRecurringTransfer(
@@ -68,7 +68,9 @@ contract RecurringTransfersModule is Module {
     {
         require(OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner");
         require(amount != 0, "amount must be greater than 0");
-        require(transferDay < 32, "transferDay must be less than 32");
+        require(transferDay < 29, "transferDay must be less than 29");
+        require(transferHourStart > 0, "transferHourStart must be greater than 0");
+        require(transferHourEnd < 23, "transferHourEnd must be less than 23");
         require(transferHourStart < transferHourEnd, "transferHourStart must be less than transferHourEnd");
         recurringTransfers[receiver] = RecurringTransfer(delegate, token, rate, amount, transferDay, transferHourStart, transferHourEnd, 0);
     }
