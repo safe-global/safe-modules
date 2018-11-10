@@ -8,28 +8,39 @@ const DutchExchangeProxy = artifacts.require("DutchExchangeProxy")
 
 const SECONDS_IN_DAY = 60 * 60 * 24
 
+var currentBlockTime;
+var currentDate;
+var currentYear;
+var currentMonth;
+var currentDay;
+var currentHour;
+var thisTimeNextMonth;
+
+function updateTime() {
+    currentBlockTime = utils.currentBlockTime()
+    currentDate = new Date(currentBlockTime * 1000)
+    currentYear = currentDate.getUTCFullYear()
+    currentMonth = currentDate.getUTCMonth()
+    currentDay = currentDate.getUTCDate()
+    currentHour = currentDate.getUTCHours()
+
+    if(currentMonth == 11) {
+        thisTimeNextMonth = Date.UTC(currentYear + 1, 0, currentDay, currentHour, 0, 0) / 1000
+    } else {
+        thisTimeNextMonth = Date.UTC(currentYear, currentMonth + 1, currentDay, currentHour, 0, 0) / 1000
+    }
+}
+
 contract('RecurringTransfersModule', function(accounts) {
     let gnosisSafe
     let recurringTransfersModule
     let dutchExchange
     let dxAddress
 
-    const currentBlockTime = utils.currentBlockTime()
-    const currentDate = new Date(currentBlockTime * 1000)
-    const currentYear = currentDate.getUTCFullYear()
-    const currentMonth = currentDate.getUTCMonth()
-    const currentDay = currentDate.getUTCDate()
-    const currentHour = currentDate.getUTCHours()
-    var thisTimeNextMonth
-    if(currentMonth == 11) {
-        thisTimeNextMonth = Date.UTC(currentYear + 1, 0, currentDay, currentHour, 0, 0) / 1000
-    } else {
-        thisTimeNextMonth = Date.UTC(currentYear, currentMonth + 1, currentDay, currentHour, 0, 0) / 1000
-    }
-
     const owner = accounts[0]
     const receiver = accounts[1]
     const delegate = accounts[8]
+    const rando = accounts[7]
     const transferAmount = parseInt(web3.toWei(1, 'ether'))
 
     beforeEach(async function() {
@@ -66,6 +77,9 @@ contract('RecurringTransfersModule', function(accounts) {
         let modules = await gnosisSafe.getModules()
         recurringTransfersModule = RecurringTransfersModule.at(modules[0])
         assert.equal(await recurringTransfersModule.manager.call(), gnosisSafe.address)
+
+        // update timeout
+        updateTime();
     })
 
     it('transfer window unit tests', async () => {
@@ -181,35 +195,52 @@ contract('RecurringTransfersModule', function(accounts) {
     })
 
 
-    it('should transfer 1 eth then transfer another 1 eth the next month', async () => {
+    it('should transfer with delegate', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            "add new recurring transfer with delegate",
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, 0, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+                receiver, delegate, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute 1st recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
-        )
-
-        await utils.fastForwardBlockTime(thisTimeNextMonth - currentBlockTime)
-
-        utils.logGasUsage(
-            "executing 2nd recurring transfer fails",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            "execute recurring transfer",
+            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: delegate})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance - transferAmount * 2, safeEndBalance)
-        assert.equal(receiverStartBalance + transferAmount * 2, receiverEndBalance)
+        assert.equal(safeStartBalance - transferAmount, safeEndBalance)
+        assert.equal(receiverStartBalance + transferAmount, receiverEndBalance)
+    })
+
+    it('should reject when rando tries to make transfer', async () => {
+        await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
+        const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
+        const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
+
+        utils.logGasUsage(
+            "add new recurring transfer with delegate",
+            await recurringTransfersModule.addRecurringTransfer(
+                receiver, delegate, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+            )
+        )
+
+        await utils.assertRejects(
+            recurringTransfersModule.executeRecurringTransfer(receiver, {from: rando}),
+            "execute recurring transfer should be rejected"
+        )
+
+        const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
+        const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
+
+        assert.equal(safeStartBalance, safeEndBalance)
+        assert.equal(receiverStartBalance, receiverEndBalance)
     })
 
     it('price bullshit', async () => {

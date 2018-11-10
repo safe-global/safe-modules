@@ -1,10 +1,10 @@
 pragma solidity 0.4.24;
-import "./DateTime.sol";
+
+import "ethereum-datetime/contracts/DateTime.sol";
 import "gnosis-safe/contracts/base/ModuleManager.sol";
 import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/base/Module.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
-
 import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
 import "@gnosis.pm/dx-contracts/contracts/Oracle/PriceOracleInterface.sol";
 
