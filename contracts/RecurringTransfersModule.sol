@@ -82,7 +82,7 @@ contract RecurringTransfersModule is Module {
     {
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
         require(OwnerManager(manager).isOwner(msg.sender) || msg.sender == recurringTransfer.delegate, "Method can only be called by an owner or the external approver");
-        require(isNextMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
+        require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
 
         if (recurringTransfer.token == 0) {
@@ -103,7 +103,7 @@ contract RecurringTransfersModule is Module {
         dateTime.getHour(now) < hourEnd;
     }
 
-    function isNextMonth(uint previousTime)
+    function isPastMonth(uint previousTime)
         internal view returns (bool)
     {
         return dateTime.getYear(now) > dateTime.getYear(previousTime) ||

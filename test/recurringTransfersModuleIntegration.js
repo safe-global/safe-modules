@@ -7,8 +7,6 @@ const CreateAndAddModules = artifacts.require("./gnosis-safe/contracts/libraries
 const GnosisSafe = artifacts.require("./gnosis-safe/contracts/GnosisSafe.sol")
 const DutchExchangeProxy = artifacts.require("DutchExchangeProxy")
 
-const SECONDS_IN_DAY = 60 * 60 * 24
-
 contract('RecurringTransfersModule', function(accounts) {
     let gnosisSafe
     let recurringTransfersModule
