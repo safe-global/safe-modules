@@ -118,24 +118,6 @@ async function getErrorMessage(to, value, data, from) {
     return abi.rawDecode(["string"], returnBuffer.slice(4))[0];
 }
 
-async function fastForwardBlockTime(seconds) {
-    await web3.currentProvider.send({
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [seconds], id: 0
-    })
-
-    await web3.currentProvider.send({
-        jsonrpc: "2.0",
-        method: "evm_mine",
-        params: [], id: 0
-    })
-}
-
-function currentBlockTime() {
-    return web3.eth.getBlock(web3.eth.blockNumber).timestamp
-}
-
 Object.assign(exports, {
     createAndAddModulesData,
     currentTimeNs,
@@ -147,7 +129,5 @@ Object.assign(exports, {
     signTransaction,
     assertRejects,
     estimateDataGasCosts,
-    getErrorMessage,
-    fastForwardBlockTime,
-    currentBlockTime
+    getErrorMessage
 })

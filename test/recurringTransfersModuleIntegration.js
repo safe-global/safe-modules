@@ -1,4 +1,5 @@
 const utils = require('./utils')
+const blockTime = require('./blockTime')
 
 const RecurringTransfersModule = artifacts.require("./RecurringTransfersModule.sol")
 const ProxyFactory = artifacts.require("./gnosis-safe/contracts/proxies/ProxyFactory.sol")
@@ -8,34 +9,14 @@ const DutchExchangeProxy = artifacts.require("DutchExchangeProxy")
 
 const SECONDS_IN_DAY = 60 * 60 * 24
 
-var currentBlockTime;
-var currentDate;
-var currentYear;
-var currentMonth;
-var currentDay;
-var currentHour;
-var thisTimeNextMonth;
-
-function updateTime() {
-    currentBlockTime = utils.currentBlockTime()
-    currentDate = new Date(currentBlockTime * 1000)
-    currentYear = currentDate.getUTCFullYear()
-    currentMonth = currentDate.getUTCMonth()
-    currentDay = currentDate.getUTCDate()
-    currentHour = currentDate.getUTCHours()
-
-    if(currentMonth == 11) {
-        thisTimeNextMonth = Date.UTC(currentYear + 1, 0, currentDay, currentHour, 0, 0) / 1000
-    } else {
-        thisTimeNextMonth = Date.UTC(currentYear, currentMonth + 1, currentDay, currentHour, 0, 0) / 1000
-    }
-}
-
 contract('RecurringTransfersModule', function(accounts) {
     let gnosisSafe
     let recurringTransfersModule
     let dutchExchange
     let dxAddress
+
+    let currentBlockTime
+    let currentDateTime
 
     const owner = accounts[0]
     const receiver = accounts[1]
@@ -78,8 +59,9 @@ contract('RecurringTransfersModule', function(accounts) {
         recurringTransfersModule = RecurringTransfersModule.at(modules[0])
         assert.equal(await recurringTransfersModule.manager.call(), gnosisSafe.address)
 
-        // update timeout
-        updateTime();
+        // update time
+        currentBlockTime = blockTime.getCurrentBlockTime()
+        currentDateTime = blockTime.getUtcDateTime(currentBlockTime)
     })
 
     it('should transfer 1 eth', async () => {
@@ -90,7 +72,7 @@ contract('RecurringTransfersModule', function(accounts) {
         utils.logGasUsage(
             "add new recurring transfer",
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, 0, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+                receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
@@ -114,7 +96,7 @@ contract('RecurringTransfersModule', function(accounts) {
         utils.logGasUsage(
             "add new recurring transfer",
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, 0, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+                receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
@@ -144,7 +126,7 @@ contract('RecurringTransfersModule', function(accounts) {
         utils.logGasUsage(
             "add new recurring transfer",
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, 0, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+                receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
@@ -153,7 +135,7 @@ contract('RecurringTransfersModule', function(accounts) {
             await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
         )
 
-        await utils.fastForwardBlockTime(thisTimeNextMonth - currentBlockTime)
+        await blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         utils.logGasUsage(
             "executing 2nd recurring transfer fails",
@@ -176,7 +158,7 @@ contract('RecurringTransfersModule', function(accounts) {
         utils.logGasUsage(
             "add new recurring transfer with delegate",
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, delegate, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+                receiver, delegate, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
@@ -200,7 +182,7 @@ contract('RecurringTransfersModule', function(accounts) {
         utils.logGasUsage(
             "add new recurring transfer with delegate",
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, delegate, 0, 0, transferAmount, currentDay, currentHour - 1, currentHour + 1, {from: owner}
+                receiver, delegate, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
