@@ -3,14 +3,14 @@ function getCurrentBlockTime() {
     return web3.eth.getBlock(web3.eth.blockNumber).timestamp
 }
 
-async function fastForwardBlockTime(seconds) {
-    await web3.currentProvider.send({
+function fastForwardBlockTime(seconds) {
+    web3.currentProvider.send({
         jsonrpc: "2.0",
         method: "evm_increaseTime",
         params: [seconds], id: 0
     })
 
-    await web3.currentProvider.send({
+    web3.currentProvider.send({
         jsonrpc: "2.0",
         method: "evm_mine",
         params: [], id: 0

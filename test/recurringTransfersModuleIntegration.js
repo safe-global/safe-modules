@@ -135,7 +135,7 @@ contract('RecurringTransfersModule', function(accounts) {
             await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
         )
 
-        await blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
+        blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         utils.logGasUsage(
             "executing 2nd recurring transfer fails",
