@@ -95,8 +95,8 @@ contract RecurringTransfersModule is Module {
         recurringTransfers[receiver].lastTransferTime = now;
     }
 
-    function isOnDayAndBetweenHours(uint8 day, uint8 hourStart, uint hourEnd)
-        public view returns (bool)
+    function isOnDayAndBetweenHours(uint8 day, uint8 hourStart, uint8 hourEnd)
+        internal view returns (bool)
     {
         return dateTime.getDay(now) == day &&
         dateTime.getHour(now) > hourStart &&
@@ -104,7 +104,7 @@ contract RecurringTransfersModule is Module {
     }
 
     function isNextMonth(uint previousTime)
-        public view returns (bool)
+        internal view returns (bool)
     {
         return dateTime.getYear(now) > dateTime.getYear(previousTime) ||
         dateTime.getMonth(now) > dateTime.getMonth(previousTime);

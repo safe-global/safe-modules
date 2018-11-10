@@ -82,33 +82,6 @@ contract('RecurringTransfersModule', function(accounts) {
         updateTime();
     })
 
-    it('transfer window unit tests', async () => {
-        assert.isTrue(
-            await recurringTransfersModule.isNextMonth(0),
-            "has been a month since time 0"
-        )
-
-        assert.isTrue(
-            await recurringTransfersModule.isNextMonth(currentBlockTime - (currentDay + 5) * SECONDS_IN_DAY),
-            "has been a month since current time minus one month"
-        )
-
-        assert.isFalse(
-            await recurringTransfersModule.isNextMonth(currentBlockTime),
-            "has not been a month since current time"
-        )
-
-        assert.isTrue(
-            await recurringTransfersModule.isOnDayAndBetweenHours(currentDay, currentHour - 1, currentHour + 1),
-            "is on same day and between hours"
-        )
-
-        assert.isFalse(
-            await recurringTransfersModule.isOnDayAndBetweenHours(currentDay, currentHour + 1, currentHour + 2),
-            "is not on same day and between different hours"
-        )
-    })
-
     it('should transfer 1 eth', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
