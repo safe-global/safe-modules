@@ -40,7 +40,7 @@ contract('RecurringTransfersModule', function(accounts) {
         exposedRecurringTransfersModule.setup(mock.address)
 
         // fast forwarding to a consistent time prevents issues
-        // tests will start running at roughly 6 AM
+        // tests will start running at roughly 5 AM
         const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
         blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
 
