@@ -187,7 +187,7 @@ contract('RecurringTransfersModule', function(accounts) {
         blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         utils.logGasUsage(
-            "executing 2nd recurring transfer fails",
+            "execute 2nd recurring transfer",
             await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
         )
 
@@ -198,6 +198,41 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverStartBalance + transferAmount * 2, receiverEndBalance)
     })
 
+    it('should transfer 1 eth then fail the next month after the recurring transfer has been deleted', async () => {
+        await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
+        const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
+        const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
+
+        utils.logGasUsage(
+            "add new recurring transfer",
+            await recurringTransfersModule.addRecurringTransfer(
+                receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
+            )
+        )
+
+        utils.logGasUsage(
+            "execute 1st recurring transfer",
+            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+        )
+
+        utils.logGasUsage(
+            "remove recurring transfer",
+            await recurringTransfersModule.removeRecurringTransfer(receiver, {from: owner})
+        )
+
+        blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
+
+        await utils.assertRejects(
+            recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner}),
+            "executing 2nd recurring transfer fails"
+        )
+
+        const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
+        const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
+
+        assert.equal(safeStartBalance - transferAmount, safeEndBalance)
+        assert.equal(receiverStartBalance + transferAmount, receiverEndBalance)
+    })
 
     it('should transfer with delegate', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})

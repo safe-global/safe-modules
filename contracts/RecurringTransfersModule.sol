@@ -44,7 +44,7 @@ contract RecurringTransfersModule is Module {
         setManager();
     }
 
-    /// @dev Adds a recurring transfer struct to this module.
+    /// @dev Creates a recurring transfer.
     /// @param receiver The address receiving the recurring transfer.
     /// @param delegate Address that can execute the recurring transfer in addition to owners (0 for none).
     /// @param token Address of the token that will be transfered (0 for Ether).
@@ -72,6 +72,13 @@ contract RecurringTransfersModule is Module {
         require(transferHourEnd < 23, "transferHourEnd must be less than 23");
         require(transferHourStart < transferHourEnd, "transferHourStart must be less than transferHourEnd");
         recurringTransfers[receiver] = RecurringTransfer(delegate, token, rate, amount, transferDay, transferHourStart, transferHourEnd, 0);
+    }
+
+    /// @dev Removes a recurring transfer.
+    /// @param receiver The receiving address for the recurring transfer.
+    function removeRecurringTransfer(address receiver) public {
+        require(OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner");
+        delete recurringTransfers[receiver];
     }
 
     /// @dev Executes a recurring transfer.
