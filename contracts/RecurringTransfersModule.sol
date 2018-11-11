@@ -6,7 +6,6 @@ import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/base/Module.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
-import "@gnosis.pm/dx-contracts/contracts/Oracle/PriceOracleInterface.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
 /// @author Grant Wuerker - <gwuerker@gmail.com>
@@ -39,7 +38,7 @@ contract RecurringTransfersModule is Module {
     function setup(address _dutchExchange)
         public
     {
-        require(address(_dutchExchange) != address(0));
+        require(_dutchExchange != 0);
         dutchExchange = DutchExchange(_dutchExchange);
         dateTime = new DateTime();
         setManager();
@@ -110,9 +109,36 @@ contract RecurringTransfersModule is Module {
         dateTime.getMonth(now) > dateTime.getMonth(previousTime);
     }
 
-    function getUSDETHPrice(address token)
-        public view returns (uint, uint)
+    // Adjust amount for the transfer rate if it exists
+    // For example:
+    // say GNO = 1/10 ETH and DAI = 1/200 ETH
+    // token = GNO address
+    // rate = DAI address
+    // amount = 1000
+    // In other words, we want to pay the receiver $1000 worth of GNO token.
+    // Given the rates above, we will pay (1 * 10 * 1000) / (200 * 1) = 50 GNO tokens.
+    function getAdjustedTransferAmount(address token, address rate, uint amount)
+        internal view returns (uint)
     {
-        return dutchExchange.getPriceOfTokenInLastAuction(token);
+        require(rate != 0, "Recurring transfer rate must not be 0");
+
+        uint tokenPriceNum = 1;
+        uint tokenPriceDen = 1;
+        // they are transfering ETH
+        if(token != 0) {
+            (tokenPriceNum, tokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(token);
+        }
+
+        uint ratePriceNum;
+        uint ratePriceDen;
+        (ratePriceNum, ratePriceDen) = dutchExchange.getPriceOfTokenInLastAuction(rate);
+
+        uint adjustedNum = (ratePriceNum * tokenPriceDen * amount);
+        uint adjustedDen = (ratePriceDen * tokenPriceNum);
+
+        require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
+
+        return adjustedNum / adjustedDen;
     }
+
 }

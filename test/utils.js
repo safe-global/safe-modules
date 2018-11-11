@@ -118,6 +118,12 @@ async function getErrorMessage(to, value, data, from) {
     return abi.rawDecode(["string"], returnBuffer.slice(4))[0];
 }
 
+function randomAddress() {
+    var result = '';
+    for (var i = 41; i > 0; --i) result += '0123456789abcdef'[Math.floor(Math.random() * 16)];
+    return '0x' + result;
+}
+
 Object.assign(exports, {
     createAndAddModulesData,
     currentTimeNs,
@@ -129,5 +135,6 @@ Object.assign(exports, {
     signTransaction,
     assertRejects,
     estimateDataGasCosts,
-    getErrorMessage
+    getErrorMessage,
+    randomAddress
 })

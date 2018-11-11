@@ -5,13 +5,10 @@ const RecurringTransfersModule = artifacts.require("./RecurringTransfersModule.s
 const ProxyFactory = artifacts.require("./gnosis-safe/contracts/proxies/ProxyFactory.sol")
 const CreateAndAddModules = artifacts.require("./gnosis-safe/contracts/libraries/CreateAndAddModules.sol")
 const GnosisSafe = artifacts.require("./gnosis-safe/contracts/GnosisSafe.sol")
-const DutchExchangeProxy = artifacts.require("DutchExchangeProxy")
 
 contract('RecurringTransfersModule', function(accounts) {
     let gnosisSafe
     let recurringTransfersModule
-    let dutchExchange
-    let dxAddress
 
     let currentBlockTime
     let currentDateTime
@@ -26,11 +23,6 @@ contract('RecurringTransfersModule', function(accounts) {
         // Create lightwallet
         lw = await utils.createLightwallet()
 
-        // create dutch dutchExchange
-        //dutchExchange = await DutchExchange.new()
-        dxProxy = await DutchExchangeProxy.deployed()
-        dxAddress = dxProxy.address
-
         // Create Master Copies
         let proxyFactory = await ProxyFactory.new()
         let createAndAddModules = await CreateAndAddModules.new()
@@ -41,10 +33,10 @@ contract('RecurringTransfersModule', function(accounts) {
         let recurringTransfersModuleMasterCopy = await RecurringTransfersModule.new()
 
         // Initialize module master copy
-        recurringTransfersModuleMasterCopy.setup(dxAddress)
+        recurringTransfersModuleMasterCopy.setup(accounts[3])
 
         // Create Gnosis Safe and Recurring Transfer Module in one transaction
-        let moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(dxAddress)
+        let moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(accounts[3])
         let proxyFactoryData = await proxyFactory.contract.createProxy.getData(recurringTransfersModuleMasterCopy.address, moduleData)
         let modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
         let createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
@@ -56,6 +48,11 @@ contract('RecurringTransfersModule', function(accounts) {
         let modules = await gnosisSafe.getModules()
         recurringTransfersModule = RecurringTransfersModule.at(modules[0])
         assert.equal(await recurringTransfersModule.manager.call(), gnosisSafe.address)
+
+        // fast forwarding to a consistent time prevents issues
+        // tests will start running at roughly 6 AM
+        const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
+        blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
 
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
@@ -196,8 +193,4 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverStartBalance, receiverEndBalance)
     })
 
-    it('price bullshit', async () => {
-        console.log(dxAddress);
-        console.log(await recurringTransfersModule.getUSDETHPrice(accounts[3]));
-    })
 })
