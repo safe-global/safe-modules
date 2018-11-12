@@ -8,36 +8,24 @@ const DutchExchange = artifacts.require("DutchExchange")
 
 contract('RecurringTransfersModule', function(accounts) {
     let exposedRecurringTransfersModule
+    let dutchExchangeMock
+    let dutchExchange
     let currentBlockTime
     let currentDateTime
 
     const SECONDS_IN_DAY = 60 * 60 * 24
 
-    const mockGnoAddress = utils.randomAddress()
-    const mockDaiAddress = utils.randomAddress()
+    const mockGnoAddress = accounts[3]
+    const mockDaiAddress = accounts[4]
 
     beforeEach(async function() {
         // create mock DutchExchange contract
-        const mock = await MockContract.new()
-        const dutchExchange = await DutchExchange.at(mock.address)
-
-        // mock GNO and DAI values
-        await mock.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            abi.rawEncode(['uint', 'uint'], [1, 10]).toString()
-        )
-        await mock.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
-            abi.rawEncode(['uint', 'uint'], [100, 20000]).toString()
-        )
-
-        console.log('mocked value of DAI: ', await dutchExchange.getPriceOfTokenInLastAuction(mockDaiAddress))
-        console.log('mock address: ', mock.address)
-        console.log('dx address: ', dutchExchange.address)
+        dutchExchangeMock = await MockContract.new()
+        dutchExchange = await DutchExchange.at(dutchExchangeMock.address)
 
         // create exposed module
         exposedRecurringTransfersModule = await ExposedRecurringTransfersModule.new()
-        exposedRecurringTransfersModule.setup(mock.address)
+        exposedRecurringTransfersModule.setup(dutchExchangeMock.address)
 
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM
@@ -80,8 +68,17 @@ contract('RecurringTransfersModule', function(accounts) {
     });
 
     it('transfer amount is properly adusted for $1000 in GNO tokens', async () => {
+        // mock GNO and DAI values
+        await dutchExchangeMock.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
+            abi.rawEncode(['uint', 'uint'], [100, 1000]).toString()
+        )
+        await dutchExchangeMock.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
+            abi.rawEncode(['uint', 'uint'], [100, 20000]).toString()
+        )
+
         const result = await exposedRecurringTransfersModule._getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000)
-        console.log('dx address in test: ', await exposedRecurringTransfersModule.dutchExchange())
         assert.equal(50, result.toNumber())
     });
 });
