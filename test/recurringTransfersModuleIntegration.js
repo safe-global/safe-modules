@@ -1,11 +1,14 @@
 const utils = require('./utils')
 const blockTime = require('./blockTime')
 const solc = require('solc')
+const abi = require('ethereumjs-abi')
 
 const RecurringTransfersModule = artifacts.require("./RecurringTransfersModule.sol")
 const ProxyFactory = artifacts.require("./gnosis-safe/contracts/proxies/ProxyFactory.sol")
 const CreateAndAddModules = artifacts.require("./gnosis-safe/contracts/libraries/CreateAndAddModules.sol")
 const GnosisSafe = artifacts.require("./gnosis-safe/contracts/GnosisSafe.sol")
+const MockContract = artifacts.require("MockContract")
+const DutchExchange = artifacts.require("DutchExchange")
 
 contract('RecurringTransfersModule', function(accounts) {
     let gnosisSafe
@@ -19,9 +22,12 @@ contract('RecurringTransfersModule', function(accounts) {
     const delegate = accounts[8]
     const rando = accounts[7]
     const transferAmount = parseInt(web3.toWei(1, 'ether'))
-    const tokenTransferAmount = 10
 
     beforeEach(async function() {
+        // create mock DutchExchange contract
+        dutchExchangeMock = await MockContract.new()
+        dutchExchange = await DutchExchange.at(dutchExchangeMock.address)
+
         // Create lightwallet
         lw = await utils.createLightwallet()
 
@@ -35,10 +41,10 @@ contract('RecurringTransfersModule', function(accounts) {
         let recurringTransfersModuleMasterCopy = await RecurringTransfersModule.new()
 
         // Initialize module master copy
-        recurringTransfersModuleMasterCopy.setup(accounts[3])
+        recurringTransfersModuleMasterCopy.setup(dutchExchange.address)
 
         // Create Gnosis Safe and Recurring Transfer Module in one transaction
-        let moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(accounts[3])
+        let moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(dutchExchange.address)
         let proxyFactoryData = await proxyFactory.contract.createProxy.getData(recurringTransfersModuleMasterCopy.address, moduleData)
         let modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
         let createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
@@ -86,6 +92,8 @@ contract('RecurringTransfersModule', function(accounts) {
     })
 
     it('should transfer ERC20 tokens', async () => {
+        const tokenTransferAmount = 10
+
         // deposit money for execution
         await web3.eth.sendTransaction({from: accounts[0], to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
 
@@ -282,4 +290,71 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverStartBalance, receiverEndBalance)
     })
 
+    it('should transfer adjusted value of ERC20 tokens', async () => {
+        const tokenTransferAmount = 1000
+
+        // deposit money for execution
+        await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
+
+        // Create fake token
+        let source = `
+        contract TestToken {
+            mapping (address => uint) public balances;
+            function TestToken() {
+                balances[msg.sender] = 1000;
+            }
+            function transfer(address to, uint value) public returns (bool) {
+                require(balances[msg.sender] >= value);
+                balances[msg.sender] -= value;
+                balances[to] += value;
+            }
+        }`
+        let output = await solc.compile(source, 0);
+
+        // Create test token contract
+        let contractInterface = JSON.parse(output.contracts[':TestToken']['interface'])
+        let contractBytecode = '0x' + output.contracts[':TestToken']['bytecode']
+        let transactionHash = await web3.eth.sendTransaction({from: accounts[0], data: contractBytecode, gas: 4000000})
+        let receipt = web3.eth.getTransactionReceipt(transactionHash);
+        const TestToken = web3.eth.contract(contractInterface)
+        let testToken = TestToken.at(receipt.contractAddress)
+
+        // fake token to mock rate on
+        const fakeTestTokenAddress = accounts[4]
+
+        // transfer tokens to safe
+        await testToken.transfer(gnosisSafe.address, 1000, {from: owner})
+
+        // save balances at start
+        const safeStartBalance = await testToken.balances(gnosisSafe.address).toNumber()
+        const receiverStartBalance = await testToken.balances(receiver).toNumber()
+
+        // mock token values
+        await dutchExchangeMock.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(testToken.address),
+            abi.rawEncode(['uint', 'uint'], [100, 1000]).toString()
+        )
+        await dutchExchangeMock.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(fakeTestTokenAddress),
+            abi.rawEncode(['uint', 'uint'], [100, 20000]).toString()
+        )
+
+        utils.logGasUsage(
+            "add new recurring transfer",
+            await recurringTransfersModule.addRecurringTransfer(
+                receiver, 0, testToken.address, fakeTestTokenAddress, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
+            )
+        )
+
+        utils.logGasUsage(
+            "execute recurring transfer",
+            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+        )
+
+        const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
+        const receiverEndBalance = await testToken.balances(receiver).toNumber()
+
+        assert.equal(safeStartBalance - (tokenTransferAmount / 20), safeEndBalance)
+        assert.equal(receiverStartBalance + (tokenTransferAmount / 20), receiverEndBalance)
+    })
 })

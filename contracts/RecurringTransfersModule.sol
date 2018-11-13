@@ -91,10 +91,12 @@ contract RecurringTransfersModule is Module {
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
 
+        uint transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
+
         if (recurringTransfer.token == 0) {
-            require(manager.execTransactionFromModule(receiver, recurringTransfer.amount, "", Enum.Operation.Call), "Could not execute ether transfer");
+            require(manager.execTransactionFromModule(receiver, transferAmount, "", Enum.Operation.Call), "Could not execute Ether transfer");
         } else {
-            bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, recurringTransfer.amount);
+            bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, transferAmount);
             require(manager.execTransactionFromModule(recurringTransfer.token, 0, data, Enum.Operation.Call), "Could not execute token transfer");
         }
 
@@ -127,7 +129,9 @@ contract RecurringTransfersModule is Module {
     function getAdjustedTransferAmount(address token, address rate, uint amount)
         internal view returns (uint)
     {
-        require(rate != 0, "Recurring transfer rate must not be 0");
+        if(rate == 0) {
+            return amount;
+        }
 
         uint tokenPriceNum = 1;
         uint tokenPriceDen = 1;
