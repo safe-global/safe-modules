@@ -129,6 +129,7 @@ contract RecurringTransfersModule is Module {
     function getAdjustedTransferAmount(address token, address rate, uint amount)
         internal view returns (uint)
     {
+        // transfer does not need to be adjusted since no rate is given
         if(rate == 0) {
             return amount;
         }

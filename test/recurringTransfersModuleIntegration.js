@@ -291,7 +291,7 @@ contract('RecurringTransfersModule', function(accounts) {
     })
 
     it('should transfer adjusted value of ERC20 tokens', async () => {
-        const tokenTransferAmount = 1000
+        const tokenTransferAmount = 1e18
 
         // deposit money for execution
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
@@ -301,7 +301,7 @@ contract('RecurringTransfersModule', function(accounts) {
         contract TestToken {
             mapping (address => uint) public balances;
             function TestToken() {
-                balances[msg.sender] = 1000;
+                balances[msg.sender] = 10**20;
             }
             function transfer(address to, uint value) public returns (bool) {
                 require(balances[msg.sender] >= value);
@@ -323,7 +323,7 @@ contract('RecurringTransfersModule', function(accounts) {
         const fakeTestTokenAddress = accounts[4]
 
         // transfer tokens to safe
-        await testToken.transfer(gnosisSafe.address, 1000, {from: owner})
+        await testToken.transfer(gnosisSafe.address, 1e20, {from: owner})
 
         // save balances at start
         const safeStartBalance = await testToken.balances(gnosisSafe.address).toNumber()
@@ -332,11 +332,11 @@ contract('RecurringTransfersModule', function(accounts) {
         // mock token values
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(testToken.address),
-            '0x'+ abi.rawEncode(['uint', 'uint'], [1, 10]).toString('hex')
+            '0x'+ abi.rawEncode(['uint', 'uint'], [1e18.toString(), 10e18.toString()]).toString('hex')
         )
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(fakeTestTokenAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1, 200]).toString('hex')
+            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toString(), 200e18.toString()]).toString('hex')
         )
 
         utils.logGasUsage(
