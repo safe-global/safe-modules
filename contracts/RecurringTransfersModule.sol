@@ -87,7 +87,7 @@ contract RecurringTransfersModule is Module {
         public
     {
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
-        require(OwnerManager(manager).isOwner(msg.sender) || msg.sender == recurringTransfer.delegate, "Method can only be called by an owner or the external approver");
+        require(msg.sender == recurringTransfer.delegate || OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner or the external approver");
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
 
