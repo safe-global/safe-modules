@@ -55,7 +55,7 @@ contract('RecurringTransfersModule', function(accounts) {
         )
         let modules = await gnosisSafe.getModules()
         recurringTransfersModule = RecurringTransfersModule.at(modules[0])
-        assert.equal(await recurringTransfersModule.manager.call(), gnosisSafe.address)
+        assert.equal(gnosisSafe.address, await recurringTransfersModule.manager.call())
 
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM
@@ -87,8 +87,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance - transferAmount, safeEndBalance)
-        assert.equal(receiverStartBalance + transferAmount, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - transferAmount)
+        assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
     it('should transfer ERC20 tokens', async () => {
@@ -141,8 +141,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
         const receiverEndBalance = await testToken.balances(receiver).toNumber()
 
-        assert.equal(safeStartBalance - tokenTransferAmount, safeEndBalance)
-        assert.equal(receiverStartBalance + tokenTransferAmount, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - tokenTransferAmount)
+        assert.equal(receiverEndBalance, receiverStartBalance + tokenTransferAmount)
     })
 
     it('should transfer 1 eth then fail on second transfer', async () => {
@@ -170,8 +170,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance - transferAmount, safeEndBalance)
-        assert.equal(receiverStartBalance + transferAmount, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - transferAmount)
+        assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
 
@@ -202,8 +202,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance - transferAmount * 2, safeEndBalance)
-        assert.equal(receiverStartBalance + transferAmount * 2, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - transferAmount * 2)
+        assert.equal(receiverEndBalance, receiverStartBalance + transferAmount * 2)
     })
 
     it('should transfer 1 eth then fail the next month after the recurring transfer has been deleted', async () => {
@@ -238,8 +238,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance - transferAmount, safeEndBalance)
-        assert.equal(receiverStartBalance + transferAmount, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - transferAmount)
+        assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
     it('should transfer with delegate', async () => {
@@ -262,8 +262,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance - transferAmount, safeEndBalance)
-        assert.equal(receiverStartBalance + transferAmount, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - transferAmount)
+        assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
     it('should reject when rando tries to make transfer', async () => {
@@ -286,8 +286,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
-        assert.equal(safeStartBalance, safeEndBalance)
-        assert.equal(receiverStartBalance, receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance)
+        assert.equal(receiverEndBalance, receiverStartBalance)
     })
 
     it('should transfer adjusted value of ERC20 tokens', async () => {
@@ -354,7 +354,7 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
         const receiverEndBalance = await testToken.balances(receiver).toNumber()
 
-        assert.equal(safeStartBalance - (tokenTransferAmount / 20), safeEndBalance)
-        assert.equal(receiverStartBalance + (tokenTransferAmount / 20), receiverEndBalance)
+        assert.equal(safeEndBalance, safeStartBalance - (tokenTransferAmount / 20))
+        assert.equal(receiverEndBalance, receiverStartBalance + (tokenTransferAmount / 20))
     })
 })
