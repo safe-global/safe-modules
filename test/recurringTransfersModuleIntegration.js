@@ -332,11 +332,11 @@ contract('RecurringTransfersModule', function(accounts) {
         // mock token values
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(testToken.address),
-            abi.rawEncode(['uint', 'uint'], [100, 1000]).toString()
+            '0x'+ abi.rawEncode(['uint', 'uint'], [1, 10]).toString('hex')
         )
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(fakeTestTokenAddress),
-            abi.rawEncode(['uint', 'uint'], [100, 20000]).toString()
+            '0x' + abi.rawEncode(['uint', 'uint'], [1, 200]).toString('hex')
         )
 
         utils.logGasUsage(

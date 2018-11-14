@@ -71,11 +71,11 @@ contract('RecurringTransfersModule', function(accounts) {
         // mock GNO and DAI values
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            abi.rawEncode(['uint', 'uint'], [100, 1000]).toString()
+            '0x' + abi.rawEncode(['uint', 'uint'], [1, 10]).toString('hex')
         )
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
-            abi.rawEncode(['uint', 'uint'], [100, 20000]).toString()
+            '0x' + abi.rawEncode(['uint', 'uint'], [1, 200]).toString('hex')
         )
 
         const result = await exposedRecurringTransfersModule._getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000)
