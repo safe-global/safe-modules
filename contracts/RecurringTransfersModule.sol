@@ -38,7 +38,7 @@ contract RecurringTransfersModule is Module {
     function setup(address _dutchExchange)
         public
     {
-        require(_dutchExchange != 0);
+        require(_dutchExchange != 0, "A non-zero dutch exchange address must be provided.");
         dutchExchange = DutchExchange(_dutchExchange);
         dateTime = new DateTime();
         setManager();
