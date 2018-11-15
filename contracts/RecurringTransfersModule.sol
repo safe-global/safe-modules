@@ -35,12 +35,13 @@ contract RecurringTransfersModule is Module {
 
     /// @dev Setup function sets initial storage of contract.
     /// @param _dutchExchange Address of the DutchExchange contract.
-    function setup(address _dutchExchange)
+    /// @param _dateTime Address of the DateTime contract.
+    function setup(address _dutchExchange, address _dateTime)
         public
     {
         require(_dutchExchange != 0, "A non-zero dutch exchange address must be provided.");
         dutchExchange = DutchExchange(_dutchExchange);
-        dateTime = new DateTime();
+        dateTime = DateTime(_dateTime);
         setManager();
     }
 

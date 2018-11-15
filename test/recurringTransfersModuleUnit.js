@@ -5,6 +5,7 @@ const abi = require('ethereumjs-abi')
 const ExposedRecurringTransfersModule = artifacts.require("./ExposedRecurringTransfersModule.sol")
 const MockContract = artifacts.require("MockContract")
 const DutchExchange = artifacts.require("DutchExchange")
+const DateTime = artifacts.require("DateTime")
 
 contract('RecurringTransfersModule', function(accounts) {
     let exposedRecurringTransfersModule
@@ -23,9 +24,12 @@ contract('RecurringTransfersModule', function(accounts) {
         dutchExchangeMock = await MockContract.new()
         dutchExchange = await DutchExchange.at(dutchExchangeMock.address)
 
+        // create DateTime contract
+        const dateTime = await DateTime.new()
+
         // create exposed module
         exposedRecurringTransfersModule = await ExposedRecurringTransfersModule.new()
-        exposedRecurringTransfersModule.setup(dutchExchangeMock.address)
+        exposedRecurringTransfersModule.setup(dutchExchangeMock.address, dateTime.address)
 
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM
