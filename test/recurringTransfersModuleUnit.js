@@ -7,6 +7,8 @@ const MockContract = artifacts.require("MockContract")
 const DutchExchange = artifacts.require("DutchExchange")
 const DateTime = artifacts.require("DateTime")
 
+const SECONDS_IN_DAY = 60 * 60 * 24
+
 contract('RecurringTransfersModule', function(accounts) {
     let exposedRecurringTransfersModule
     let dutchExchangeMock
@@ -14,10 +16,8 @@ contract('RecurringTransfersModule', function(accounts) {
     let currentBlockTime
     let currentDateTime
 
-    const SECONDS_IN_DAY = 60 * 60 * 24
-
-    const mockGnoAddress = accounts[3]
-    const mockDaiAddress = accounts[4]
+    const mockGnoAddress = '0x1'
+    const mockDaiAddress = '0x2'
 
     beforeEach(async function() {
         // create mock DutchExchange contract

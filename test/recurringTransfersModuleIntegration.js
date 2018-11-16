@@ -38,28 +38,28 @@ contract('RecurringTransfersModule', function(accounts) {
         const lw = await utils.createLightwallet()
 
         // Create Master Copies
-        let proxyFactory = await ProxyFactory.new()
-        let createAndAddModules = await CreateAndAddModules.new()
-        let gnosisSafeMasterCopy = await GnosisSafe.new()
+        const proxyFactory = await ProxyFactory.new()
+        const createAndAddModules = await CreateAndAddModules.new()
+        const gnosisSafeMasterCopy = await GnosisSafe.new()
 
         // Initialize safe master copy
         gnosisSafeMasterCopy.setup([owner], 1, 0, "0x")
-        let recurringTransfersModuleMasterCopy = await RecurringTransfersModule.new()
+        const recurringTransfersModuleMasterCopy = await RecurringTransfersModule.new()
 
         // Initialize module master copy
         recurringTransfersModuleMasterCopy.setup(dutchExchange.address, dateTime.address)
 
         // Create Gnosis Safe and Recurring Transfer Module in one transaction
-        let moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(dutchExchange.address, dateTime.address)
-        let proxyFactoryData = await proxyFactory.contract.createProxy.getData(recurringTransfersModuleMasterCopy.address, moduleData)
-        let modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
-        let createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
-        let gnosisSafeData = await gnosisSafeMasterCopy.contract.setup.getData([lw.accounts[0], lw.accounts[1], owner], 2, createAndAddModules.address, createAndAddModulesData)
+        const moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(dutchExchange.address, dateTime.address)
+        const proxyFactoryData = await proxyFactory.contract.createProxy.getData(recurringTransfersModuleMasterCopy.address, moduleData)
+        const modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
+        const createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
+        const gnosisSafeData = await gnosisSafeMasterCopy.contract.setup.getData([lw.accounts[0], lw.accounts[1], owner], 2, createAndAddModules.address, createAndAddModulesData)
         gnosisSafe = utils.getParamFromTxEvent(
             await proxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData),
             'ProxyCreation', 'proxy', proxyFactory.address, GnosisSafe, 'create Gnosis Safe and Recurring Transfer Module',
         )
-        let modules = await gnosisSafe.getModules()
+        const modules = await gnosisSafe.getModules()
         recurringTransfersModule = RecurringTransfersModule.at(modules[0])
         assert.equal(gnosisSafe.address, await recurringTransfersModule.manager.call())
 
@@ -73,20 +73,20 @@ contract('RecurringTransfersModule', function(accounts) {
         currentDateTime = blockTime.getUtcDateTime(currentBlockTime)
     })
 
-    it('should transfer 1 eth', async () => {
+    it('should transfer eth', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
@@ -98,29 +98,22 @@ contract('RecurringTransfersModule', function(accounts) {
     })
 
     it('should transfer ERC20 tokens', async () => {
+        await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
         const tokenTransferAmount = 10
-
-        // create test token
         const testToken = await createTestToken(owner, 100);
-
-        // deposit money for execution
-        await web3.eth.sendTransaction({from: accounts[0], to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
-
-        // transfer tokens to safe
         await testToken.transfer(gnosisSafe.address, 100, {from: owner})
-
         const safeStartBalance = await testToken.balances(gnosisSafe.address).toNumber()
         const receiverStartBalance = await testToken.balances(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, 0, testToken.address, 0, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
@@ -131,26 +124,26 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverEndBalance, receiverStartBalance + tokenTransferAmount)
     })
 
-    it('should transfer 1 eth then fail on second transfer', async () => {
+    it('should transfer eth then fail on second transfer', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute 1st recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         await utils.assertRejects(
             recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner}),
-            "executing 2nd recurring transfer fails"
+            'expected recurring transfer to get rejected'
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -161,27 +154,27 @@ contract('RecurringTransfersModule', function(accounts) {
     })
 
 
-    it('should transfer 1 eth then transfer another 1 eth the next month', async () => {
+    it('should transfer eth then transfer another eth the next month', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute 1st recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         utils.logGasUsage(
-            "execute 2nd recurring transfer",
+            'expected recurring transfer to get rejected',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
@@ -192,25 +185,25 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverEndBalance, receiverStartBalance + transferAmount * 2)
     })
 
-    it('should transfer 1 eth then fail the next month after the recurring transfer has been deleted', async () => {
+    it('should transfer eth then fail the next month after the recurring transfer has been deleted', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute 1st recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         utils.logGasUsage(
-            "remove recurring transfer",
+            'expected recurring transfer to get removed',
             await recurringTransfersModule.removeRecurringTransfer(receiver, {from: owner})
         )
 
@@ -218,7 +211,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         await utils.assertRejects(
             recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner}),
-            "executing 2nd recurring transfer fails"
+            'expected recurring transfer to get rejected'
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -234,14 +227,14 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer with delegate",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, delegate, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: delegate})
         )
 
@@ -258,7 +251,7 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         utils.logGasUsage(
-            "add new recurring transfer with delegate",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, delegate, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
@@ -266,7 +259,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         await utils.assertRejects(
             recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: rando}),
-            "execute recurring transfer should be rejected"
+            'expected recurring transfer to get rejected'
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -277,21 +270,11 @@ contract('RecurringTransfersModule', function(accounts) {
     })
 
     it('should transfer adjusted value of ERC20 tokens', async () => {
-        const tokenTransferAmount = 1e18
-
-        // deposit money for execution
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
-
-        // create test token
-        const testToken = await createTestToken(owner, "10**20")
-
-        // fake token to mock rate on
-        const fakeTestTokenAddress = accounts[4]
-
-        // transfer tokens to safe
+        const tokenTransferAmount = 1e18
+        const testToken = await createTestToken(owner, '10**20')
+        const fakeTestTokenAddress = '0x1'
         await testToken.transfer(gnosisSafe.address, 1e20, {from: owner})
-
-        // save balances at start
         const safeStartBalance = await testToken.balances(gnosisSafe.address).toNumber()
         const receiverStartBalance = await testToken.balances(receiver).toNumber()
 
@@ -306,14 +289,14 @@ contract('RecurringTransfersModule', function(accounts) {
         )
 
         utils.logGasUsage(
-            "add new recurring transfer",
+            'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
                 receiver, 0, testToken.address, fakeTestTokenAddress, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
         utils.logGasUsage(
-            "execute recurring transfer",
+            'expected recurring transfer to execute',
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
