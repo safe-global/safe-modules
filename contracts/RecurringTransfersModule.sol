@@ -185,7 +185,6 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         private
     {
         uint256 amount = ((gasUsed - gasleft()) + dataGas) * gasPrice;
-
         // solium-disable-next-line security/no-tx-origin
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
         if (gasToken == address(0)) {
