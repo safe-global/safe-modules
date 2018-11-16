@@ -4,12 +4,13 @@ import "ethereum-datetime/contracts/DateTime.sol";
 import "gnosis-safe/contracts/base/ModuleManager.sol";
 import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/base/Module.sol";
+import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
 /// @author Grant Wuerker - <gwuerker@gmail.com>
-contract RecurringTransfersModule is Module {
+contract RecurringTransfersModule is Module, SecuredTokenTransfer {
     string public constant NAME = "Recurring Transfers Module";
     string public constant VERSION = "0.0.2";
 
@@ -84,13 +85,28 @@ contract RecurringTransfersModule is Module {
 
     /// @dev Executes a recurring transfer.
     /// @param receiver The address that will receive tokens.
-    function executeRecurringTransfer(address receiver)
+    /// @param safeTxGas Gas that should be used for the Safe transaction.
+    /// @param dataGas Gas costs for data used to trigger the safe transaction and to pay the payment transfer
+    /// @param gasPrice Gas price that should be used for the payment calculation.
+    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
+    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
+    function executeRecurringTransfer(
+        address receiver,
+        uint256 safeTxGas,
+        uint256 dataGas,
+        uint256 gasPrice,
+        address gasToken,
+        address refundReceiver
+    )
         public
     {
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
         require(msg.sender == recurringTransfer.delegate || OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner or the external approver");
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
+
+        uint startGas = gasleft();
+        require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
         uint transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
 
@@ -102,6 +118,11 @@ contract RecurringTransfersModule is Module {
         }
 
         recurringTransfers[receiver].lastTransferTime = now;
+
+        // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
+        if (gasPrice > 0) {
+            handlePayment(startGas, dataGas, gasPrice, gasToken, refundReceiver);
+        }
     }
 
     function isOnDayAndBetweenHours(uint8 day, uint8 hourStart, uint8 hourEnd)
@@ -154,4 +175,24 @@ contract RecurringTransfersModule is Module {
         return adjustedNum / adjustedDen;
     }
 
+    function handlePayment(
+        uint256 gasUsed,
+        uint256 dataGas,
+        uint256 gasPrice,
+        address gasToken,
+        address refundReceiver
+    )
+        private
+    {
+        uint256 amount = ((gasUsed - gasleft()) + dataGas) * gasPrice;
+
+        // solium-disable-next-line security/no-tx-origin
+        address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
+        if (gasToken == address(0)) {
+            // solium-disable-next-line security/no-send
+            require(receiver.send(amount), "Could not pay gas costs with ether");
+        } else {
+            require(transferToken(gasToken, receiver, amount), "Could not pay gas costs with token");
+        }
+    }
 }

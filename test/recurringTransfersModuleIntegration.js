@@ -85,7 +85,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -139,7 +139,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
@@ -163,11 +163,11 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute 1st recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner}),
+            recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner}),
             "executing 2nd recurring transfer fails"
         )
 
@@ -193,14 +193,14 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute 1st recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         utils.logGasUsage(
             "execute 2nd recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -224,7 +224,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute 1st recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         utils.logGasUsage(
@@ -235,7 +235,7 @@ contract('RecurringTransfersModule', function(accounts) {
         blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner}),
+            recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner}),
             "executing 2nd recurring transfer fails"
         )
 
@@ -260,7 +260,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: delegate})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: delegate})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -283,7 +283,7 @@ contract('RecurringTransfersModule', function(accounts) {
         )
 
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(receiver, {from: rando}),
+            recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: rando}),
             "execute recurring transfer should be rejected"
         )
 
@@ -352,7 +352,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
         utils.logGasUsage(
             "execute recurring transfer",
-            await recurringTransfersModule.executeRecurringTransfer(receiver, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
         const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
