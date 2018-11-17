@@ -100,15 +100,15 @@ contract('RecurringTransfersModule', function(accounts) {
     it('should transfer ERC20 tokens', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
         const tokenTransferAmount = 10
-        const testToken = await createTestToken(owner, 100);
-        await testToken.transfer(gnosisSafe.address, 100, {from: owner})
-        const safeStartBalance = await testToken.balances(gnosisSafe.address).toNumber()
-        const receiverStartBalance = await testToken.balances(receiver).toNumber()
+        const token = await createTestToken(owner, tokenTransferAmount);
+        await token.transfer(gnosisSafe.address, tokenTransferAmount, {from: owner})
+        const safeStartBalance = await token.balances(gnosisSafe.address).toNumber()
+        const receiverStartBalance = await token.balances(receiver).toNumber()
 
         utils.logGasUsage(
             'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, 0, testToken.address, 0, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
+                receiver, 0, token.address, 0, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
@@ -117,8 +117,8 @@ contract('RecurringTransfersModule', function(accounts) {
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
-        const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
-        const receiverEndBalance = await testToken.balances(receiver).toNumber()
+        const safeEndBalance = await token.balances(gnosisSafe.address).toNumber()
+        const receiverEndBalance = await token.balances(receiver).toNumber()
 
         assert.equal(safeEndBalance, safeStartBalance - tokenTransferAmount)
         assert.equal(receiverEndBalance, receiverStartBalance + tokenTransferAmount)
@@ -272,26 +272,26 @@ contract('RecurringTransfersModule', function(accounts) {
     it('should transfer adjusted value of ERC20 tokens', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
         const tokenTransferAmount = 1e18
-        const testToken = await createTestToken(owner, '10**20')
-        const fakeTestTokenAddress = '0x1'
-        await testToken.transfer(gnosisSafe.address, 1e20, {from: owner})
-        const safeStartBalance = await testToken.balances(gnosisSafe.address).toNumber()
-        const receiverStartBalance = await testToken.balances(receiver).toNumber()
+        const token1 = await createTestToken(owner, tokenTransferAmount)
+        const token2Address = '0x1'
+        await token1.transfer(gnosisSafe.address, tokenTransferAmount, {from: owner})
+        const safeStartBalance = await token1.balances(gnosisSafe.address).toNumber()
+        const receiverStartBalance = await token1.balances(receiver).toNumber()
 
         // mock token values
         await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(testToken.address),
-            '0x'+ abi.rawEncode(['uint', 'uint'], [1e18.toString(), 10e18.toString()]).toString('hex')
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(token1.address),
+            '0x'+ abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 10e18.toFixed()]).toString('hex')
         )
         await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(fakeTestTokenAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toString(), 200e18.toString()]).toString('hex')
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(token2Address),
+            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 200e18.toFixed()]).toString('hex')
         )
 
         utils.logGasUsage(
             'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, 0, testToken.address, fakeTestTokenAddress, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
+                receiver, 0, token1.address, token2Address, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
@@ -300,8 +300,8 @@ contract('RecurringTransfersModule', function(accounts) {
             await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
         )
 
-        const safeEndBalance = await testToken.balances(gnosisSafe.address).toNumber()
-        const receiverEndBalance = await testToken.balances(receiver).toNumber()
+        const safeEndBalance = await token1.balances(gnosisSafe.address).toNumber()
+        const receiverEndBalance = await token1.balances(receiver).toNumber()
 
         assert.equal(safeEndBalance, safeStartBalance - (tokenTransferAmount / 20))
         assert.equal(receiverEndBalance, receiverStartBalance + (tokenTransferAmount / 20))
@@ -313,7 +313,7 @@ async function createTestToken(creator, balance) {
     contract TestToken {
       mapping (address => uint) public balances;
       function TestToken() {
-          balances[msg.sender] = ${balance};
+          balances[msg.sender] = ${balance.toFixed()};
       }
       function transfer(address to, uint value) public returns (bool) {
           require(balances[msg.sender] >= value);
