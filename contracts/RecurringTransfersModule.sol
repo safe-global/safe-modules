@@ -41,6 +41,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         public
     {
         require(_dutchExchange != 0, "A non-zero dutch exchange address must be provided.");
+        require(_dateTime != 0, "A non-zero date time address must be provided.");
         dutchExchange = DutchExchange(_dutchExchange);
         dateTime = DateTime(_dateTime);
         setManager();
@@ -100,7 +101,9 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
     )
         public
     {
+        require(receiver == 0, "Invalid receiver address")
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
+        require(recurringTransfer.amount == 0, "A recurring transfer has not been created for this address")
         require(msg.sender == recurringTransfer.delegate || OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner or the external approver");
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
@@ -129,7 +132,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         internal view returns (bool)
     {
         return dateTime.getDay(now) == day &&
-        dateTime.getHour(now) > hourStart &&
+        dateTime.getHour(now) >= hourStart &&
         dateTime.getHour(now) < hourEnd;
     }
 
@@ -170,6 +173,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         uint256 adjustedNum = (ratePriceNum * tokenPriceDen * amount);
         uint256 adjustedDen = (ratePriceDen * tokenPriceNum);
 
+        require(adjustedNum != 0, "The adjusted amount numerator must not be 0");
         require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
 
         return adjustedNum / adjustedDen;
