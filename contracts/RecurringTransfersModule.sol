@@ -31,7 +31,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         uint8 transferHourStart;
         uint8 transferHourEnd;
 
-        uint lastTransferTime;
+        uint256 lastTransferTime;
     }
 
     /// @dev Setup function sets initial storage of contract.
@@ -105,10 +105,10 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
 
-        uint startGas = gasleft();
+        uint256 startGas = gasleft();
         require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
-        uint transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
+        uint256 transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
 
         if (recurringTransfer.token == 0) {
             require(manager.execTransactionFromModule(receiver, transferAmount, "", Enum.Operation.Call), "Could not execute Ether transfer");
@@ -133,7 +133,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         dateTime.getHour(now) < hourEnd;
     }
 
-    function isPastMonth(uint previousTime)
+    function isPastMonth(uint256 previousTime)
         internal view returns (bool)
     {
         return dateTime.getYear(now) > dateTime.getYear(previousTime) ||
@@ -148,7 +148,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
     // amount = 1000
     // In other words, we want to pay the receiver $1000 worth of GNO token.
     // Given the rates above, we will pay (1 * 10 * 1000) / (200 * 1) = 50 GNO tokens.
-    function getAdjustedTransferAmount(address token, address rate, uint amount)
+    function getAdjustedTransferAmount(address token, address rate, uint256 amount)
         internal view returns (uint)
     {
         // transfer does not need to be adjusted since no rate is given
@@ -156,19 +156,19 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
             return amount;
         }
 
-        uint tokenPriceNum = 1;
-        uint tokenPriceDen = 1;
+        uint256 tokenPriceNum = 1;
+        uint256 tokenPriceDen = 1;
         // they are transfering ETH
         if(token != 0) {
             (tokenPriceNum, tokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(token);
         }
 
-        uint ratePriceNum;
-        uint ratePriceDen;
+        uint256 ratePriceNum;
+        uint256 ratePriceDen;
         (ratePriceNum, ratePriceDen) = dutchExchange.getPriceOfTokenInLastAuction(rate);
 
-        uint adjustedNum = (ratePriceNum * tokenPriceDen * amount);
-        uint adjustedDen = (ratePriceDen * tokenPriceNum);
+        uint256 adjustedNum = (ratePriceNum * tokenPriceDen * amount);
+        uint256 adjustedDen = (ratePriceDen * tokenPriceNum);
 
         require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
 
