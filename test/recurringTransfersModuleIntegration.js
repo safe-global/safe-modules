@@ -64,9 +64,11 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(gnosisSafe.address, await recurringTransfersModule.manager.call())
 
         // fast forwarding to a consistent time prevents issues
-        // tests will start running at roughly 5 AM
-        const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
-        blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
+        // tests will start running at roughly 5 AM on the nearest day that is less than 15
+        while(blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).day > 15) {
+          const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
+          blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
+        }
 
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
