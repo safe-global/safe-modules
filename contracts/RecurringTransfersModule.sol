@@ -20,6 +20,12 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
     // recurringTransfers maps the composite hash of a token and account address to a recurring transfer struct.
     mapping (address => RecurringTransfer) public recurringTransfers;
 
+    // gasPriceLimits maps a token address to a gas price limit for transfer refunds
+    mapping (address => uint256) public gasPriceLimits;
+
+    // dataGasLimits maps a token address to a data gas limit for transfer refunds
+    mapping (address => uint256) public dataGasLimits;
+
     struct RecurringTransfer {
         address delegate;
 
@@ -101,15 +107,14 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
     )
         public
     {
-        require(receiver != 0, "Invalid receiver address");
+        uint256 startGas = gasleft();
+        require(startGas >= safeTxGas, "Not enough gas to execute safe transaction");
+        require(receiver != 0, "A non-zero reciever address must be provided");
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
         require(recurringTransfer.amount != 0, "A recurring transfer has not been created for this address");
-        require(msg.sender == recurringTransfer.delegate || OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner or the external approver");
+        require(msg.sender == recurringTransfer.delegate || OwnerManager(manager).isOwner(msg.sender), "Method can only be called by a delegate or owner");
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
-
-        uint256 startGas = gasleft();
-        require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
         uint256 transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
 
@@ -124,6 +129,8 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
         if (gasPrice > 0) {
+            require(gasPrice <= gasPriceLimits[gasToken], "Gas price is too high");
+            require(dataGas <= dataGasLimits[gasToken], "Data gas is too high");
             handlePayment(startGas, dataGas, gasPrice, gasToken, refundReceiver);
         }
     }
@@ -177,6 +184,18 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
 
         return adjustedNum / adjustedDen;
+    }
+
+    function setGasLimits(
+        address token,
+        uint256 gasPrice,
+        uint256 dataGas
+    )
+        public
+    {
+        require(OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner");
+        gasPriceLimits[token] = gasPrice;
+        dataGasLimits[token] = dataGas;
     }
 
     function handlePayment(
