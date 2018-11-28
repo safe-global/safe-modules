@@ -180,7 +180,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         uint256 adjustedNum = (ratePriceNum * tokenPriceDen * amount);
         uint256 adjustedDen = (ratePriceDen * tokenPriceNum);
 
-        //require(adjustedNum != 0, "The adjusted amount numerator must not be 0");
+        require(adjustedNum != 0, "The adjusted amount numerator must not be 0");
         require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
 
         return adjustedNum / adjustedDen;
@@ -212,9 +212,10 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
         if (gasToken == address(0)) {
             // solium-disable-next-line security/no-send
-            require(receiver.send(amount), "Could not pay gas costs with ether");
+            require(manager.execTransactionFromModule(receiver, amount, "", Enum.Operation.Call), "Could not pay gas costs with ether");
         } else {
-            require(transferToken(gasToken, receiver, amount), "Could not pay gas costs with token");
+            bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, amount);
+            require(manager.execTransactionFromModule(gasToken, 0, data, Enum.Operation.Call), "Could not pay gas costs with token");
         }
     }
 }
