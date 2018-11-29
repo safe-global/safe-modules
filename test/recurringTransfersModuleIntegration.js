@@ -11,6 +11,8 @@ const MockContract = artifacts.require("MockContract")
 const DutchExchange = artifacts.require("DutchExchange")
 const DateTime = artifacts.require("DateTime")
 
+const GAS_PRICE = 25000000000;
+
 contract('RecurringTransfersModule', function(accounts) {
     let gnosisSafe
     let recurringTransfersModule
@@ -64,7 +66,7 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(gnosisSafe.address, await recurringTransfersModule.manager.call())
 
         // fast forwarding to a consistent time prevents issues
-        // tests will start running at roughly 5 AM on the nearest day that is less than 15
+        // tests will start running at roughly 5 AM on the nearest day of the month that is less than 15
         while(blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).day > 15) {
             const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
             blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
@@ -96,6 +98,42 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
 
         assert.equal(safeEndBalance, safeStartBalance - transferAmount)
+        assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
+    })
+
+    it('should transfer eth and refund owner', async () => {
+        await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
+        const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
+
+        const dataGas = 37538;
+
+        utils.logGasUsage(
+            'expected recurring transfer to get created',
+            await recurringTransfersModule.addRecurringTransfer(
+                receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
+            )
+        )
+
+        utils.logGasUsage(
+            'expected gas limits to get set',
+            await recurringTransfersModule.setGasLimits(
+                0, GAS_PRICE, dataGas, {from: owner}
+            )
+        )
+
+        // moved down here since the transactions above are paid for by the owner
+        const ownerStartBalance = web3.eth.getBalance(owner).toNumber()
+
+        const transferTransaction = await recurringTransfersModule.executeRecurringTransfer(receiver, 0, dataGas, GAS_PRICE, 0, 0, {from: owner})
+        utils.logGasUsage(
+            'expected recurring transfer to execute',
+            transferTransaction
+        )
+
+        const ownerEndBalance = web3.eth.getBalance(owner).toNumber()
+        const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
+
+        assert.equal(0, ownerStartBalance - ownerEndBalance)
         assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 

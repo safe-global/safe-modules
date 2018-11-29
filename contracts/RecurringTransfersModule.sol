@@ -186,6 +186,10 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         return adjustedNum / adjustedDen;
     }
 
+    /// @dev Sets the gas limits for transfer refunds on a given token.
+    /// @param token The token that gas limits will be set on.
+    /// @param gasPrice The maximum gas price value for this token.
+    /// @param dataGas The maximum data gas value for this token.
     function setGasLimits(
         address token,
         uint256 gasPrice,
