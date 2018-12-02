@@ -377,7 +377,7 @@ const signModuleTx = async (module, params, lw, signers) => {
     return sigs
 }
 
-async function createTestToken(creator, balance) {
+const createTestToken = async (creator, balance) => {
     let source = `
     contract TestToken {
       mapping (address => uint) public balances;

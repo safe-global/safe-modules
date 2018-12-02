@@ -201,6 +201,12 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
 
     /// @dev Returns hash to be signed by owners.
+    /// @param receiver The address that will receive tokens.
+    /// @param safeTxGas Gas that should be used for the Safe transaction.
+    /// @param dataGas Gas costs for data used to trigger the safe transaction and to pay the payment transfer
+    /// @param gasPrice Gas price that should be used for the payment calculation.
+    /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
+    /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
     /// @param _nonce Nonce used for this Safe transaction.
     /// @return Transaction hash.
     function getTransactionHash(
