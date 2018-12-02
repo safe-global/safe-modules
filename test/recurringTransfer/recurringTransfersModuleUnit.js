@@ -1,4 +1,4 @@
-const utils = require('./utils')
+const utils = require('../utils')
 const blockTime = require('./blockTime')
 const abi = require('ethereumjs-abi')
 
