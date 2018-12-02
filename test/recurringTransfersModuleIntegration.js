@@ -25,8 +25,6 @@ contract('RecurringTransfersModule', function(accounts) {
 
     const owner = accounts[0]
     const receiver = accounts[1]
-    const delegate = accounts[8]
-    const rando = accounts[7]
     const transferAmount = parseInt(web3.toWei(1, 'ether'))
 
     beforeEach(async function() {
@@ -67,11 +65,9 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(gnosisSafe.address, await recurringTransfersModule.manager.call())
 
         // fast forwarding to a consistent time prevents issues
-        // tests will start running at roughly 5 AM on the nearest day of the month that is less than 15
-        while(blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).day > 15) {
-            const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
-            blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
-        }
+        // tests will start running at roughly 5 AM
+        const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
+        blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
 
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
@@ -203,7 +199,6 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
-    /*
     it('should transfer eth then transfer another eth the next month', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -216,16 +211,19 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
+        sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to get rejected',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -247,9 +245,11 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         utils.logGasUsage(
@@ -259,8 +259,9 @@ contract('RecurringTransfersModule', function(accounts) {
 
         blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
+        sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner}),
+            recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner}),
             'expected recurring transfer to get rejected'
         )
 
@@ -276,6 +277,8 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
+        delegate = lw.accounts[2]
+
         utils.logGasUsage(
             'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
@@ -283,9 +286,11 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [delegate])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: delegate})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -300,15 +305,19 @@ contract('RecurringTransfersModule', function(accounts) {
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
+        let rando = lw.accounts[2]
+
         utils.logGasUsage(
             'expected recurring transfer to get created',
             await recurringTransfersModule.addRecurringTransfer(
-                receiver, delegate, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
+                receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1, {from: owner}
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [rando])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: rando}),
+            recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner}),
             'expected recurring transfer to get rejected'
         )
 
@@ -345,9 +354,11 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         const safeEndBalance = await token1.balances(gnosisSafe.address).toNumber()
@@ -356,7 +367,6 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(safeEndBalance, safeStartBalance - (tokenTransferAmount / 20))
         assert.equal(receiverEndBalance, receiverStartBalance + (tokenTransferAmount / 20))
     })
-    */
 })
 
 const signModuleTx = async (module, params, lw, signers) => {
