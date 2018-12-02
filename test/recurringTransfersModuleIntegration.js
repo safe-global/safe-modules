@@ -14,6 +14,7 @@ const DateTime = artifacts.require("DateTime")
 const GAS_PRICE = 25000000000;
 
 contract('RecurringTransfersModule', function(accounts) {
+    let lw
     let gnosisSafe
     let recurringTransfersModule
     let dutchExchange
@@ -37,7 +38,7 @@ contract('RecurringTransfersModule', function(accounts) {
         const dateTime = await DateTime.new()
 
         // Create lightwallet
-        const lw = await utils.createLightwallet()
+        lw = await utils.createLightwallet()
 
         // Create Master Copies
         const proxyFactory = await ProxyFactory.new()
@@ -89,9 +90,11 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -101,6 +104,7 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
+    /*
     it('should transfer eth and refund owner', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
@@ -136,6 +140,7 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(0, ownerStartBalance - ownerEndBalance)
         assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
+    */
 
     it('should transfer ERC20 tokens', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
@@ -152,9 +157,11 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
         const safeEndBalance = await token.balances(gnosisSafe.address).toNumber()
@@ -176,13 +183,16 @@ contract('RecurringTransfersModule', function(accounts) {
             )
         )
 
+        let params = [receiver, 0, 0, 0, 0, 0]
+        let sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
             'expected recurring transfer to execute',
-            await recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner})
+            await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
+        sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(receiver, 0, 0, 0, 0, 0, {from: owner}),
+            recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner}),
             'expected recurring transfer to get rejected'
         )
 
@@ -193,7 +203,7 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverEndBalance, receiverStartBalance + transferAmount)
     })
 
-
+    /*
     it('should transfer eth then transfer another eth the next month', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: transferAmount * 2})
         const safeStartBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
@@ -346,7 +356,16 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(safeEndBalance, safeStartBalance - (tokenTransferAmount / 20))
         assert.equal(receiverEndBalance, receiverStartBalance + (tokenTransferAmount / 20))
     })
+    */
 })
+
+const signModuleTx = async (module, params, lw, signers) => {
+    let nonce = await module.nonce()
+    let txHash = await module.getTransactionHash(...params, nonce)
+    let sigs = utils.signTransaction(lw, signers, txHash)
+
+    return sigs
+}
 
 async function createTestToken(creator, balance) {
     let source = `

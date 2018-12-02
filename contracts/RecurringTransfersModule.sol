@@ -6,11 +6,12 @@ import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/base/Module.sol";
 import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
+import "gnosis-safe/contracts/common/SignatureDecoder.sol";
 import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
 /// @author Grant Wuerker - <gwuerker@gmail.com>
-contract RecurringTransfersModule is Module, SecuredTokenTransfer {
+contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder {
     string public constant NAME = "Recurring Transfers Module";
     string public constant VERSION = "0.0.2";
 
@@ -25,6 +26,9 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
 
     // dataGasLimits maps a token address to a data gas limit for transfer refunds
     mapping (address => uint256) public dataGasLimits;
+
+    // nonce to invalidate previously executed transactions
+    uint256 public nonce;
 
     struct RecurringTransfer {
         address delegate;
@@ -103,20 +107,29 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         uint256 dataGas,
         uint256 gasPrice,
         address gasToken,
-        address refundReceiver
+        address refundReceiver,
+        bytes signatures
     )
         public
     {
-        uint256 startGas = gasleft();
-        require(startGas >= safeTxGas, "Not enough gas to execute safe transaction");
         require(receiver != 0, "A non-zero reciever address must be provided");
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
         require(recurringTransfer.amount != 0, "A recurring transfer has not been created for this address");
-        require(msg.sender == recurringTransfer.delegate || OwnerManager(manager).isOwner(msg.sender), "Method can only be called by a delegate or owner");
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
 
         uint256 transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
+
+        uint256 startGas = gasleft();
+        bytes32 txHash = getTransactionHash(
+            receiver,
+            safeTxGas, dataGas, gasPrice, gasToken, refundReceiver,
+            nonce
+        );
+        require(checkSignatures(txHash, signatures, recurringTransfer.delegate), "Invalid signatures provided");
+        // Increase nonce and execute transaction.
+        nonce++;
+        require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
         if (recurringTransfer.token == 0) {
             require(manager.execTransactionFromModule(receiver, transferAmount, "", Enum.Operation.Call), "Could not execute Ether transfer");
@@ -186,20 +199,35 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer {
         return adjustedNum / adjustedDen;
     }
 
-    /// @dev Sets the gas limits for transfer refunds on a given token.
-    /// @param token The token that gas limits will be set on.
-    /// @param gasPrice The maximum gas price value for this token.
-    /// @param dataGas The maximum data gas value for this token.
-    function setGasLimits(
-        address token,
+
+    /// @dev Returns hash to be signed by owners.
+    /// @param _nonce Nonce used for this Safe transaction.
+    /// @return Transaction hash.
+    function getTransactionHash(
+        address receiver,
+        uint256 safeTxGas,
+        uint256 dataGas,
         uint256 gasPrice,
-        uint256 dataGas
+        address gasToken,
+        address refundReceiver,
+        uint256 _nonce
     )
         public
+        view
+        returns (bytes32)
     {
-        require(OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner");
-        gasPriceLimits[token] = gasPrice;
-        dataGasLimits[token] = dataGas;
+        return keccak256(
+            abi.encodePacked(byte(0x19), byte(0), this, receiver, safeTxGas, dataGas, gasPrice, gasToken, refundReceiver, _nonce)
+        );
+    }
+
+    function checkSignatures(bytes32 transactionHash, bytes signatures, address delegate)
+        internal
+        view
+        returns (bool)
+    {
+        address signer = recoverKey(transactionHash, signatures, 0);
+        return signer == delegate || OwnerManager(manager).isOwner(signer);
     }
 
     function handlePayment(
