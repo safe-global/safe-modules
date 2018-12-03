@@ -2,6 +2,7 @@ const utils = require('../utils')
 const blockTime = require('./blockTime')
 const solc = require('solc')
 const abi = require('ethereumjs-abi')
+const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
 
 const RecurringTransfersModule = artifacts.require("./RecurringTransfersModule.sol")
 const ProxyFactory = artifacts.require("./gnosis-safe/contracts/proxies/ProxyFactory.sol")
@@ -66,8 +67,9 @@ contract('RecurringTransfersModule', function(accounts) {
 
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM
+        // TODO: handle days less than 29
         const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
-        blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
+        await wait((23 - currentHour + 5) * 60 * 60);
 
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
@@ -218,7 +220,7 @@ contract('RecurringTransfersModule', function(accounts) {
             await recurringTransfersModule.executeRecurringTransfer(...params, sigs, {from: owner})
         )
 
-        blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
+        await wait(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         utils.logGasUsage(
@@ -257,7 +259,7 @@ contract('RecurringTransfersModule', function(accounts) {
             await recurringTransfersModule.removeRecurringTransfer(receiver, {from: owner})
         )
 
-        blockTime.fastForwardBlockTime(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
+        await wait(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         sigs = await signModuleTx(recurringTransfersModule, params, lw, [lw.accounts[0]])
         await utils.assertRejects(

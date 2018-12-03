@@ -3,20 +3,6 @@ function getCurrentBlockTime() {
     return web3.eth.getBlock(web3.eth.blockNumber).timestamp
 }
 
-function fastForwardBlockTime(seconds) {
-    web3.currentProvider.send({
-        jsonrpc: "2.0",
-        method: "evm_increaseTime",
-        params: [seconds], id: 0
-    })
-
-    web3.currentProvider.send({
-        jsonrpc: "2.0",
-        method: "evm_mine",
-        params: [], id: 0
-    })
-}
-
 function getUtcDateTime(blockTime) {
     const date  = new Date(blockTime * 1000);
 
@@ -38,10 +24,8 @@ function getBlockTimeNextMonth(blockTime) {
     }
 }
 
-
 Object.assign(exports, {
     getCurrentBlockTime,
-    fastForwardBlockTime,
     getUtcDateTime,
     getBlockTimeNextMonth
 });

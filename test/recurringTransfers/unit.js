@@ -1,6 +1,7 @@
 const utils = require('../utils')
 const blockTime = require('./blockTime')
 const abi = require('ethereumjs-abi')
+const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
 
 const ExposedRecurringTransfersModule = artifacts.require("./ExposedRecurringTransfersModule.sol")
 const MockContract = artifacts.require("MockContract")
@@ -34,7 +35,7 @@ contract('RecurringTransfersModule', function(accounts) {
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM
         const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
-        blockTime.fastForwardBlockTime((23 - currentHour + 5) * 60 * 60);
+        await wait((23 - currentHour + 5) * 60 * 60);
 
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
