@@ -408,10 +408,10 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         // solium-disable-next-line security/no-tx-origin
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
         if (gasToken == address(0)) {
-            // solium-disable-next-line security/no-send
-            require(receiver.send(amount), "Could not pay gas costs with ether");
+            require(manager.execTransactionFromModule(receiver, amount, "", Enum.Operation.Call), "Could not refund gas");
         } else {
-            require(transferToken(gasToken, receiver, amount), "Could not pay gas costs with token");
+            bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, amount);
+            require(manager.execTransactionFromModule(gasToken, 0, data, Enum.Operation.Call), "Could not refund token gas");
         }
     }
 }
