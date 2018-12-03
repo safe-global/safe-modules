@@ -15,7 +15,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 /// @title Transfer Limit Module - Allows to transfer limited amounts of ERC20 tokens and Ether.
 contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     string public constant NAME = "Transfer Limit Module";
-    string public constant VERSION = "0.0.2";
+    string public constant VERSION = "0.0.1";
 
     // transferLimits mapping maps token address to transfer limit settings.
     mapping (address => TransferLimit) public transferLimits;
