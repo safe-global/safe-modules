@@ -13,7 +13,7 @@ import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
 /// @author Grant Wuerker - <gwuerker@gmail.com>
 contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder {
     string public constant NAME = "Recurring Transfers Module";
-    string public constant VERSION = "0.0.2";
+    string public constant VERSION = "0.1.0";
 
     DateTime public dateTime;
     DutchExchange public dutchExchange;
