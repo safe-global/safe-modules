@@ -131,14 +131,14 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         nonce++;
         require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
+        recurringTransfers[receiver].lastTransferTime = now;
+
         if (recurringTransfer.token == 0) {
             require(manager.execTransactionFromModule(receiver, transferAmount, "", Enum.Operation.Call), "Could not execute Ether transfer");
         } else {
             bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, transferAmount);
             require(manager.execTransactionFromModule(recurringTransfer.token, 0, data, Enum.Operation.Call), "Could not execute token transfer");
         }
-
-        recurringTransfers[receiver].lastTransferTime = now;
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
         if (gasPrice > 0) {
