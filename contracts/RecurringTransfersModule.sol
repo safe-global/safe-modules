@@ -34,7 +34,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         address delegate;
 
         address token;
-        address rate;
+        address rateToken;
         uint256 amount;
 
         uint8 transferDay;
@@ -61,8 +61,8 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     /// @param receiver The address receiving the recurring transfer.
     /// @param delegate Address that can execute the recurring transfer in addition to owners (0 for none).
     /// @param token Address of the token that will be transfered (0 for Ether).
-    /// @param rate Address of the token used to calculate the amount transfered (0 for none). For example, set this to DAI for consistent payment amounts in USD.
-    /// @param amount The amount of tokens transfered. This will vary upon execution if a rate is provided.
+    /// @param rateToken Address of the token used to calculate the amount transfered (0 for none). For example, set this to DAI for consistent payment amounts in USD.
+    /// @param amount The amount of tokens transfered. This will vary upon execution if a rateToken is provided.
     /// @param transferDay Day of the month when the recurring transfer can be executed (1-28).
     /// @param transferHourStart Time of the day when transfer can be executed (0-22).
     /// @param transferHourEnd Time of the day when transfer can no longer be executed (1-23).
@@ -70,7 +70,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         address receiver,
         address delegate,
         address token,
-        address rate,
+        address rateToken,
         uint256 amount,
         uint8 transferDay,
         uint8 transferHourStart,
@@ -84,7 +84,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         require(transferHourStart > 0, "transferHourStart must be greater than 0");
         require(transferHourEnd < 23, "transferHourEnd must be less than 23");
         require(transferHourStart < transferHourEnd, "transferHourStart must be less than transferHourEnd");
-        recurringTransfers[receiver] = RecurringTransfer(delegate, token, rate, amount, transferDay, transferHourStart, transferHourEnd, 0);
+        recurringTransfers[receiver] = RecurringTransfer(delegate, token, rateToken, amount, transferDay, transferHourStart, transferHourEnd, 0);
     }
 
     /// @dev Removes a recurring transfer.
@@ -118,7 +118,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
         require(isOnDayAndBetweenHours(recurringTransfer.transferDay, recurringTransfer.transferHourStart, recurringTransfer.transferHourEnd), "Transfer request not within valid timeframe");
 
-        uint256 transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rate, recurringTransfer.amount);
+        uint256 transferAmount = getAdjustedTransferAmount(recurringTransfer.token, recurringTransfer.rateToken, recurringTransfer.amount);
 
         uint256 startGas = gasleft();
         bytes32 txHash = getTransactionHash(
@@ -163,19 +163,19 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         dateTime.getMonth(now) > dateTime.getMonth(previousTime);
     }
 
-    // Adjust amount for the transfer rate if it exists
+    // Adjust amount for the transfer rateToken if it exists
     // For example:
     // say GNO = 1/10 ETH and DAI = 1/200 ETH
     // token = GNO address
-    // rate = DAI address
+    // rateToken = DAI address
     // amount = 1000
     // In other words, we want to pay the receiver $1000 worth of GNO token.
-    // Given the rates above, we will pay (1 * 10 * 1000) / (200 * 1) = 50 GNO tokens.
-    function getAdjustedTransferAmount(address token, address rate, uint256 amount)
+    // Given the rateTokens above, we will pay (1 * 10 * 1000) / (200 * 1) = 50 GNO tokens.
+    function getAdjustedTransferAmount(address token, address rateToken, uint256 amount)
         internal view returns (uint)
     {
-        // transfer does not need to be adjusted since no rate is given
-        if(rate == 0) {
+        // transfer does not need to be adjusted since no rateToken is given
+        if(rateToken == 0) {
             return amount;
         }
 
@@ -186,12 +186,12 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
             (tokenPriceNum, tokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(token);
         }
 
-        uint256 ratePriceNum;
-        uint256 ratePriceDen;
-        (ratePriceNum, ratePriceDen) = dutchExchange.getPriceOfTokenInLastAuction(rate);
+        uint256 rateTokenPriceNum;
+        uint256 rateTokenPriceDen;
+        (rateTokenPriceNum, rateTokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(rateToken);
 
-        uint256 adjustedNum = (ratePriceNum * tokenPriceDen * amount);
-        uint256 adjustedDen = (ratePriceDen * tokenPriceNum);
+        uint256 adjustedNum = (rateTokenPriceNum * tokenPriceDen * amount);
+        uint256 adjustedDen = (rateTokenPriceDen * tokenPriceNum);
 
         require(adjustedNum != 0, "The adjusted amount numerator must not be 0");
         require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
