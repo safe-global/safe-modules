@@ -181,7 +181,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
         uint256 tokenPriceNum = 1;
         uint256 tokenPriceDen = 1;
-        // they are transfering ETH
+        // they are transfering a token
         if(token != 0) {
             (tokenPriceNum, tokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(token);
         }
