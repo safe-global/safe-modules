@@ -26,6 +26,7 @@ contract('RecurringTransfersModule', function(accounts) {
 
     const owner = accounts[0]
     const receiver = accounts[1]
+    const relayer = accounts[2]
     const transferAmount = parseInt(web3.toWei(1, 'ether'))
 
     beforeEach(async function() {
@@ -82,14 +83,11 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         const signer = lw.accounts[0]
-        const rando = accounts[7]
 
         const addParams = [receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transferSigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transferSigs)
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, signer)
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
@@ -107,14 +105,11 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = await token.balances(receiver).toNumber()
 
         const signer = lw.accounts[0]
-        const rando = accounts[7]
 
         const addParams = [receiver, 0, token.address, 0, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transferSigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transferSigs)
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, signer)
 
         const safeEndBalance = await token.balances(gnosisSafe.address).toNumber()
         const receiverEndBalance = await token.balances(receiver).toNumber()
@@ -129,18 +124,15 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         const signer = lw.accounts[0]
-        const rando = accounts[7]
 
         const addParams = [receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transfer1Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transfer1Sigs)
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, signer)
 
         const transfer2Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sigs, {from: rando}),
+            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sigs, {from: relayer}),
             'expected recurring transfer to get rejected'
         )
 
@@ -157,19 +149,13 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         const signer = lw.accounts[0]
-        const rando = accounts[7]
 
         const addParams = [receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transfer1Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transfer1Sigs)
-
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, signer)
         await wait(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
-
-        const transfer2Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transfer2Sigs)
+        await executeRecurringTransfer(transferParams, signer)
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
@@ -184,25 +170,18 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         const signer = lw.accounts[0]
-        const rando = accounts[7]
 
         const addParams = [receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transfer1Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transfer1Sigs)
-
-        utils.logGasUsage(
-            'remove recurring transfer',
-            await recurringTransfersModule.removeRecurringTransfer(receiver, {from: owner})
-        )
-
+        const removeParams = [receiver]
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, signer)
+        await removeRecurringTransfer(removeParams)
         await wait(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
         const transfer2Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sigs, {from: rando}),
+            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sigs, {from: relayer}),
             'expected recurring transfer to get rejected'
         )
 
@@ -219,14 +198,11 @@ contract('RecurringTransfersModule', function(accounts) {
         const receiverStartBalance = web3.eth.getBalance(receiver).toNumber()
 
         const delegate = lw.accounts[2]
-        const rando = accounts[7]
 
         const addParams = [receiver, delegate, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transferSigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [delegate])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transferSigs)
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, delegate)
 
         const safeEndBalance = web3.eth.getBalance(gnosisSafe.address).toNumber()
         const receiverEndBalance = web3.eth.getBalance(receiver).toNumber()
@@ -243,9 +219,9 @@ contract('RecurringTransfersModule', function(accounts) {
         const rando = lw.accounts[2]
 
         const addParams = [receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
+        await addRecurringTransfer(addParams)
+
         const transferSigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [rando])
         await utils.assertRejects(
             recurringTransfersModule.executeRecurringTransfer(...transferParams, transferSigs, {from: owner}),
@@ -282,11 +258,9 @@ contract('RecurringTransfersModule', function(accounts) {
         )
 
         const addParams = [receiver, 0, token1.address, token2Address, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
-        await addRecurringTransfer(recurringTransfersModule, owner, addParams)
-
         const transferParams = [receiver, 0, 0, 0, 0, 0]
-        const transferSigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
-        await executeRecurringTransfer(recurringTransfersModule, rando, transferParams, transferSigs)
+        await addRecurringTransfer(addParams)
+        await executeRecurringTransfer(transferParams, signer)
 
         const safeEndBalance = await token1.balances(gnosisSafe.address).toNumber()
         const receiverEndBalance = await token1.balances(receiver).toNumber()
@@ -294,23 +268,35 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(safeEndBalance, safeStartBalance - (tokenTransferAmount / 20), "expected safe token balance to decrease after transfer")
         assert.equal(receiverEndBalance, receiverStartBalance + (tokenTransferAmount / 20), "expected receiver token balance to decrease after transfer")
     })
-})
 
-const addRecurringTransfer = async (module, caller, params) => {
-    utils.logGasUsage(
-        'create recurring transfer',
-        await module.addRecurringTransfer(
-            ...params, {from: caller}
+    const addRecurringTransfer = async (params) => {
+        utils.logGasUsage(
+            'create recurring transfer',
+            await recurringTransfersModule.addRecurringTransfer(
+                ...params, {from: owner}
+            )
         )
-    )
-}
+    }
 
-const executeRecurringTransfer = async (module, caller, params, sigs) => {
-    utils.logGasUsage(
-        'execute recurring transfer',
-        await module.executeRecurringTransfer(...params, sigs, {from: caller})
-    )
-}
+    const removeRecurringTransfer = async (params) => {
+        utils.logGasUsage(
+            'remove recurring transfer',
+            await recurringTransfersModule.removeRecurringTransfer(
+                ...params, {from: owner}
+            )
+        )
+    }
+
+    const executeRecurringTransfer = async (params, signer) => {
+        const sigs = await signModuleTx(recurringTransfersModule, params, lw, [signer])
+        utils.logGasUsage(
+            'execute recurring transfer',
+            await recurringTransfersModule.executeRecurringTransfer(
+                ...params, sigs, {from: relayer}
+            )
+        )
+    }
+})
 
 const signModuleTx = async (module, params, lw, signers) => {
     let nonce = await module.nonce()
