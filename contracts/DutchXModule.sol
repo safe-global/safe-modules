@@ -3,6 +3,8 @@ import "gnosis-safe/contracts/base/Module.sol";
 import "gnosis-safe/contracts/base/ModuleManager.sol";
 import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
+import "./DutchXInterface.sol";
+import "./DutchXTokenInterface.sol";
 
 
 
@@ -13,15 +15,15 @@ contract DutchXModule is Module {
     string public constant NAME = "DutchX Module";
     string public constant VERSION = "0.0.2";
 
-    // Whitelisted token functions
-    bytes32 public constant APPROVE_TOKEN_FUNCTION_IDENTIFIER = hex"095ea7b3";
-    bytes32 public constant DEPOSIT_WETH_FUNCTION_IDENTIFIER = hex"d0e30db0";
-    // Whitelisted dx functions
-    bytes32 public constant DEPOSIT_DX_FUNCTION_IDENTIFIER = hex"47e7ef24";
-    bytes32 public constant POST_SELL_DX_FUNCTION_IDENTIFIER = hex"59f96ae5";
-    bytes32 public constant POST_BUY_DX_FUNCTION_IDENTIFIER = hex"5e7f22c2";
-    bytes32 public constant CLAIM_SELLER_DX_FUNCTION_IDENTIFIER = hex"7895dd21";
-    bytes32 public constant CLAIM_BUYER_DX_FUNCTION_IDENTIFIER = hex"d3cc8d1c";
+    // // Whitelisted token functions
+    // bytes32 public constant APPROVE_TOKEN_FUNCTION_IDENTIFIER = hex"095ea7b3";
+    // bytes32 public constant DEPOSIT_WETH_FUNCTION_IDENTIFIER = hex"d0e30db0";
+    // // Whitelisted dx functions
+    // bytes32 public constant DEPOSIT_DX_FUNCTION_IDENTIFIER = hex"47e7ef24";
+    // bytes32 public constant POST_SELL_DX_FUNCTION_IDENTIFIER = hex"59f96ae5";
+    // bytes32 public constant POST_BUY_DX_FUNCTION_IDENTIFIER = hex"5e7f22c2";
+    // bytes32 public constant CLAIM_SELLER_DX_FUNCTION_IDENTIFIER = hex"7895dd21";
+    // bytes32 public constant CLAIM_BUYER_DX_FUNCTION_IDENTIFIER = hex"d3cc8d1c";
     
     address public dutchXAddress;
     // isWhitelistedToken mapping maps destination address to boolean.
@@ -109,6 +111,11 @@ contract DutchXModule is Module {
         public
         returns (bool)
     {
+
+        // Load allowed method interfaces
+        DutchXTokenInterface tokenInterface;
+        DutchXInterface dxInterface;
+
         // Only Safe owners are allowed to execute transactions to whitelisted accounts.
         require(isOperator[msg.sender], "Method can only be called by an operator");
 
@@ -123,14 +130,14 @@ contract DutchXModule is Module {
         }
 
         // Only approve tokens function and deposit (in the case of WETH) is allowed against token contracts, and DutchX proxy must be the spender (for approve)
-        if (functionIdentifier != DEPOSIT_WETH_FUNCTION_IDENTIFIER){
+        if (functionIdentifier != tokenInterface.deposit.selector){
             require(value == 0, "Eth transactions only allowed for wrapping ETH");
         }
 
         // Only these functions:
         // PostSellOrder, postBuyOrder, claimTokensFromSeveralAuctionsAsBuyer, claimTokensFromSeveralAuctionsAsSeller, deposit
         // Are allowed for the Dutch X contract
-        if (functionIdentifier == APPROVE_TOKEN_FUNCTION_IDENTIFIER) {
+        if (functionIdentifier == tokenInterface.approve.selector) {
             uint spender;
             // solium-disable-next-line security/no-inline-assembly
             assembly {
@@ -142,7 +149,7 @@ contract DutchXModule is Module {
             //(address spender) = abi.decode(dataParams, (address));
 
             require(address(spender) == dutchXAddress, "Spender must be the DutchX Contract");
-        } else if (functionIdentifier == DEPOSIT_DX_FUNCTION_IDENTIFIER) {
+        } else if (functionIdentifier == dxInterface.deposit.selector) {
             // TODO we need abi.decodeWithSelector
             // deposit(address token, uint256 amount) we skip the amount
             // (address token) = abi.decode(data, (address));
@@ -153,7 +160,7 @@ contract DutchXModule is Module {
                 depositToken := mload(add(data, 0x24))
             }
             require (isWhitelistedToken[address(depositToken)], "Only whitelisted tokens can be deposit on the DutchX");
-        } else if (functionIdentifier == POST_SELL_DX_FUNCTION_IDENTIFIER) {
+        } else if (functionIdentifier == dxInterface.postSellOrder.selector) {
             // TODO we need abi.decodeWithSelector
             // postSellOrder(address sellToken, address buyToken, uint256 auctionIndex, uint256 amount) we skip auctionIndex and amount
             //(address sellToken, address buyToken) = abi.decode(data, (address, address));
@@ -166,7 +173,7 @@ contract DutchXModule is Module {
                 buyToken := mload(add(data, 0x44))
             }
             require (isWhitelistedToken[address(sellToken)] && isWhitelistedToken[address(buyToken)], "Only whitelisted tokens can be sold");
-        } else if (functionIdentifier == POST_BUY_DX_FUNCTION_IDENTIFIER) {
+        } else if (functionIdentifier == dxInterface.postBuyOrder.selector) {
             // TODO we need abi.decodeWithSelector
             // postBuyOrder(address sellToken, address buyToken, uint256 auctionIndex, uint256 amount) we skip auctionIndex and amount
             // (address sellToken, address buyToken) = abi.decode(data, (address, address));
@@ -181,7 +188,7 @@ contract DutchXModule is Module {
             require (isWhitelistedToken[address(sellToken)] && isWhitelistedToken[address(buyToken)], "Only whitelisted tokens can be bought");
         } else {
             // Other functions different than claim and deposit are not allowed
-            require(functionIdentifier == CLAIM_SELLER_DX_FUNCTION_IDENTIFIER || functionIdentifier == CLAIM_BUYER_DX_FUNCTION_IDENTIFIER || functionIdentifier == DEPOSIT_WETH_FUNCTION_IDENTIFIER, "Function not allowed");
+            require(functionIdentifier == dxInterface.claimTokensFromSeveralAuctionsAsSeller.selector || functionIdentifier == dxInterface.claimTokensFromSeveralAuctionsAsBuyer.selector || functionIdentifier == tokenInterface.deposit.selector, "Function not allowed");
         }
 
         require(manager.execTransactionFromModule(to, value, data, Enum.Operation.Call), "Could not execute transaction");
