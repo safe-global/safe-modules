@@ -77,8 +77,8 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         uint8 transferHourEnd
     )
         public
+        authorized
     {
-        require(OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner");
         require(amount != 0, "amount must be greater than 0");
         require(transferDay < 29, "transferDay must be less than 29");
         require(transferHourStart > 0, "transferHourStart must be greater than 0");
@@ -89,8 +89,10 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
     /// @dev Removes a recurring transfer.
     /// @param receiver The receiving address for the recurring transfer.
-    function removeRecurringTransfer(address receiver) public {
-        require(OwnerManager(manager).isOwner(msg.sender), "Method can only be called by an owner");
+    function removeRecurringTransfer(address receiver)
+        public
+        authorized 
+    {
         delete recurringTransfers[receiver];
     }
 
