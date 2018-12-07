@@ -8,7 +8,6 @@ const CreateAndAddModules = artifacts.require("./libraries/CreateAndAddModules.s
 const ProxyFactory = artifacts.require("./ProxyFactory.sol")
 const TransferLimitModule = artifacts.require("./modules/TransferLimitModule.sol")
 const MockContract = artifacts.require('./MockContract.sol')
-const MockToken = artifacts.require('./Token.sol')
 const TransferLimitModuleMock = artifacts.require('./mocks/TransferLimitModuleMock.sol')
 
 

@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "./PriceOracleInterface.sol";
+
 interface DutchExchange {
     function getPriceOfTokenInLastAuction(
         address token
@@ -15,4 +17,6 @@ interface DutchExchange {
         address token1,
         address token2
     ) external view returns (uint index);
+
+    function ethUSDOracle() external view returns (PriceOracleInterface);
 }

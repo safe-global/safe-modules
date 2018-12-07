@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
 import "../base/Module.sol";
 import "../base/ModuleManager.sol";
@@ -6,10 +6,9 @@ import "../base/OwnerManager.sol";
 import "../common/Enum.sol";
 import "../common/SignatureDecoder.sol";
 import "../common/SecuredTokenTransfer.sol";
-
-import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
-import "@gnosis.pm/dx-contracts/contracts/Oracle/PriceOracleInterface.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../external/DutchExchangeInterface.sol";
+import "../external/PriceOracleInterface.sol";
+import "../external/SafeMath.sol";
 
 
 /// @title Transfer Limit Module - Allows to transfer limited amounts of ERC20 tokens and Ether.
@@ -70,8 +69,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     /// @param _delegate A non-owner address who is allowed to perform transfers within limits (optional).
     /// @param _dutchxAddr Address of DutchX contract, which is used as price oracle.
     function setup(
-        address[] tokens,
-        uint256[] _transferLimits,
+        address[] memory tokens,
+        uint256[] memory _transferLimits,
         uint256 _timePeriod,
         bool _rolling,
         uint256 _globalWeiCap,
@@ -88,7 +87,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         require(isValidTimePeriod(_timePeriod), "Invalid time period");
         // In the range [1, safeThreshold - 1]
         require(isValidThreshold(_threshold), "Invalid threshold");
-        require(_dutchxAddr != 0, "Invalid dutchx address");
+        require(_dutchxAddr != address(0), "Invalid dutchx address");
 
         timePeriod = _timePeriod;
         rolling = _rolling;
@@ -142,11 +141,11 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         uint256 gasPrice,
         address gasToken,
         address refundReceiver,
-        bytes signatures
+        bytes memory signatures
     )
         public
     {
-        require(to != 0, "Invalid to address provided");
+        require(to != address(0), "Invalid to address provided");
         require(amount > 0, "Invalid amount provided");
 
         uint256 startGas = gasleft();
@@ -165,7 +164,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         require(handleTransferLimits(token, amount), "Transfer exceeds limits");
 
         // Perform transfer by invoking manager
-        if (token == 0) {
+        if (token == address(0)) {
             require(manager.execTransactionFromModule(to, amount, "", Enum.Operation.Call), "Could not execute ether transfer");
         } else {
             bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", to, amount);
@@ -313,7 +312,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         returns (bool)
     {
         if  (_timePeriod >= 1 hours &&
-             _timePeriod < 1 years) {
+             _timePeriod < 365 days) {
             return true;
         }
 
@@ -325,14 +324,14 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         returns (bool)
     {
         if  (_threshold >= 1 &&
-             _threshold < OwnerManager(manager).getThreshold()) {
+             _threshold < OwnerManager(address(manager)).getThreshold()) {
             return true;
         }
 
         return false;
     }
 
-    function checkSignatures(bytes32 transactionHash, bytes signatures)
+    function checkSignatures(bytes32 transactionHash, bytes memory signatures)
         internal
         view
         returns (bool)
@@ -353,7 +352,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
             }
 
             // Signer should either be one of the owners, or the delegate
-            if (currentOwner != delegate && !OwnerManager(manager).isOwner(currentOwner)) {
+            if (currentOwner != delegate && !OwnerManager(address(manager)).isOwner(currentOwner)) {
                 return false;
             }
 
@@ -365,11 +364,10 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
     function getEthAmount(address token, uint256 amount)
         internal
-        view
         returns (uint256, uint256)
     {
         // Amount is in wei
-        if (token == 0) {
+        if (token == address(0)) {
             return (amount, 10**18);
         }
 
@@ -394,7 +392,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     }
 
     function handlePayment(
-        uint256 gasUsed,
+        uint256 startGas,
         uint256 dataGas,
         uint256 gasPrice,
         address gasToken,
@@ -402,7 +400,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     )
         private
     {
-        uint256 amount = ((gasUsed - gasleft()) + dataGas) * gasPrice;
+        uint256 amount = ((startGas - gasleft()) + dataGas) * gasPrice;
         // Make sure refund is within transfer limits, to prevent
         // attacker with a compromised key to empty the safe.
         require(handleTransferLimits(gasToken, amount), "Gas refund exceeds transfer limit");
