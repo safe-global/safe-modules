@@ -11,11 +11,10 @@ import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
 /// @author Grant Wuerker - <gwuerker@gmail.com>
-contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder {
+contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder, DateTime {
     string public constant NAME = "Recurring Transfers Module";
     string public constant VERSION = "0.1.0";
 
-    DateTime public dateTime;
     DutchExchange public dutchExchange;
 
     // recurringTransfers maps the composite hash of a token and account address to a recurring transfer struct.
@@ -46,14 +45,11 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
     /// @dev Setup function sets initial storage of contract.
     /// @param _dutchExchange Address of the DutchExchange contract.
-    /// @param _dateTime Address of the DateTime contract.
-    function setup(address _dutchExchange, address _dateTime)
+    function setup(address _dutchExchange)
         public
     {
         require(_dutchExchange != 0, "A non-zero dutch exchange address must be provided.");
-        require(_dateTime != 0, "A non-zero date time address must be provided.");
         dutchExchange = DutchExchange(_dutchExchange);
-        dateTime = DateTime(_dateTime);
         setManager();
     }
 
@@ -153,16 +149,16 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     function isOnDayAndBetweenHours(uint8 day, uint8 hourStart, uint8 hourEnd)
         internal view returns (bool)
     {
-        return dateTime.getDay(now) == day &&
-        dateTime.getHour(now) >= hourStart &&
-        dateTime.getHour(now) < hourEnd;
+        return getDay(now) == day &&
+        getHour(now) >= hourStart &&
+        getHour(now) < hourEnd;
     }
 
     function isPastMonth(uint256 previousTime)
         internal view returns (bool)
     {
-        return dateTime.getYear(now) > dateTime.getYear(previousTime) ||
-        dateTime.getMonth(now) > dateTime.getMonth(previousTime);
+        return getYear(now) > getYear(previousTime) ||
+        getMonth(now) > getMonth(previousTime);
     }
 
     // Adjust amount for the transfer rateToken if it exists

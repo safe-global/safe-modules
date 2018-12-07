@@ -25,12 +25,9 @@ contract('RecurringTransfersModule', function(accounts) {
         dutchExchangeMock = await MockContract.new()
         dutchExchange = await DutchExchange.at(dutchExchangeMock.address)
 
-        // create DateTime contract
-        const dateTime = await DateTime.new()
-
         // create exposed module
         exposedRecurringTransfersModule = await ExposedRecurringTransfersModule.new()
-        exposedRecurringTransfersModule.setup(dutchExchangeMock.address, dateTime.address)
+        exposedRecurringTransfersModule.setup(dutchExchangeMock.address)
 
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM

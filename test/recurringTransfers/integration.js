@@ -10,7 +10,6 @@ const CreateAndAddModules = artifacts.require("./gnosis-safe/contracts/libraries
 const GnosisSafe = artifacts.require("./gnosis-safe/contracts/GnosisSafe.sol")
 const MockContract = artifacts.require("MockContract")
 const DutchExchange = artifacts.require("DutchExchange")
-const DateTime = artifacts.require("DateTime")
 
 const GAS_PRICE = 25000000000;
 
@@ -35,9 +34,6 @@ contract('RecurringTransfersModule', function(accounts) {
         mockDutchExchange = await MockContract.new()
         dutchExchange = await DutchExchange.at(mockDutchExchange.address)
 
-        // create DateTime contract
-        const dateTime = await DateTime.new()
-
         // Create lightwallet
         lw = await utils.createLightwallet()
 
@@ -50,11 +46,8 @@ contract('RecurringTransfersModule', function(accounts) {
         gnosisSafeMasterCopy.setup([owner], 1, 0, "0x")
         const recurringTransfersModuleMasterCopy = await RecurringTransfersModule.new()
 
-        // Initialize module master copy
-        recurringTransfersModuleMasterCopy.setup(dutchExchange.address, dateTime.address)
-
         // Create Gnosis Safe and Recurring Transfer Module in one transaction
-        const moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(dutchExchange.address, dateTime.address)
+        const moduleData = await recurringTransfersModuleMasterCopy.contract.setup.getData(dutchExchange.address)
         const proxyFactoryData = await proxyFactory.contract.createProxy.getData(recurringTransfersModuleMasterCopy.address, moduleData)
         const modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
         const createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
