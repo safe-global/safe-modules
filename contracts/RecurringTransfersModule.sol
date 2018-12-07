@@ -41,7 +41,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         uint8 transferHourStart;
         uint8 transferHourEnd;
 
-        uint256 lastTransferTime;
+        uint32 lastTransferTime;
     }
 
     /// @dev Setup function sets initial storage of contract.
@@ -91,7 +91,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     /// @param receiver The receiving address for the recurring transfer.
     function removeRecurringTransfer(address receiver)
         public
-        authorized 
+        authorized
     {
         delete recurringTransfers[receiver];
     }
@@ -133,7 +133,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         nonce++;
         require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
-        recurringTransfers[receiver].lastTransferTime = now;
+        recurringTransfers[receiver].lastTransferTime = uint32(now);
 
         if (recurringTransfer.token == 0) {
             require(manager.execTransactionFromModule(receiver, transferAmount, "", Enum.Operation.Call), "Could not execute Ether transfer");
