@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "../contracts/RecurringTransfersModule.sol";
+import "../RecurringTransfersModule.sol";
 
 contract ExposedRecurringTransfersModule is RecurringTransfersModule {
 

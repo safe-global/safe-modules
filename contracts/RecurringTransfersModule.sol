@@ -8,10 +8,11 @@ import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "gnosis-safe/contracts/common/SignatureDecoder.sol";
 import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
+import "./TokenPriceOracle.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
 /// @author Grant Wuerker - <gwuerker@gmail.com>
-contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder, DateTime {
+contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder, DateTime, TokenPriceOracle {
     string public constant NAME = "Recurring Transfers Module";
     string public constant VERSION = "0.1.0";
 
@@ -181,12 +182,12 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         uint256 tokenPriceDen = 1;
         // they are transfering a token
         if(token != 0) {
-            (tokenPriceNum, tokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(token);
+            (tokenPriceNum, tokenPriceDen) = getPrice(token);
         }
 
         uint256 rateTokenPriceNum;
         uint256 rateTokenPriceDen;
-        (rateTokenPriceNum, rateTokenPriceDen) = dutchExchange.getPriceOfTokenInLastAuction(rateToken);
+        (rateTokenPriceNum, rateTokenPriceDen) = getPrice(rateToken);
 
         uint256 adjustedNum = (rateTokenPriceNum * tokenPriceDen * amount);
         uint256 adjustedDen = (rateTokenPriceDen * tokenPriceNum);
@@ -196,7 +197,13 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
         return adjustedNum / adjustedDen;
     }
-
+    
+    
+    function getPrice(address token)
+        public view returns (uint256, uint256)
+    {
+        return dutchExchange.getPriceOfTokenInLastAuction(token);
+    }
 
     /// @dev Returns hash to be signed by owners.
     /// @param receiver The address that will receive tokens.

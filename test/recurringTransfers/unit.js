@@ -3,7 +3,7 @@ const blockTime = require('./blockTime')
 const abi = require('ethereumjs-abi')
 const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
 
-const ExposedRecurringTransfersModule = artifacts.require("./ExposedRecurringTransfersModule.sol")
+const ExposedRecurringTransfersModule = artifacts.require("./test/ExposedRecurringTransfersModule.sol")
 const MockContract = artifacts.require("MockContract")
 const DutchExchange = artifacts.require("DutchExchange")
 const DateTime = artifacts.require("DateTime")
@@ -69,7 +69,7 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.isTrue(result)
     })
 
-    it('transfer amount is properly adusted for $1000 in GNO tokens', async () => {
+    it('should transfer amount properly adusted for $1000 in GNO tokens', async () => {
         // mock GNO and DAI values
         await dutchExchangeMock.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
