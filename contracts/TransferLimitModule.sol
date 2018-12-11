@@ -262,10 +262,11 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
         // Convert ether to wei
         uint256 weiAmount = ethNum.mul(10**18).div(ethDen);
-        if (globalWeiCap > 0 && totalWeiSpent.add(weiAmount) > globalWeiCap) {
+        uint256 weiSpent = totalWeiSpent.add(weiAmount);
+        if (globalWeiCap > 0 && weiSpent > globalWeiCap) {
             return false;
         }
-        totalWeiSpent = totalWeiSpent.add(weiAmount);
+        totalWeiSpent = weiSpent;
 
         if (globalDaiCap != 0) {
             // Calculate value in dai.
@@ -274,10 +275,11 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
             (daiNum, daiDen) = getDaiAmount(ethNum, ethDen);
 
             uint256 daiAmount = daiNum.div(daiDen);
-            if (totalDaiSpent.add(daiAmount) > globalDaiCap) {
+            uint256 daiSpent = totalDaiSpent.add(daiAmount);
+            if (daiSpent > globalDaiCap) {
                 return false;
             }
-            totalDaiSpent = totalDaiSpent.add(daiAmount);
+            totalDaiSpent = daiSpent;
         }
 
         return true;
