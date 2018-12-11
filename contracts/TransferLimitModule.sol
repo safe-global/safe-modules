@@ -18,6 +18,18 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     string public constant NAME = "Transfer Limit Module";
     string public constant VERSION = "0.0.1";
 
+    // keccak256(
+    //     "EIP712Domain(address verifyingContract)"
+    // );
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = 0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
+
+    // keccak256(
+    //     "TransferLimitTx(address token,address to,uint256 amount,uint256 safeTxGas,uint256 dataGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
+    // );
+    bytes32 public constant TX_TYPEHASH = 0x4ecf5a0602ce6cefe3487cc1ecf78c33c1e0ca56eec470230e61732f727de202;
+
+    bytes32 public domainSeparator;
+
     // transferLimits mapping maps token address to transfer limit settings.
     mapping (address => TransferLimit) public transferLimits;
 
@@ -83,11 +95,14 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     {
         setManager();
 
+        require(domainSeparator == 0, "Domain Separator already set!");
         // Greater than 1 hour and less than 1 year.
         require(isValidTimePeriod(_timePeriod), "Invalid time period");
         // In the range [1, safeThreshold - 1]
         require(isValidThreshold(_threshold), "Invalid threshold");
         require(_dutchxAddr != address(0), "Invalid dutchx address");
+
+        domainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, this));
 
         timePeriod = _timePeriod;
         rolling = _rolling;
@@ -204,8 +219,11 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         view
         returns (bytes32)
     {
+        bytes32 txHash = keccak256(
+            abi.encode(TX_TYPEHASH, token, to, amount, safeTxGas, dataGas, gasPrice, gasToken, refundReceiver, _nonce)
+        );
         return keccak256(
-            abi.encodePacked(byte(0x19), byte(0), this, token, to, amount, safeTxGas, dataGas, gasPrice, gasToken, refundReceiver, _nonce)
+            abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, txHash)
         );
     }
 
@@ -329,6 +347,11 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         view
         returns (bool)
     {
+        // Check that the provided signature data is not too short
+        if (signatures.length < threshold * 65) {
+            return false;
+        }
+
         // There cannot be an owner with address 0.
         address lastOwner = address(0);
         address currentOwner;
