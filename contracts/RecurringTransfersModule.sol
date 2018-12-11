@@ -8,11 +8,14 @@ import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "gnosis-safe/contracts/common/SignatureDecoder.sol";
 import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./TokenPriceOracle.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
 /// @author Grant Wuerker - <gwuerker@gmail.com>
 contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder, DateTime, TokenPriceOracle {
+    using SafeMath for uint256;
+  
     string public constant NAME = "Recurring Transfers Module";
     string public constant VERSION = "0.1.0";
 
@@ -189,13 +192,13 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         uint256 rateTokenPriceDen;
         (rateTokenPriceNum, rateTokenPriceDen) = getPrice(rateToken);
 
-        uint256 adjustedNum = (rateTokenPriceNum * tokenPriceDen * amount);
-        uint256 adjustedDen = (rateTokenPriceDen * tokenPriceNum);
+        uint256 adjustedNum = (rateTokenPriceNum.mul(tokenPriceDen).mul(amount));
+        uint256 adjustedDen = (rateTokenPriceDen.mul(tokenPriceNum));
 
         require(adjustedNum != 0, "The adjusted amount numerator must not be 0");
         require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
 
-        return adjustedNum / adjustedDen;
+        return adjustedNum.div(adjustedDen);
     }
     
     
@@ -250,7 +253,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     )
         private
     {
-        uint256 amount = ((gasUsed - gasleft()) + dataGas) * gasPrice;
+        uint256 amount = ((gasUsed.sub(gasleft())).add(dataGas)).mul(gasPrice);
         // solium-disable-next-line security/no-tx-origin
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
         if (gasToken == address(0)) {
