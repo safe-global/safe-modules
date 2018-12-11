@@ -216,7 +216,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         view
         returns (uint)
     {
-        return getNow() - (getNow() % timePeriod);
+        return now - (now % timePeriod);
     }
 
     function handleTransferLimits(address token, uint256 amount)
@@ -287,8 +287,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         internal
         returns (bool)
     {
-        if (rolling && getNow() > lastStartTime + timePeriod) {
-            lastStartTime = getNow();
+        if (rolling && now > lastStartTime + timePeriod) {
+            lastStartTime = now;
             return true;
         } else if (!rolling && currentStartTime() > lastStartTime) {
             lastStartTime = currentStartTime();
@@ -296,15 +296,6 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         }
 
         return false;
-    }
-
-    // Return now from function to allow mocking.
-    function getNow()
-        internal
-        view
-        returns (uint256)
-    {
-        return now;
     }
 
     function isValidTimePeriod(uint256 _timePeriod)

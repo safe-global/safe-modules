@@ -3,16 +3,7 @@ pragma solidity ^0.5.0;
 import "../modules/TransferLimitModule.sol";
 
 contract TransferLimitModuleMock is TransferLimitModule {
-    uint256 mockedNow;
     uint256 price;
-
-    function setMockedNow(uint256 _now) external {
-        mockedNow = _now;
-    }
-
-    function getNow() internal view returns (uint256) {
-        return mockedNow != 0 ? mockedNow : super.getNow();
-    }
 
     function setPrice(uint256 _price) external {
         price = _price;

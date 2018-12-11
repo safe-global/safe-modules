@@ -2,6 +2,7 @@ const utils = require('./utils')
 const solc = require('solc')
 const ABI = require('ethereumjs-abi')
 const BigNumber = require('bignumber.js')
+const { wait, waitUntilBlock } = require('@digix/tempo')(web3)
 
 const GnosisSafe = artifacts.require("./GnosisSafe.sol")
 const CreateAndAddModules = artifacts.require("./libraries/CreateAndAddModules.sol")
@@ -302,10 +303,10 @@ contract('TransferLimitModule time period', (accounts) => {
     })
 
     it('should reset expenditure after period is over', async () => {
-        // Set "now" to 1 min after beginning of current time period.
+        // Set "now" to 1 min after beginning of next time period.
         let now = Date.now()
-        now = (now - (now % timePeriod)) + (60)
-        await module.setMockedNow(now)
+        let target = (now - (now % timePeriod)) + (timePeriod + 60)
+        await wait(target)
 
         let params = [0, accounts[0], 70, 0, 0, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
@@ -315,8 +316,7 @@ contract('TransferLimitModule time period', (accounts) => {
         assert(totalWeiSpent.eq(70), 'total wei spent is updated after transfer')
 
         // Fast forward one hour
-        now += 60 * 60
-        await module.setMockedNow(now)
+        await wait(60 * 60)
 
         params = [token.address, accounts[0], 70, 0, 0, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
@@ -325,8 +325,7 @@ contract('TransferLimitModule time period', (accounts) => {
         assert(totalWeiSpent.eq(140), 'total wei spent is updated after transfer')
 
         // Fast forward one hour
-        now += 60 * 60
-        await module.setMockedNow(now)
+        await wait(60 * 60)
 
         params = [token.address, accounts[0], 30, 0, 0, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
@@ -337,8 +336,7 @@ contract('TransferLimitModule time period', (accounts) => {
         )
 
         // Fast forward one day
-        now += 60 * 60 * 24
-        await module.setMockedNow(now)
+        await wait(timePeriod)
 
         params = [token.address, accounts[0], 140, 0, 0, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
@@ -354,6 +352,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
     let lw
     let token
     let dutchx
+    const timePeriod = 60 * 60 * 24
 
     beforeEach(async () => {
         lw = await utils.createLightwallet()
@@ -373,7 +372,8 @@ contract('TransferLimitModule rolling time period', (accounts) => {
 
     it('should reset expenditure after rolling period is over', async () => {
         let now = Date.now()
-        await module.setMockedNow(now)
+        let target = (now - (now % timePeriod)) + (timePeriod + 60)
+        await wait(target)
 
         let params = [0, accounts[0], 70, 0, 0, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
@@ -383,8 +383,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         assert(totalWeiSpent.eq(70), 'total wei spent is updated after transfer')
 
         // Fast forward one hour
-        now += 60 * 60
-        await module.setMockedNow(now)
+        await wait(60 * 60)
 
         params = [token.address, accounts[0], 70, 0, 0, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
@@ -393,8 +392,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         assert(totalWeiSpent.eq(140), 'total wei spent is updated after transfer')
 
         // Fast forward one hour
-        now += 60 * 60
-        await module.setMockedNow(now)
+        await wait(60 * 60)
 
         params = [token.address, accounts[0], 30, 0, 0, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
@@ -405,8 +403,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         )
 
         // Fast forward one day
-        now += 60 * 60 * 24
-        await module.setMockedNow(now)
+        await wait(timePeriod)
 
         params = [token.address, accounts[0], 140, 0, 0, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
