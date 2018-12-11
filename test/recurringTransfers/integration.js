@@ -242,6 +242,11 @@ contract('RecurringTransfersModule', function(accounts) {
         const signer = lw.accounts[0]
         const rando = accounts[7]
 
+        // make sure there is no auction between tokens
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getAuctionIndex.getData(token1.address, token2Address),
+            '0x' + abi.rawEncode(['uint'], [0]).toString('hex')
+        )
         // mock token values
         await mockDutchExchange.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(token1.address),

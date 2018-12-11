@@ -176,29 +176,19 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     function getAdjustedTransferAmount(address token, address rateToken, uint256 amount)
         internal view returns (uint)
     {
-        // transfer does not need to be adjusted since no rateToken is given
-        if(rateToken == 0) {
+        // transfer does not need to be adjusted since a rateToken is not given
+        if(rateToken == address(0)) {
             return amount;
         }
+        
+        uint256 tokenToRateTokenPriceNum;
+        uint256 tokenToRateTokenPriceDen;
+        (tokenToRateTokenPriceNum, tokenToRateTokenPriceDen) = getPriceInToken(token, rateToken);
 
-        uint256 tokenPriceNum = 1;
-        uint256 tokenPriceDen = 1;
-        // they are transfering a token
-        if(token != 0) {
-            (tokenPriceNum, tokenPriceDen) = getPrice(token);
-        }
+        require(tokenToRateTokenPriceNum != 0, "The tokenToRateToken numerator must not be 0");
+        require(tokenToRateTokenPriceDen != 0, "The tokenToRateToken denominator must not be 0");
 
-        uint256 rateTokenPriceNum;
-        uint256 rateTokenPriceDen;
-        (rateTokenPriceNum, rateTokenPriceDen) = getPrice(rateToken);
-
-        uint256 adjustedNum = (rateTokenPriceNum.mul(tokenPriceDen).mul(amount));
-        uint256 adjustedDen = (rateTokenPriceDen.mul(tokenPriceNum));
-
-        require(adjustedNum != 0, "The adjusted amount numerator must not be 0");
-        require(adjustedDen != 0, "The adjusted amount denominator must not be 0");
-
-        return adjustedNum.div(adjustedDen);
+        return tokenToRateTokenPriceNum.mul(amount).div(tokenToRateTokenPriceDen);
     }
     
     
@@ -207,6 +197,28 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     {
         return dutchExchange.getPriceOfTokenInLastAuction(token);
     }
+    
+    function getPriceInToken(address token, address rateToken)
+        public view returns (uint256, uint256)
+    {  
+        uint256 auctionIndex = dutchExchange.getAuctionIndex(token, rateToken);
+        if(auctionIndex > 0) {
+            return dutchExchange.getPriceInPastAuction(token, rateToken, auctionIndex);
+        }
+        
+        uint256 tokenPriceNum = 1;
+        uint256 tokenPriceDen = 1;
+        // a token is being transfered
+        if(token != address(0)) {
+          (tokenPriceNum, tokenPriceDen) = getPrice(token);
+        }
+
+        uint256 rateTokenPriceNum;
+        uint256 rateTokenPriceDen;
+        (rateTokenPriceNum, rateTokenPriceDen) = getPrice(rateToken);
+        
+        return (rateTokenPriceNum.mul(tokenPriceDen), rateTokenPriceDen.mul(tokenPriceNum));
+    }    
 
     /// @dev Returns hash to be signed by owners.
     /// @param receiver The address that will receive tokens.

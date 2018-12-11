@@ -12,7 +12,7 @@ const SECONDS_IN_DAY = 60 * 60 * 24
 
 contract('RecurringTransfersModule', function(accounts) {
     let exposedRecurringTransfersModule
-    let dutchExchangeMock
+    let mockDutchExchange
     let dutchExchange
     let currentBlockTime
     let currentDateTime
@@ -22,12 +22,12 @@ contract('RecurringTransfersModule', function(accounts) {
 
     beforeEach(async function() {
         // create mock DutchExchange contract
-        dutchExchangeMock = await MockContract.new()
-        dutchExchange = await DutchExchange.at(dutchExchangeMock.address)
+        mockDutchExchange = await MockContract.new()
+        dutchExchange = await DutchExchange.at(mockDutchExchange.address)
 
         // create exposed module
         exposedRecurringTransfersModule = await ExposedRecurringTransfersModule.new()
-        exposedRecurringTransfersModule.setup(dutchExchangeMock.address)
+        exposedRecurringTransfersModule.setup(mockDutchExchange.address)
 
         // fast forwarding to a consistent time prevents issues
         // tests will start running at roughly 5 AM
@@ -69,13 +69,18 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.isTrue(result)
     })
 
-    it('should transfer amount properly adusted for $1000 in GNO tokens', async () => {
+    it('should adjust transfer amount properly for $1000 in GNO tokens', async () => {
+        // make sure there is no auction between tokens
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getAuctionIndex.getData(mockGnoAddress, mockDaiAddress),
+            '0x' + abi.rawEncode(['uint'], [0]).toString('hex')
+        )
         // mock GNO and DAI values
-        await dutchExchangeMock.givenCalldataReturn(
+        await mockDutchExchange.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
             '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 10e18.toFixed()]).toString('hex')
         )
-        await dutchExchangeMock.givenCalldataReturn(
+        await mockDutchExchange.givenCalldataReturn(
             await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
             '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 200e18.toFixed()]).toString('hex')
         )
