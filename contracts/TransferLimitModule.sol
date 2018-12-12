@@ -24,9 +24,9 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = 0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
 
     // keccak256(
-    //     "TransferLimitTx(address token,address to,uint256 amount,uint256 safeTxGas,uint256 dataGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
+    //     "TransferLimitTx(address token,address to,uint256 amount,uint256 gasLimit,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
     // );
-    bytes32 public constant TX_TYPEHASH = 0x4ecf5a0602ce6cefe3487cc1ecf78c33c1e0ca56eec470230e61732f727de202;
+    bytes32 public constant TX_TYPEHASH = 0x1e0b25695fc08726dccc000eb0da234286a5072680f159f621269991ee796887;
 
     bytes32 public domainSeparator;
 
@@ -140,8 +140,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     /// @param token Address of the token that should be transfered (0 for Ether)
     /// @param to Address to which the tokens should be transfered
     /// @param amount Amount of tokens (or Wei) that should be transfered
-    /// @param safeTxGas Gas that should be used for the Safe transaction.
-    /// @param dataGas Gas costs for data used to trigger the safe transaction and to pay the payment transfer
+    /// @param gasLimit Maximum amount of gas to be paid.
     /// @param gasPrice Gas price that should be used for the payment calculation.
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
@@ -151,8 +150,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         address token,
         address to,
         uint256 amount,
-        uint256 safeTxGas,
-        uint256 dataGas,
+        uint256 gasLimit,
         uint256 gasPrice,
         address gasToken,
         address refundReceiver,
@@ -166,13 +164,12 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         uint256 startGas = gasleft();
         bytes32 txHash = getTransactionHash(
             token, to, amount,
-            safeTxGas, dataGas, gasPrice, gasToken, refundReceiver,
+            gasLimit, gasPrice, gasToken, refundReceiver,
             nonce
         );
         require(checkSignatures(txHash, signatures), "Invalid signatures provided");
         // Increase nonce and execute transaction.
         nonce++;
-        require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
 
         // Validate that transfer is not exceeding transfer limit, and
         // update state to keep track of spent values.
@@ -188,7 +185,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
         if (gasPrice > 0) {
-            handlePayment(startGas, dataGas, gasPrice, gasToken, refundReceiver);
+            handlePayment(startGas, gasLimit, gasPrice, gasToken, refundReceiver);
         }
     }
 
@@ -197,8 +194,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     /// @param to Address to which the tokens should be transfered
     /// @param amount Amount of tokens (or Wei) that should be transfered
     /// @param _nonce Nonce used for this Safe transaction.
-    /// @param safeTxGas Gas that should be used for the Safe transaction.
-    /// @param dataGas Gas costs for data used to trigger the safe transaction and to pay the payment transfer
+    /// @param gasLimit Maximum amount of gas to be paid.
     /// @param gasPrice Gas price that should be used for the payment calculation.
     /// @param gasToken Token address (or 0 if ETH) that is used for the payment.
     /// @param refundReceiver Address of receiver of gas payment (or 0 if tx.origin).
@@ -208,8 +204,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         address token,
         address to,
         uint256 amount,
-        uint256 safeTxGas,
-        uint256 dataGas,
+        uint256 gasLimit,
         uint256 gasPrice,
         address gasToken,
         address refundReceiver,
@@ -220,7 +215,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         returns (bytes32)
     {
         bytes32 txHash = keccak256(
-            abi.encode(TX_TYPEHASH, token, to, amount, safeTxGas, dataGas, gasPrice, gasToken, refundReceiver, _nonce)
+            abi.encode(TX_TYPEHASH, token, to, amount, gasLimit, gasPrice, gasToken, refundReceiver, _nonce)
         );
         return keccak256(
             abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, txHash)
@@ -409,14 +404,14 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
     function handlePayment(
         uint256 startGas,
-        uint256 dataGas,
+        uint256 gasLimit,
         uint256 gasPrice,
         address gasToken,
         address refundReceiver
     )
         private
     {
-        uint256 amount = ((startGas - gasleft()) + dataGas) * gasPrice;
+        uint256 amount = gasLimit.mul(gasPrice);
         // Make sure refund is within transfer limits, to prevent
         // attacker with a compromised key to empty the safe.
         require(handleTransferLimits(gasToken, amount), "Gas refund exceeds transfer limit");
