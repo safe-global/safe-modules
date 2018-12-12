@@ -174,7 +174,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     // In other words, we want to pay the receiver $1000 worth of GNO token.
     // Given the rateTokens above, we will pay (1 * 10 * 1000) / (200 * 1) = 50 GNO tokens.
     function getAdjustedTransferAmount(address token, address rateToken, uint256 amount)
-        internal view returns (uint)
+        public view returns (uint)
     {
         // transfer does not need to be adjusted since a rateToken is not given
         if(rateToken == address(0)) {
