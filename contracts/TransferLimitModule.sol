@@ -66,7 +66,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     DutchExchange dutchx;
 
     struct TransferLimit {
-        uint256 transferLimit;
+        uint256 limit;
         uint256 spent;
     }
 
@@ -113,7 +113,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         dutchx = DutchExchange(_dutchxAddr);
 
         for (uint256 i = 0; i < tokens.length; i++) {
-            transferLimits[tokens[i]].transferLimit = _transferLimits[i];
+            transferLimits[tokens[i]].limit = _transferLimits[i];
         }
     }
 
@@ -124,7 +124,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         public
         authorized
     {
-        transferLimits[token].transferLimit = transferLimit;
+        transferLimits[token].limit = transferLimit;
     }
 
     /// @dev Updates the delegate. This can only be done via a Safe transaction.
@@ -161,7 +161,6 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         require(to != address(0), "Invalid to address provided");
         require(amount > 0, "Invalid amount provided");
 
-        uint256 startGas = gasleft();
         bytes32 txHash = getTransactionHash(
             token, to, amount,
             gasLimit, gasPrice, gasToken, refundReceiver,
@@ -170,6 +169,14 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         require(checkSignatures(txHash, signatures), "Invalid signatures provided");
         // Increase nonce and execute transaction.
         nonce++;
+
+        // If time period is over, reset expenditure.
+        TransferLimit storage transferLimit = transferLimits[token];
+        if (isPeriodOver()) {
+            transferLimit.spent = 0;
+            totalWeiSpent = 0;
+            totalDaiSpent = 0;
+        }
 
         // Validate that transfer is not exceeding transfer limit, and
         // update state to keep track of spent values.
@@ -185,7 +192,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
         if (gasPrice > 0) {
-            handlePayment(startGas, gasLimit, gasPrice, gasToken, refundReceiver);
+            handlePayment(gasLimit, gasPrice, gasToken, refundReceiver);
         }
     }
 
@@ -237,15 +244,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         returns (bool)
     {
         TransferLimit storage transferLimit = transferLimits[token];
-        // If time period is over, reset expenditure.
-        if (isPeriodOver()) {
-            transferLimit.spent = 0;
-            totalWeiSpent = 0;
-            totalDaiSpent = 0;
-        }
-
         // Transfer + previous expenditure shouldn't exceed limit specified for token.
-        if (transferLimit.spent.add(amount) > transferLimit.transferLimit) {
+        if (transferLimit.spent.add(amount) > transferLimit.limit) {
             return false;
         }
 
@@ -315,6 +315,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
     function isValidTimePeriod(uint256 _timePeriod)
         internal
+        pure
         returns (bool)
     {
         if  (_timePeriod >= 1 hours &&
@@ -327,6 +328,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
     function isValidThreshold(uint256 _threshold)
         internal
+        view
         returns (bool)
     {
         if  (_threshold >= 1 &&
@@ -403,7 +405,6 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     }
 
     function handlePayment(
-        uint256 startGas,
         uint256 gasLimit,
         uint256 gasPrice,
         address gasToken,
