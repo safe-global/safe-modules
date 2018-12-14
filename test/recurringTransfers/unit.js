@@ -1,11 +1,11 @@
-const utils = require('../utils')
+const utils = require('gnosis-safe/test/utils')
 const blockTime = require('./blockTime')
 const abi = require('ethereumjs-abi')
 const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
 
 const ExposedRecurringTransfersModule = artifacts.require("./test/ExposedRecurringTransfersModule.sol")
+const DutchExchange = artifacts.require("./external/DutchExchange.sol")
 const MockContract = artifacts.require("MockContract")
-const DutchExchange = artifacts.require("DutchExchange")
 const DateTime = artifacts.require("DateTime")
 
 const SECONDS_IN_DAY = 60 * 60 * 24

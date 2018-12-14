@@ -1,4 +1,4 @@
-const utils = require('../utils')
+const utils = require('gnosis-safe/test/utils')
 const blockTime = require('./blockTime')
 const solc = require('solc')
 const abi = require('ethereumjs-abi')
@@ -97,7 +97,6 @@ contract('RecurringTransfersModule', function(accounts) {
         await token.transfer(gnosisSafe.address, tokenTransferAmount, {from: owner})
         const safeStartBalance = await token.balances(gnosisSafe.address).toNumber()
         const receiverStartBalance = await token.balances(receiver).toNumber()
-
         const signer = lw.accounts[0]
 
         const addParams = [receiver, 0, token.address, 0, tokenTransferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
@@ -317,20 +316,20 @@ const signModuleTx = async (module, params, lw, signers) => {
 const createTestToken = async (creator, balance) => {
     let source = `
     contract TestToken {
-      mapping (address => uint) public balances;
-      function TestToken() {
-          balances[msg.sender] = ${balance.toFixed()};
-      }
-      function transfer(address to, uint value) public returns (bool) {
-          require(balances[msg.sender] >= value);
-          balances[msg.sender] -= value;
-          balances[to] += value;
-      }
+        mapping (address => uint) public balances;
+        constructor() public {
+            balances[msg.sender] = ${balance.toFixed()};
+        }
+        function transfer(address to, uint value) public returns (bool) {
+            require(balances[msg.sender] >= value);
+            balances[msg.sender] -= value;
+            balances[to] += value;
+        }
     }`
-    let output = await solc.compile(source, 0);
-
-    let contractInterface = JSON.parse(output.contracts[':TestToken']['interface'])
-    let contractBytecode = '0x' + output.contracts[':TestToken']['bytecode']
+    let output = await utils.compile(source);
+    // Create test token contract
+    let contractInterface = output.interface
+    let contractBytecode = output.data
     let transactionHash = await web3.eth.sendTransaction({from: creator, data: contractBytecode, gas: 4000000})
     let receipt = web3.eth.getTransactionReceipt(transactionHash);
     const TestToken = web3.eth.contract(contractInterface)
