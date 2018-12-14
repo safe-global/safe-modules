@@ -7,8 +7,8 @@ import "gnosis-safe/contracts/base/Module.sol";
 import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "gnosis-safe/contracts/common/SignatureDecoder.sol";
-import "@gnosis.pm/dx-contracts/contracts/DutchExchange.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./external/DutchExchangeInterface.sol";
+import "./external/SafeMath.sol";
 import "./TokenPriceOracle.sol";
 
 /// @title Recurring Transfer Module - Allows an owner to create transfers that can be executed by an owner or delegate on a recurring basis
