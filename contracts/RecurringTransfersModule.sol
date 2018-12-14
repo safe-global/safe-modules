@@ -1,12 +1,12 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
-import "ethereum-datetime/contracts/DateTime.sol";
 import "gnosis-safe/contracts/base/ModuleManager.sol";
 import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/base/Module.sol";
 import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "gnosis-safe/contracts/common/SignatureDecoder.sol";
+import "./external/DateTime.sol";
 import "./external/DutchExchangeInterface.sol";
 import "./external/SafeMath.sol";
 import "./TokenPriceOracle.sol";
@@ -52,7 +52,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     function setup(address _dutchExchange)
         public
     {
-        require(_dutchExchange != 0, "A non-zero dutch exchange address must be provided.");
+        require(_dutchExchange != address(0), "A non-zero dutch exchange address must be provided.");
         dutchExchange = DutchExchange(_dutchExchange);
         setManager();
     }
@@ -110,11 +110,11 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         uint256 gasPrice,
         address gasToken,
         address refundReceiver,
-        bytes signatures
+        bytes memory signatures
     )
         public
     {
-        require(receiver != 0, "A non-zero reciever address must be provided");
+        require(receiver != address(0), "A non-zero reciever address must be provided");
         RecurringTransfer memory recurringTransfer = recurringTransfers[receiver];
         require(recurringTransfer.amount != 0, "A recurring transfer has not been created for this address");
         require(isPastMonth(recurringTransfer.lastTransferTime), "Transfer has already been executed this month");
@@ -135,7 +135,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
         recurringTransfers[receiver].lastTransferTime = uint32(now);
 
-        if (recurringTransfer.token == 0) {
+        if (recurringTransfer.token == address(0)) {
             require(manager.execTransactionFromModule(receiver, transferAmount, "", Enum.Operation.Call), "Could not execute Ether transfer");
         } else {
             bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, transferAmount);
@@ -247,13 +247,13 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         );
     }
 
-    function checkSignatures(bytes32 transactionHash, bytes signatures, address delegate)
+    function checkSignatures(bytes32 transactionHash, bytes memory signatures, address delegate)
         internal
         view
         returns (bool)
     {
         address signer = recoverKey(transactionHash, signatures, 0);
-        return signer == delegate || OwnerManager(manager).isOwner(signer);
+        return signer == delegate || OwnerManager(address(manager)).isOwner(signer);
     }
 
     function handlePayment(

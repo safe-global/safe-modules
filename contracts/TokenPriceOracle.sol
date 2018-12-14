@@ -1,5 +1,5 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
 interface TokenPriceOracle {
-    function getPrice(address token) public view returns (uint256, uint256);
+    function getPrice(address token) external view returns (uint256, uint256);
 }
