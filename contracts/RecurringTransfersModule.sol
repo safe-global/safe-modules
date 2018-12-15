@@ -7,7 +7,7 @@ import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
 import "gnosis-safe/contracts/common/SignatureDecoder.sol";
 import "./external/DateTime.sol";
-import "./external/DutchExchangeInterface.sol";
+import "./external/DutchExchange.sol";
 import "./external/SafeMath.sol";
 import "./TokenPriceOracle.sol";
 

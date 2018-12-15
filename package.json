@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "test-norpc": "truffle test",
-    "test": "run-with-testrpc -l 20000000 --noVMErrorsOnRPCResponse true 'truffle test'",
+    "test": "run-with-testrpc -l 20000000 --noVMErrorsOnRPCResponse true 'truffle test test/recurringTransfers/unit.js'",
     "lint": "solium -d contracts",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
-    "@gnosis.pm/mock-contract": "github:gnosis/mock-contract#sol_0_5_0",
+    "@gnosis.pm/mock-contract": "^3.0.4",
     "bignumber.js": "^7.1.0",
     "eth-lightwallet": "^3.0.1",
     "ethereumjs-abi": "^0.6.5",
@@ -40,7 +40,6 @@
     "web3": "0.20.6"
   },
   "dependencies": {
-    "@gnosis.pm/dx-contracts": "^1.0.7",
     "gnosis-safe": "github:gnosis/safe-contracts#v0.1.0",
     "openzeppelin-solidity": "^2.0.0",
     "truffle-hdwallet-provider": "0.0.7-beta.1"

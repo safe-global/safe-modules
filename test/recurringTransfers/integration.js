@@ -5,11 +5,11 @@ const abi = require('ethereumjs-abi')
 const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
 
 const RecurringTransfersModule = artifacts.require("./RecurringTransfersModule.sol")
+const DutchExchange = artifacts.require("./external/DutchExchange.sol")
 const ProxyFactory = artifacts.require("./gnosis-safe/contracts/proxies/ProxyFactory.sol")
 const CreateAndAddModules = artifacts.require("./gnosis-safe/contracts/libraries/CreateAndAddModules.sol")
 const GnosisSafe = artifacts.require("./gnosis-safe/contracts/GnosisSafe.sol")
 const MockContract = artifacts.require("MockContract")
-const DutchExchange = artifacts.require("DutchExchange")
 
 const GAS_PRICE = 25000000000;
 
