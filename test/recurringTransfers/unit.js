@@ -68,7 +68,51 @@ contract('RecurringTransfersModule', function(accounts) {
         const result = await exposedRecurringTransfersModule._isPastMonth(currentBlockTime - (currentDateTime.day + 3) * SECONDS_IN_DAY)
         assert.isTrue(result)
     })
+    
+    it('should get correct price of token from dutch exchange', async () => {
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
+            '0x' + abi.rawEncode(['uint', 'uint'], [10, 200]).toString('hex')
+        )
+        const result = await dutchExchange.getPriceOfTokenInLastAuction(mockGnoAddress)
+        expect([result[0].toNumber(), result[1].toNumber()]).to.eql([10, 200])
+    })
+    
+    it('should get correct price of token from recurring transfers module', async () => {
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
+            '0x' + abi.rawEncode(['uint', 'uint'], [10, 200]).toString('hex')
+        )
+        
+        const result = await exposedRecurringTransfersModule.getPrice(mockGnoAddress)
+        expect([result[0].toNumber(), result[1].toNumber()]).to.eql([10, 200])
+    })
 
+    // fails
+    it('should get correct price of token in token from recurring transfers module', async () => {
+        // make sure there is no auction between tokens
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getAuctionIndex.getData(mockGnoAddress, mockDaiAddress),
+            '0x' + abi.rawEncode(['uint'], [0]).toString('hex')
+        )
+        // 1 eth = $200
+        // mock GNO and DAI values
+        // GNO = $20
+        // DAI = $1 
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
+            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 10e18.toFixed()]).toString('hex')
+        )
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
+            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 200e18.toFixed()]).toString('hex')
+        )
+        
+        const result = await exposedRecurringTransfersModule.getPriceInToken(mockGnoAddress, mockDaiAddress)
+        assert.equal(result[0].toNumber(), 10e18.toFixed())
+        assert.equal(result[1].toNumber(), 200e18.toFixed())
+    })
+  
     // fails
     it('should adjust transfer amount properly for $1000 in GNO tokens when there is no auction between the tokens', async () => {
         // make sure there is no auction between tokens
@@ -89,32 +133,10 @@ contract('RecurringTransfersModule', function(accounts) {
             '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 200e18.toFixed()]).toString('hex')
         )
         
-        const result = await exposedRecurringTransfersModule._getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000e18)
+        const result = await exposedRecurringTransfersModule.getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000e18)
         assert.equal(result.toNumber(), 50e18)
     })
-    
-    it('should get price of token from dutch exchange', async () => {
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [10, 200]).toString('hex')
-        )
-        const result = await dutchExchange.getPriceOfTokenInLastAuction(mockGnoAddress)
-        expect([result[0].c[0], result[1].c[0]]).to.eql([10, 200])
-    });
-    
-    // fails
-    it('should get price of token from recurring transfers module', async () => {
-        await mockDutchExchange.givenAnyReturn(
-            //await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [10, 100]).toString('hex')
-        )
-        
-        console.log(await exposedRecurringTransfersModule.dutchExchange());
-        const result = await exposedRecurringTransfersModule.getPrice(mockGnoAddress)
-        expect([result[0].c[0], result[1].c[0]]).to.eql([10, 200])
-    });
-    
-    // fails
+
     it('should adjust transfer amount properly for $1000 in GNO tokens when there is an auction between the tokens', async () => {
         // make sure there is no auction between tokens
         await mockDutchExchange.givenCalldataReturn(
@@ -130,7 +152,7 @@ contract('RecurringTransfersModule', function(accounts) {
             '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 20e18.toFixed()]).toString('hex')
         )
 
-        const result = await exposedRecurringTransfersModule._getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000e18)
+        const result = await exposedRecurringTransfersModule.getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000e18)
         assert.equal(result.toNumber(), 50e18)
     })
 })
