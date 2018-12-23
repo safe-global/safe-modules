@@ -165,7 +165,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         getMonth(now) > getMonth(previousTime);
     }
 
-    // Adjust amount for the transfer rateToken if it exists
+    // @dev Adjust amount for the transfer rateToken if it exists
     // For example:
     // say GNO = 1/10 ETH and DAI = 1/200 ETH
     // token = GNO address
@@ -173,6 +173,10 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     // amount = 1000
     // In other words, we want to pay the receiver $1000 worth of GNO token.
     // Given the rateTokens above, we will pay (1 * 10 * 1000) / (200 * 1) = 50 GNO tokens.
+    // @param token The token being valued
+    // @param rateToken the token being used to calculate the value of token
+    // @param amount Amount of token being transferred in rateToken
+    // @returns the final amount of tokens to be transferd
     function getAdjustedTransferAmount(address token, address rateToken, uint256 amount)
         public view returns (uint)
     {
@@ -191,13 +195,19 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         return tokenToRateTokenPriceNum.mul(amount).div(tokenToRateTokenPriceDen);
     }
     
-    
+    // @dev Gets the price of a token
+    // @params token Address of the token being valued
+    // @returns Price of the token
     function getPrice(address token)
         public view returns (uint256, uint256)
     {
         return dutchExchange.getPriceOfTokenInLastAuction(token);
     }
     
+    // @dev Gets the price of a token
+    // @params token Address of the token being valued
+    // @params rateToken Address of a token used to calculate the price 
+    // @returns Price of the token
     function getPriceInToken(address token, address rateToken)
         public view returns (uint256, uint256)
     {  
