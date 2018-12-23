@@ -29,14 +29,13 @@ contract('RecurringTransfersModule', function(accounts) {
         exposedRecurringTransfersModule = await ExposedRecurringTransfersModule.new()
         await exposedRecurringTransfersModule.setup(dutchExchange.address)
 
-        // fast forwarding to a consistent time prevents issues
-        // tests will start running at roughly 5 AM
-        const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
-        await wait((23 - currentHour + 5) * 60 * 60);
-
+        // tests will start running at 5 AM on the first day of next month
+        currentBlockTime = blockTime.getCurrentBlockTime()
+        await wait(blockTime.getBlockTimeAtStartOfNextMonth(currentBlockTime) - currentBlockTime)
+        
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
-        currentDateTime = blockTime.getUtcDateTime(currentBlockTime)
+        currentDateTime = blockTime.getCurrentUtcDateTime()
     })
 
     it('is currently on day and between hours', async () => {

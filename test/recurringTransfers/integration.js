@@ -60,15 +60,13 @@ contract('RecurringTransfersModule', function(accounts) {
         recurringTransfersModule = RecurringTransfersModule.at(modules[0])
         assert.equal(gnosisSafe.address, await recurringTransfersModule.manager.call())
 
-        // fast forwarding to a consistent time prevents issues
-        // tests will start running at roughly 5 AM
-        // TODO: handle days less than 29
-        const currentHour = blockTime.getUtcDateTime(blockTime.getCurrentBlockTime()).hour
-        await wait((23 - currentHour + 5) * 60 * 60);
-
+        // tests will start running at 5 AM on the first day of next month
+        currentBlockTime = blockTime.getCurrentBlockTime()
+        await wait(blockTime.getBlockTimeAtStartOfNextMonth(currentBlockTime) - currentBlockTime)
+        
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
-        currentDateTime = blockTime.getUtcDateTime(currentBlockTime)
+        currentDateTime = blockTime.getCurrentUtcDateTime()
     })
 
     it('should transfer eth', async () => {
@@ -229,6 +227,7 @@ contract('RecurringTransfersModule', function(accounts) {
         assert.equal(receiverEndBalance, receiverStartBalance, "expected receiver balance to be the same after transfer")
     })
 
+    // fails
     it('should transfer adjusted value of ERC20 tokens', async () => {
         await web3.eth.sendTransaction({from: owner, to: gnosisSafe.address, value: web3.toWei(0.1, 'ether')})
         const tokenTransferAmount = 1e18
