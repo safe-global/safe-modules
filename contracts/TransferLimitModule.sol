@@ -28,6 +28,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     // );
     bytes32 public constant TX_TYPEHASH = 0x7e238b3eff6b836db6c4c9737afec4334a0d6dd13c3bbba4407f3e8506784733;
 
+    event TransferFailed(bytes32 txHash);
+
     bytes32 public domainSeparator;
 
     // transferLimits mapping maps token address to transfer limit settings.
@@ -170,22 +172,30 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
         // If time period is over, reset expenditure.
         if (isPeriodOver()) {
-            TransferLimit storage transferLimit = transferLimits[token];
-            transferLimit.spent = 0;
+            transferLimits[token].spent = 0;
             totalWeiSpent = 0;
             totalDaiSpent = 0;
         }
 
         // Validate that transfer is not exceeding transfer limit, and
-        // update state to keep track of spent values.
-        require(handleTransferLimits(token, amount), "Transfer exceeds limits");
+        // compute new expenditure values to be updated after transfering.
+        (bool isUnderLimit, uint256 weiSpent, uint256 daiSpent) = checkTransferLimits(token, amount);
+        require(isUnderLimit, "Transfer exceeds limits");
 
         // Perform transfer by invoking manager
+        bool ok;
         if (token == address(0)) {
-            require(manager.execTransactionFromModule(to, amount, "", Enum.Operation.Call), "Could not execute ether transfer");
+            ok = manager.execTransactionFromModule(to, amount, "", Enum.Operation.Call);
         } else {
             bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", to, amount);
-            require(manager.execTransactionFromModule(token, 0, data, Enum.Operation.Call), "Could not execute token transfer");
+            ok = manager.execTransactionFromModule(token, 0, data, Enum.Operation.Call);
+        }
+
+        // Only update transfer limits if transfer happened.
+        if (ok) {
+            updateTransferLimits(token, amount, weiSpent, daiSpent);
+        } else {
+            emit TransferFailed(txHash);
         }
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
@@ -235,33 +245,29 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         return now - (now % timePeriod);
     }
 
-    function handleTransferLimits(address token, uint256 amount)
+    function checkTransferLimits(address token, uint256 amount)
         internal
-        returns (bool)
+        view
+        returns (bool, uint256, uint256)
     {
         TransferLimit storage transferLimit = transferLimits[token];
         // Transfer + previous expenditure shouldn't exceed limit specified for token.
         if (transferLimit.spent.add(amount) > transferLimit.limit) {
-            return false;
+            return (false, 0, 0);
         }
 
         // If a global cap is set, transfer amount + value of all
         // previous expenditures (for all tokens) shouldn't exceed global limit.
-        if (!isUnderGlobalCap(token, amount)) {
-            return false;
-        }
-
-        transferLimits[token].spent = transferLimits[token].spent.add(amount);
-
-        return true;
+        return isUnderGlobalCap(token, amount);
     }
 
     function isUnderGlobalCap(address token, uint256 amount)
         internal
-        returns (bool)
+        view
+        returns (bool, uint256, uint256)
     {
         if (globalWeiCap == 0 && globalDaiCap == 0) {
-            return true;
+            return (true, 0, 0);
         }
 
         // Calculate value in ether.
@@ -273,10 +279,10 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         uint256 weiAmount = ethNum.mul(10**18).div(ethDen);
         uint256 weiSpent = totalWeiSpent.add(weiAmount);
         if (globalWeiCap > 0 && weiSpent > globalWeiCap) {
-            return false;
+            return (false, 0, 0);
         }
-        totalWeiSpent = weiSpent;
 
+        uint256 daiSpent;
         if (globalDaiCap != 0) {
             // Calculate value in dai.
             uint256 daiNum;
@@ -284,14 +290,13 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
             (daiNum, daiDen) = getDaiAmount(ethNum, ethDen);
 
             uint256 daiAmount = daiNum.div(daiDen);
-            uint256 daiSpent = totalDaiSpent.add(daiAmount);
+            daiSpent = totalDaiSpent.add(daiAmount);
             if (daiSpent > globalDaiCap) {
-                return false;
+                return (false, 0, 0);
             }
-            totalDaiSpent = daiSpent;
         }
 
-        return true;
+        return (true, weiSpent, daiSpent);
     }
 
     function isPeriodOver()
@@ -307,6 +312,19 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         }
 
         return false;
+    }
+
+    function updateTransferLimits(address token, uint256 amount, uint256 weiSpent, uint256 daiSpent)
+        internal
+    {
+        transferLimits[token].spent = transferLimits[token].spent.add(amount);
+        if (weiSpent > 0 && weiSpent > totalWeiSpent) {
+            totalWeiSpent = weiSpent;
+
+            if (daiSpent > 0 && daiSpent > totalDaiSpent) {
+                totalDaiSpent = daiSpent;
+            }
+        }
     }
 
     function isValidTimePeriod(uint256 _timePeriod)
@@ -373,6 +391,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
     function getEthAmount(address token, uint256 amount)
         internal
+        view
         returns (uint256, uint256)
     {
         // Amount is in wei
@@ -409,7 +428,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     {
         // Make sure refund is within transfer limits, to prevent
         // attacker with a compromised key to empty the safe.
-        require(handleTransferLimits(gasToken, amount), "Gas refund exceeds transfer limit");
+        (bool isUnderLimit, uint256 weiSpent, uint256 daiSpent) = checkTransferLimits(gasToken, amount);
+        require(isUnderLimit, "Gas refund exceeds transfer limit");
 
         // solium-disable-next-line security/no-tx-origin
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
@@ -419,5 +439,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
             bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", receiver, amount);
             require(manager.execTransactionFromModule(gasToken, 0, data, Enum.Operation.Call), "Could not refund token gas");
         }
+
+        updateTransferLimits(gasToken, amount, weiSpent, daiSpent);
     }
 }

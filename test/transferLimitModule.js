@@ -418,14 +418,17 @@ contract('TransferLimitModule gas refund', (accounts) => {
     let module
     let lw
     let token
+    let failingToken
     let dutchx
     let relayer = accounts[1]
 
     beforeEach(async () => {
         lw = await utils.createLightwallet()
 
-        // Mock token that always transfers successfully
         token = await mockToken()
+
+        failingToken = await MockContract.new()
+        await failingToken.givenAnyRevert()
 
         // Mock DutchExchange
         dutchx = await mockDutchx()
@@ -434,7 +437,7 @@ contract('TransferLimitModule gas refund', (accounts) => {
             TransferLimitModule,
             lw,
             accounts,
-            [[0, token.address], [web3.toWei('500000', 'gwei'), 200], 60 * 60 * 24, false, 0, 0, 2, 0, dutchx.address],
+            [[0, token.address, failingToken.address], [web3.toWei('500000', 'gwei'), 200, 20], 60 * 60 * 24, false, 0, 0, 2, 0, dutchx.address],
             [lw.accounts[0], lw.accounts[1], lw.accounts[2], accounts[0]],
             3
         )
@@ -496,6 +499,32 @@ contract('TransferLimitModule gas refund', (accounts) => {
             await reverts(module.executeTransferLimit(...params, sigs, { from: relayer, gasPrice })),
             'expected tx to revert when gas refund exceeds limit'
         )
+    })
+
+    it('should refund even when transfer fails', async () => {
+        // Estimate gas usage
+        let gasPrice = new BigNumber(10 ** 9) // 1 Gwei
+        let params = [failingToken.address, accounts[2], 5, gasPrice, 0, 0]
+        let signers = [lw.accounts[0], lw.accounts[1]]
+        let sigs = await signModuleTx(module, params, lw, signers)
+        let gasEstimate = await module.executeTransferLimit.estimateGas(...params, sigs, { from: relayer, gasPrice: 10 ** 9 })
+
+        // Calculate gasLimit based on estimate
+        let gasLimit = (new BigNumber(gasEstimate)).add(5000)
+        params = [failingToken.address, accounts[2], 5, gasLimit.mul(gasPrice), 0, 0]
+        sigs = await signModuleTx(module, params, lw, signers)
+
+        let balance = await web3.eth.getBalance(relayer)
+        let tx = await module.executeTransferLimit(...params, sigs, { from: relayer, gasPrice: gasPrice })
+        assert(tx.logs[0].event === 'TransferFailed', 'transfer should have failed')
+
+        let spent = (await module.transferLimits.call(failingToken.address))[1]
+        assert(spent.eq(0), 'token should not be spent')
+
+        let gasUsed = gasPrice.mul(tx.receipt.gasUsed)
+        let gasRefundAmount = gasLimit.mul(gasPrice)
+        let newBalance = await web3.eth.getBalance(relayer)
+        assert(newBalance.eq(balance.sub(gasUsed).add(gasRefundAmount)), 'relayer should be refunded')
     })
 })
 
