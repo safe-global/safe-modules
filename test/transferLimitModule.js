@@ -79,7 +79,7 @@ contract('TransferLimitModule authorization', (accounts) => {
     })
 
     it('should withdraw only when authorized', async () => {
-        let params = [0, accounts[0], 50, 0, 0, 0, 0]
+        let params = [0, accounts[0], 50, 0, 0, 0]
         let sigs = await signModuleTx(module, params, lw, [lw.accounts[0]])
 
         // Withdrawal should fail for only one signature
@@ -100,7 +100,7 @@ contract('TransferLimitModule authorization', (accounts) => {
         let delegate = await module.delegate.call()
         assert.equal(delegate, lw.accounts[3])
 
-        let params = [0, accounts[0], 50, 0, 0, 0, 0]
+        let params = [0, accounts[0], 50, 0, 0, 0]
         let sigs = await signModuleTx(module, params, lw, [lw.accounts[3]])
 
         // Withdrawal should fail for only one signature by delegate
@@ -146,7 +146,7 @@ contract('TransferLimitModule transfer limits', (accounts) => {
     })
 
     it('should withdraw ether within transfer limit', async () => {
-        let params = [0, accounts[0], 50, 0, 0, 0, 0]
+        let params = [0, accounts[0], 50, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
 
@@ -158,7 +158,7 @@ contract('TransferLimitModule transfer limits', (accounts) => {
     })
 
     it('should not withdraw ether more than limit', async () => {
-        let params = [0, accounts[0], 150, 0, 0, 0, 0]
+        let params = [0, accounts[0], 150, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
 
@@ -169,7 +169,7 @@ contract('TransferLimitModule transfer limits', (accounts) => {
     })
 
     it('should withdraw token within transfer limit', async () => {
-        let params = [token.address, accounts[0], 50, 0, 0, 0, 0]
+        let params = [token.address, accounts[0], 50, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
 
@@ -179,7 +179,7 @@ contract('TransferLimitModule transfer limits', (accounts) => {
     })
 
     it('should not withdraw token more than limit', async () => {
-        let params = [token.address, accounts[0], 250, 0, 0, 0, 0]
+        let params = [token.address, accounts[0], 250, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
 
@@ -190,7 +190,7 @@ contract('TransferLimitModule transfer limits', (accounts) => {
     })
 
     it('should withdraw within global ether limit', async () => {
-        let params = [0, accounts[0], 70, 0, 0, 0, 0]
+        let params = [0, accounts[0], 70, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
@@ -200,7 +200,7 @@ contract('TransferLimitModule transfer limits', (accounts) => {
         let totalWeiSpent = await module.totalWeiSpent.call()
         assert(totalWeiSpent.eq(70), 'total ether spent takes token transfer into account')
 
-        params = [token.address, accounts[0], 70, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 70, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
 
@@ -211,12 +211,12 @@ contract('TransferLimitModule transfer limits', (accounts) => {
     })
 
     it('should not withdraw token more than global ether limit', async () => {
-        let params = [token.address, accounts[0], 70, 0, 0, 0, 0]
+        let params = [token.address, accounts[0], 70, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
 
-        params = [0, accounts[0], 90, 0, 0, 0, 0]
+        params = [0, accounts[0], 90, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         assert(
             await reverts(module.executeTransferLimit(...params, sigs, { from: accounts[0] })),
@@ -252,14 +252,14 @@ contract('TransferLimitModule global dai transfer limit', (accounts) => {
     })
 
     it('should withdraw token within global dai limit', async () => {
-        let params = [0, accounts[0], 90, 0, 0, 0, 0]
+        let params = [0, accounts[0], 90, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         let daiSpent = await module.totalDaiSpent.call()
         assert(daiSpent.eq(90), 'dai expenditure is updated after transfer')
 
-        params = [token.address, accounts[0], 70, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 70, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         daiSpent = await module.totalDaiSpent.call()
@@ -267,7 +267,7 @@ contract('TransferLimitModule global dai transfer limit', (accounts) => {
     })
 
     it('should not withdraw more than global dai limit', async () => {
-        let params = [token.address, accounts[0], 180, 0, 0, 0, 0]
+        let params = [token.address, accounts[0], 180, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
 
@@ -308,7 +308,7 @@ contract('TransferLimitModule time period', (accounts) => {
         let target = (now - (now % timePeriod)) + (timePeriod + 60)
         await wait(target)
 
-        let params = [0, accounts[0], 70, 0, 0, 0, 0]
+        let params = [0, accounts[0], 70, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
@@ -318,7 +318,7 @@ contract('TransferLimitModule time period', (accounts) => {
         // Fast forward one hour
         await wait(60 * 60)
 
-        params = [token.address, accounts[0], 70, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 70, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         totalWeiSpent = await module.totalWeiSpent.call()
@@ -327,7 +327,7 @@ contract('TransferLimitModule time period', (accounts) => {
         // Fast forward one hour
         await wait(60 * 60)
 
-        params = [token.address, accounts[0], 30, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 30, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         // Should fail as limit will be exceeded
         assert(
@@ -338,7 +338,7 @@ contract('TransferLimitModule time period', (accounts) => {
         // Fast forward one day
         await wait(timePeriod)
 
-        params = [token.address, accounts[0], 140, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 140, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         totalWeiSpent = await module.totalWeiSpent.call()
@@ -375,7 +375,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         let target = (now - (now % timePeriod)) + (timePeriod + 60)
         await wait(target)
 
-        let params = [0, accounts[0], 70, 0, 0, 0, 0]
+        let params = [0, accounts[0], 70, 0, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
@@ -385,7 +385,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         // Fast forward one hour
         await wait(60 * 60)
 
-        params = [token.address, accounts[0], 70, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 70, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         totalWeiSpent = await module.totalWeiSpent.call()
@@ -394,7 +394,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         // Fast forward one hour
         await wait(60 * 60)
 
-        params = [token.address, accounts[0], 30, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 30, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         // Should fail as limit will be exceeded
         assert(
@@ -405,7 +405,7 @@ contract('TransferLimitModule rolling time period', (accounts) => {
         // Fast forward one day
         await wait(timePeriod)
 
-        params = [token.address, accounts[0], 140, 0, 0, 0, 0]
+        params = [token.address, accounts[0], 140, 0, 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         totalWeiSpent = await module.totalWeiSpent.call()
@@ -445,14 +445,14 @@ contract('TransferLimitModule gas refund', (accounts) => {
     it('should refund relayer with ether according to gasLimit', async () => {
         // Estimate gas usage
         let gasPrice = new BigNumber(10 ** 9) // 1 Gwei
-        let params = [0, accounts[2], 50, 1, gasPrice, 0, 0]
+        let params = [0, accounts[2], 50, gasPrice, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         let gasEstimate = await module.executeTransferLimit.estimateGas(...params, sigs, { from: relayer, gasPrice: 10 ** 9 })
 
         // Calculate gasLimit based on estimate
         let gasLimit = (new BigNumber(gasEstimate)).add(5000)
-        params = [0, accounts[2], 50, gasLimit, gasPrice, 0, 0]
+        params = [0, accounts[2], 50, gasLimit.mul(gasPrice), 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
 
         let balance = await web3.eth.getBalance(relayer)
@@ -467,7 +467,7 @@ contract('TransferLimitModule gas refund', (accounts) => {
         let balance = await web3.eth.getBalance(relayer)
         let gasLimit = new BigNumber(10)
         let gasPrice = new BigNumber(1)
-        let params = [0, accounts[2], 50, gasLimit, gasPrice, token.address, 0]
+        let params = [0, accounts[2], 50, gasLimit.mul(gasPrice), token.address, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
 
@@ -482,14 +482,14 @@ contract('TransferLimitModule gas refund', (accounts) => {
 
     it('should fail if refund exceeds transfer limits', async () => {
         let gasPrice = new BigNumber(10 ** 9) // 1 Gwei
-        let params = [0, accounts[2], 50, 1, gasPrice, 0, 0]
+        let params = [0, accounts[2], 50, gasPrice, 0, 0]
         let signers = [lw.accounts[0], lw.accounts[1]]
         let sigs = await signModuleTx(module, params, lw, signers)
         let gasEstimate = await module.executeTransferLimit.estimateGas(...params, sigs, { from: relayer, gasPrice: 10 ** 9 })
 
         let gasLimit = (new BigNumber(gasEstimate)).add(5000)
         let amount = web3.toWei('400000', 'gwei')
-        params = [0, accounts[2], amount, gasLimit, gasPrice, 0, 0]
+        params = [0, accounts[2], amount, gasLimit.mul(gasPrice), 0, 0]
         sigs = await signModuleTx(module, params, lw, signers)
 
         assert(
