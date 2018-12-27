@@ -171,8 +171,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         nonce++;
 
         // If time period is over, reset expenditure.
-        TransferLimit storage transferLimit = transferLimits[token];
         if (isPeriodOver()) {
+            TransferLimit storage transferLimit = transferLimits[token];
             transferLimit.spent = 0;
             totalWeiSpent = 0;
             totalDaiSpent = 0;
