@@ -501,7 +501,7 @@ contract('TransferLimitModule gas refund', (accounts) => {
         )
     })
 
-    it('should refund even when transfer fails', async () => {
+    it('should refund even when token transfer fails', async () => {
         // Estimate gas usage
         let gasPrice = new BigNumber(10 ** 9) // 1 Gwei
         let params = [failingToken.address, accounts[2], 5, gasPrice, 0, 0]
@@ -525,6 +525,42 @@ contract('TransferLimitModule gas refund', (accounts) => {
         let gasRefundAmount = gasLimit.mul(gasPrice)
         let newBalance = await web3.eth.getBalance(relayer)
         assert(newBalance.eq(balance.sub(gasUsed).add(gasRefundAmount)), 'relayer should be refunded')
+    })
+
+    it('should refund with tokens even when ether transfer fails', async () => {
+        let res = await setupModule(
+            TransferLimitModule,
+            lw,
+            accounts,
+            [[0, token.address, failingToken.address], [web3.toWei('500000', 'gwei'), 200, 20], 60 * 60 * 24, false, 0, 0, 2, 0, dutchx.address],
+            [lw.accounts[0], lw.accounts[1], lw.accounts[2], accounts[0]],
+            3,
+            0 // No ether in safe
+        )
+        safe = res[0]
+        module = res[1]
+
+        let balance = await web3.eth.getBalance(relayer)
+        let gasLimit = new BigNumber(10)
+        let gasPrice = new BigNumber(1)
+        let params = [0, accounts[2], 50, gasLimit.mul(gasPrice), token.address, 0]
+        let signers = [lw.accounts[0], lw.accounts[1]]
+        let sigs = await signModuleTx(module, params, lw, signers)
+
+        await token.reset()
+        let tx = await module.executeTransferLimit(...params, sigs, { from: relayer, gasPrice: 10 ** 9 })
+        assert.equal(tx.logs[0].event, 'TransferFailed', 'transfer should have failed')
+
+        let gasUsed = (new BigNumber(10 ** 9)).mul(tx.receipt.gasUsed)
+        let newBalance = await web3.eth.getBalance(relayer)
+        assert(newBalance.eq(balance.sub(gasUsed)), 'relayer should have paid gasUsed')
+
+        let spent = (await module.transferLimits.call(token.address))[1]
+        assert(spent.eq(10), 'gas refund must be reflected in spent tokens')
+
+        let transferMethod = web3.sha3('transfer(address,uint256)').slice(0, 10)
+        let invocationCount = await token.invocationCountForMethod.call(transferMethod)
+        assert.equal(invocationCount, 1, 'transfer should have been called for token mock')
     })
 })
 
@@ -567,7 +603,7 @@ const mockDutchx = async () => {
     return dutchx
 }
 
-const setupModule = async (moduleContract, lw, accounts, params, safeOwners, safeThreshold) => {
+const setupModule = async (moduleContract, lw, accounts, params, safeOwners, safeThreshold, safeBalance = web3.toWei(1, 'ether')) => {
     // Create Master Copies
     let proxyFactory = await ProxyFactory.new()
     let createAndAddModules = await CreateAndAddModules.new()
@@ -588,7 +624,7 @@ const setupModule = async (moduleContract, lw, accounts, params, safeOwners, saf
     module = moduleContract.at(modules[0])
 
     // Deposit 1 ether
-    await web3.eth.sendTransaction({ from: accounts[0], to: safe.address, value: web3.toWei(1, 'ether') })
+    await web3.eth.sendTransaction({ from: accounts[0], to: safe.address, value: safeBalance })
 
     return [ safe, module ]
 }
