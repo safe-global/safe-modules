@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
-    "@gnosis.pm/mock-contract": "gnosis/mock-contract#master",
+    "@gnosis.pm/mock-contract": "github:g-r-a-n-t/mock-contract#master",
     "bignumber.js": "^7.1.0",
     "eth-lightwallet": "^3.0.1",
     "ethereumjs-abi": "^0.6.5",
