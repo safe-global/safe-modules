@@ -67,21 +67,9 @@ contract('RecurringTransfersModule', function(accounts) {
         const result = await exposedRecurringTransfersModule._isPastMonth(currentBlockTime - (currentDateTime.day + 3) * SECONDS_IN_DAY)
         assert.isTrue(result)
     })
-    
-    it('should get correct price of token from dutch exchange', async () => {
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [10, 200]).toString('hex')
-        )
-        const result = await dutchExchange.getPriceOfTokenInLastAuction(mockGnoAddress)
-        expect([result[0].toNumber(), result[1].toNumber()]).to.eql([10, 200])
-    })
-    
+        
     it('should get correct price of token from recurring transfers module', async () => {
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [10, 200]).toString('hex')
-        )
+        await mockPriceOfTokenInLastAuction(mockGnoAddress, [10, 200])
         
         const result = await exposedRecurringTransfersModule.getPrice(mockGnoAddress)
         expect([result[0].toNumber(), result[1].toNumber()]).to.eql([10, 200])
@@ -89,23 +77,14 @@ contract('RecurringTransfersModule', function(accounts) {
 
     it('should get correct price of token in token from recurring transfers module', async () => {
         // there is no past auction between tokens
-        await mockDutchExchange.givenCalldataReturnUint(
-            await dutchExchange.contract.getAuctionIndex.getData(mockGnoAddress, mockDaiAddress),
-            0
-        )
+        await mockAuctionIndex(mockGnoAddress, mockDaiAddress, 0)
         
         // 1 eth = $200
         // mock GNO and DAI values
         // GNO = $20
         // DAI = $1 
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 10e18.toFixed()]).toString('hex')
-        )
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 200e18.toFixed()]).toString('hex')
-        )
+        await mockPriceOfTokenInLastAuction(mockGnoAddress, [1e18.toFixed(), 10e18.toFixed()])
+        await mockPriceOfTokenInLastAuction(mockDaiAddress, [1e18.toFixed(), 200e18.toFixed()])
           
         const result = await exposedRecurringTransfersModule.getPriceInToken(mockGnoAddress, mockDaiAddress)
         assert.equal(result[0].toNumber(), 10e36.toFixed())
@@ -114,22 +93,14 @@ contract('RecurringTransfersModule', function(accounts) {
   
     it('should adjust transfer amount properly for $1000 in GNO tokens when there is no auction between the tokens', async () => {
         // there is no past auction between tokens
-        await mockDutchExchange.givenCalldataReturnUint(
-            await dutchExchange.contract.getAuctionIndex.getData(mockGnoAddress, mockDaiAddress),
-            0
-        )
+        await mockAuctionIndex(mockGnoAddress, mockDaiAddress, 0)
+        
         // 1 eth = $200
         // mock GNO and DAI values
         // GNO = $20
         // DAI = $1 
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockGnoAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 10e18.toFixed()]).toString('hex')
-        )
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(mockDaiAddress),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 200e18.toFixed()]).toString('hex')
-        )
+        await mockPriceOfTokenInLastAuction(mockGnoAddress, [1e18.toFixed(), 10e18.toFixed()])
+        await mockPriceOfTokenInLastAuction(mockDaiAddress, [1e18.toFixed(), 200e18.toFixed()])
         
         const result = await exposedRecurringTransfersModule.getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000e18)
         assert.equal(result.toNumber(), 50e18)
@@ -137,20 +108,36 @@ contract('RecurringTransfersModule', function(accounts) {
 
     it('should adjust transfer amount properly for $1000 in GNO tokens when there is an auction between the tokens', async () => {
         // there is a past auction between tokens
-        await mockDutchExchange.givenCalldataReturnUint(
-            await dutchExchange.contract.getAuctionIndex.getData(mockGnoAddress, mockDaiAddress),
-            1
-        )
+        await mockAuctionIndex(mockGnoAddress, mockDaiAddress, 1)
+        
         // 1 eth = $200
         // mock GNO and DAI values
         // GNO = $20
         // DAI = $1 
-        await mockDutchExchange.givenCalldataReturn(
-            await dutchExchange.contract.getPriceInPastAuction.getData(mockGnoAddress, mockDaiAddress, 1),
-            '0x' + abi.rawEncode(['uint', 'uint'], [1e18.toFixed(), 20e18.toFixed()]).toString('hex')
-        )
+        await mockPriceInPastAuction(mockGnoAddress, mockDaiAddress, 1, [1e18.toFixed(), 20e18.toFixed()])
 
         const result = await exposedRecurringTransfersModule.getAdjustedTransferAmount(mockGnoAddress, mockDaiAddress, 1000e18)
         assert.equal(result.toNumber(), 50e18)
     })
+
+    const mockPriceOfTokenInLastAuction = async (token, price) => {
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getPriceOfTokenInLastAuction.getData(token),
+            '0x' + abi.rawEncode(['uint', 'uint'], price).toString('hex')
+        )
+    }
+    
+    const mockAuctionIndex = async (token1, token2, index) => {
+        await mockDutchExchange.givenCalldataReturnUint(
+            await dutchExchange.contract.getAuctionIndex.getData(token1, token2),
+            index
+        )
+    }
+    
+    const mockPriceInPastAuction = async (token1, token2, index, price) => {
+        await mockDutchExchange.givenCalldataReturn(
+            await dutchExchange.contract.getPriceInPastAuction.getData(token1, token2, index),
+            '0x' + abi.rawEncode(['uint', 'uint'], price).toString('hex')
+        )
+    }
 })
