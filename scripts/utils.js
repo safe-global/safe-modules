@@ -2,7 +2,7 @@ module.exports = (web3) => {
   const util = require('util')
   const solc = require('solc')
   const lightwallet = require('eth-lightwallet')
-  const abi = require("ethereumjs-abi")
+  const abi = require('ethereumjs-abi')
   const ModuleDataWrapper = web3.eth.contract([{"constant":false,"inputs":[{"name":"data","type":"bytes"}],"name":"setup","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}])
 
   function createAndAddModulesData(dataArray) {
@@ -75,12 +75,21 @@ module.exports = (web3) => {
       console.log("Gas costs for " + subject + ": " + receipt.gasUsed)
   }
 
-  async function createLightwallet() {
+  function createRandomSeed() {
+    return lightwallet.keystore.generateRandomSeed()
+  }
+
+  async function createLightwallet(seedPhrase) {
+      let randomSeedPhrase
+      if (!seedPhrase) {
+        randomSeedPhrase = createRandomSeed()
+      }
+
       // Create lightwallet accounts
       const createVault = util.promisify(lightwallet.keystore.createVault).bind(lightwallet.keystore)
       const keystore = await createVault({
           hdPathString: "m/44'/60'/0'/0",
-          seedPhrase: "pull rent tower word science patrol economy legal yellow kit frequent fat",
+          seedPhrase: seedPhrase || randomSeedPhrase,
           password: "test",
           salt: "testsalt"
       })
@@ -152,6 +161,7 @@ module.exports = (web3) => {
 
   return Object.assign(exports, {
       createAndAddModulesData,
+      createRandomSeed,
       currentTimeNs,
       compile,
       getParamFromTxEvent,
