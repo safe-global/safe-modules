@@ -15,7 +15,7 @@ import "./TokenPriceOracle.sol";
 /// @author Grant Wuerker - <gwuerker@gmail.com>
 contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDecoder, DateTime, TokenPriceOracle {
     using SafeMath for uint256;
-  
+
     string public constant NAME = "Recurring Transfers Module";
     string public constant VERSION = "0.1.0";
 
@@ -184,7 +184,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         if(rateToken == address(0)) {
             return amount;
         }
-        
+
         uint256 tokenToRateTokenPriceNum;
         uint256 tokenToRateTokenPriceDen;
         (tokenToRateTokenPriceNum, tokenToRateTokenPriceDen) = getPriceInToken(token, rateToken);
@@ -194,7 +194,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
         return tokenToRateTokenPriceNum.mul(amount).div(tokenToRateTokenPriceDen);
     }
-    
+
     // @dev Gets the price of a token
     // @params token Address of the token being valued
     // @returns Price of the token
@@ -203,32 +203,32 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     {
         return dutchExchange.getPriceOfTokenInLastAuction(token);
     }
-    
+
     // @dev Gets the price of a token
     // @params token Address of the token being valued
-    // @params rateToken Address of a token used to calculate the price 
+    // @params rateToken Address of a token used to calculate the price
     // @returns Price of the token
     function getPriceInToken(address token, address rateToken)
         public view returns (uint256, uint256)
-    {  
+    {
         uint256 auctionIndex = dutchExchange.getAuctionIndex(token, rateToken);
         if(auctionIndex > 0) {
             return dutchExchange.getPriceInPastAuction(token, rateToken, auctionIndex);
         }
-        
+
         uint256 tokenPriceNum = 1;
         uint256 tokenPriceDen = 1;
         // a token is being transfered
         if(token != address(0)) {
-          (tokenPriceNum, tokenPriceDen) = getPrice(token);
+            (tokenPriceNum, tokenPriceDen) = getPrice(token);
         }
 
         uint256 rateTokenPriceNum;
         uint256 rateTokenPriceDen;
         (rateTokenPriceNum, rateTokenPriceDen) = getPrice(rateToken);
-        
+
         return (rateTokenPriceNum.mul(tokenPriceDen), rateTokenPriceDen.mul(tokenPriceNum));
-    }    
+    }
 
     /// @dev Returns hash to be signed by owners.
     /// @param receiver The address that will receive tokens.

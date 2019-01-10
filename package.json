@@ -11,7 +11,7 @@
   "scripts": {
     "test-norpc": "truffle test",
     "test": "run-with-testrpc -l 20000000 --noVMErrorsOnRPCResponse true 'truffle test'",
-    "lint": "solium -d contracts",
+    "lint": "./node_modules/solium/bin/solium.js -d contracts",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
   "repository": {
@@ -37,6 +37,7 @@
     "random-buffer": "*",
     "run-with-testrpc": "^0.3.0",
     "solidity-coverage": "^0.4.15",
+    "solium": "^1.2.1",
     "web3": "0.20.6"
   },
   "dependencies": {
