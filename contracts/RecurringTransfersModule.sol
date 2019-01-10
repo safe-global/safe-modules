@@ -24,12 +24,6 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
     // recurringTransfers maps the composite hash of a token and account address to a recurring transfer struct.
     mapping (address => RecurringTransfer) public recurringTransfers;
 
-    // gasPriceLimits maps a token address to a gas price limit for transfer refunds
-    mapping (address => uint256) public gasPriceLimits;
-
-    // dataGasLimits maps a token address to a data gas limit for transfer refunds
-    mapping (address => uint256) public dataGasLimits;
-
     // nonce to invalidate previously executed transactions
     uint256 public nonce;
 
@@ -144,8 +138,6 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
         if (gasPrice > 0) {
-            require(gasPrice <= gasPriceLimits[gasToken], "Gas price is too high");
-            require(dataGas <= dataGasLimits[gasToken], "Data gas is too high");
             handlePayment(startGas, dataGas, gasPrice, gasToken, refundReceiver);
         }
     }
