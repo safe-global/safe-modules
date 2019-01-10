@@ -3,7 +3,9 @@ pragma solidity ^0.5.0;
 contract DateTime {
         /*
          *  Date and Time utilities for ethereum contracts
-         *
+         * 
+         *  This contract has been copied from https://github.com/pipermerriam/ethereum-datetime/blob/master/contracts/DateTime.sol
+         *  and modied to support Solidity 0.5.
          */
         struct _DateTime {
                 uint16 year;
