@@ -110,7 +110,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         uint256 gasPrice,
         address gasToken,
         address refundReceiver,
-        bytes memory signatures
+        bytes memory signature
     )
         public
     {
@@ -128,7 +128,7 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
             safeTxGas, dataGas, gasPrice, gasToken, refundReceiver,
             nonce
         );
-        require(checkSignatures(txHash, signatures, recurringTransfer.delegate), "Invalid signatures provided");
+        require(checkSignature(txHash, signature, recurringTransfer.delegate), "Invalid signature provided");
         // Increase nonce and execute transaction.
         nonce++;
         require(gasleft() >= safeTxGas, "Not enough gas to execute safe transaction");
@@ -257,12 +257,12 @@ contract RecurringTransfersModule is Module, SecuredTokenTransfer, SignatureDeco
         );
     }
 
-    function checkSignatures(bytes32 transactionHash, bytes memory signatures, address delegate)
+    function checkSignature(bytes32 transactionHash, bytes memory signature, address delegate)
         internal
         view
         returns (bool)
     {
-        address signer = recoverKey(transactionHash, signatures, 0);
+        address signer = recoverKey(transactionHash, signature, 0);
         return signer == delegate || OwnerManager(address(manager)).isOwner(signer);
     }
 

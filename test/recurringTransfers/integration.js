@@ -63,7 +63,7 @@ contract('RecurringTransfersModule', function(accounts) {
         // tests will start running at 5 AM on the first day of next month
         currentBlockTime = blockTime.getCurrentBlockTime()
         await wait(blockTime.getBlockTimeAtStartOfNextMonth(currentBlockTime) - currentBlockTime)
-        
+
         // update time
         currentBlockTime = blockTime.getCurrentBlockTime()
         currentDateTime = blockTime.getCurrentUtcDateTime()
@@ -121,9 +121,9 @@ contract('RecurringTransfersModule', function(accounts) {
         await addRecurringTransfer(addParams, signer)
         await executeRecurringTransfer(transferParams, signer)
 
-        const transfer2Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
+        const transfer2Sig = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sigs, {from: relayer}),
+            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sig, {from: relayer}),
             'expected recurring transfer to get rejected'
         )
 
@@ -170,9 +170,9 @@ contract('RecurringTransfersModule', function(accounts) {
         await removeRecurringTransfer(removeParams, signer)
         await wait(blockTime.getBlockTimeNextMonth(currentBlockTime) - currentBlockTime)
 
-        const transfer2Sigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
+        const transfer2Sig = await signModuleTx(recurringTransfersModule, transferParams, lw, [signer])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sigs, {from: relayer}),
+            recurringTransfersModule.executeRecurringTransfer(...transferParams, transfer2Sig, {from: relayer}),
             'expected recurring transfer to get rejected'
         )
 
@@ -214,9 +214,9 @@ contract('RecurringTransfersModule', function(accounts) {
         const addParams = [receiver, 0, 0, 0, transferAmount, currentDateTime.day, currentDateTime.hour - 1, currentDateTime.hour + 1]
         const transferParams = [receiver, 0, 0, 0, 0, 0]
         await addRecurringTransfer(addParams, signer)
-        const transferSigs = await signModuleTx(recurringTransfersModule, transferParams, lw, [rando])
+        const transferSig = await signModuleTx(recurringTransfersModule, transferParams, lw, [rando])
         await utils.assertRejects(
-            recurringTransfersModule.executeRecurringTransfer(...transferParams, transferSigs, {from: owner}),
+            recurringTransfersModule.executeRecurringTransfer(...transferParams, transferSig, {from: owner}),
             'expected recurring transfer to get rejected'
         )
 
@@ -271,11 +271,11 @@ contract('RecurringTransfersModule', function(accounts) {
         const data = await recurringTransfersModule.contract.addRecurringTransfer.getData(...params)
         const nonce = await gnosisSafe.nonce()
         const transactionHash = await gnosisSafe.getTransactionHash(recurringTransfersModule.address, 0, data, CALL, 0, 0, 0, 0, 0, nonce)
-        const sigs = utils.signTransaction(lw, [signer], transactionHash)
+        const sig = utils.signTransaction(lw, [signer], transactionHash)
         utils.logGasUsage(
             'add recurring transfer',
             await gnosisSafe.execTransaction(
-                recurringTransfersModule.address, 0, data, CALL, 0, 0, 0, 0, 0, sigs, {from: relayer}
+                recurringTransfersModule.address, 0, data, CALL, 0, 0, 0, 0, 0, sig, {from: relayer}
             )
         )
     }
@@ -284,21 +284,21 @@ contract('RecurringTransfersModule', function(accounts) {
         const data = await recurringTransfersModule.contract.removeRecurringTransfer.getData(...params)
         const nonce = await gnosisSafe.nonce()
         const transactionHash = await gnosisSafe.getTransactionHash(recurringTransfersModule.address, 0, data, CALL, 0, 0, 0, 0, 0, nonce)
-        const sigs = utils.signTransaction(lw, [signer], transactionHash)
+        const sig = utils.signTransaction(lw, [signer], transactionHash)
         utils.logGasUsage(
             'remove recurring transfer',
             await gnosisSafe.execTransaction(
-                recurringTransfersModule.address, 0, data, CALL, 0, 0, 0, 0, 0, sigs, {from: relayer}
+                recurringTransfersModule.address, 0, data, CALL, 0, 0, 0, 0, 0, sig, {from: relayer}
             )
         )
     }
 
     const executeRecurringTransfer = async (params, signer) => {
-        const sigs = await signModuleTx(recurringTransfersModule, params, lw, [signer])
+        const sig = await signModuleTx(recurringTransfersModule, params, lw, [signer])
         utils.logGasUsage(
             'execute recurring transfer',
             await recurringTransfersModule.executeRecurringTransfer(
-                ...params, sigs, {from: relayer}
+                ...params, sig, {from: relayer}
             )
         )
     }
@@ -307,9 +307,9 @@ contract('RecurringTransfersModule', function(accounts) {
 const signModuleTx = async (module, params, lw, signers) => {
     let nonce = await module.nonce()
     let txHash = await module.getTransactionHash(...params, nonce)
-    let sigs = utils.signTransaction(lw, signers, txHash)
+    let sig = utils.signTransaction(lw, signers, txHash)
 
-    return sigs
+    return sig
 }
 
 const createTestToken = async (creator, balance) => {
