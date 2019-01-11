@@ -2,48 +2,53 @@
 /*
  How to run the command
  ----------------------
+ The script inherits a Web3 instance from Truffle, according to the configuration
+ contained within truffle.js.
 
- - Using defaults, will generate a random seed and accounts:
+ - Using defaults, will use the configuration from truffle.js:
    npm run deploy-safe
- - By passing a seed, will use the first 2 accounts as owners
-   npm run deploy-safe -- --seed 'embrace oblige enemy live screen stem match fall answer pink afraid impulse'
+
+- On a specific network:
+   npm run deploy-safe -- --network rinkeby
+
+ - By passing a mnemonic, will use the first 2 accounts as owners
+   npm run deploy-safe -- --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect'
 
  - By passing a seed and the accounts to add as a owners
-   npm run deploy-safe -- --seed 'embrace oblige enemy live screen stem match fall answer pink afraid impulse' \
-     --owners '0x800612b6c61883dd44d4e3e6e8f1a1a821ca5fe2,0xa54df3627c7f162ff533377ee353baf9ac8fbf1b,0x8f788b2a8f87e6083db5d8a0d8d0dff898e2a0c0'
+   npm run deploy-safe -- \
+     --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect' \
+     --owners '0x90f8bf6a479f320ead074411a4b0e7944ea8c9c1,0xffcf8fdee72ac11b5c542428b35eef5769c409f0,0x22d491bde2303f2f43325b2108d26f1eaba1e32b'
 
  - By passing a seed, the owners and the threshold explicitally
-   npm run deploy-safe -- --seed 'embrace oblige enemy live screen stem match fall answer pink afraid impulse' \
-     --owners '0x800612b6c61883dd44d4e3e6e8f1a1a821ca5fe2,0xa54df3627c7f162ff533377ee353baf9ac8fbf1b,0x8f788b2a8f87e6083db5d8a0d8d0dff898e2a0c0' \
+   npm run deploy-safe -- \
+     --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect' \
+     --owners '0x800612b6c61883dd44d4e3e6e8f1a1a821ca5fe2,0xffcf8fdee72ac11b5c542428b35eef5769c409f0,0x22d491bde2303f2f43325b2108d26f1eaba1e32b' \
      --threshold 3
+
+The `this` variable is an object containing a set of values inherited from Truffle.
+
 */
 
-const args = require('yargs').argv;
-const Web3 = require('web3')
-// istantiate web3
-const web3 = new Web3()
+const args = require('yargs').argv
+const nodeUtils = require('util')
+const gnosisUtils = require('./utils')(this.web3) // Get web3 from injected global variables
 
-const utils = require('./utils')(web3)
-
-const CreateAndAddModules = artifacts.require("./CreateAndAddModules.sol");
 const GnosisSafe = artifacts.require("./GnosisSafe.sol");
 const ProxyFactory = artifacts.require("./ProxyFactory.sol");
 
 module.exports = async function(callback) {
-  let seedPhrase, accounts, lightWallet, owners, threshold
+  let accounts, owners, threshold
 
-  if (!args.seed) {
-    seedPhrase = utils.createRandomSeed()
+  if (!args.mnemonic) {
+    console.log("Using Truffle Mnemonic configuration")
   } else {
-    seedPhrase = args.seed
+    console.log("Provided mnemonic: " + args.mnemonic)
   }
 
-  // Create lightwallet/Restore lightWallet
-  lightWallet = await utils.createLightwallet(seedPhrase)
-  accounts = lightWallet.accounts
+  accounts = await nodeUtils.promisify(this.web3.eth.getAccounts)()
 
   // Check owners/accounts and set threshold
-  if (!args.owners || !args.seed) {
+  if (!args.owners) {
     owners = [accounts[0], accounts[1]]
     threshold = 2
   } else {
@@ -52,24 +57,31 @@ module.exports = async function(callback) {
   }
 
   // Istantiate contracts
+  console.log("Deploy ProxyFactory")
   let proxyFactory = await ProxyFactory.new()
-  let createAndAddModules = await CreateAndAddModules.new()
+  console.log("Address: " + proxyFactory.address)
+  console.log("Deploy GnosisSafe master copy")
   let gnosisSafeMasterCopy = await GnosisSafe.new()
+  console.log("Address: " + gnosisSafeMasterCopy.address)
 
   // Initialize safe master copy with number of confirmations defined by 'threshold'
-  gnosisSafeMasterCopy.setup(owners, threshold, 0, "0x")
+  console.log("Execute GnosisSafe setup transaction")
+  const setupTx = await gnosisSafeMasterCopy.setup(owners, threshold, 0, "0x")
 
   // Create Gnosis Safe
   let gnosisSafeData = await gnosisSafeMasterCopy.contract.setup.getData(owners, threshold, 0, "0x")
+  console.log("Execute createProxy")
   let proxyInstance = await proxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData)
-  gnosisSafe = utils.getParamFromTxEvent(
+
+  gnosisSafe = gnosisUtils.getParamFromTxEvent(
       await proxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData),
       'ProxyCreation', 'proxy', proxyFactory.address, GnosisSafe, 'create Gnosis Safe',
   )
 
-  // Print info
-  console.log("Seed: " + seedPhrase)
-  console.log("Owners: ".concat(owners))
+  const contractOwners = await gnosisSafe.getOwners()
+
+  // Print generic info
+  console.log("Owners: ".concat(contractOwners))
   console.log("Threshold: " + threshold)
   console.log("Safe address: " + gnosisSafe.address)
 

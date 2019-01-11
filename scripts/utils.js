@@ -132,31 +132,64 @@ module.exports = (web3) => {
   }
 
   async function compile(source) {
-      var input = JSON.stringify({
-          'language': 'Solidity',
-          'settings': {
-              'outputSelection': {
-              '*': {
-                  '*': [ 'abi', 'evm.bytecode' ]
-              }
-              }
-          },
-          'sources': {
-              'tmp.sol': {
-                  'content': source
-              }
+    let input = {
+        'language': 'Solidity',
+        'settings': {
+            'outputSelection': {
+            '*': {
+                '*': [ 'abi', 'evm.bytecode' ]
+            }
+            }
+        },
+        'sources': {
+            'tmp.sol': {
+                'content': source
+            }
+        }
+    }
+
+
+    let output = JSON.parse(solc.compile(JSON.stringify(input)))
+    let fileOutput = output['contracts']['tmp.sol']
+    let contractOutput = fileOutput[Object.keys(fileOutput)[0]]
+    let interface = contractOutput['abi']
+    let data = '0x' + contractOutput['evm']['bytecode']['object']
+
+    return {
+        "data": data,
+        "interface": interface
+    }
+  }
+
+  // Helper function to deploy a mocked tocken
+  async function deployWETHToken(deployer) {
+      let tokenSource = `
+      contract TestToken {
+          constructor() public {}
+          function transfer(address to, uint value) public returns (bool) {
+              return true;
           }
-      })
-      let solcData = await solc.compile(input)
-      let output = JSON.parse(solcData)
-      let fileOutput = output['contracts']['tmp.sol']
-      let contractOutput = fileOutput[Object.keys(fileOutput)[0]]
-      let interface = contractOutput['abi']
-      let data = '0x' + contractOutput['evm']['bytecode']['object']
-      return {
-          "data": data,
-          "interface": interface
-      }
+          function approve(address spender, uint amount) public returns (bool){
+              return true;
+          }
+          function deposit() public payable returns (bool){
+              return true;
+          }
+
+          function withdraw() public returns (bool){
+              return true;
+          }
+      }`
+      let output = await compile(tokenSource)
+      let tokenInterface = output.interface
+      let tokenBytecode = output.data
+      let transaction = await web3.eth.sendTransaction({from: deployer, data: tokenBytecode, gas: 4000000})
+      let receipt = await web3.eth.getTransactionReceipt(transaction.transactionHash)
+      const TestToken = web3.eth.contract(tokenInterface, receipt.contractAddress)
+      return TestToken
+      // console.log(TestToken)
+      // return TestToken.at(receipt.contractAddress)
+
   }
 
   return Object.assign(exports, {
@@ -164,6 +197,7 @@ module.exports = (web3) => {
       createRandomSeed,
       currentTimeNs,
       compile,
+      deployWETHToken,
       getParamFromTxEvent,
       getParamFromTxEventWithAdditionalDefinitions,
       checkTxEvent,

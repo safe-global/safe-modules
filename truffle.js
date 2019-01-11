@@ -1,6 +1,7 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
+const args = require('yargs').argv
 
-const mnemonic = process.env.MNEMONIC
+const mnemonic = process.env.MNEMONIC || args.mnemonic
 const token = process.env.INFURA_TOKEN
 
 module.exports = {
@@ -13,11 +14,11 @@ module.exports = {
     },
     rinkeby: {
       provider: () => {
-        return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + token)
+        return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/' + token, 0, 10)
       },
       network_id: '4',
       gas: 6700000,
-      gasPrice: 1000000000, // 1 Gwei
+      gasPrice: 3000000000, // 1 Gwei
     },
     mainnet: {
       provider: () => {

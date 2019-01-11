@@ -9,6 +9,8 @@
     "test"
   ],
   "scripts": {
+    "deploy-safe": "truffle exec scripts/deploy_safe.js",
+    "deploy-dx-module": "truffle exec scripts/deploy_dx_module.js",
     "test-norpc": "truffle test",
     "test": "run-with-testrpc -l 20000000 --noVMErrorsOnRPCResponse true 'truffle test'"
   },
@@ -27,7 +29,7 @@
   },
   "devDependencies": {
     "@digix/tempo": "^0.2.0",
-    "@gnosis.pm/mock-contract": "github:gnosis/mock-contract#feature/solidity-0.5.0",
+    "@gnosis.pm/mock-contract": "github:gnosis/mock-contract#sol_0_5_0",
     "bignumber.js": "^7.1.0",
     "eth-lightwallet": "^3.0.1",
     "ethereumjs-abi": "^0.6.5",
@@ -40,7 +42,7 @@
   },
   "dependencies": {
     "gnosis-safe": "github:gnosis/safe-contracts#v0.1.0",
-    "solc": "^0.4.24",
+    "solc": "0.5.2",
     "truffle-hdwallet-provider": "0.0.7-beta.1"
   }
 }
