@@ -29,7 +29,9 @@ The `this` variable is an object containing a set of values inherited from Truff
 
 */
 
-const args = require('yargs').argv
+const args = require('yargs').option('master-copy', {
+  string: true
+}).argv
 const nodeUtils = require('util')
 const gnosisUtils = require('./utils')(this.web3) // Get web3 from injected global variables
 
@@ -37,7 +39,7 @@ const GnosisSafe = artifacts.require("./GnosisSafe.sol");
 const ProxyFactory = artifacts.require("./ProxyFactory.sol");
 
 module.exports = async function(callback) {
-  let accounts, owners, threshold
+  let accounts, owners, threshold, masterCopyAddress, masterCopyInstance
 
   if (!args.mnemonic) {
     console.log("Using Truffle Mnemonic configuration")
@@ -45,6 +47,7 @@ module.exports = async function(callback) {
     console.log("Provided mnemonic: " + args.mnemonic)
   }
 
+  masterCopyAddress = args['master-copy']
   accounts = await nodeUtils.promisify(this.web3.eth.getAccounts)()
 
   // Check owners/accounts and set threshold
@@ -60,21 +63,29 @@ module.exports = async function(callback) {
   console.log("Deploy ProxyFactory")
   let proxyFactory = await ProxyFactory.new()
   console.log("Address: " + proxyFactory.address)
-  console.log("Deploy GnosisSafe master copy")
-  let gnosisSafeMasterCopy = await GnosisSafe.new()
-  console.log("Address: " + gnosisSafeMasterCopy.address)
 
-  // Initialize safe master copy with number of confirmations defined by 'threshold'
-  console.log("Execute GnosisSafe setup transaction")
-  const setupTx = await gnosisSafeMasterCopy.setup(owners, threshold, 0, "0x")
+  // TODO master copy address is the same on Mainnet and other networks
+  // except for ganache, we can hard-code its value to avoid errors when using
+  // mainnet/rinkeby
+  if (!masterCopyAddress) {
+    console.log("Deploy GnosisSafe master copy")
+    masterCopyInstance = await GnosisSafe.new()
+    console.log("Address: " + masterCopyInstance.address)
+    // Initialize safe master copy with number of confirmations defined by 'threshold'
+    console.log("Execute GnosisSafe setup transaction")
+    await masterCopyInstance.setup(owners, threshold, 0, "0x")
+  } else {
+    console.log("Get GnosisSafe master copy instance at " + masterCopyAddress)
+    masterCopyInstance = GnosisSafe.at(masterCopyAddress)
+  }
 
   // Create Gnosis Safe
-  let gnosisSafeData = await gnosisSafeMasterCopy.contract.setup.getData(owners, threshold, 0, "0x")
+  let gnosisSafeData = await masterCopyInstance.contract.setup.getData(owners, threshold, 0, "0x")
   console.log("Execute createProxy")
-  let proxyInstance = await proxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData)
+  let proxyInstance = await proxyFactory.createProxy(masterCopyInstance.address, gnosisSafeData)
 
   gnosisSafe = gnosisUtils.getParamFromTxEvent(
-      await proxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData),
+      await proxyFactory.createProxy(masterCopyInstance.address, gnosisSafeData),
       'ProxyCreation', 'proxy', proxyFactory.address, GnosisSafe, 'create Gnosis Safe',
   )
 
