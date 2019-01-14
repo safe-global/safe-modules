@@ -11,6 +11,9 @@
 - On a specific network:
    npm run deploy-safe -- --network rinkeby
 
+- By using a specific master copy address:
+  npm run deploy-safe -- --master-copy 0x5b1869d9a4c187f2eaa108f3062412ecf0526b24
+
  - By passing a mnemonic, will use the first 2 accounts as owners
    npm run deploy-safe -- --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect'
 
@@ -64,7 +67,7 @@ module.exports = async function(callback) {
   let proxyFactory = await ProxyFactory.new()
   console.log("Address: " + proxyFactory.address)
 
-  // TODO master copy address is the same on Mainnet and other networks
+  // TODO master copy address is the same on Mainnet and on other networks
   // except for ganache, we can hard-code its value to avoid errors when using
   // mainnet/rinkeby
   if (!masterCopyAddress) {
