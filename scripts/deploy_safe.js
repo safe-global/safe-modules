@@ -11,8 +11,9 @@
 - On a specific network:
    npm run deploy-safe -- --network rinkeby
 
-- By using a specific master copy address:
-  npm run deploy-safe -- --master-copy 0x5b1869d9a4c187f2eaa108f3062412ecf0526b24
+- By using a specific master copy address and ProxyFactory:
+  npm run deploy-safe -- --master-copy 0x5b1869d9a4c187f2eaa108f3062412ecf0526b24 \
+  --proxy-factory 0xe78a0f7e598cc8b0bb87894b0f60dd2a88d6a8ab
 
  - By passing a mnemonic, will use the first 2 accounts as owners
    npm run deploy-safe -- --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect'
@@ -34,6 +35,8 @@ The `this` variable is an object containing a set of values inherited from Truff
 
 const args = require('yargs').option('master-copy', {
   string: true
+}).option('proxy-factory', {
+  string: true
 }).argv
 const nodeUtils = require('util')
 const gnosisUtils = require('./utils')(this.web3) // Get web3 from injected global variables
@@ -42,7 +45,7 @@ const GnosisSafe = artifacts.require("./GnosisSafe.sol");
 const ProxyFactory = artifacts.require("./ProxyFactory.sol");
 
 module.exports = async function(callback) {
-  let accounts, owners, threshold, masterCopyAddress, masterCopyInstance
+  let accounts, owners, threshold, masterCopyAddress, masterCopyInstance, proxyFactoryAddress, proxyFactoryInstance
 
   if (!args.mnemonic) {
     console.log("Using Truffle Mnemonic configuration")
@@ -51,6 +54,7 @@ module.exports = async function(callback) {
   }
 
   masterCopyAddress = args['master-copy']
+  proxyFactoryAddress = args['proxy-factory']
   accounts = await nodeUtils.promisify(this.web3.eth.getAccounts)()
 
   // Check owners/accounts and set threshold
@@ -62,10 +66,17 @@ module.exports = async function(callback) {
     threshold = args.threshold || owners.length - 1
   }
 
-  // Istantiate contracts
-  console.log("Deploy ProxyFactory")
-  let proxyFactory = await ProxyFactory.new()
-  console.log("Address: " + proxyFactory.address)
+  if (!proxyFactoryAddress) {
+    // Istantiate contracts
+    console.log("Deploy ProxyFactory")
+    proxyFactoryInstance = await ProxyFactory.new()
+    console.log("Proxy factory address: " + proxyFactoryInstance.address)
+  } else {
+    console.log("Get ProxyFactory instance at " + proxyFactoryAddress)
+    proxyFactoryInstance = ProxyFactory.at(proxyFactoryAddress)
+  }
+
+  let gnosisSafe, gnosisSafeData
 
   // TODO master copy address is the same on Mainnet and on other networks
   // except for ganache, we can hard-code its value to avoid errors when using
@@ -73,24 +84,18 @@ module.exports = async function(callback) {
   if (!masterCopyAddress) {
     console.log("Deploy GnosisSafe master copy")
     masterCopyInstance = await GnosisSafe.new()
-    console.log("Address: " + masterCopyInstance.address)
-    // Initialize safe master copy with number of confirmations defined by 'threshold'
-    console.log("Execute GnosisSafe setup transaction")
-    await masterCopyInstance.setup(owners, threshold, 0, "0x")
+    console.log("Master copy address: " + masterCopyInstance.address)
   } else {
     console.log("Get GnosisSafe master copy instance at " + masterCopyAddress)
     masterCopyInstance = GnosisSafe.at(masterCopyAddress)
   }
 
   // Create Gnosis Safe
-  let gnosisSafeData = await masterCopyInstance.contract.setup.getData(owners, threshold, 0, "0x")
+  gnosisSafeData = await masterCopyInstance.contract.setup.getData(owners, threshold, 0, "0x")
   console.log("Execute createProxy")
-  let proxyInstance = await proxyFactory.createProxy(masterCopyInstance.address, gnosisSafeData)
-
-  gnosisSafe = gnosisUtils.getParamFromTxEvent(
-      await proxyFactory.createProxy(masterCopyInstance.address, gnosisSafeData),
-      'ProxyCreation', 'proxy', proxyFactory.address, GnosisSafe, 'create Gnosis Safe',
-  )
+  let proxyInstance = await proxyFactoryInstance.createProxy(masterCopyInstance.address, gnosisSafeData)
+  let proxyAddress = proxyInstance.logs[0].args.proxy
+  gnosisSafe = GnosisSafe.at(proxyAddress)
 
   const contractOwners = await gnosisSafe.getOwners()
 
