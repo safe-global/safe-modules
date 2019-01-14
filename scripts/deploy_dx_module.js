@@ -45,9 +45,8 @@ module.exports = async function(callback) {
     dxModuleAddress = dxModuleInstance.address
     console.log("DX Module address: " + dxModuleAddress)
   } else {
-    console.log("Provided mnemonic: " + args.mnemonic)
     dxModuleAddress = args['dx-module']
-    console.log(dxModuleAddress)
+    console.log("DX Module address: " + dxModuleAddress)
     dxModuleInstance = DutchXModule.at(dxModuleAddress)
   }
 

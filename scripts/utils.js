@@ -162,6 +162,7 @@ module.exports = (web3) => {
   }
 
   // Helper function to deploy a mocked tocken
+  // Returns the token instance
   async function deployWETHToken(deployer) {
       let tokenSource = `
       contract TestToken {
@@ -183,12 +184,11 @@ module.exports = (web3) => {
       let output = await compile(tokenSource)
       let tokenInterface = output.interface
       let tokenBytecode = output.data
-      let transaction = await web3.eth.sendTransaction({from: deployer, data: tokenBytecode, gas: 4000000})
-      let receipt = await web3.eth.getTransactionReceipt(transaction.transactionHash)
-      const TestToken = web3.eth.contract(tokenInterface, receipt.contractAddress)
-      return TestToken
-      // console.log(TestToken)
-      // return TestToken.at(receipt.contractAddress)
+      let transactionHash = await web3.eth.sendTransaction({from: deployer, data: tokenBytecode, gas: 4000000})
+      let txReceipt = await web3.eth.getTransactionReceipt(transactionHash)
+      const testToken = web3.eth.contract(tokenInterface, txReceipt.contractAddress)
+      console.log("Token Address: " + txReceipt.contractAddress)
+      return testToken
 
   }
 
