@@ -1,7 +1,7 @@
 const utils = require('gnosis-safe/test/utils')
 
 const CreateAndAddModules = artifacts.require("./CreateAndAddModules.sol");
-const DutchXModule = artifacts.require("./DutchXModule.sol");
+const DutchXModule = artifacts.require("./DutchXCompleteModule.sol");
 const GnosisSafe = artifacts.require("./GnosisSafe.sol");
 const ProxyFactory = artifacts.require("./ProxyFactory.sol");
 const DutchXInterface = artifacts.require("./DutchXInterface.sol")

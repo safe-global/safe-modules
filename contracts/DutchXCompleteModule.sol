@@ -10,20 +10,10 @@ import "./DutchXTokenInterface.sol";
 
 /// @title DutchX Module - Allows to execute transactions to DutchX contract for whitelisted token pairs without confirmations and deposit tokens in the DutchX.
 /// @author Denis Granha - <denis@gnosis.pm>
-contract DutchXModule is Module {
+contract DutchXCompleteModule is Module {
 
-    string public constant NAME = "DutchX Module";
+    string public constant NAME = "DutchX Complete Module";
     string public constant VERSION = "0.0.2";
-
-    // // Whitelisted token functions
-    // bytes32 public constant APPROVE_TOKEN_FUNCTION_IDENTIFIER = hex"095ea7b3";
-    // bytes32 public constant DEPOSIT_WETH_FUNCTION_IDENTIFIER = hex"d0e30db0";
-    // // Whitelisted dx functions
-    // bytes32 public constant DEPOSIT_DX_FUNCTION_IDENTIFIER = hex"47e7ef24";
-    // bytes32 public constant POST_SELL_DX_FUNCTION_IDENTIFIER = hex"59f96ae5";
-    // bytes32 public constant POST_BUY_DX_FUNCTION_IDENTIFIER = hex"5e7f22c2";
-    // bytes32 public constant CLAIM_SELLER_DX_FUNCTION_IDENTIFIER = hex"7895dd21";
-    // bytes32 public constant CLAIM_BUYER_DX_FUNCTION_IDENTIFIER = hex"d3cc8d1c";
     
     address public dutchXAddress;
     // isWhitelistedToken mapping maps destination address to boolean.
@@ -146,7 +136,7 @@ contract DutchXModule is Module {
 
             // TODO we need abi.decodeWithSelector
             // approve(address spender, uint256 amount) we skip the amount
-            //(address spender) = abi.decode(dataParams, (address));
+            // (address spender) = abi.decode(dataParams, (address));
 
             require(address(spender) == dutchXAddress, "Spender must be the DutchX Contract");
         } else if (functionIdentifier == dxInterface.deposit.selector) {
@@ -163,7 +153,7 @@ contract DutchXModule is Module {
         } else if (functionIdentifier == dxInterface.postSellOrder.selector) {
             // TODO we need abi.decodeWithSelector
             // postSellOrder(address sellToken, address buyToken, uint256 auctionIndex, uint256 amount) we skip auctionIndex and amount
-            //(address sellToken, address buyToken) = abi.decode(data, (address, address));
+            // (address sellToken, address buyToken) = abi.decode(data, (address, address));
             
             uint sellToken;
             uint buyToken;
