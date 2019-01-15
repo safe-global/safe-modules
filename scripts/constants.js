@@ -1,0 +1,7 @@
+const CALL = 0
+const HEX_ZERO = '0x0000000000000000000000000000000000000000'
+
+module.exports = {
+  CALL,
+  HEX_ZERO
+}

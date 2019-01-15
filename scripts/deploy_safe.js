@@ -38,9 +38,10 @@ const args = require('yargs').option('master-copy', {
 }).option('proxy-factory', {
   string: true
 }).argv
-const nodeUtils = require('util')
 const gnosisUtils = require('./utils')(this.web3) // Get web3 from injected global variables
+const nodeUtils = require('util')
 
+// Contracts
 const GnosisSafe = artifacts.require("./GnosisSafe.sol");
 const ProxyFactory = artifacts.require("./ProxyFactory.sol");
 
