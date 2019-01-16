@@ -93,7 +93,7 @@ module.exports = async function(callback) {
   }
 
   try {
-    console.log("Execute dxModule.addToWhitelist(token) from Safe ...")
+    console.log("Get Data dxModule.addToWhitelist(token) from Safe ...")
     let dxModuleData = await dxModuleInstance.contract.addToWhitelist.getData(tokenAddress)
     //await dxModuleInstance.addToWhitelist(tokenAddress)
     console.log("Get Safe instance nonce...")
