@@ -1,99 +1,17 @@
 pragma solidity 0.5.0;
-import "gnosis-safe/contracts/base/Module.sol";
-import "gnosis-safe/contracts/base/ModuleManager.sol";
-import "gnosis-safe/contracts/base/OwnerManager.sol";
 import "gnosis-safe/contracts/common/Enum.sol";
+import "./DutchXBaseModule.sol";
 import "./DutchXInterface.sol";
 import "./DutchXTokenInterface.sol";
-
 
 
 /// @title DutchX Module - Allows to execute transactions to DutchX contract for whitelisted token pairs without confirmations and deposit tokens in the DutchX.
 //  differs from the Complete module in the allowed functions, it doesn't allow to perform buy operations.
 /// @author Denis Granha - <denis@gnosis.pm>
-contract DutchXSellerModule is Module {
+contract DutchXSellerModule is DutchXBaseModule {
 
     string public constant NAME = "DutchX Seller Module";
     string public constant VERSION = "0.0.2";
-    
-    address public dutchXAddress;
-
-    // isWhitelistedToken mapping maps destination address to boolean.
-    mapping (address => bool) public isWhitelistedToken;
-    mapping (address => bool) public isOperator;
-
-    /// @dev Setup function sets initial storage of contract.
-    /// @param dx DutchX Proxy Address.
-    /// @param tokens List of whitelisted tokens.
-    function setup(address dx, address[] memory tokens, address[] memory operators)
-        public
-    {
-        setManager();
-        dutchXAddress = dx;
-
-        for (uint256 i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
-            require(token != address(0), "Invalid token provided");
-            isWhitelistedToken[token] = true;
-        }
-        for (uint256 i = 0; i < operators.length; i++) {
-            address operator = operators[i];
-            require(operator != address(0), "Invalid operator address provided");
-            isOperator[operator] = true;
-        }
-    }
-
-    /// @dev Allows to add token to whitelist. This can only be done via a Safe transaction.
-    /// @param token ERC20 token address.
-    function addToWhitelist(address token)
-        public
-        authorized
-    {
-        require(token != address(0), "Invalid token provided");
-        require(!isWhitelistedToken[token], "Token is already whitelisted");
-        isWhitelistedToken[token] = true;
-    }
-
-    /// @dev Allows to remove token from whitelist. This can only be done via a Safe transaction.
-    /// @param token ERC20 token address.
-    function removeFromWhitelist(address token)
-        public
-        authorized
-    {
-        require(isWhitelistedToken[token], "Token is not whitelisted");
-        isWhitelistedToken[token] = false;
-    }
-
-    /// @dev Allows to add operator to whitelist. This can only be done via a Safe transaction.
-    /// @param operator ethereum address.
-    function addOperator(address operator)
-        public
-        authorized
-    {
-        require(operator != address(0), "Invalid address provided");
-        require(!isOperator[operator], "Operator is already whitelisted");
-        isOperator[operator] = true;
-    }
-
-    /// @dev Allows to remove operator from whitelist. This can only be done via a Safe transaction.
-    /// @param operator ethereum address.
-    function removeOperator(address operator)
-        public
-        authorized
-    {
-        require(isOperator[operator], "Operator is not whitelisted");
-        isOperator[operator] = false;
-    }
-
-    /// @dev Allows to change DutchX Proxy contract address. This can only be done via a Safe transaction.
-    /// @param dx New proxy contract address for DutchX.
-    function changeDXProxy(address dx)
-        public
-        authorized
-    {
-        require(dx != address(0), "Invalid address provided");
-        dutchXAddress = dx;
-    }
 
     /// @dev Returns if Safe transaction is to DutchX contract and with whitelisted tokens.
     /// @param to Dutch X address or Whitelisted token (only for approve operations for DX).
@@ -116,7 +34,7 @@ contract DutchXSellerModule is Module {
         require(to == dutchXAddress || isWhitelistedToken[to], "Destination address is not allowed");
 
         // Decode data
-        bytes4 functionIdentifier;        
+        bytes4 functionIdentifier;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
             functionIdentifier := mload(add(data, 0x20))
@@ -157,7 +75,7 @@ contract DutchXSellerModule is Module {
             // TODO we need abi.decodeWithSelector
             // postSellOrder(address sellToken, address buyToken, uint256 auctionIndex, uint256 amount) we skip auctionIndex and amount
             // (address sellToken, address buyToken) = abi.decode(data, (address, address));
-            
+
             uint sellToken;
             uint buyToken;
             // solium-disable-next-line security/no-inline-assembly
