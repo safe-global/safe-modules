@@ -6,8 +6,9 @@ contained within truffle.js.
 
  npm run deploy-dx-module -- --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect' \
  --safe 0x7e664541678c4997ad9dbdb9978c6e2b5a9445be \
- --dx-module-address 0x5017a545b09ab9a30499de7f431df0855bcb7275 (optional if --create-dx provided)
+ --dx-module-address 0x5017a545b09ab9a30499de7f431df0855bcb7275 (optional, not needed if --create-dx provided)
  --dx-module-type [complete, seller]
+ --dutchx-address 0x2a504b5e7ec284aca5b6f49716611237239f0b97 (the DutchX address)
  --whitelisted-tokens '0x4017a545b09ab9a30444de7f431df0855bcb7276,0x6017a545b09ab9a30300de7f431df0855bcb7277' (optional)
  --create-dx (optional)
 
@@ -16,6 +17,8 @@ contained within truffle.js.
 const args = require('yargs').option('safe', {
   string: true
 }).option('dx-module-address', {
+  string: true
+}).option('dutchx-address', {
   string: true
 }).argv // ask argv to treat args as a string
 
@@ -29,7 +32,7 @@ const DutchXSellerModule = artifacts.require("./DutchXSellerModule.sol")
 const GnosisSafe = artifacts.require("./GnosisSafe.sol")
 
 module.exports = async function(callback) {
-  let dxContractType, dxModuleAddress, dxModuleInstance, owners, whitelistedTokens
+  let dxContractType, dxModuleAddress, dxModuleInstance, dutchxAddress, owners, whitelistedTokens
   const mnemonic = args.mnemonic || this.web3.currentProvider.mnemonic
 
   const dxContracts = {
@@ -41,6 +44,12 @@ module.exports = async function(callback) {
 
   if (!args.safe) {
     callback('--safe argument not provided. Please provide the Safe address')
+  }
+
+  if (!args['dutchx-address']) {
+    callback('--dutchx-address argument not provided. Please provide the DutchX address')
+  } else {
+    dutchxAddress = args['dutchx-address']
   }
 
   if (args['dx-module-type'] && dxContracts[args['dx-module-type']]) {
@@ -114,8 +123,9 @@ module.exports = async function(callback) {
     try {
       console.log(`=========== DX ${dxContractType.toUpperCase()} MODULE SETUP ==============`)
       console.log(`DX Module address: ${dxModuleAddress}`)
+      console.log(`Provided DutchX Address: ${dutchxAddress}`)
       console.log("Get data dxModule.setup(dxModuleAddress, whitelistedTokens, owners) ...")
-      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dxModuleAddress, whitelistedTokens, owners)
+      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, owners)
       console.log("Get Safe instance nonce...")
       nonce = await safeInstance.nonce()
       console.log(`Safe Nonce: ${nonce}`)
@@ -129,6 +139,9 @@ module.exports = async function(callback) {
               dxModuleAddress, 0, dxModuleSetupData, constants.CALL, 0, 0, 0, 0, 0, signatures
           )
       )
+      // Lookup DutchX address on DX Module contract, it has to be equals to args.dutchx-address
+      let lookupDutchxAddress = await dxModuleInstance.dutchXAddress()
+      console.log(`DutchX address setted ${lookupDutchxAddress.toLowerCase() == dutchxAddress.toLowerCase() ? 'correctly' : 'incorrectly'} on DX Module`)
       console.log("==========================================")
     } catch(error) {
       callback(error)
