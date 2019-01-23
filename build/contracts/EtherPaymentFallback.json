@@ -1,0 +1,177 @@
+{
+  "contractName": "EtherPaymentFallback",
+  "abi": [
+    {
+      "payable": true,
+      "stateMutability": "payable",
+      "type": "fallback"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603280601d6000396000f3fe608060405200fea165627a7a723058206e56340636921798b208cda93cbc8cd4cb4695e563a2567dc8cd43675ffb800d0029",
+  "deployedBytecode": "0x608060405200fea165627a7a723058206e56340636921798b208cda93cbc8cd4cb4695e563a2567dc8cd43675ffb800d0029",
+  "sourceMap": "167:155:13:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;167:155:13;;;;;;;",
+  "deployedSourceMap": "167:155:13:-;;;",
+  "source": "pragma solidity ^0.5.0;\n\n\n/// @title EtherPaymentFallback - A contract that has a fallback to accept ether payments\n/// @author Richard Meissner - <richard@gnosis.pm>\ncontract EtherPaymentFallback {\n\n    /// @dev Fallback function accepts Ether transactions.\n    function ()\n        external\n        payable\n    {\n\n    }\n}\n",
+  "sourcePath": "gnosis-safe/contracts/common/EtherPaymentFallback.sol",
+  "ast": {
+    "absolutePath": "gnosis-safe/contracts/common/EtherPaymentFallback.sol",
+    "exportedSymbols": {
+      "EtherPaymentFallback": [
+        3379
+      ]
+    },
+    "id": 3380,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3374,
+        "literals": [
+          "solidity",
+          "^",
+          "0.5",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:13"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": "@title EtherPaymentFallback - A contract that has a fallback to accept ether payments\n @author Richard Meissner - <richard@gnosis.pm>",
+        "fullyImplemented": true,
+        "id": 3379,
+        "linearizedBaseContracts": [
+          3379
+        ],
+        "name": "EtherPaymentFallback",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 3377,
+              "nodeType": "Block",
+              "src": "312:8:13",
+              "statements": []
+            },
+            "documentation": "@dev Fallback function accepts Ether transactions.",
+            "id": 3378,
+            "implemented": true,
+            "kind": "fallback",
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3375,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "272:2:13"
+            },
+            "returnParameters": {
+              "id": 3376,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "312:0:13"
+            },
+            "scope": 3379,
+            "src": "263:57:13",
+            "stateMutability": "payable",
+            "superFunction": null,
+            "visibility": "external"
+          }
+        ],
+        "scope": 3380,
+        "src": "167:155:13"
+      }
+    ],
+    "src": "0:323:13"
+  },
+  "legacyAST": {
+    "absolutePath": "gnosis-safe/contracts/common/EtherPaymentFallback.sol",
+    "exportedSymbols": {
+      "EtherPaymentFallback": [
+        3379
+      ]
+    },
+    "id": 3380,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3374,
+        "literals": [
+          "solidity",
+          "^",
+          "0.5",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:13"
+      },
+      {
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": "@title EtherPaymentFallback - A contract that has a fallback to accept ether payments\n @author Richard Meissner - <richard@gnosis.pm>",
+        "fullyImplemented": true,
+        "id": 3379,
+        "linearizedBaseContracts": [
+          3379
+        ],
+        "name": "EtherPaymentFallback",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 3377,
+              "nodeType": "Block",
+              "src": "312:8:13",
+              "statements": []
+            },
+            "documentation": "@dev Fallback function accepts Ether transactions.",
+            "id": 3378,
+            "implemented": true,
+            "kind": "fallback",
+            "modifiers": [],
+            "name": "",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3375,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "272:2:13"
+            },
+            "returnParameters": {
+              "id": 3376,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "312:0:13"
+            },
+            "scope": 3379,
+            "src": "263:57:13",
+            "stateMutability": "payable",
+            "superFunction": null,
+            "visibility": "external"
+          }
+        ],
+        "scope": 3380,
+        "src": "167:155:13"
+      }
+    ],
+    "src": "0:323:13"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.1",
+  "updatedAt": "2019-01-09T10:35:12.996Z",
+  "devdoc": {
+    "author": "Richard Meissner - <richard@gnosis.pm>",
+    "methods": {},
+    "title": "EtherPaymentFallback - A contract that has a fallback to accept ether payments"
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}
