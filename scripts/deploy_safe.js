@@ -42,8 +42,8 @@ const gnosisUtils = require('./utils')(this.web3) // Get web3 from injected glob
 const nodeUtils = require('util')
 
 // Contracts
-const GnosisSafe = artifacts.require("./GnosisSafe.sol");
-const ProxyFactory = artifacts.require("./ProxyFactory.sol");
+const GnosisSafe = artifacts.require("./GnosisSafe.sol")
+const ProxyFactory = artifacts.require("./ProxyFactory.sol")
 
 module.exports = async function(callback) {
   let accounts, owners, threshold, masterCopyAddress, masterCopyInstance, proxyFactoryAddress, proxyFactoryInstance
