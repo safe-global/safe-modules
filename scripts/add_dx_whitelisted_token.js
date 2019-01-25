@@ -7,7 +7,7 @@ contained within truffle.js.
 npm run add-dx-whitelisted-token -- \
  --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect'
  --token 0xb09bcc172050fbd4562da8b229cf3e45dc3045a6 \
- --dx-module-address 0xfc628dd79137395f3c9744e33b1c5de554d94882
+ --dx-module-address 0xfc628dd79137395f3c9744e33b1c5de554d94882 \
  --dx-module-type complete [complete, seller]
 
 */
@@ -73,26 +73,26 @@ module.exports = async function(callback) {
     }
   }
 
-  // Get the value of dxModule manager
-  const manager = await dxModuleInstance.manager()
-
-  // Truffle uses the HTTPPRovider When on LOCALHOST, so we need to pass the mnemonic seed via command
-  const lightWallet = await gnosisUtils.createLightwallet(mnemonic)
-
-  // Get Safe instance
-  console.log("Getting GnosisSafe instance...")
-  const safeInstance = GnosisSafe.at(manager)
-  const owners = await safeInstance.getOwners()
-
-  // Check if token is already whitelisted
-  let isWhitelistedToken = await dxModuleInstance.isWhitelistedToken(tokenAddress)
-
-  if (isWhitelistedToken) {
-    // No needs to go forward
-    callback('Token is already whitelisted')
-  }
-
   try {
+    // Get the value of dxModule manager
+    const manager = await dxModuleInstance.manager()
+
+    // Truffle uses the HTTPPRovider When on LOCALHOST, so we need to pass the mnemonic seed via command
+    const lightWallet = await gnosisUtils.createLightwallet(mnemonic)
+
+    // Get Safe instance
+    console.log("Getting GnosisSafe instance...")
+    const safeInstance = GnosisSafe.at(manager)
+    const owners = await safeInstance.getOwners()
+
+    // Check if token is already whitelisted
+    let isWhitelistedToken = await dxModuleInstance.isWhitelistedToken(tokenAddress)
+
+    if (isWhitelistedToken) {
+      // No needs to go forward
+      callback('Token is already whitelisted')
+    }
+
     console.log("Get Data dxModule.addToWhitelist(token) from Safe ...")
     let dxModuleData = await dxModuleInstance.contract.addToWhitelist.getData(tokenAddress)
     //await dxModuleInstance.addToWhitelist(tokenAddress)
@@ -110,12 +110,12 @@ module.exports = async function(callback) {
         )
     )
 
+    isWhitelistedToken = await dxModuleInstance.isWhitelistedToken(tokenAddress)
+    console.log(`Token whitelisted: ${isWhitelistedToken}`)
+
   } catch (error) {
     callback(error)
   }
-
-  isWhitelistedToken = await dxModuleInstance.isWhitelistedToken(tokenAddress)
-  console.log(`Token whitelisted: ${isWhitelistedToken}`)
 
   // Close script
   callback()

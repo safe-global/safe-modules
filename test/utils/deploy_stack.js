@@ -82,7 +82,7 @@ module.exports = async function(callback) {
   try {
     dxModuleAddress = dxCompleteModuleInstance.address
     console.log(`=========== DX COMPLETE MODULE SETUP ==============`)
-    console.log(`DX Module address: ${dxModuleAddress}`)
+    console.log(`Safe DX Module address: ${dxModuleAddress}`)
     console.log(`Provided DutchX Address: ${dutchxAddress}`)
     console.log("Get data dxModule.setup(dxModuleAddress, whitelistedTokens, owners) ...")
     dxModuleSetupData = await dxCompleteModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, owners)
@@ -110,7 +110,7 @@ module.exports = async function(callback) {
   try {
     dxModuleAddress = dxSellerModuleInstance.address
     console.log(`=========== DX SELLER MODULE SETUP ==============`)
-    console.log(`DX Module address: ${dxModuleAddress}`)
+    console.log(`Safe DX Module address: ${dxModuleAddress}`)
     console.log(`Provided DutchX Address: ${dutchxAddress}`)
     console.log("Get data dxModule.setup(dxModuleAddress, whitelistedTokens, owners) ...")
     dxModuleSetupData = await dxSellerModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, owners)
