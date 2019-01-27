@@ -59,18 +59,20 @@ contract('TransferLimitModule authorization', (accounts) => {
     let safe
     let module
     let lw
+    let safeOwners
 
     beforeEach(async () => {
         // Create lightwallet
         lw = await utils.createLightwallet()
 
+        safeOwners = [lw.accounts[0], lw.accounts[1], lw.accounts[2], lw.accounts[3], accounts[0]]
         let res = await setupModule(
             TransferLimitModule,
             lw,
             accounts,
             [[0], [100], 60 * 60 * 24, false, 0, 0, 2, 0, accounts[1]],
-            [lw.accounts[0], lw.accounts[1], lw.accounts[2], accounts[0]],
-            3
+            safeOwners,
+            4
         )
         safe = res[0]
         module = res[1]
@@ -96,12 +98,12 @@ contract('TransferLimitModule authorization', (accounts) => {
     })
 
     it('should allow withdrawal for delegate', async () => {
-        await updateDelegate(safe, module, lw, lw.accounts[3])
+        await updateDelegate(safe, module, lw, safeOwners.slice(0, 4), lw.accounts[4])
         let delegate = await module.delegate.call()
-        assert.equal(delegate, lw.accounts[3])
+        assert.equal(delegate, lw.accounts[4])
 
         let params = [0, accounts[0], 50, 0, 0, 0]
-        let sigs = await signModuleTx(module, params, lw, [lw.accounts[3]])
+        let sigs = await signModuleTx(module, params, lw, [lw.accounts[4]])
 
         // Withdrawal should fail for only one signature by delegate
         await utils.assertRejects(
@@ -109,7 +111,28 @@ contract('TransferLimitModule authorization', (accounts) => {
             'signature threshold not met'
         )
 
-        sigs = await signModuleTx(module, params, lw, [lw.accounts[0], lw.accounts[3]])
+        sigs = await signModuleTx(module, params, lw, [lw.accounts[0], lw.accounts[4]])
+        // Withdraw transfer limit
+        await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
+        let spent = (await module.transferLimits.call(0))[1]
+        assert(spent.eq(50), 'spent value should be updated')
+    })
+
+    it('should update threshold', async () => {
+        await updateThreshold(safe, module, lw, safeOwners.slice(0, 4), 3)
+        let threshold = await module.threshold.call()
+        assert.equal(threshold, 3)
+
+        let params = [0, accounts[0], 50, 0, 0, 0]
+        let sigs = await signModuleTx(module, params, lw, [lw.accounts[0], lw.accounts[1]])
+
+        // Withdrawal should fail for two signatures (previous threshold)
+        await utils.assertRejects(
+            module.executeTransferLimit(...params, sigs, { from: accounts[0] }),
+            'signature threshold not met'
+        )
+
+        sigs = await signModuleTx(module, params, lw, [lw.accounts[0], lw.accounts[1], lw.accounts[2]])
         // Withdraw transfer limit
         await module.executeTransferLimit(...params, sigs, { from: accounts[0] })
         let spent = (await module.transferLimits.call(0))[1]
@@ -575,16 +598,24 @@ const signModuleTx = async (module, params, lw, signers) => {
     return sigs
 }
 
-const updateDelegate = async (safe, module, lw, delegate) => {
-    let data = await module.contract.setDelegate.getData(delegate)
-
+const execSafeTx = async (safe, module, lw, keys, data) => {
     let nonce = await safe.nonce()
     let transactionHash = await safe.getTransactionHash(module.address, 0, data, CALL, 100000, 0, web3.toWei(100, 'gwei'), 0, 0, nonce)
-    let sigs = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1], lw.accounts[2]], transactionHash)
+    let sigs = utils.signTransaction(lw, keys, transactionHash)
 
     await safe.execTransaction(
         module.address, 0, data, CALL, 100000, 0, web3.toWei(100, 'gwei'), 0, 0, sigs
     )
+}
+
+const updateDelegate = async (safe, module, lw, keys, delegate) => {
+    let data = await module.contract.setDelegate.getData(delegate)
+    await execSafeTx(safe, module, lw, keys, data)
+}
+
+const updateThreshold = async (safe, module, lw, keys, threshold) => {
+    let data = await module.contract.setThreshold.getData(threshold)
+    await execSafeTx(safe, module, lw, keys, data)
 }
 
 const mockToken = async () => {

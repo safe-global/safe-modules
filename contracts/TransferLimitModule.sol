@@ -138,6 +138,16 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         delegate = _delegate;
     }
 
+    /// @dev Updates number of required signatures for a transfer.
+    /// This can only be done via a Safe transaction.
+    /// @param _threshold New threshold.
+    function setThreshold(uint256 _threshold)
+      public
+      authorized
+    {
+      threshold = _threshold;
+    }
+
     /// @dev Returns if Safe transaction is a valid transfer limit transaction.
     /// @param token Address of the token that should be transfered (0 for Ether)
     /// @param to Address to which the tokens should be transfered
