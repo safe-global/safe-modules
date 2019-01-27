@@ -178,7 +178,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
         // Validate that transfer is not exceeding transfer limit, and
         // compute new expenditure values to be updated after transfering.
-        (bool isUnderLimit, uint256 weiSpent, uint256 daiSpent) = checkTransferLimits(token, amount);
+        (bool isUnderLimit, uint256 newTotalWeiSpent, uint256 newTotalDaiSpent) = checkTransferLimits(token, amount);
         require(isUnderLimit, "Transfer exceeds limits");
 
         // Perform transfer by invoking manager
@@ -192,7 +192,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
 
         // Only update transfer limits if transfer happened.
         if (ok) {
-            updateTransferLimits(token, amount, weiSpent, daiSpent);
+            updateTransferLimits(token, amount, newTotalWeiSpent, newTotalDaiSpent);
         } else {
             emit TransferFailed(txHash);
         }
@@ -313,15 +313,18 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         return false;
     }
 
-    function updateTransferLimits(address token, uint256 amount, uint256 weiSpent, uint256 daiSpent)
+    function updateTransferLimits(address token, uint256 amount, uint256 newTotalWeiSpent, uint256 newTotalDaiSpent)
         internal
     {
         transferLimits[token].spent = transferLimits[token].spent.add(amount);
-        if (weiSpent > 0 && weiSpent > totalWeiSpent) {
-            totalWeiSpent = weiSpent;
+        // 0 means module is not limiting global dai/wei expenditure,
+        // or that current transfer would exceed the global cap.
+        // New value cannot be smaller than current expenditure.
+        if (newTotalWeiSpent > 0 && newTotalWeiSpent > totalWeiSpent) {
+            totalWeiSpent = newTotalWeiSpent;
 
-            if (daiSpent > 0 && daiSpent > totalDaiSpent) {
-                totalDaiSpent = daiSpent;
+            if (newTotalDaiSpent > 0 && newTotalDaiSpent > totalDaiSpent) {
+                totalDaiSpent = newTotalDaiSpent;
             }
         }
     }
