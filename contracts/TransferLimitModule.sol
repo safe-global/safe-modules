@@ -67,6 +67,9 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     // DutchExchange contract used as price oracle.
     DutchExchange dutchx;
 
+    // Protects updating transfer limits against reentrancy
+    bool mutex;
+
     struct TransferLimit {
         uint256 limit;
         uint256 spent;
@@ -170,6 +173,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     {
         require(to != address(0), "Invalid to address provided");
         require(amount > 0, "Invalid amount provided");
+        require(mutex == false, "Transfering is locked");
 
         bytes32 txHash = getTransactionHash(
             token, to, amount,
@@ -191,6 +195,9 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         (bool isUnderLimit, uint256 newTotalWeiSpent, uint256 newTotalDaiSpent) = checkTransferLimits(token, amount);
         require(isUnderLimit, "Transfer exceeds limits");
 
+        // Lock mutex to prevent reentrancy
+        mutex = true;
+
         // Perform transfer by invoking manager
         bool ok;
         if (token == address(0)) {
@@ -206,6 +213,9 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         } else {
             emit TransferFailed(txHash);
         }
+
+        // Release mutex
+        mutex = false;
 
         // We transfer the calculated tx costs to the tx.origin to avoid sending it to intermediate contracts that have made calls
         if (refund > 0) {
@@ -438,10 +448,15 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
     )
         private
     {
+        require(mutex == false, "Transfering is locked");
+
         // Make sure refund is within transfer limits, to prevent
         // attacker with a compromised key to empty the safe.
         (bool isUnderLimit, uint256 weiSpent, uint256 daiSpent) = checkTransferLimits(gasToken, amount);
         require(isUnderLimit, "Gas refund exceeds transfer limit");
+
+        // Lock mutex to prevent reentrancy
+        mutex = true;
 
         // solium-disable-next-line security/no-tx-origin
         address receiver = refundReceiver == address(0) ? tx.origin : refundReceiver;
@@ -453,5 +468,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
         }
 
         updateTransferLimits(gasToken, amount, weiSpent, daiSpent);
+
+        // Release mutex
+        mutex = false;
     }
 }
