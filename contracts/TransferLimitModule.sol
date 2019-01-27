@@ -166,9 +166,8 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
             refund, gasToken, refundReceiver,
             nonce
         );
-        require(checkSignatures(txHash, signatures), "Invalid signatures provided");
-        // Increase nonce and execute transaction.
         nonce++;
+        require(checkSignatures(txHash, signatures), "Invalid signatures provided");
 
         // If time period is over, reset expenditure.
         if (isPeriodOver()) {
