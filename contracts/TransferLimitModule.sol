@@ -148,7 +148,7 @@ contract TransferLimitModule is Module, SignatureDecoder, SecuredTokenTransfer {
       public
       authorized
     {
-      threshold = _threshold;
+        threshold = _threshold;
     }
 
     /// @dev Returns if Safe transaction is a valid transfer limit transaction.
