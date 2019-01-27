@@ -1,4 +1,4 @@
-const utils = require('./utils')
+const utils = require('gnosis-safe/test/utils')
 const solc = require('solc')
 const ABI = require('ethereumjs-abi')
 const BigNumber = require('bignumber.js')

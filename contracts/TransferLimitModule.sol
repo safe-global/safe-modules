@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 
-import "../base/Module.sol";
-import "../base/ModuleManager.sol";
-import "../base/OwnerManager.sol";
-import "../common/Enum.sol";
-import "../common/SignatureDecoder.sol";
-import "../common/SecuredTokenTransfer.sol";
-import "../external/DutchExchangeInterface.sol";
-import "../external/PriceOracleInterface.sol";
-import "../external/SafeMath.sol";
+import "gnosis-safe/contracts/base/Module.sol";
+import "gnosis-safe/contracts/base/ModuleManager.sol";
+import "gnosis-safe/contracts/base/OwnerManager.sol";
+import "gnosis-safe/contracts/common/Enum.sol";
+import "gnosis-safe/contracts/common/SignatureDecoder.sol";
+import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
+import "./external/DutchExchangeInterface.sol";
+import "./external/PriceOracleInterface.sol";
+import "./external/SafeMath.sol";
 
 
 /// @title Transfer Limit Module - Allows to transfer limited amounts of ERC20 tokens and Ether.

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../modules/TransferLimitModule.sol";
+import "../TransferLimitModule.sol";
 
 contract TransferLimitModuleMock is TransferLimitModule {
     uint256 price;
