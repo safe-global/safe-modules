@@ -4,9 +4,10 @@ How to run the command
 The script inherits a Web3 instance from Truffle, according to the configuration
 contained within truffle.js.
 
-npm run add-dx-operator -- \
+npm run enable-dx-module -- \
  --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect' \
- --dx-module-address 0xfc628dd79137395f3c9744e33b1c5de554d94882
+ --safe-address 0xfc628dd79137395f3c9744e33b1c5de554d94882 \
+ --dx-module-address 0xab1234567137395f3c9744e33b1c5de554d94883
 
 */
 
@@ -16,8 +17,8 @@ const args = require('yargs').option('dx-module-address', {
   string: true
 }).argv // ask argv to treat args as a string
 
-const gnosisUtils = require('./utils')(this.web3)
-const constants = require('./constants')
+const gnosisUtils = require('../utils')(this.web3)
+const constants = require('../constants')
 
 const DutchXBaseModule = artifacts.require("./DutchXBaseModule")
 const GnosisSafe = artifacts.require("./GnosisSafe.sol")

@@ -18,8 +18,8 @@ const args = require('yargs').option('dx-module-address', {
   string: true
 }).argv // ask argv to treat args as a string
 
-const gnosisUtils = require('./utils')(this.web3)
-const constants = require('./constants')
+const gnosisUtils = require('../utils')(this.web3)
+const constants = require('../constants')
 
 const DutchXCompleteModule = artifacts.require("./DutchXCompleteModule.sol")
 const DutchXSellerModule = artifacts.require("./DutchXSellerModule.sol")

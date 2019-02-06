@@ -22,8 +22,8 @@ const args = require('yargs').option('safe', {
   string: true
 }).argv // ask argv to treat args as a string
 
-const constants = require('./constants')
-const gnosisUtils = require('./utils')(this.web3)
+const constants = require('../constants')
+const gnosisUtils = require('../utils')(this.web3)
 
 
 // Contracts

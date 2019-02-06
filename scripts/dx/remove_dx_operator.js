@@ -4,10 +4,12 @@ How to run the command
 The script inherits a Web3 instance from Truffle, according to the configuration
 contained within truffle.js.
 
-npm run add-dx-operator -- \
+npm run remove-dx-operator -- \
  --mnemonic 'myth like bonus scare over problem client lizard pioneer submit female collect' \
  --dx-module-address 0xfc628dd79137395f3c9744e33b1c5de554d94882 \
  --operator-address 0xb09bcc172050fbd4562da8b229cf3e45dc3045a6
+
+You must use the same mnemonic used to create the Safe module
 
 */
 
@@ -17,8 +19,8 @@ const args = require('yargs').option('dx-module-address', {
   string: true
 }).argv // ask argv to treat args as a string
 
-const gnosisUtils = require('./utils')(this.web3)
-const constants = require('./constants')
+const gnosisUtils = require('../utils')(this.web3)
+const constants = require('../constants')
 
 const DutchXBaseModule = artifacts.require("./DutchXBaseModule")
 const GnosisSafe = artifacts.require("./GnosisSafe.sol")
@@ -58,8 +60,8 @@ module.exports = async function(callback) {
   // Get the value of dxModule manager
   let isOperator = await dxModuleInstance.isOperator(operatorAddress)
 
-  if (isOperator == true) {
-    callback(`Address ${operatorAddress} is already listed as an operator, no further action is required.`)
+  if (isOperator != true) {
+    callback(`Address ${operatorAddress} is not listed as an operator, no further action is required.`)
   }
 
   // Truffle uses the HTTPPRovider When on LOCALHOST, so we need to pass the mnemonic seed via command
@@ -74,8 +76,8 @@ module.exports = async function(callback) {
   const safeOwners = await safeInstance.getOwners()
 
   try {
-    console.log("Get Data dxModule.addOperator(address) from Safe ...")
-    let dxModuleData = await dxModuleInstance.contract.addOperator.getData(operatorAddress)
+    console.log("Get Data dxModule.removeOperator(address) from Safe ...")
+    let dxModuleData = await dxModuleInstance.contract.removeOperator.getData(operatorAddress)
     console.log("Get Safe instance nonce...")
     let nonce = await safeInstance.nonce()
     console.log(`Nonce: ${nonce}`)
@@ -84,7 +86,7 @@ module.exports = async function(callback) {
     console.log("Sign transaction...")
     signatures = gnosisUtils.signTransaction(lightWallet, safeOwners, transactionHash)
     gnosisUtils.logGasUsage(
-        'execTransaction dxModule.addOperator()',
+        'execTransaction dxModule.removeOperator()',
         await safeInstance.execTransaction(
             dxModuleAddress, 0, dxModuleData, constants.CALL, 0, 0, 0, 0, 0, signatures
         )
@@ -95,7 +97,12 @@ module.exports = async function(callback) {
   }
 
   isOperator = await dxModuleInstance.isOperator(operatorAddress)
-  console.log(`Address is now an operator: ${isOperator}`)
+  if (isOperator == false) {
+    console.log(`Address ${operatorAddress} is not an operator anymore`)
+  } else {
+    callback(`${operatorAddress} is still an operator, please review your safe configuration`)
+  }
+
 
   // Close script
   callback()
