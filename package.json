@@ -15,6 +15,7 @@
     "deploy-safe": "truffle exec scripts/deploy_safe.js",
     "deploy-dx-module": "truffle exec scripts/dx/deploy_dx_module.js",
     "enable-dx-module": "truffle exec scripts/dx/enable_dx_module.js",
+    "print-info": "truffle exec scripts/dx/print_info.js",
     "remove-dx-operator": "truffle exec scripts/dx/remove_dx_operator.js",
     "remove-dx-whitelisted-token": "truffle exec scripts/dx/remove_dx_whitelisted_token.js",
     "test-norpc": "truffle test",
