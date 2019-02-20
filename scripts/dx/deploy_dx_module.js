@@ -20,6 +20,8 @@ const args = require('yargs').option('safe', {
   string: true
 }).option('dutchx-address', {
   string: true
+}).option('operators', {
+  string: true
 }).option('whitelisted-tokens', {
   string: true
 }).argv // ask argv to treat args as a string
@@ -33,7 +35,7 @@ const DutchXCompleteModule = artifacts.require("./DutchXCompleteModule.sol")
 const DutchXSellerModule = artifacts.require("./DutchXSellerModule.sol")
 const GnosisSafe = artifacts.require("./GnosisSafe.sol")
 
-module.exports = async function(callback) {
+module.exports = async function (callback) {
   let dxContractType, dxModuleAddress, dxModuleInstance, dutchxAddress, owners, whitelistedTokens
   const mnemonic = args.mnemonic || this.web3.currentProvider.mnemonic
 
@@ -85,7 +87,7 @@ module.exports = async function(callback) {
         dxModuleInstance = await DutchXSellerModule.new([])
       }
       dxModuleAddress = dxModuleInstance.address
-    } catch(error) {
+    } catch (error) {
       callback(error)
     }
   } else {
@@ -99,7 +101,7 @@ module.exports = async function(callback) {
         dxModuleAddress = args['dx-module-address']
         dxModuleInstance = DutchXSellerModule.at(dxModuleAddress)
       }
-    } catch(error) {
+    } catch (error) {
       callback(error)
     }
   }
@@ -129,8 +131,18 @@ module.exports = async function(callback) {
       console.log(`DX Module address: ${dxModuleAddress}`)
       console.log(`Provided DutchX Address: ${dutchxAddress}`)
       console.log("Get data dxModule.setup(dxModuleAddress, whitelistedTokens, owners) ...")
-      const operators = owners // we currently set the Safe's owners as module's operators
-      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, operators)
+      let operators
+      if (args['operators']) {
+        operators = args['operators'].split(',')
+      } else {
+        operators = owners
+      }
+
+      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(
+        dutchxAddress,
+        whitelistedTokens,
+        operators
+      )
       console.log("Get Safe instance nonce...")
       nonce = await safeInstance.nonce()
       console.log(`Safe Nonce: ${nonce}`)
@@ -139,10 +151,10 @@ module.exports = async function(callback) {
       console.log("Sign transaction...")
       signatures = gnosisUtils.signTransaction(lightWallet, owners, transactionHash)
       gnosisUtils.logGasUsage(
-          'execTransaction dxModule.setup() from the Safe',
-          await safeInstance.execTransaction(
-              dxModuleAddress, 0, dxModuleSetupData, constants.CALL, 0, 0, 0, 0, 0, signatures
-          )
+        'execTransaction dxModule.setup() from the Safe',
+        await safeInstance.execTransaction(
+          dxModuleAddress, 0, dxModuleSetupData, constants.CALL, 0, 0, 0, 0, 0, signatures
+        )
       )
       // Lookup DutchX address on DX Module contract, it has to be equals to args.dutchx-address
       let lookupDutchxAddress = await dxModuleInstance.dutchXAddress()
@@ -150,7 +162,7 @@ module.exports = async function(callback) {
       manager = await dxModuleInstance.manager()
       console.log(`Manager: ${manager}`)
       console.log("==========================================")
-    } catch(error) {
+    } catch (error) {
       callback(error)
     }
   }
@@ -168,10 +180,10 @@ module.exports = async function(callback) {
     console.log("Sign transaction...")
     signatures = gnosisUtils.signTransaction(lightWallet, owners, transactionHash)
     gnosisUtils.logGasUsage(
-        'execTransaction add module',
-        await safeInstance.execTransaction(
-            safeInstance.address, 0, enableModuleData, constants.CALL, 0, 0, 0, 0, 0, signatures
-        )
+      'execTransaction add module',
+      await safeInstance.execTransaction(
+        safeInstance.address, 0, enableModuleData, constants.CALL, 0, 0, 0, 0, 0, signatures
+      )
     )
 
     // Get safe modules
