@@ -20,6 +20,8 @@ const args = require('yargs').option('safe', {
   string: true
 }).option('dutchx-address', {
   string: true
+}).option('whitelisted-tokens', {
+  string: true
 }).argv // ask argv to treat args as a string
 
 const constants = require('../constants')
@@ -67,6 +69,7 @@ module.exports = async function(callback) {
   if (!args['whitelisted-tokens']) {
     whitelistedTokens = []
   } else {
+    console.log(args['whitelisted-tokens'])
     whitelistedTokens = args['whitelisted-tokens'].split(',')
   }
 
@@ -125,7 +128,7 @@ module.exports = async function(callback) {
       console.log(`DX Module address: ${dxModuleAddress}`)
       console.log(`Provided DutchX Address: ${dutchxAddress}`)
       console.log("Get data dxModule.setup(dxModuleAddress, whitelistedTokens, owners) ...")
-      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, owners)
+      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, owners) // change owners with operators
       console.log("Get Safe instance nonce...")
       nonce = await safeInstance.nonce()
       console.log(`Safe Nonce: ${nonce}`)
