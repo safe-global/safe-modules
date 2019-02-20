@@ -47,6 +47,7 @@ const ProxyFactory = artifacts.require("./ProxyFactory.sol")
 
 module.exports = async function(callback) {
   let accounts, owners, threshold, masterCopyAddress, masterCopyInstance, proxyFactoryAddress, proxyFactoryInstance
+  const mnemonic = args.mnemonic || this.web3.currentProvider.mnemonic
 
   if (!args.mnemonic) {
     console.log("Using Truffle Mnemonic configuration")
@@ -56,7 +57,10 @@ module.exports = async function(callback) {
 
   masterCopyAddress = args['master-copy']
   proxyFactoryAddress = args['proxy-factory']
-  accounts = await nodeUtils.promisify(this.web3.eth.getAccounts)()
+
+  // Truffle uses the HTTPPRovider When on LOCALHOST, so we need to pass the mnemonic seed via command
+  const lightWallet = await gnosisUtils.createLightwallet(mnemonic)
+  accounts = lightWallet.accounts // await nodeUtils.promisify(this.web3.eth.getAccounts)()
 
   // Check owners/accounts and set threshold
   if (!args.owners) {

@@ -78,7 +78,7 @@ module.exports = async function(callback) {
   // Create DX Module
   const dxCompleteModuleInstance = await DutchXCompleteModule.new([])
   const dxSellerModuleInstance = await DutchXSellerModule.new([])
-  let dxModuleSetupData, dxModuleAddress
+  let dxModuleSetupData, dxModuleAddress, dxModuleManager
   try {
     dxModuleAddress = dxCompleteModuleInstance.address
     console.log(`=========== DX COMPLETE MODULE SETUP ==============`)
@@ -102,6 +102,8 @@ module.exports = async function(callback) {
     // Lookup DutchX address on DX Module contract, it has to be equals to args.dutchx-address
     let lookupDutchxAddress = await dxCompleteModuleInstance.dutchXAddress()
     console.log(`DutchX address setted ${lookupDutchxAddress.toLowerCase() == dutchxAddress.toLowerCase() ? 'correctly' : 'incorrectly'} on DX Module`)
+    dxModuleManager = await dxCompleteModuleInstance.manager()
+    console.log(`Manager: ${dxModuleManager}`)
     console.log("==========================================")
   } catch(error) {
     callback(error)
@@ -130,6 +132,8 @@ module.exports = async function(callback) {
     // Lookup DutchX address on DX Module contract, it has to be equals to args.dutchx-address
     let lookupDutchxAddress = await dxSellerModuleInstance.dutchXAddress()
     console.log(`DutchX address setted ${lookupDutchxAddress.toLowerCase() == dutchxAddress.toLowerCase() ? 'correctly' : 'incorrectly'} on DX Module`)
+    dxModuleManager = await dxSellerModuleInstance.manager()
+    console.log(`Manager: ${dxModuleManager}`)
     console.log("==========================================")
   } catch(error) {
     callback(error)

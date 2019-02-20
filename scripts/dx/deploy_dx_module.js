@@ -91,6 +91,7 @@ module.exports = async function(callback) {
   } else {
     try {
       // Get an instance of the DutchX contract according to its type
+      // TODO add comments
       if (dxContractType == 'complete') {
         dxModuleAddress = args['dx-module-address']
         dxModuleInstance = DutchXCompleteModule.at(dxModuleAddress)
@@ -117,7 +118,7 @@ module.exports = async function(callback) {
   // Print safe info
   console.log('Safe: ' + args.safe)
   console.log('Owners: ' + owners)
-  console.log('Manager: ' + manager)
+  console.log('DX Manager: ' + manager)
   console.log("==========================================")
 
   let nonce, signatures, transactionHash
@@ -128,7 +129,8 @@ module.exports = async function(callback) {
       console.log(`DX Module address: ${dxModuleAddress}`)
       console.log(`Provided DutchX Address: ${dutchxAddress}`)
       console.log("Get data dxModule.setup(dxModuleAddress, whitelistedTokens, owners) ...")
-      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, owners) // change owners with operators
+      const operators = owners // we currently set the Safe's owners as module's operators
+      let dxModuleSetupData = await dxModuleInstance.contract.setup.getData(dutchxAddress, whitelistedTokens, operators)
       console.log("Get Safe instance nonce...")
       nonce = await safeInstance.nonce()
       console.log(`Safe Nonce: ${nonce}`)
@@ -145,6 +147,8 @@ module.exports = async function(callback) {
       // Lookup DutchX address on DX Module contract, it has to be equals to args.dutchx-address
       let lookupDutchxAddress = await dxModuleInstance.dutchXAddress()
       console.log(`DutchX address setted ${lookupDutchxAddress.toLowerCase() == dutchxAddress.toLowerCase() ? 'correctly' : 'incorrectly'} on DX Module`)
+      manager = await dxModuleInstance.manager()
+      console.log(`Manager: ${manager}`)
       console.log("==========================================")
     } catch(error) {
       callback(error)
@@ -173,9 +177,6 @@ module.exports = async function(callback) {
     // Get safe modules
     const modules = await safeInstance.getModules()
     console.log(`Modules: ${modules}`)
-
-    manager = await dxModuleInstance.manager()
-    console.log(`Manager: ${manager}`)
     console.log("==========================================")
   } catch (error) {
     callback(error)

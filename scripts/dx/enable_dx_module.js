@@ -62,6 +62,13 @@ module.exports = async function(callback) {
     // Get Safe instance
     console.log("Getting GnosisSafe instance...")
     const safeInstance = GnosisSafe.at(safeAddress)
+
+    let modules = await safeInstance.getModules()
+
+    if (modules.includes(dxModuleAddress)) {
+      callback('The DX Module is already enabled')
+    }
+
     const safeOwners = await safeInstance.getOwners()
 
     console.log("============= SAFE EXECUTION =============")
@@ -85,7 +92,7 @@ module.exports = async function(callback) {
     )
 
     // Get safe modules
-    const modules = await safeInstance.getModules()
+    modules = await safeInstance.getModules()
     console.log(`Modules: ${modules}`)
     console.log("==========================================")
   } catch (error) {
