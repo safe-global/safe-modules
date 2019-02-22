@@ -35,14 +35,14 @@
     "absolutePath": "gnosis-safe/contracts/interfaces/ISignatureValidator.sol",
     "exportedSymbols": {
       "ISignatureValidator": [
-        3646
+        3866
       ]
     },
-    "id": 3647,
+    "id": 3867,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3636,
+        "id": 3856,
         "literals": [
           "solidity",
           "^",
@@ -50,7 +50,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:19"
+        "src": "0:23:21"
       },
       {
         "baseContracts": [],
@@ -58,9 +58,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 3646,
+        "id": 3866,
         "linearizedBaseContracts": [
-          3646
+          3866
         ],
         "name": "ISignatureValidator",
         "nodeType": "ContractDefinition",
@@ -68,23 +68,23 @@
           {
             "body": null,
             "documentation": "@dev Should return whether the signature provided is valid for the provided data\n@param _data Arbitrary length data signed on the behalf of address(this)\n@param _signature Signature byte array associated with _data\n    * MUST return a bool upon valid or invalid signature with corresponding _data\nMUST take (bytes, bytes) as arguments",
-            "id": 3645,
+            "id": 3865,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "isValidSignature",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3641,
+              "id": 3861,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3638,
+                  "id": 3858,
                   "name": "_data",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3645,
-                  "src": "476:20:19",
+                  "scope": 3865,
+                  "src": "476:20:21",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -92,10 +92,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 3637,
+                    "id": 3857,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "476:5:19",
+                    "src": "476:5:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -106,11 +106,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 3640,
+                  "id": 3860,
                   "name": "_signature",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3645,
-                  "src": "507:25:19",
+                  "scope": 3865,
+                  "src": "507:25:21",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -118,10 +118,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 3639,
+                    "id": 3859,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "507:5:19",
+                    "src": "507:5:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -131,19 +131,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "466:67:19"
+              "src": "466:67:21"
             },
             "returnParameters": {
-              "id": 3644,
+              "id": 3864,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3643,
+                  "id": 3863,
                   "name": "isValid",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3645,
-                  "src": "568:12:19",
+                  "scope": 3865,
+                  "src": "568:12:21",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -151,10 +151,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3642,
+                    "id": 3862,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "568:4:19",
+                    "src": "568:4:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -164,33 +164,33 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "567:14:19"
+              "src": "567:14:21"
             },
-            "scope": 3646,
-            "src": "441:141:19",
+            "scope": 3866,
+            "src": "441:141:21",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3647,
-        "src": "25:560:19"
+        "scope": 3867,
+        "src": "25:560:21"
       }
     ],
-    "src": "0:585:19"
+    "src": "0:585:21"
   },
   "legacyAST": {
     "absolutePath": "gnosis-safe/contracts/interfaces/ISignatureValidator.sol",
     "exportedSymbols": {
       "ISignatureValidator": [
-        3646
+        3866
       ]
     },
-    "id": 3647,
+    "id": 3867,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3636,
+        "id": 3856,
         "literals": [
           "solidity",
           "^",
@@ -198,7 +198,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:19"
+        "src": "0:23:21"
       },
       {
         "baseContracts": [],
@@ -206,9 +206,9 @@
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 3646,
+        "id": 3866,
         "linearizedBaseContracts": [
-          3646
+          3866
         ],
         "name": "ISignatureValidator",
         "nodeType": "ContractDefinition",
@@ -216,23 +216,23 @@
           {
             "body": null,
             "documentation": "@dev Should return whether the signature provided is valid for the provided data\n@param _data Arbitrary length data signed on the behalf of address(this)\n@param _signature Signature byte array associated with _data\n    * MUST return a bool upon valid or invalid signature with corresponding _data\nMUST take (bytes, bytes) as arguments",
-            "id": 3645,
+            "id": 3865,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "isValidSignature",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3641,
+              "id": 3861,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3638,
+                  "id": 3858,
                   "name": "_data",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3645,
-                  "src": "476:20:19",
+                  "scope": 3865,
+                  "src": "476:20:21",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -240,10 +240,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 3637,
+                    "id": 3857,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "476:5:19",
+                    "src": "476:5:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -254,11 +254,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 3640,
+                  "id": 3860,
                   "name": "_signature",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3645,
-                  "src": "507:25:19",
+                  "scope": 3865,
+                  "src": "507:25:21",
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
@@ -266,10 +266,10 @@
                     "typeString": "bytes"
                   },
                   "typeName": {
-                    "id": 3639,
+                    "id": 3859,
                     "name": "bytes",
                     "nodeType": "ElementaryTypeName",
-                    "src": "507:5:19",
+                    "src": "507:5:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes_storage_ptr",
                       "typeString": "bytes"
@@ -279,19 +279,19 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "466:67:19"
+              "src": "466:67:21"
             },
             "returnParameters": {
-              "id": 3644,
+              "id": 3864,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3643,
+                  "id": 3863,
                   "name": "isValid",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3645,
-                  "src": "568:12:19",
+                  "scope": 3865,
+                  "src": "568:12:21",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -299,10 +299,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 3642,
+                    "id": 3862,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "568:4:19",
+                    "src": "568:4:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -312,40 +312,26 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "567:14:19"
+              "src": "567:14:21"
             },
-            "scope": 3646,
-            "src": "441:141:19",
+            "scope": 3866,
+            "src": "441:141:21",
             "stateMutability": "nonpayable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3647,
-        "src": "25:560:19"
+        "scope": 3867,
+        "src": "25:560:21"
       }
     ],
-    "src": "0:585:19"
+    "src": "0:585:21"
   },
   "compiler": {
     "name": "solc",
     "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.1",
-  "updatedAt": "2019-01-09T10:35:12.997Z",
-  "devdoc": {
-    "methods": {
-      "isValidSignature(bytes,bytes)": {
-        "details": "Should return whether the signature provided is valid for the provided data",
-        "params": {
-          "_data": "Arbitrary length data signed on the behalf of address(this)",
-          "_signature": "Signature byte array associated with _data    * MUST return a bool upon valid or invalid signature with corresponding _data MUST take (bytes, bytes) as arguments"
-        }
-      }
-    }
-  },
-  "userdoc": {
-    "methods": {}
-  }
+  "schemaVersion": "2.0.2",
+  "updatedAt": "2019-02-22T16:34:35.774Z"
 }

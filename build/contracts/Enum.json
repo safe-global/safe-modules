@@ -3,22 +3,22 @@
   "abi": [],
   "bytecode": "0x6080604052348015600f57600080fd5b50603580601d6000396000f3fe6080604052600080fdfea165627a7a7230582040008e20d62e942e6d1c3b6242e22b8ad19a72ec25410dfb828a18b831d51e400029",
   "deployedBytecode": "0x6080604052600080fdfea165627a7a7230582040008e20d62e942e6d1c3b6242e22b8ad19a72ec25410dfb828a18b831d51e400029",
-  "sourceMap": "115:95:12:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;115:95:12;;;;;;;",
-  "deployedSourceMap": "115:95:12:-;;;;;",
+  "sourceMap": "115:95:14:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;115:95:14;;;;;;;",
+  "deployedSourceMap": "115:95:14:-;;;;;",
   "source": "pragma solidity ^0.5.0;\n\n\n/// @title Enum - Collection of enums\n/// @author Richard Meissner - <richard@gnosis.pm>\ncontract Enum {\n    enum Operation {\n        Call,\n        DelegateCall,\n        Create\n    }\n}\n",
   "sourcePath": "gnosis-safe/contracts/common/Enum.sol",
   "ast": {
     "absolutePath": "gnosis-safe/contracts/common/Enum.sol",
     "exportedSymbols": {
       "Enum": [
-        3372
+        3592
       ]
     },
-    "id": 3373,
+    "id": 3593,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3367,
+        "id": 3587,
         "literals": [
           "solidity",
           "^",
@@ -26,7 +26,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:12"
+        "src": "0:23:14"
       },
       {
         "baseContracts": [],
@@ -34,59 +34,59 @@
         "contractKind": "contract",
         "documentation": "@title Enum - Collection of enums\n @author Richard Meissner - <richard@gnosis.pm>",
         "fullyImplemented": true,
-        "id": 3372,
+        "id": 3592,
         "linearizedBaseContracts": [
-          3372
+          3592
         ],
         "name": "Enum",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "Enum.Operation",
-            "id": 3371,
+            "id": 3591,
             "members": [
               {
-                "id": 3368,
+                "id": 3588,
                 "name": "Call",
                 "nodeType": "EnumValue",
-                "src": "160:4:12"
+                "src": "160:4:14"
               },
               {
-                "id": 3369,
+                "id": 3589,
                 "name": "DelegateCall",
                 "nodeType": "EnumValue",
-                "src": "174:12:12"
+                "src": "174:12:14"
               },
               {
-                "id": 3370,
+                "id": 3590,
                 "name": "Create",
                 "nodeType": "EnumValue",
-                "src": "196:6:12"
+                "src": "196:6:14"
               }
             ],
             "name": "Operation",
             "nodeType": "EnumDefinition",
-            "src": "135:73:12"
+            "src": "135:73:14"
           }
         ],
-        "scope": 3373,
-        "src": "115:95:12"
+        "scope": 3593,
+        "src": "115:95:14"
       }
     ],
-    "src": "0:211:12"
+    "src": "0:211:14"
   },
   "legacyAST": {
     "absolutePath": "gnosis-safe/contracts/common/Enum.sol",
     "exportedSymbols": {
       "Enum": [
-        3372
+        3592
       ]
     },
-    "id": 3373,
+    "id": 3593,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3367,
+        "id": 3587,
         "literals": [
           "solidity",
           "^",
@@ -94,7 +94,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:12"
+        "src": "0:23:14"
       },
       {
         "baseContracts": [],
@@ -102,60 +102,52 @@
         "contractKind": "contract",
         "documentation": "@title Enum - Collection of enums\n @author Richard Meissner - <richard@gnosis.pm>",
         "fullyImplemented": true,
-        "id": 3372,
+        "id": 3592,
         "linearizedBaseContracts": [
-          3372
+          3592
         ],
         "name": "Enum",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "Enum.Operation",
-            "id": 3371,
+            "id": 3591,
             "members": [
               {
-                "id": 3368,
+                "id": 3588,
                 "name": "Call",
                 "nodeType": "EnumValue",
-                "src": "160:4:12"
+                "src": "160:4:14"
               },
               {
-                "id": 3369,
+                "id": 3589,
                 "name": "DelegateCall",
                 "nodeType": "EnumValue",
-                "src": "174:12:12"
+                "src": "174:12:14"
               },
               {
-                "id": 3370,
+                "id": 3590,
                 "name": "Create",
                 "nodeType": "EnumValue",
-                "src": "196:6:12"
+                "src": "196:6:14"
               }
             ],
             "name": "Operation",
             "nodeType": "EnumDefinition",
-            "src": "135:73:12"
+            "src": "135:73:14"
           }
         ],
-        "scope": 3373,
-        "src": "115:95:12"
+        "scope": 3593,
+        "src": "115:95:14"
       }
     ],
-    "src": "0:211:12"
+    "src": "0:211:14"
   },
   "compiler": {
     "name": "solc",
     "version": "0.5.0+commit.1d4f565a.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.1",
-  "updatedAt": "2019-01-09T10:35:12.996Z",
-  "devdoc": {
-    "author": "Richard Meissner - <richard@gnosis.pm>",
-    "methods": {},
-    "title": "Enum - Collection of enums"
-  },
-  "userdoc": {
-    "methods": {}
-  }
+  "schemaVersion": "2.0.2",
+  "updatedAt": "2019-02-22T16:34:35.748Z"
 }

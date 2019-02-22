@@ -14,10 +14,19 @@ contract DutchXBaseModule is Module {
   /// @dev Setup function sets initial storage of contract.
   /// @param dx DutchX Proxy Address.
   /// @param tokens List of whitelisted tokens.
-  function setup(address dx, address[] memory tokens, address[] memory operators)
+  /// @param operators List of addresses that can operate the module.
+  /// @param _manager Address of the manager, the safe contract.
+  function setup(address dx, address[] memory tokens, address[] memory operators, address payable _manager)
       public
   {
-      setManager();
+      require(address(manager) == address(0), "Manager has already been set");
+      if (_manager == address(0)){
+        manager = ModuleManager(msg.sender);
+      }
+      else{
+        manager = ModuleManager(_manager);
+      }
+
       dutchXAddress = dx;
 
       for (uint256 i = 0; i < tokens.length; i++) {

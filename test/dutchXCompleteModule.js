@@ -68,7 +68,7 @@ contract('DutchXModule', function(accounts) {
         gnosisSafeMasterCopy.setup([accounts[0], accounts[1]], 2, 0, "0x")
         let dxModuleCopy = await DutchXModule.new( [])
         // Create Gnosis Safe and DutchX Module in one transaction
-        let moduleData = await dxModuleCopy.contract.setup.getData(dxMock.address, [], [accounts[0]]) // dx, whitelistedToken, operators
+        let moduleData = await dxModuleCopy.contract.setup.getData(dxMock.address, [], [accounts[0]], 0) // dx, whitelistedToken, operators
         let proxyFactoryData = await proxyFactory.contract.createProxy.getData(dxModuleCopy.address, moduleData)
         let modulesCreationData = utils.createAndAddModulesData([proxyFactoryData])
         let createAndAddModulesData = createAndAddModules.contract.createAndAddModules.getData(proxyFactory.address, modulesCreationData)
