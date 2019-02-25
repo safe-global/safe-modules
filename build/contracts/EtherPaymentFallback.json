@@ -9,22 +9,22 @@
   ],
   "bytecode": "0x6080604052348015600f57600080fd5b50603280601d6000396000f3fe608060405200fea165627a7a723058206e56340636921798b208cda93cbc8cd4cb4695e563a2567dc8cd43675ffb800d0029",
   "deployedBytecode": "0x608060405200fea165627a7a723058206e56340636921798b208cda93cbc8cd4cb4695e563a2567dc8cd43675ffb800d0029",
-  "sourceMap": "167:155:15:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;167:155:15;;;;;;;",
-  "deployedSourceMap": "167:155:15:-;;;",
+  "sourceMap": "167:155:9:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;167:155:9;;;;;;;",
+  "deployedSourceMap": "167:155:9:-;;;",
   "source": "pragma solidity ^0.5.0;\n\n\n/// @title EtherPaymentFallback - A contract that has a fallback to accept ether payments\n/// @author Richard Meissner - <richard@gnosis.pm>\ncontract EtherPaymentFallback {\n\n    /// @dev Fallback function accepts Ether transactions.\n    function ()\n        external\n        payable\n    {\n\n    }\n}\n",
   "sourcePath": "gnosis-safe/contracts/common/EtherPaymentFallback.sol",
   "ast": {
     "absolutePath": "gnosis-safe/contracts/common/EtherPaymentFallback.sol",
     "exportedSymbols": {
       "EtherPaymentFallback": [
-        3599
+        2809
       ]
     },
-    "id": 3600,
+    "id": 2810,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3594,
+        "id": 2804,
         "literals": [
           "solidity",
           "^",
@@ -32,7 +32,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:15"
+        "src": "0:23:9"
       },
       {
         "baseContracts": [],
@@ -40,64 +40,64 @@
         "contractKind": "contract",
         "documentation": "@title EtherPaymentFallback - A contract that has a fallback to accept ether payments\n @author Richard Meissner - <richard@gnosis.pm>",
         "fullyImplemented": true,
-        "id": 3599,
+        "id": 2809,
         "linearizedBaseContracts": [
-          3599
+          2809
         ],
         "name": "EtherPaymentFallback",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 3597,
+              "id": 2807,
               "nodeType": "Block",
-              "src": "312:8:15",
+              "src": "312:8:9",
               "statements": []
             },
             "documentation": "@dev Fallback function accepts Ether transactions.",
-            "id": 3598,
+            "id": 2808,
             "implemented": true,
             "kind": "fallback",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3595,
+              "id": 2805,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "272:2:15"
+              "src": "272:2:9"
             },
             "returnParameters": {
-              "id": 3596,
+              "id": 2806,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "312:0:15"
+              "src": "312:0:9"
             },
-            "scope": 3599,
-            "src": "263:57:15",
+            "scope": 2809,
+            "src": "263:57:9",
             "stateMutability": "payable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3600,
-        "src": "167:155:15"
+        "scope": 2810,
+        "src": "167:155:9"
       }
     ],
-    "src": "0:323:15"
+    "src": "0:323:9"
   },
   "legacyAST": {
     "absolutePath": "gnosis-safe/contracts/common/EtherPaymentFallback.sol",
     "exportedSymbols": {
       "EtherPaymentFallback": [
-        3599
+        2809
       ]
     },
-    "id": 3600,
+    "id": 2810,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3594,
+        "id": 2804,
         "literals": [
           "solidity",
           "^",
@@ -105,7 +105,7 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:15"
+        "src": "0:23:9"
       },
       {
         "baseContracts": [],
@@ -113,51 +113,51 @@
         "contractKind": "contract",
         "documentation": "@title EtherPaymentFallback - A contract that has a fallback to accept ether payments\n @author Richard Meissner - <richard@gnosis.pm>",
         "fullyImplemented": true,
-        "id": 3599,
+        "id": 2809,
         "linearizedBaseContracts": [
-          3599
+          2809
         ],
         "name": "EtherPaymentFallback",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "body": {
-              "id": 3597,
+              "id": 2807,
               "nodeType": "Block",
-              "src": "312:8:15",
+              "src": "312:8:9",
               "statements": []
             },
             "documentation": "@dev Fallback function accepts Ether transactions.",
-            "id": 3598,
+            "id": 2808,
             "implemented": true,
             "kind": "fallback",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 3595,
+              "id": 2805,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "272:2:15"
+              "src": "272:2:9"
             },
             "returnParameters": {
-              "id": 3596,
+              "id": 2806,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "312:0:15"
+              "src": "312:0:9"
             },
-            "scope": 3599,
-            "src": "263:57:15",
+            "scope": 2809,
+            "src": "263:57:9",
             "stateMutability": "payable",
             "superFunction": null,
             "visibility": "external"
           }
         ],
-        "scope": 3600,
-        "src": "167:155:15"
+        "scope": 2810,
+        "src": "167:155:9"
       }
     ],
-    "src": "0:323:15"
+    "src": "0:323:9"
   },
   "compiler": {
     "name": "solc",
@@ -165,5 +165,5 @@
   },
   "networks": {},
   "schemaVersion": "2.0.2",
-  "updatedAt": "2019-02-22T16:34:35.748Z"
+  "updatedAt": "2019-02-25T15:03:21.593Z"
 }
