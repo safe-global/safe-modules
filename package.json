@@ -6,7 +6,8 @@
   "main": "index.js",
   "files": [
     "contracts",
-    "test"
+    "test",
+    "build"
   ],
   "scripts": {
     "add-dx-operator": "truffle exec scripts/dx/add_dx_operator.js",
