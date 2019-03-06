@@ -11,6 +11,10 @@ contract DutchXBaseModule is Module {
   mapping (address => bool) public isWhitelistedToken;
   mapping (address => bool) public isOperator;
 
+  // helper variables used by the CLI
+  address[] public whitelistedTokens; 
+  address[] public whitelistedOperators;
+
   /// @dev Setup function sets initial storage of contract.
   /// @param dx DutchX Proxy Address.
   /// @param tokens List of whitelisted tokens.
@@ -34,11 +38,16 @@ contract DutchXBaseModule is Module {
           require(token != address(0), "Invalid token provided");
           isWhitelistedToken[token] = true;
       }
+
+      whitelistedTokens = tokens;
+
       for (uint256 i = 0; i < operators.length; i++) {
           address operator = operators[i];
           require(operator != address(0), "Invalid operator address provided");
           isOperator[operator] = true;
       }
+
+      whitelistedOperators = operators;
   }
 
   /// @dev Allows to add token to whitelist. This can only be done via a Safe transaction.
@@ -50,6 +59,7 @@ contract DutchXBaseModule is Module {
       require(token != address(0), "Invalid token provided");
       require(!isWhitelistedToken[token], "Token is already whitelisted");
       isWhitelistedToken[token] = true;
+      whitelistedTokens.push(token);
   }
 
   /// @dev Allows to remove token from whitelist. This can only be done via a Safe transaction.
@@ -60,6 +70,13 @@ contract DutchXBaseModule is Module {
   {
       require(isWhitelistedToken[token], "Token is not whitelisted");
       isWhitelistedToken[token] = false;
+
+      for (uint i=0; i<whitelistedTokens.length - 1; i++)
+        if(whitelistedTokens[i] == token){
+            whitelistedTokens[i] = whitelistedTokens[whitelistedTokens.length-1];
+            break;
+        }
+      whitelistedTokens.length -=1;
   }
 
   /// @dev Allows to add operator to whitelist. This can only be done via a Safe transaction.
@@ -71,6 +88,7 @@ contract DutchXBaseModule is Module {
       require(operator != address(0), "Invalid address provided");
       require(!isOperator[operator], "Operator is already whitelisted");
       isOperator[operator] = true;
+      whitelistedOperators.push(operator);
   }
 
   /// @dev Allows to remove operator from whitelist. This can only be done via a Safe transaction.
@@ -81,6 +99,14 @@ contract DutchXBaseModule is Module {
   {
       require(isOperator[operator], "Operator is not whitelisted");
       isOperator[operator] = false;
+
+      for (uint i=0; i<whitelistedOperators.length - 1; i++)
+        if(whitelistedOperators[i] == operator){
+            whitelistedOperators[i] = whitelistedOperators[whitelistedOperators.length-1];
+            break;
+        }
+      whitelistedOperators.length -=1;
+
   }
 
   /// @dev Allows to change DutchX Proxy contract address. This can only be done via a Safe transaction.
@@ -102,4 +128,24 @@ contract DutchXBaseModule is Module {
       public
       returns (bool);
 
+
+   /// @dev Returns list of whitelisted tokens.
+   /// @return List of whitelisted tokens addresses.
+   function getWhitelistedTokens()
+     public
+     view
+     returns (address[] memory)
+   {
+     return whitelistedTokens;
+   }
+
+   /// @dev Returns list of whitelisted operators.
+   /// @return List of whitelisted operators addresses.
+   function getWhitelistedOperators()
+     public
+     view
+     returns (address[] memory)
+   {
+     return whitelistedOperators;
+   }
 }

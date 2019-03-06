@@ -83,6 +83,11 @@ contract('DutchXModule', function(accounts) {
         assert.equal(await dxModule.manager.call(), gnosisSafe.address)
     })
 
+    it('before adding any token to whitelist, list should be empty', async () => {
+        const initialWhitelistedTokens = await dxModule.getWhitelistedTokens()
+        assert.equal(initialWhitelistedTokens.length, 0, "Initial whitelisted tokens should be none")
+    })
+
     it('should execute approve tokens and deposit for whitelisted token in the dx', async () => {
         
         // send 1 ETH to the safe
@@ -119,6 +124,10 @@ contract('DutchXModule', function(accounts) {
             )
         )
         assert.equal(await dxModule.isWhitelistedToken(token.address), true)
+
+        const newWhitelistedTokens = await dxModule.getWhitelistedTokens()
+        assert.equal(newWhitelistedTokens.length, 1, "Whitelisted tokens should contain one")
+        assert.equal(newWhitelistedTokens[0], token.address, "Whitelisted token should be the one passed to addToWhitelist")
 
         // No operator user will fail when trying to execute a transaction
         utils.assertRejects(
