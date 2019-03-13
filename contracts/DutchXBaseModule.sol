@@ -1,5 +1,5 @@
 pragma solidity 0.5.0;
-import "gnosis-safe/contracts/base/Module.sol";
+import "@gnosis.pm/safe-contracts/contracts/base/Module.sol";
 
 
 /// @title DutchX Base Module - Expose a set of methods to enable a Safe to interact with a DX

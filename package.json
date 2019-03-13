@@ -53,9 +53,9 @@
     "web3": "^0.20.6"
   },
   "dependencies": {
+    "@gnosis.pm/safe-contracts": "^0.1.0",
     "@gnosis.pm/util-contracts": "^2.0.0",
     "dotenv": "^6.2.0",
-    "gnosis-safe": "github:gnosis/safe-contracts#v0.1.0",
     "solc": "0.5.0"
   }
 }

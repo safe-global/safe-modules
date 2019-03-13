@@ -1,4 +1,4 @@
-const utils = require('gnosis-safe/test/utils')
+const utils = require('@gnosis.pm/safe-contracts/test/utils')
 
 const CreateAndAddModules = artifacts.require("./CreateAndAddModules.sol");
 const DutchXModule = artifacts.require("./DutchXSellerModule.sol");
