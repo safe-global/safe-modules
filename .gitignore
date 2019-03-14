@@ -4,3 +4,4 @@ node_modules/
 .zos.session
 env/
 .history
+coverage*
