@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity ^0.5.0;
 import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "./DutchXBaseModule.sol";
 import "./DutchXInterface.sol";

@@ -21,7 +21,7 @@ let solcUseDocker, solcVersion
 if (!compatibilityTruffle4) {
   // Use truffle 5
   solcUseDocker = process.env.SOLC_USE_DOCKER === 'true' || false
-  solcVersion = '0.5.0'
+  solcVersion = '0.5.3'
 }
 
 // Gas price

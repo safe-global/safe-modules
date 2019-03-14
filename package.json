@@ -14,7 +14,7 @@
     "restore": "rm -rf build && npm run compile && tnt iN && tnt cB",
     "test-norpc": "truffle test",
     "test": "run-with-testrpc -l 20000000 --noVMErrorsOnRPCResponse true 'truffle test'",
-    "install": "cd $INIT_CWD && npm explore truffle -- npm install solc@0.5.0",
+    "install": "cd $INIT_CWD && npm explore truffle -- npm install solc@0.5.3",
     "lint": "./node_modules/solium/bin/solium.js -d contracts",
     "coverage": "./node_modules/.bin/solidity-coverage"
   },
