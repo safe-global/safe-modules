@@ -55,7 +55,6 @@
   "dependencies": {
     "@gnosis.pm/safe-contracts": "^0.1.0",
     "@gnosis.pm/util-contracts": "^2.0.0",
-    "dotenv": "^6.2.0",
-    "solc": "0.5.0"
+    "dotenv": "^6.2.0"
   }
 }
