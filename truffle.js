@@ -1,4 +1,3 @@
-require('eth-lightwallet')
 const truffleConfig = require('@gnosis.pm/util-contracts/src/util/truffleConfig')
 
 const DEFAULT_GAS_PRICE_GWEI = 5
