@@ -10,7 +10,7 @@ const MockContract = artifacts.require("./MockContract.sol")
 
 
 // Helper function to deploy a mocked tocken
-let deployWETHToken = async function(deployer) {
+let deployTestToken = async function(deployer) {
     let tokenSource = `
     contract TestToken {
         constructor() public {}
@@ -54,7 +54,7 @@ contract('DutchXModule', function(accounts) {
         const mock = await MockContract.new()
         mock.givenAnyReturnBool(true)
 
-        const tokenMock = await deployWETHToken(accounts[0])
+        const tokenMock = await deployTestToken(accounts[0])
 
         // Mocked contracts
         dxMock = DutchXInterface.at(mock.address)
