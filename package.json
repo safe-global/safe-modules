@@ -1,5 +1,5 @@
 {
-  "name": "gnosis-safe-modules",
+  "name": "@gnosis.pm/safe-modules",
   "version": "0.1.0",
   "description": "Modules for the Gnosis Safe contracts",
   "license": "GPL-3.0",
