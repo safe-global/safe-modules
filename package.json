@@ -1,6 +1,6 @@
 {
   "name": "gnosis-safe-modules",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Modules for the Gnosis Safe contracts",
   "license": "GPL-3.0",
   "main": "index.js",
