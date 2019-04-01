@@ -1,5 +1,11 @@
 {
   "DutchXCompleteModule": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xba22d73c079ceb97db93f2effb1f1054fe1cfcd6",
+      "transactionHash": "0x302f43dab8cfd78a02e1eda013812818a74f0d4a2dbeaad0fc6ff817280736d1"
+    },
     "4": {
       "events": {},
       "links": {},
@@ -14,6 +20,12 @@
     }
   },
   "DutchXSellerModule": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xe3ebeb3a6a535131f2861f866d98d555580aa84d",
+      "transactionHash": "0x430218aee1446df04391d74bfe6ce519b7eec54a9d9cdfa539900a260fab1248"
+    },
     "4": {
       "events": {},
       "links": {},
@@ -28,6 +40,12 @@
     }
   },
   "Migrations": {
+    "1": {
+      "events": {},
+      "links": {},
+      "address": "0xcd88e1fa7420be158b35e815c3ba07cd743c6bdb",
+      "transactionHash": "0x068f35ff75704f0e871fe71e5668f5462c03949fc414614e4954743784aa16ba"
+    },
     "4": {
       "events": {},
       "links": {},
