@@ -1,0 +1,44 @@
+{
+  "DutchXCompleteModule": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xc98349cec1ceaf7c5a3dcac7dc83b469a9d76b6f",
+      "transactionHash": "0x8765a9188ee1ad037b721b8129c5bd075732b35ef9e8707bc51711d5cca82ddf"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0x756b9902ddfa6d097e4eb70b8dd2b4014cfc49e0",
+      "transactionHash": "0x012ba475f2d3fc94c190e0aa6e542b775a48d47447d3cdd2a86ecb8affd35bcf"
+    }
+  },
+  "DutchXSellerModule": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0x11bd88fcc3715d4b19314421d195cd08c3085129",
+      "transactionHash": "0x1798454cbf2bf8303f4476943b86e102a76c47c8ff58a5fffc2b1ad0d797a89a"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0x369fa7130120a29c2b7676bba822236fcb73022c",
+      "transactionHash": "0x2be492d2da94e69d9d8317cee04d6ed247f8d06f3caf1744d00cd3649599fc39"
+    }
+  },
+  "Migrations": {
+    "4": {
+      "events": {},
+      "links": {},
+      "address": "0xa9d38b5ab4b097bf5defbe5af59b6166c6f7f58b",
+      "transactionHash": "0xb3d274d53c826c3e6c0f4851a1b430b777fc4b9c0e91ddcb5abda9e4e5fcde0d"
+    },
+    "42": {
+      "events": {},
+      "links": {},
+      "address": "0x4eda071ef68cc88e0b266e0289c6b9f8b0b7b3c1",
+      "transactionHash": "0xf8b011930d2d0c4b033af0b432ce4c4e6abd730638d76e15013fd44f4c8eb57a"
+    }
+  }
+}

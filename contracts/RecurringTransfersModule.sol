@@ -1,11 +1,11 @@
 pragma solidity ^0.5.0;
 
-import "gnosis-safe/contracts/base/ModuleManager.sol";
-import "gnosis-safe/contracts/base/OwnerManager.sol";
-import "gnosis-safe/contracts/base/Module.sol";
-import "gnosis-safe/contracts/common/SecuredTokenTransfer.sol";
-import "gnosis-safe/contracts/common/Enum.sol";
-import "gnosis-safe/contracts/common/SignatureDecoder.sol";
+import "@gnosis.pm/safe-contracts/contracts/base/ModuleManager.sol";
+import "@gnosis.pm/safe-contracts/contracts/base/OwnerManager.sol";
+import "@gnosis.pm/safe-contracts/contracts/base/Module.sol";
+import "@gnosis.pm/safe-contracts/contracts/common/SecuredTokenTransfer.sol";
+import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import "@gnosis.pm/safe-contracts/contracts/common/SignatureDecoder.sol";
 import "./external/DateTime.sol";
 import "./external/DutchExchangeInterface.sol";
 import "./external/SafeMath.sol";

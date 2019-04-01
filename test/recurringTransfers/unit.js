@@ -1,4 +1,4 @@
-const utils = require('gnosis-safe/test/utils')
+const utils = require('@gnosis.pm/safe-contracts/test/utils')
 const blockTime = require('./blockTime')
 const abi = require('ethereumjs-abi')
 const { wait, waitUntilBlock } = require('@digix/tempo')(web3);
