@@ -18,6 +18,6 @@ License
 -------
 All smart contracts are released under LGPL v.3.
 
-Contributors
+Maintainers
 ------------
 - Richard Meissner ([rmeissner](https://github.com/rmeissner))

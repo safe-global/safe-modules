@@ -1,0 +1,25 @@
+{
+  "name": "top-up-module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "run-with-testrpc -l 20000000 --noVMErrorsOnRPCResponse 'truffle test'"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@gnosis.pm/mock-contract": "^3.0.0",
+    "run-with-testrpc": "^0.3.0",
+    "eth-lightwallet": "^4.0.0",
+    "ethereumjs-abi": "^0.6.5",
+    "ganache-cli": "6.1.7",
+    "truffle-hdwallet-provider": "^1.0.0-web3one.1"
+  },
+  "dependencies": {
+    "@gnosis.pm/safe-contracts": "^1.1.0",
+    "@gnosis.pm/util-contracts": "^2.0.0",
+    "dotenv": "^8.0.0",
+    "truffle": "^5.0.34"
+  }
+}
