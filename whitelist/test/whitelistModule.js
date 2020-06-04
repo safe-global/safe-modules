@@ -1,4 +1,4 @@
-const utils = require('./utils/general')
+const utils = require('@gnosis.pm/safe-contracts/test/utils/general')
 
 const CreateAndAddModules = artifacts.require("./libraries/CreateAndAddModules.sol");
 const ProxyFactory = artifacts.require("./GnosisSafeProxyFactory.sol");
