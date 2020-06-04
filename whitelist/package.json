@@ -45,6 +45,7 @@
   "dependencies": {
     "@gnosis.pm/safe-contracts": "^1.1.1-dev.2",
     "@gnosis.pm/util-contracts": "^2.0.6",
+    "@rmeissner/safe-apps-react-sdk": "^0.1.0",
     "dotenv": "^6.2.0",
     "openzeppelin-solidity": "^2.5.1"
   },
