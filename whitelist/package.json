@@ -14,7 +14,11 @@
     "preversion": "yarn restore",
     "restore": "yarn truffle compile && yarn tnt cB",
     "deploy": "run(){ truffle deploy --network=$@; }; run",
-    "do": "run(){ truffle exec --network=$@; }; run"
+    "do": "run(){ truffle exec --network=$@; }; run",
+    "sapp-start": "react-scripts start",
+    "sapp-build": "react-scripts build",
+    "sapp-test": "react-scripts test",
+    "sapp-eject": "react-scripts eject"
   },
   "repository": {
     "type": "git",
@@ -39,18 +43,45 @@
     "random-buffer": "*",
     "run-with-testrpc": "^0.3.0",
     "solidity-coverage": "^0.7.4",
-    "web3": "^1.2.6",
-    "solium": "^1.2.1"
+    "solium": "^1.2.1",
+    "web3": "^1.2.6"
   },
   "dependencies": {
+    "-": "^0.0.1",
     "@gnosis.pm/safe-contracts": "^1.1.1-dev.2",
     "@gnosis.pm/util-contracts": "^2.0.6",
-    "@rmeissner/safe-apps-react-sdk": "^0.1.0",
+    "@material-ui/core": "^4.9.12",
+    "@material-ui/icons": "^4.9.1",
+    "@rmeissner/safe-apps-react-sdk": "^0.3.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@types/jest": "^24.0.0",
+    "@types/node": "^12.0.0",
+    "@types/react": "^16.9.0",
+    "@types/react-dom": "^16.9.0",
     "dotenv": "^6.2.0",
-    "openzeppelin-solidity": "^2.5.1"
+    "http-proxy-middleware": "^1.0.4",
+    "openzeppelin-solidity": "^2.5.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.1",
+    "typescript": "~3.7.2"
   },
   "resolutions": {
     "bitcore-lib": "8.1.1",
     "run-with-testrpc/ganache-cli": "6.3.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
