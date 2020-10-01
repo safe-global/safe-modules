@@ -106,7 +106,7 @@ contract('AllowanceModule delegate', function(accounts) {
         assert.ok(tokenLimit[3] > 0)
         assert.equal(2, tokenLimit[4])
 
-        let removeDelegateData = await safeModule.contract.methods.removeDelegate(lw.accounts[4]).encodeABI()
+        let removeDelegateData = await safeModule.contract.methods.removeDelegate(lw.accounts[4], true).encodeABI()
         await execTransaction(safeModule.address, 0, removeDelegateData, CALL, "remove delegate")
         let removedAllowance = await safeModule.getTokenAllowance(gnosisSafe.address, lw.accounts[4], token.address)
         assert.equal(0, removedAllowance[0])

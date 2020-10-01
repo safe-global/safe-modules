@@ -32,9 +32,12 @@ contract AllowanceModule is SignatureDecoder {
 
     // Safe -> Delegate -> Allowance
     mapping(address => mapping (address => mapping(address => Allowance))) public allowances;
+    // Safe -> Delegate -> Tokens
     mapping(address => mapping (address => address[])) public tokens;
-    mapping(address => mapping (uint48 => Delegate)) public delegates;
+    // Safe -> Delegates double linked list entry points
     mapping(address => uint48) public delegatesStart;
+    // Safe -> Delegates double linked list
+    mapping(address => mapping (uint48 => Delegate)) public delegates;
 
     // We use a double linked list for the delegates. The id is the first 6 bytes. 
     // To double check the address in case of collision, the address is part of the struct.
@@ -56,7 +59,10 @@ contract AllowanceModule is SignatureDecoder {
     event AddDelegate(address indexed safe, address delegate);
     event RemoveDelegate(address indexed safe, address delegate);
     event ExecuteAllowanceTransfer(address indexed safe, address delegate, address token, address to, uint96 value, uint16 nonce);
+    event PayAllowanceTransfer(address indexed safe, address delegate, address paymentToken, address paymentReceiver, uint96 payment);
     event SetAllowance(address indexed safe, address delegate, address token, uint96 allowanceAmount, uint16 resetTime);
+    event ResetAllowance(address indexed safe, address delegate, address token);
+    event DeleteAllowance(address indexed safe, address delegate, address token);
 
     /// @dev Allows to update the allowance for a specified token. This can only be done via a Safe transaction.
     /// @param delegate Delegate whose allowance should be updated.
@@ -113,6 +119,22 @@ contract AllowanceModule is SignatureDecoder {
         Allowance memory allowance = getAllowance(msg.sender, delegate, token);
         allowance.spent = 0;
         updateAllowance(msg.sender, delegate, token, allowance);
+        emit ResetAllowance(msg.sender, delegate, token);
+    }
+
+    /// @dev Allows to remove the allowance for a specific delegate and token. This will set all values except the `nonce` to 0.
+    /// @param delegate Delegate whose allowance should be updated.
+    /// @param token Token contract address.
+    function deleteAllowance(address delegate, address token)
+        public
+    {
+        Allowance memory allowance = getAllowance(msg.sender, delegate, token);
+        allowance.amount = 0;
+        allowance.spent = 0;
+        allowance.resetTimeMin = 0;
+        allowance.lastResetMin = 0;
+        updateAllowance(msg.sender, delegate, token, allowance);
+        emit DeleteAllowance(msg.sender, delegate, token);
     }
 
     /// @dev Allows to use the allowance to perform a transfer.
@@ -164,6 +186,7 @@ contract AllowanceModule is SignatureDecoder {
             // Transfer payment
             // solium-disable-next-line security/no-tx-origin
             transfer(safe, paymentToken, tx.origin, payment);
+            emit PayAllowanceTransfer(address(safe), delegate, paymentToken, tx.origin, payment);
         }
         // Transfer token
         transfer(safe, token, to, amount);
@@ -270,11 +293,18 @@ contract AllowanceModule is SignatureDecoder {
         ];
     }
 
+    /// @dev Allows to add a delegate.
+    /// @param delegate Delegate that should be added.
     function addDelegate(address delegate) public {
         require(delegate != address(0), "Invalid delegate address");
         uint48 index = uint48(delegate);
-        // Delegate already exists, nothing to do
-        if(delegates[msg.sender][index].delegate != address(0)) return;
+        address currentDelegate = delegates[msg.sender][index].delegate;
+        if(currentDelegate != address(0)) {
+            // We have a collision for the indeces of delegates 
+            require(currentDelegate == delegate, "currentDelegate == delegate");
+            // Delegate already exists, nothing to do
+            return;
+        }
         uint48 startIndex = delegatesStart[msg.sender];
         delegates[msg.sender][index] = Delegate(delegate, 0, startIndex);
         delegates[msg.sender][startIndex].prev = index;
@@ -282,20 +312,26 @@ contract AllowanceModule is SignatureDecoder {
         emit AddDelegate(msg.sender, delegate);
     }
 
-    function removeDelegate(address delegate) public {
+    /// @dev Allows to remove a delegate.
+    /// @param delegate Delegate that should be removed.
+    /// @param removeAllowances Indicator if allowances should also be removed. This should be set to `true` unless this causes an out of gas, in this case the allowances should be "manually" deleted via `deleteAllowance`.
+    function removeDelegate(address delegate, bool removeAllowances) public {
         Delegate memory current = delegates[msg.sender][uint48(delegate)];
         // Delegate doesn't exists, nothing to do
         if(current.delegate == address(0)) return;
-        address[] storage delegateTokens = tokens[msg.sender][delegate];
-        for (uint256 i = 0; i < delegateTokens.length; i++) {
-            address token = delegateTokens[i];
-            // Set all allowance params except the nonce to 0
-            Allowance memory allowance = getAllowance(msg.sender, delegate, token);
-            allowance.amount = 0;
-            allowance.spent = 0;
-            allowance.resetTimeMin = 0;
-            allowance.lastResetMin = 0;
-            updateAllowance(msg.sender, delegate, token, allowance);
+        if (removeAllowances) {
+            address[] storage delegateTokens = tokens[msg.sender][delegate];
+            for (uint256 i = 0; i < delegateTokens.length; i++) {
+                address token = delegateTokens[i];
+                // Set all allowance params except the nonce to 0
+                Allowance memory allowance = getAllowance(msg.sender, delegate, token);
+                allowance.amount = 0;
+                allowance.spent = 0;
+                allowance.resetTimeMin = 0;
+                allowance.lastResetMin = 0;
+                updateAllowance(msg.sender, delegate, token, allowance);
+                emit DeleteAllowance(msg.sender, delegate, token);
+            }
         }
         delegates[msg.sender][current.prev].next = current.next;
         delegates[msg.sender][current.next].prev = current.prev;
