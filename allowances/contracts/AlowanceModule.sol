@@ -19,15 +19,15 @@ contract AllowanceModule is SignatureDecoder {
     string public constant NAME = "Allowance Module";
     string public constant VERSION = "0.1.0";
 
-    // TODO: Fix hardcode hash
-    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-        "EIP712Domain(uint256 chainId,address verifyingContract)"
-    );
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
+    // keccak256(
+    //     "EIP712Domain(uint256 chainId,address verifyingContract)"
+    // );
 
-    // TODO: Fix hardcode hash
-    bytes32 public constant ALLOWANCE_TRANSFER_TYPEHASH = keccak256(
-        "AllowanceTransfer(address safe,address token,uint96 amount,address paymentToken,uint96 payment,uint16 nonce)"
-    );
+    bytes32 public constant ALLOWANCE_TRANSFER_TYPEHASH = 0x80b006280932094e7cc965863eb5118dc07e5d272c6670c4a7c87299e04fceeb;
+    // keccak256(
+    //     "AllowanceTransfer(address safe,address token,uint96 amount,address paymentToken,uint96 payment,uint16 nonce)"
+    // );
 
     // Safe -> Delegate -> Allowance
     mapping(address => mapping (address => mapping(address => Allowance))) public allowances;
@@ -170,7 +170,7 @@ contract AllowanceModule is SignatureDecoder {
     }
 
     /// @dev Returns the chain id used by this contract.
-    function getChainId() public view returns (uint256) {
+    function getChainId() public pure returns (uint256) {
         uint256 id;
         assembly {
             id := chainid()
@@ -211,7 +211,7 @@ contract AllowanceModule is SignatureDecoder {
         ));
     }
 
-    function checkSignature(address expectedDelegate, bytes memory signature, bytes memory transferHashData, GnosisSafe safe) private {
+    function checkSignature(address expectedDelegate, bytes memory signature, bytes memory transferHashData, GnosisSafe safe) private view {
         address signer = recoverSignature(signature, transferHashData);
         require(
             expectedDelegate == signer && delegates[address(safe)][uint48(signer)].delegate == signer,

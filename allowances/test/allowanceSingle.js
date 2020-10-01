@@ -26,6 +26,7 @@ contract('AllowanceModule delegate', function(accounts) {
 
         // Create Master Copies
         safeModule = await AllowanceModule.new()
+
         const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
         const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
         gnosisSafe = await GnosisSafe.at(proxy.address)
