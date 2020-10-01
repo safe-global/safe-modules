@@ -1,7 +1,15 @@
 const utils = require('@gnosis.pm/safe-contracts/test/utils/general')
 const { wait, waitUntilBlock } = require('./utils')(web3);
 
-const GnosisSafe = artifacts.require("./GnosisSafe.sol")
+const truffleContract = require("@truffle/contract")
+
+const GnosisSafeBuildInfo = require("@gnosis.pm/safe-contracts/build/contracts/GnosisSafe.json")
+const GnosisSafe = truffleContract(GnosisSafeBuildInfo)
+GnosisSafe.setProvider(web3.currentProvider)
+const GnosisSafeProxyBuildInfo = require("@gnosis.pm/safe-contracts/build/contracts/GnosisSafeProxy.json")
+const GnosisSafeProxy = truffleContract(GnosisSafeProxyBuildInfo)
+GnosisSafeProxy.setProvider(web3.currentProvider)
+
 const AllowanceModule = artifacts.require("./AllowanceModule.sol")
 const TestToken = artifacts.require("./TestToken.sol")
 
@@ -18,9 +26,11 @@ contract('AllowanceModule', function(accounts) {
         lw = await utils.createLightwallet()
 
         // Create Master Copies
-        gnosisSafe = await GnosisSafe.new()
         safeModule = await AllowanceModule.new()
-        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0)
+        const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
+        const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
+        gnosisSafe = await GnosisSafe.at(proxy.address)
+        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
     })
 
     let currentMinutes = function() {
@@ -38,11 +48,11 @@ contract('AllowanceModule', function(accounts) {
         let sigs = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1]], transactionHash)
         utils.logGasUsage(
             'execTransaction ' + message,
-            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs)
+            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs, { from: accounts[0] })
         )
     }
 
-    it.only('Execute allowance without refund', async () => {
+    it('Execute allowance without refund', async () => {
         const token = await TestToken.new({from: accounts[0]})
         await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]}) 
         //const mintToken = await TestCompound.new(sourceToken.address)

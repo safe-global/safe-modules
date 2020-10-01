@@ -1,6 +1,14 @@
 const utils = require('@gnosis.pm/safe-contracts/test/utils/general')
 
-const GnosisSafe = artifacts.require("./GnosisSafe.sol")
+const truffleContract = require("@truffle/contract")
+
+const GnosisSafeBuildInfo = require("@gnosis.pm/safe-contracts/build/contracts/GnosisSafe.json")
+const GnosisSafe = truffleContract(GnosisSafeBuildInfo)
+GnosisSafe.setProvider(web3.currentProvider)
+const GnosisSafeProxyBuildInfo = require("@gnosis.pm/safe-contracts/build/contracts/GnosisSafeProxy.json")
+const GnosisSafeProxy = truffleContract(GnosisSafeProxyBuildInfo)
+GnosisSafeProxy.setProvider(web3.currentProvider)
+
 const AllowanceModule = artifacts.require("./AllowanceModule.sol")
 const TestToken = artifacts.require("./TestToken.sol")
 
@@ -17,9 +25,11 @@ contract('AllowanceModule delegate', function(accounts) {
         lw = await utils.createLightwallet()
 
         // Create Master Copies
-        gnosisSafe = await GnosisSafe.new()
         safeModule = await AllowanceModule.new()
-        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0)
+        const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
+        const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
+        gnosisSafe = await GnosisSafe.at(proxy.address)
+        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
     })
 
     let execTransaction = async function(to, value, data, operation, message) {
@@ -28,7 +38,7 @@ contract('AllowanceModule delegate', function(accounts) {
         let sigs = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1]], transactionHash)
         utils.logGasUsage(
             'execTransaction ' + message,
-            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs)
+            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs, { from: accounts[0] })
         )
     }
 
@@ -59,7 +69,8 @@ contract('AllowanceModule delegate', function(accounts) {
         assert.equal(100, tokenAllowance[0])
         assert.equal(0, tokenAllowance[1])
         assert.equal(0, tokenAllowance[2])
-        assert.equal(0, tokenAllowance[3])
+        // Reset time should be set to current on first init
+        assert.notEqual(0, tokenAllowance[3])
         assert.equal(1, tokenAllowance[4])
         let unknownAllowance = await safeModule.getTokenAllowance(gnosisSafe.address, lw.accounts[3], token.address)
         assert.equal(0, unknownAllowance[0])
@@ -132,7 +143,8 @@ contract('AllowanceModule delegate', function(accounts) {
         assert.equal(web3.utils.toWei("1.0", 'ether'), tokenAllowance[0])
         assert.equal(0, tokenAllowance[1])
         assert.equal(0, tokenAllowance[2])
-        assert.equal(0, tokenAllowance[3])
+        // Reset time should be set to current on first init
+        assert.notEqual(0, tokenAllowance[3])
         assert.equal(1, tokenAllowance[4])
 
         assert.equal(await web3.eth.getBalance(gnosisSafe.address), web3.utils.toWei("1.0", 'ether'))

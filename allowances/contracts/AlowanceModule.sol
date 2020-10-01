@@ -1,8 +1,7 @@
-pragma solidity >=0.5.0 <0.7.0;
+pragma solidity >=0.7.0 <0.8.0;
 
-import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
-import "@gnosis.pm/safe-contracts/contracts/common/SignatureDecoder.sol";
-import "@gnosis.pm/safe-contracts/contracts/interfaces/ISignatureValidator.sol";
+import "./Enum.sol";
+import "./SignatureDecoder.sol";
 
 interface GnosisSafe {
     /// @dev Allows a Module to execute a Safe transaction without any further confirmations.
@@ -15,15 +14,15 @@ interface GnosisSafe {
         returns (bool success);
 }
 
-contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
+contract AllowanceModule is SignatureDecoder {
 
     string public constant NAME = "Allowance Module";
     string public constant VERSION = "0.1.0";
 
-    //keccak256(
-    //    "EIP712Domain(address verifyingContract)"
-    //);
-    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = 0x035aff83d86937d35b32e04f0ddc6ff469290eef2f1b692d8a815c89404d4749;
+    // TODO: Fix hardcode hash
+    bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = keccak256(
+        "EIP712Domain(uint256 chainId,address verifyingContract)"
+    );
 
     // TODO: Fix hardcode hash
     bytes32 public constant ALLOWANCE_TRANSFER_TYPEHASH = keccak256(
@@ -35,14 +34,16 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
     mapping(address => mapping (address => address[])) public tokens;
     mapping(address => mapping (uint48 => Delegate)) public delegates;
     mapping(address => uint48) public delegatesStart;
-    bytes32 public domainSeparator;
 
+    // We use a double linked list for the delegates. The id is the first 6 bytes. 
+    // To double check the address in case of collision, the address is part of the struct.
     struct Delegate {
         address delegate;
         uint48 prev;
         uint48 next;
     }
 
+    // The allowance info is optimized to fit into one word of storage.
     struct Allowance {
         uint96 amount;
         uint96 spent;
@@ -55,11 +56,6 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
     event RemoveDelegate(address indexed safe, address delegate);
     event ExecuteAllowanceTransfer(address indexed safe, address delegate, address token, address to, uint96 value, uint16 nonce);
     event SetAllowance(address indexed safe, address delegate, address token, uint96 allowanceAmount, uint16 resetTime);
-
-    constructor() public {
-        // TODO: add chain id
-        domainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, this));
-    }
 
     /// @dev Allows to update the allowance for a specified token. This can only be done via a Safe transaction.
     /// @param delegate Delegate whose allowance should be updated.
@@ -79,7 +75,7 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
         }
         // Divide by 60 to get current time in minutes
         // solium-disable-next-line security/no-block-members
-        uint32 currentMin = uint32(now / 60);
+        uint32 currentMin = uint32(block.timestamp / 60);
         if (resetBaseMin > 0) {
             require(resetBaseMin <= currentMin, "resetBaseMin <= currentMin");
             allowance.lastResetMin = currentMin - ((currentMin - resetBaseMin) % resetTimeMin);
@@ -95,9 +91,11 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
     function getAllowance(address safe, address delegate, address token) private view returns (Allowance memory allowance) {
         allowance = allowances[safe][delegate][token];
         // solium-disable-next-line security/no-block-members
-        uint32 currentMin = uint32(now / 60);
+        uint32 currentMin = uint32(block.timestamp / 60);
+        // Check if we should reset the time. We do this on load to minimize storage read/ writes
         if (allowance.resetTimeMin > 0 && allowance.lastResetMin <= currentMin - allowance.resetTimeMin) {
             allowance.spent = 0;
+            // Resets happen in regular itervals and `lastResetMin` should be aligned to that
             allowance.lastResetMin = currentMin - ((currentMin - allowance.lastResetMin) % allowance.resetTimeMin);
         }
         return allowance;
@@ -107,12 +105,24 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
         allowances[safe][delegate][token] = allowance;
     }
 
+    /// @dev Allows to reset the allowance for a specific delegate and token.
+    /// @param delegate Delegate whose allowance should be updated.
+    /// @param token Token contract address.
     function resetAllowance(address delegate, address token) public {
         Allowance memory allowance = getAllowance(msg.sender, delegate, token);
         allowance.spent = 0;
         updateAllowance(msg.sender, delegate, token, allowance);
     }
 
+    /// @dev Allows to use the allowance to perform a transfer.
+    /// @param safe The Safe whose funds should be used.
+    /// @param token Token contract address.
+    /// @param to Address that should receive the tokens.
+    /// @param amount Amount to should be transfered.
+    /// @param paymentToken Token that should be used to pay for the execution of the transfer.
+    /// @param payment Amount to should be paid for executing the transfer.
+    /// @param delegate Delegate whose allowance should be updated.
+    /// @param signature Signature generated by the delegate to authorize the transfer.
     function executeAllowanceTransfer(
         GnosisSafe safe,
         address token,
@@ -146,7 +156,7 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
         updateAllowance(address(safe), delegate, token, allowance);
 
         // Perform external interactions
-        // Check signature (this contains a potential call -> EIP-1271)
+        // Check signature
         checkSignature(delegate, signature, transferHashData, safe);
 
         if (payment > 0) {
@@ -159,6 +169,16 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
         emit ExecuteAllowanceTransfer(address(safe), delegate, token, to, amount, allowance.nonce - 1);
     }
 
+    /// @dev Returns the chain id used by this contract.
+    function getChainId() public view returns (uint256) {
+        uint256 id;
+        assembly {
+            id := chainid()
+        }
+        return id;
+    }
+
+    /// @dev Generates the data for the transfer hash (required for signing)
     function generateTransferHashData(
         address safe,
         address token,
@@ -168,12 +188,15 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
         uint96 payment,
         uint16 nonce
     ) private view returns (bytes memory) {
+        uint256 chainId = getChainId();
+        bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, this));
         bytes32 transferHash = keccak256(
             abi.encode(ALLOWANCE_TRANSFER_TYPEHASH, safe, token, to, amount, paymentToken, payment, nonce)
         );
         return abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, transferHash);
     }
 
+    /// @dev Generates the transfer hash that should be signed to authorize a transfer
     function generateTransferHash(
         address safe,
         address token,
@@ -196,29 +219,19 @@ contract AllowanceModule is SignatureDecoder, ISignatureValidatorConstants {
         );
     }
 
+    // We use the same format as used for the Safe contract, except that we only support exactly 1 signature and no contract signatures.
     function recoverSignature(bytes memory signature, bytes memory transferHashData) private view returns (address owner) {
         // If there is no signature data msg.sender should be used
         if (signature.length == 0) return msg.sender;
-        // Check that the provided signature data is not too short
-        require(signature.length >= 65, "signatures.length >= 65");
+        // Check that the provided signature data is as long as 1 encoded ecsda signature
+        require(signature.length == 65, "signatures.length == 65");
         uint8 v;
         bytes32 r;
         bytes32 s;
         (v, r, s) = signatureSplit(signature, 0);
         // If v is 0 then it is a contract signature
         if (v == 0) {
-            // When handling contract signatures the address of the contract is encoded into r
-            owner = address(uint256(r));
-            bytes memory contractSignature;
-            // solium-disable-next-line security/no-inline-assembly
-            assembly {
-                // The signature data for contract signatures is appended to the concatenated signatures and the offset is stored in s
-                contractSignature := add(add(signature, s), 0x20)
-            }
-            require(
-                ISignatureValidator(owner).isValidSignature(transferHashData, contractSignature) == EIP1271_MAGIC_VALUE,
-                "Could not validate EIP-1271 signature"
-            );
+            revert("Contract signatures are not supported by this module");
         } else if (v == 1) {
             // If v is 1 we also use msg.sender, this is so that we are compatible to the GnosisSafe signature scheme
             owner = msg.sender;
