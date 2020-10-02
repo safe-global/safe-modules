@@ -102,7 +102,7 @@ contract AllowanceModule is SignatureDecoder {
         // Check if we should reset the time. We do this on load to minimize storage read/ writes
         if (allowance.resetTimeMin > 0 && allowance.lastResetMin <= currentMin - allowance.resetTimeMin) {
             allowance.spent = 0;
-            // Resets happen in regular itervals and `lastResetMin` should be aligned to that
+            // Resets happen in regular intervals and `lastResetMin` should be aligned to that
             allowance.lastResetMin = currentMin - ((currentMin - allowance.lastResetMin) % allowance.resetTimeMin);
         }
         return allowance;
@@ -141,7 +141,7 @@ contract AllowanceModule is SignatureDecoder {
     /// @param safe The Safe whose funds should be used.
     /// @param token Token contract address.
     /// @param to Address that should receive the tokens.
-    /// @param amount Amount to should be transfered.
+    /// @param amount Amount that should be transferred.
     /// @param paymentToken Token that should be used to pay for the execution of the transfer.
     /// @param payment Amount to should be paid for executing the transfer.
     /// @param delegate Delegate whose allowance should be updated.
