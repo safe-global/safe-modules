@@ -3,5 +3,6 @@ node_modules/
 .DS_Store
 .zos.session
 env/
+.env
 .history
 coverage*

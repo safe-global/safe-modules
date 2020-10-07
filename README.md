@@ -6,6 +6,7 @@ This repository contains a collection of modules that can be used with the [Gnos
 Modules
 -------
 
+- [Allowance Module](./allowances)
 - [DutchX Seller Module](./dutchx_seller)
 - [Recurring Transfers Module](./recurring_transfers)
 
@@ -18,6 +19,6 @@ License
 -------
 All smart contracts are released under LGPL v.3.
 
-Contributors
+Maintainers
 ------------
 - Richard Meissner ([rmeissner](https://github.com/rmeissner))
