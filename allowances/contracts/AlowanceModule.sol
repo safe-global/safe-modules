@@ -73,6 +73,7 @@ contract AllowanceModule is SignatureDecoder {
     function setAllowance(address delegate, address token, uint96 allowanceAmount, uint16 resetTimeMin, uint32 resetBaseMin)
         public
     {
+        require(delegate != address(0), "delegate != address(0)");
         require(delegates[msg.sender][uint48(delegate)].delegate == delegate, "delegates[msg.sender][uint48(delegate)].delegate == delegate");
         Allowance memory allowance = getAllowance(msg.sender, delegate, token);
         if (allowance.nonce == 0) { // New token
@@ -159,7 +160,7 @@ contract AllowanceModule is SignatureDecoder {
         // Get current state
         Allowance memory allowance = getAllowance(address(safe), delegate, token);
         bytes memory transferHashData = generateTransferHashData(address(safe), token, to, amount, paymentToken, payment, allowance.nonce);
-        
+
         // Update state
         allowance.nonce = allowance.nonce + 1;
         uint96 newSpent = allowance.spent + amount;
@@ -186,6 +187,7 @@ contract AllowanceModule is SignatureDecoder {
             // Transfer payment
             // solium-disable-next-line security/no-tx-origin
             transfer(safe, paymentToken, tx.origin, payment);
+            // solium-disable-next-line security/no-tx-origin
             emit PayAllowanceTransfer(address(safe), delegate, paymentToken, tx.origin, payment);
         }
         // Transfer token
@@ -196,6 +198,7 @@ contract AllowanceModule is SignatureDecoder {
     /// @dev Returns the chain id used by this contract.
     function getChainId() public pure returns (uint256) {
         uint256 id;
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             id := chainid()
         }
@@ -266,6 +269,8 @@ contract AllowanceModule is SignatureDecoder {
             // Use ecrecover with the messageHash for EOA signatures
             owner = ecrecover(keccak256(transferHashData), v, r, s);
         }
+        // 0 for the recovered owner indicates that an error happened.
+        require(owner != address(0), "owner != address(0)");
     }
 
     function transfer(GnosisSafe safe, address token, address payable to, uint96 amount) private {
@@ -296,11 +301,11 @@ contract AllowanceModule is SignatureDecoder {
     /// @dev Allows to add a delegate.
     /// @param delegate Delegate that should be added.
     function addDelegate(address delegate) public {
-        require(delegate != address(0), "Invalid delegate address");
         uint48 index = uint48(delegate);
+        require(index != uint(0), "index != uint(0)");
         address currentDelegate = delegates[msg.sender][index].delegate;
         if(currentDelegate != address(0)) {
-            // We have a collision for the indeces of delegates 
+            // We have a collision for the indices of delegates
             require(currentDelegate == delegate, "currentDelegate == delegate");
             // Delegate already exists, nothing to do
             return;
@@ -333,8 +338,15 @@ contract AllowanceModule is SignatureDecoder {
                 emit DeleteAllowance(msg.sender, delegate, token);
             }
         }
-        delegates[msg.sender][current.prev].next = current.next;
-        delegates[msg.sender][current.next].prev = current.prev;
+        if (current.prev == 0) {
+            delegatesStart[msg.sender] = current.next;
+        } else {
+            delegates[msg.sender][current.prev].next = current.next;
+        }
+        if (current.next != 0) {
+            delegates[msg.sender][current.next].prev = current.prev;
+        }
+        delete delegates[msg.sender][uint48(delegate)];
         emit RemoveDelegate(msg.sender, delegate);
     }
 
