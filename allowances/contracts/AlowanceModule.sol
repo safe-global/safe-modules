@@ -305,7 +305,7 @@ contract AllowanceModule is SignatureDecoder {
         require(index != uint(0), "index != uint(0)");
         address currentDelegate = delegates[msg.sender][index].delegate;
         if(currentDelegate != address(0)) {
-            // We have a collision for the indeces of delegates
+            // We have a collision for the indices of delegates
             require(currentDelegate == delegate, "currentDelegate == delegate");
             // Delegate already exists, nothing to do
             return;
