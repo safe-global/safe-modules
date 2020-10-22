@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@gnosis.pm/safe-contracts": "^1.2.0"
+  }
+}
