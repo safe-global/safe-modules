@@ -184,10 +184,10 @@
   resolved "https://registry.yarnpkg.com/@gnosis.pm/singleton-deployer-core/-/singleton-deployer-core-1.0.0.tgz#41b85f2078113d53e30af72726b27f2de7594bd1"
   integrity sha512-8nWpd8sAca8fmsrZP/ZMxvsTz6pAvttZ0fFssrkHQSXezDmIGXx4l2Vhlaz6CrGdTl1PLSSl8TeSOXCkWLVnuA==
 
-"@gnosis.pm/singleton-deployer-truffle@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/singleton-deployer-truffle/-/singleton-deployer-truffle-1.0.1.tgz#2d2eac455af79188c1e875e342b353318f3e1dc9"
-  integrity sha512-Z3Bu5GMrJT6yZT94p9SCZ4AVpYKkoXCxSAprqTBFXHHOCka2/bi0fiRfklntfzpnIejMKgJxSDlC2B4cW0SWBQ==
+"@gnosis.pm/singleton-deployer-truffle@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/singleton-deployer-truffle/-/singleton-deployer-truffle-1.0.2.tgz#56f64e0c00b645e603ec5438fc2443a38a0529d5"
+  integrity sha512-KYTUVxL2D9lx5hTkJtd8s/WSqZP3KMwJ1X7LhsXHVQ4ABz502+tZ93Fpi6XNAr5xqWrToqbNfHjrQhQqlZDX4w==
   dependencies:
     "@gnosis.pm/singleton-deployer-core" "^1.0.0"
     "@gnosis.pm/singleton-deployer-web3js-provider" "^1.0.0"

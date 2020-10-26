@@ -41,7 +41,7 @@
     "web3": "^1.2.6"
   },
   "dependencies": {
-    "@gnosis.pm/singleton-deployer-truffle": "^1.0.1",
+    "@gnosis.pm/singleton-deployer-truffle": "^1.0.2",
     "@gnosis.pm/safe-contracts": "^1.2.0",
     "@truffle/contract": "^4.2.23",
     "dotenv": "^8.0.0",
