@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.7.0 <0.8.0;
+pragma solidity >=0.6.0 <0.7.0;
 
-import "./Enum.sol";
+import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 import "@gnosis.pm/safe-contracts/contracts/base/Module.sol";
 
 contract VaultLiquidationProtectionModule is Module{
@@ -18,9 +18,10 @@ contract VaultLiquidationProtectionModule is Module{
 
     modifier onlyOperator {
         require(msg.sender == operator, "Only the operator can call this function");
+        _;
     }
 
-    constructor (
+    constructor(
         address _maker_vat_vault, 
         address _cdp_owner, 
         address _maker_dai_bridge, 
@@ -28,7 +29,7 @@ contract VaultLiquidationProtectionModule is Module{
         bytes32 _maker_colleteral_token_id, 
         address _manager,
         address _operator
-    ){
+    ) public {
         maker_vat_vault                 = _maker_vat_vault;
         cdp_owner                       = _cdp_owner;
         maker_dai_bridge                = _maker_dai_bridge;
@@ -58,7 +59,7 @@ contract VaultLiquidationProtectionModule is Module{
             );
 
             require(
-                safe.execTransactionFromModule(
+                manager.execTransactionFromModule(
                     maker_collateral_token_bridge, 
                     0, 
                     collateral_join_data, 
@@ -78,7 +79,7 @@ contract VaultLiquidationProtectionModule is Module{
             );
 
             require(
-                safe.execTransactionFromModule(
+                manager.execTransactionFromModule(
                     maker_dai_bridge, 
                     0, 
                     dai_join_data,
@@ -99,7 +100,7 @@ contract VaultLiquidationProtectionModule is Module{
             dai_amount
         );
         require(
-            safe.execTransactionFromModule(
+            manager.execTransactionFromModule(
                     maker_vat_vault, 
                     0, 
                     cdp_deposit_data,
