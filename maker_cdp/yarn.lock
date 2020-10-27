@@ -220,10 +220,9 @@
     "@ethersproject/properties" "^5.0.3"
     "@ethersproject/strings" "^5.0.4"
 
-"@gnosis.pm/safe-contracts@^1.2.0":
+"@gnosis.pm/safe-contracts@github:gnosis/safe-contracts#feature/add-support-solc-6":
   version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-contracts/-/safe-contracts-1.2.0.tgz#33e8332e09c19e8822fccb06c7d3eff806d091f6"
-  integrity sha512-lcpZodqztDgMICB0kAc8aJdQePwCaLJnbeNjgVTfLAo3fBckVRV06VHXg5IsZ26qLA4JfZ690Cb7TsDVE9ZF3w==
+  resolved "https://codeload.github.com/gnosis/safe-contracts/tar.gz/524532af1ac6366aa3e960335a2e5207b41d2d50"
   dependencies:
     "@truffle/hdwallet-provider" "^1.0.0"
     dotenv "^8.0.0"
@@ -232,7 +231,7 @@
     solc "0.5.17"
     truffle "^5.1.21"
 
-"@openzeppelin/contracts@^3.2.1":
+"@openzeppelin/contracts@^3.2.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.2.0.tgz#3e6b3a7662d8ed64271ade96ef42655db983fd9d"
   integrity sha512-bUOmkSoPkjnUyMiKo6RYnb0VHBk5D9KKDAgNLzF41aqAM3TeE0yGdFF5dVRcV60pZdJLlyFT/jjXIZCWyyEzAQ==

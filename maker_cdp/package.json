@@ -19,7 +19,7 @@
     "web3": "^1.2.6"
   },
   "dependencies": {
-    "@gnosis.pm/safe-contracts": "^1.2.0",
+    "@gnosis.pm/safe-contracts": "github:gnosis/safe-contracts#feature/add-support-solc-6",
     "@truffle/contract": "^4.2.23",
     "dotenv": "^8.0.0",
     "truffle": "^5.1.21"
