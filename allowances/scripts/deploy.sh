@@ -12,7 +12,7 @@ docker-compose -f $pwd/docker/docker-compose.yml --env-file $pwd/docker/.env up 
 cp -r $pwd/docker/build $pwd/../
 
 node scripts/clean_build.js
-node scripts/generate_meta.js
+node scripts/generate_meta.js --upload
 yarn truffle exec scripts/verify_deployment.js --network=$1
 
 rm $pwd/docker/.env
