@@ -10,10 +10,8 @@ const log = console.log
 const copyFile = util.promisify(fs.copyFile)
 const writeFile = util.promisify(fs.writeFile)
 
-console.log("Debug")
 const contractDir = path.join("build", "contracts")
 const metaDir = path.join("build", "meta")
-console.log("Debug2")
 const pkg = require(path.join("..", "package.json"))
 const supportedContracts = pkg.ethereum.contracts
 
