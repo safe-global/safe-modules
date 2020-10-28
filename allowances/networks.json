@@ -1,0 +1,1485 @@
+{
+  "AllowanceModule": {
+    "1": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134"
+    },
+    "4": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134"
+    },
+    "5": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134"
+    },
+    "42": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+      "transactionHash": "0xe82431ec4769eefb373fe132b0279f09fe970b5867dae2a2fe10968878f3d37c"
+    },
+    "100": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+      "transactionHash": "0xb7130610245f08b8c8b1dc691471b94774e9b0b1a4c15c5d286d3b595bb50bd8"
+    },
+    "246": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+      "transactionHash": "0x589ebbf8727e2728638abbd55de3b24e01af6d2a6577c84d47315720731a3d9f"
+    },
+    "73799": {
+      "events": {
+        "0x2fd5b26f00131bd8ca0fc556207292b85a6bec241341df82724333227458e630": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "AddDelegate",
+          "type": "event"
+        },
+        "0x9a9bc79dd7e42545ba12d5659704d73a9364d4a18e0a98ca1c992a3bc999d271": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "DeleteAllowance",
+          "type": "event"
+        },
+        "0xa11cca2c2027e28ab0046aab4d4040f59d8b06e819ccd974c1e53e86aa814c19": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "value",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "nonce",
+              "type": "uint16"
+            }
+          ],
+          "name": "ExecuteAllowanceTransfer",
+          "type": "event"
+        },
+        "0xad71d7a737da41277b5ade17fd65b00671e3ab35f23778a98c8d925dc66e3d9d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentToken",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "paymentReceiver",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "payment",
+              "type": "uint96"
+            }
+          ],
+          "name": "PayAllowanceTransfer",
+          "type": "event"
+        },
+        "0xdccc2d936ded24d2153d2760581a7f0dcb23ec71190c9726b3584cdd700214d4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            }
+          ],
+          "name": "RemoveDelegate",
+          "type": "event"
+        },
+        "0xa39af38687a2c1e52c987a84d807fd238b83b08a9da657f184a72fcd2b71360c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "ResetAllowance",
+          "type": "event"
+        },
+        "0x49caa04c5e1e168069c09df7f88c07ca87be980b0bf4570ab77fe9aae3ca7eba": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "safe",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "delegate",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint96",
+              "name": "allowanceAmount",
+              "type": "uint96"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint16",
+              "name": "resetTime",
+              "type": "uint16"
+            }
+          ],
+          "name": "SetAllowance",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCFbFaC74C26F8647cBDb8c5caf80BB5b32E43134",
+      "transactionHash": "0x589ebbf8727e2728638abbd55de3b24e01af6d2a6577c84d47315720731a3d9f"
+    }
+  }
+}

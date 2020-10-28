@@ -25,6 +25,8 @@ contract('AllowanceModule delegate', function(accounts) {
         lw = await utils.createLightwallet()
 
         // Create Master Copies
+        let amodule = await AllowanceModule.deployed()
+        console.log(amodule.address)
         safeModule = await AllowanceModule.new()
 
         const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
