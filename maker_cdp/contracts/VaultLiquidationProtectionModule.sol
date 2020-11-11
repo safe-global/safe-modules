@@ -13,7 +13,7 @@ contract VaultLiquidationProtectionModule is Module{
     address public immutable cdp_owner; // also called urn in the vat contract
     address public immutable maker_dai_bridge; // DAI adapter contract of Maker DAO used to interact with vat contract
     address public immutable maker_collateral_token_bridge; // Collateral Token Adapter contract, also called gem
-    bytes32 public immutable maker_colleteral_token_id; // Collateral Token ID in Maker DAO system, also called ILK
+    bytes32 public immutable maker_collateral_token_id; // Collateral Token ID in Maker DAO system, also called ILK
     address public immutable operator; // EOA used to interact with this module
 
     modifier onlyOperator {
@@ -26,7 +26,7 @@ contract VaultLiquidationProtectionModule is Module{
         address _cdp_owner, 
         address _maker_dai_bridge, 
         address _maker_collateral_token_bridge, 
-        bytes32 _maker_colleteral_token_id, 
+        bytes32 _maker_collateral_token_id, 
         address _manager,
         address _operator
     ) public {
@@ -34,7 +34,7 @@ contract VaultLiquidationProtectionModule is Module{
         cdp_owner                       = _cdp_owner;
         maker_dai_bridge                = _maker_dai_bridge;
         maker_collateral_token_bridge   = _maker_collateral_token_bridge;
-        maker_colleteral_token_id       = _maker_colleteral_token_id;
+        maker_collateral_token_id       = _maker_collateral_token_id;
         manager                         = ModuleManager(_manager);
         operator                        = _operator;
     }
@@ -92,7 +92,7 @@ contract VaultLiquidationProtectionModule is Module{
         // Reference: https://github.com/makerdao/dss/blob/1.1.2/src/vat.sol#L165
         bytes memory cdp_deposit_data = abi.encodeWithSignature(
             "frob(bytes32,address,address,address,int256,int256)", 
-            maker_colleteral_token_id,
+            maker_collateral_token_id,
             cdp_owner,
             manager,
             manager,
