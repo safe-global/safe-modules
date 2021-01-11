@@ -167,9 +167,10 @@
     "@ethersproject/rlp" "^5.0.3"
     "@ethersproject/signing-key" "^5.0.4"
 
-"@gnosis.pm/safe-contracts@git+ssh://git@github.com:vporton/safe-contracts.git#bequest":
+"@gnosis.pm/safe-contracts@^1.2.0":
   version "1.2.0"
-  resolved "git+ssh://git@github.com:vporton/safe-contracts.git#72f071c7b94fbc5418a88a87d2343446253de9aa"
+  resolved "https://registry.yarnpkg.com/@gnosis.pm/safe-contracts/-/safe-contracts-1.2.0.tgz#33e8332e09c19e8822fccb06c7d3eff806d091f6"
+  integrity sha512-lcpZodqztDgMICB0kAc8aJdQePwCaLJnbeNjgVTfLAo3fBckVRV06VHXg5IsZ26qLA4JfZ690Cb7TsDVE9ZF3w==
   dependencies:
     "@truffle/hdwallet-provider" "^1.0.0"
     dotenv "^8.0.0"

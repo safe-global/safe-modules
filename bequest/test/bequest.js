@@ -75,6 +75,18 @@ contract('BequestModule delegate', function(accounts) {
         await execTransaction(safeModule.address, 0, setup, CALL, "setup")
         // TODO: Check that SetBequestDate is emitted.
 
+        // TODO
+        // { // Can't call setup() twice
+        //     async function fails() {
+        //         let setup2 = await safeModule.contract.methods.setup(accounts[2], '2000').encodeABI()
+        //         console.log(await execTransaction(safeModule.address, 0, setup2, CALL, "repeated setup"))
+        //     }
+        //     await expectThrowsAsync(fails, "Returned error: Manager has already been set");
+        // }
+
+        assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
+        assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
+
         const Call = 0
         // const DelegateCall = 1
 
@@ -99,9 +111,13 @@ contract('BequestModule delegate', function(accounts) {
             await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
         }
 
+        // TODO: Try to set heir to another account.
         // Time expired:
         let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[1], toBN(2).pow(toBN(64))).encodeABI()
         await execTransaction(safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
+        // TODO: Check that SetBequestDate is emitted.
+        assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
+        assert.equal(await safeModule.contract.methods.bequestDate().call(), toBN(2).pow(toBN(64)))
 
         {
             async function fails() {
@@ -111,8 +127,6 @@ contract('BequestModule delegate', function(accounts) {
             await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
         }
 
-        // TODO: Check that we can retrieve heir() and bequestDate().
-        // TODO: Check that we can't call setup() twice.
         // TODO: Test executeReturnData().
     })
 })
