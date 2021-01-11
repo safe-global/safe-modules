@@ -28,7 +28,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
         expect(error.message).to.equal(errorMessage)
     }
 }
-  
+
 contract('BequestModule delegate', function(accounts) {
     let lw
     let gnosisSafe
