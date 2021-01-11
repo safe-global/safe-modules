@@ -1,6 +1,7 @@
 const utils = require('@gnosis.pm/safe-contracts/test/utils/general')
 
 const truffleContract = require("@truffle/contract")
+const truffleAssert = require('truffle-assertions');
 
 const GnosisSafeBuildInfo = require("@gnosis.pm/safe-contracts/build/contracts/GnosisSafe.json")
 const GnosisSafe = truffleContract(GnosisSafeBuildInfo)
@@ -55,10 +56,12 @@ contract('BequestModule delegate', function(accounts) {
         let nonce = await gnosisSafe.nonce()
         let transactionHash = await gnosisSafe.getTransactionHash(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, nonce)
         let sigs = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1]], transactionHash)
+        let result = await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs, { from: accounts[0] })
         utils.logGasUsage(
             'execTransaction ' + message,
-            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs, { from: accounts[0] })
+            result
         )
+        return result
     }
 
     it('Execute bequest with delegate', async () => {
@@ -72,8 +75,7 @@ contract('BequestModule delegate', function(accounts) {
         assert.equal(safeModule.address, modules[0])
 
         let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
-        await execTransaction(safeModule.address, 0, setup, CALL, "setup")
-        // TODO: Check that SetBequestDate is emitted.
+        let setupTx = await execTransaction(safeModule.address, 0, setup, CALL, "setup")
 
         // TODO
         // { // Can't call setup() twice
@@ -111,18 +113,16 @@ contract('BequestModule delegate', function(accounts) {
             await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
         }
 
-        // TODO: Try to set heir to another account.
         // Time expired:
-        let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[1], toBN(2).pow(toBN(64))).encodeABI()
+        let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
         await execTransaction(safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
-        // TODO: Check that SetBequestDate is emitted.
-        assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
+        assert.equal(await safeModule.contract.methods.heir().call(), accounts[2])
         assert.equal(await safeModule.contract.methods.bequestDate().call(), toBN(2).pow(toBN(64)))
 
         {
             async function fails() {
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-                await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[1]})
+                await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[2]})
             }
             await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
         }

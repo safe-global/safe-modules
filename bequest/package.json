@@ -46,7 +46,8 @@
     "@truffle/contract": "^4.2.23",
     "dotenv": "^8.0.0",
     "solc": "0.5.17",
-    "truffle": "^5.1.50"
+    "truffle": "^5.1.50",
+    "truffle-assertions": "^0.9.2"
   },
   "resolutions": {
     "bitcore-lib": "8.1.1",
