@@ -167,9 +167,9 @@
     "@ethersproject/rlp" "^5.0.3"
     "@ethersproject/signing-key" "^5.0.4"
 
-"@gnosis.pm/safe-contracts@git+ssh://git@github.com:gnosis/safe-contracts.git#development":
+"@gnosis.pm/safe-contracts@git+ssh://git@github.com:vporton/safe-contracts.git#bequest":
   version "1.2.0"
-  resolved "git+ssh://git@github.com:gnosis/safe-contracts.git#94f9b9083790495f67b661bfa93b06dcba2d3949"
+  resolved "git+ssh://git@github.com:vporton/safe-contracts.git#72f071c7b94fbc5418a88a87d2343446253de9aa"
   dependencies:
     "@truffle/hdwallet-provider" "^1.0.0"
     dotenv "^8.0.0"
@@ -230,10 +230,10 @@
     walk "^2.3.14"
     web3 "^1.0.0-beta.35"
 
-"@openzeppelin/contracts@^3.2.1-solc-0.7":
-  version "3.2.1-solc-0.7"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.2.1-solc-0.7.tgz#067a60918b935d4733208edb3d7e35cd1d51026b"
-  integrity sha512-VfKZE9L2HNaZVBR7l5yHbRmap3EiVw9F5iVXRRDdgfnA9vQ1yFanrs0VYmdo2VIXC+EsI9wPPYZY9Ic7/qDBdw==
+"@openzeppelin/contracts@^2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-2.5.0.tgz#e327a98ba1d26b7756ff62885a0aa0967a375449"
+  integrity sha512-t3jm8FrhL9tkkJTofkznTqo/XXdHi21w5yXwalEnaMOp22ZwZ0f/mmKdlgMMLPFa6bSVHbY88mKESwJT/7m5Lg==
 
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"

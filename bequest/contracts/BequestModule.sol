@@ -11,7 +11,6 @@ import "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 /// @title Bequest Module - Allows to bequest all funds on the wallet to be withdrawn after a given time.
 /// @author Victor Porton - <porton@narod.ru>
 /// Moreover, after the given time the heir can execute any transaction on the inherited wallet.
-/// TODO: Test.
 contract BequestModule is Module {
 
     string public constant NAME = "Bequest Module";
@@ -33,6 +32,7 @@ contract BequestModule is Module {
         setManager();
         heir = _heir;
         bequestDate = _bequestDate;
+        emit SetBequestDate(address(this), _heir, _bequestDate);
     }
 
     /// @dev Changes bequest settings.
@@ -65,7 +65,7 @@ contract BequestModule is Module {
     }
 
     modifier enteredIntoInheritanceRights() {
-        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take");
+        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take"); // FIXME
         _;
     }
 }
