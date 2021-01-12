@@ -74,7 +74,7 @@ contract('BequestModule delegate', function(accounts) {
         assert.equal(safeModule.address, modules[0])
 
         let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
-        let setupTx = await execTransaction(safeModule.address, 0, setup, CALL, "setup")
+        await execTransaction(safeModule.address, 0, setup, CALL, "setup")
 
         // TODO
         // { // Can't call setup() twice
