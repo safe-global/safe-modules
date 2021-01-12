@@ -129,13 +129,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     function _safeTransferFrom(address from, address to, uint256 id, uint256 amount) internal {
-        bytes memory data = abi.encodeWithSelector(
-            IERC20(address(id)).transferFrom.selector,
-            from,
-            to,
-            amount
-        );
-        _execute(address(id), 0, data); // FIXME: Handle returning false.
+        require(IERC20(address(id)).transferFrom(from, to, amount), "Can't transfer");
     }
 
     /// `from == msg.sender` is never needed in practice, because it would mean that heir withdraws from himself.

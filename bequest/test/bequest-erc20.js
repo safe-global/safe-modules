@@ -84,7 +84,7 @@ contract('BequestModule delegate', function(accounts) {
         assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
 
-        await await wrapper.setApprovalForAll(gnosisSafe.address, true, {from: heir}) // FIXME
+        await await wrapper.setApprovalForAll(wrapper.address, true, {from: heir})
 
         const big = toBN(2).pow(toBN(256)).sub(toBN(1))
         const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
@@ -93,6 +93,7 @@ contract('BequestModule delegate', function(accounts) {
         const Call = 0
         // const DelegateCall = 1
 
+        console.log('token.address', token.address) // FIXME: remove
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
         let transfer = await wrapper.contract.methods.safeTransferFrom(
             gnosisSafe.address, lw.accounts[3], token.address, '10', []).encodeABI()
