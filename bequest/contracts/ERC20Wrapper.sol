@@ -1,46 +1,139 @@
 // // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.5.17;
-// import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-// import { MyOwnable } from "./MyOwnable.sol";
-// import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC1155 } from "./ERC1155/IERC1155.sol";
+import { IERC1155MetadataURI } from "./ERC1155/IERC1155MetadataURI.sol";
+// import "./IERC1155MetadataURI.sol"; // FIXME
+import { Context } from "@openzeppelin/contracts/GSN/Context.sol";
+import { ERC165 } from "@openzeppelin/contracts/introspection/ERC165.sol";
+
+
+import { BequestModule } from "./BequestModule.sol";
+import { MyOwnable } from "./MyOwnable.sol";
+import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
  
-// /// This contract does NOT emit events.
-// /// TODO
-// contract GnosisSafeERC20Wrapper is /*IERC1155,*/ MyOwnable {
-//     constructor (address initialOwner) MyOwnable(initialOwner) { }
+/// This contract does NOT emit events.
+contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnable {
+    struct Result {
+        bool success;
+        bytes returnData;
+    }
+    
+    /*
+     *     bytes4(keccak256('balanceOf(address,uint256)')) == 0x00fdd58e
+     *     bytes4(keccak256('balanceOfBatch(address[],uint256[])')) == 0x4e1273f4
+     *     bytes4(keccak256('setApprovalForAll(address,bool)')) == 0xa22cb465
+     *     bytes4(keccak256('isApprovedForAll(address,address)')) == 0xe985e9c5
+     *     bytes4(keccak256('safeTransferFrom(address,address,uint256,uint256,bytes)')) == 0xf242432a
+     *     bytes4(keccak256('safeBatchTransferFrom(address,address,uint256[],uint256[],bytes)')) == 0x2eb2c2d6
+     *
+     *     => 0x00fdd58e ^ 0x4e1273f4 ^ 0xa22cb465 ^
+     *        0xe985e9c5 ^ 0xf242432a ^ 0x2eb2c2d6 == 0xd9b67a26
+     */
+    bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
 
-//     // function balanceOf(address account, uint256 id) external override view returns (uint256) {
+    /*
+     *     bytes4(keccak256('uri(uint256)')) == 0x0e89341c
+     */
+    bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
 
-//     // }
+    BequestModule bequest;
 
-//     // function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids) external override view returns (uint256[] memory) {
+    constructor(address _initialOwner, BequestModule _bequest) public MyOwnable(_initialOwner) {
+        // register the supported interfaces to conform to ERC1155 via ERC165
+        _registerInterface(_INTERFACE_ID_ERC1155);
 
-//     // }
+        // register the supported interfaces to conform to ERC1155MetadataURI via ERC165
+        _registerInterface(_INTERFACE_ID_ERC1155_METADATA_URI);
 
-//     // function isApprovedForAll(address account, address operator) external override view returns (bool) onlyOwner {
+        bequest = _bequest;
+    }
 
-//     // }
+    function _execute(address to, uint256 value, bytes memory data) internal {
+        bequest.execute(to, value, data, Enum.Operation.Call);
+    }
 
-//     // function safeBatchTransferFrom(address from, address to, uint256[] calldata ids, uint256[] calldata amounts, bytes calldata data) external override onlyOwner {
+    function _executeView(address to, uint256 value, bytes memory data) internal view {
+        bytes memory data2 = abi.encodeWithSelector(
+            bequest.executeReturnData.selector,
+            to,
+            value,
+            data,
+            Enum.Operation.Call
+        );
+        address(bequest).staticcall(data2);
+    }
 
-//     // }
+    function _executeReturnData(address to, uint256 value, bytes memory data) internal returns (bytes memory) {
+        return bequest.executeReturnData(to, value, data, Enum.Operation.Call);
+    }
 
-//     // function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes calldata data) external override onlyOwner {
+    function _executeReturnDataView(address to, uint256 value, bytes memory data) internal view returns (bytes memory) {
+        bytes memory data2 = abi.encodeWithSelector(
+            bequest.executeReturnData.selector,
+            to,
+            value,
+            data,
+            Enum.Operation.Call
+        );
+        (bool success, bytes memory _returnData) = address(bequest).staticcall(data2);
+        require(success, "Could not execute transaction");
+        return _returnData;
+    }
 
-//     // }
+    function balanceOf(address account, uint256 id) public view returns (uint256) {
+        bytes memory data = abi.encodeWithSelector(
+            IERC20(address(id)).balanceOf.selector,
+            account
+        );
+        (uint256 result) = abi.decode(_executeReturnDataView(address(id), 0, data), (uint256));
+        return result;
+    }
 
-//     // function setApprovalForAll(address operator, bool approved) external override onlyOwner {
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory balances) {
+        require(accounts.length == ids.length, "Lengths don't match.");
+        balances = new uint256[](accounts.length);
+        for (uint i = 0; i < accounts.length; ++i) {
+            balances[i] = balanceOf(accounts[i], ids[i]);
+        }
+    }
 
-//     // }
+    function isApprovedForAll(address /*account*/, address /*operator*/) public view returns (bool) {
+        return false; // FIXME
+    }
 
-//     // function supportsInterface(bytes4 interfaceId) external override view returns (bool) onlyOwner {
+    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/) public onlyOwner {
+        require(ids.length == amounts.length, "Lengths don't match.");
+        for (uint i = 0; i < ids.length; ++i) {
+            _safeTransferFrom(from, to, ids[i], amounts[i]);
+        }
+        emit TransferBatch(msg.sender, from, to, ids, amounts);
+    }
 
-//     // }
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/) public onlyOwner {
+        _safeTransferFrom(from, to, id, amount);
+        emit TransferSingle(msg.sender, from, to, id, amount);
+    }
 
-//     function execute(uint256 id) internal {
-//         address erc20 = address(id);
-//         // FIXME: Reentrancy vulnaberity?
-//         // bytes memory returnData = wallet.executeReturnData(erc20, 0, data, Enum.Operation.Call);
-//         // FIXME
-//     }
-// }
+    function _requireSuccess(bool success) pure internal {
+        require(success, "Could not execute transaction");
+    }
+
+    function _safeTransferFrom(address from, address to, uint256 id, uint256 amount) internal {
+        bytes memory data = abi.encodeWithSelector(
+            IERC20(address(id)).transferFrom.selector,
+            from,
+            to,
+            amount
+        );
+        _execute(address(id), 0, data);
+    }
+
+    function setApprovalForAll(address /*operator*/, bool /*approved*/) public onlyOwner {
+        revert("Not implemented."); // FIXME
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view returns (bool) {
+
+    }
+}
