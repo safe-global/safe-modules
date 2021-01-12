@@ -7,7 +7,7 @@ import { Context } from "@openzeppelin/contracts/GSN/Context.sol";
 import { ERC165 } from "@openzeppelin/contracts/introspection/ERC165.sol";
 import { BequestModule } from "./BequestModule.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
- 
+
 /// This contract does NOT emit events.
 contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /*
