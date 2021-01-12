@@ -67,7 +67,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         return _operatorApprovals[account][operator];
     }
 
-    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/) public onlyOwner {
+    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/) public isApproved(from) {
         require(ids.length == amounts.length, "Lengths don't match.");
         for (uint i = 0; i < ids.length; ++i) {
             _safeTransferFrom(from, to, ids[i], amounts[i]);
@@ -75,7 +75,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         emit TransferBatch(msg.sender, from, to, ids, amounts);
     }
 
-    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/) public onlyOwner {
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/) public isApproved(from) {
         _safeTransferFrom(from, to, id, amount);
         emit TransferSingle(msg.sender, from, to, id, amount);
     }
@@ -133,5 +133,12 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
             amount
         );
         _execute(address(id), 0, data);
+    }
+
+    // TODO: Easy set approvals to/from? owner?
+    modifier isApproved(address from) {
+        // FIXME
+        require((from == msg.sender && from == owner) || _operatorApprovals[msg.sender][from], "No approval.");
+        _;
     }
 }
