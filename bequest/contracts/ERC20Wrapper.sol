@@ -3,7 +3,6 @@ pragma solidity ^0.5.17;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155 } from "./ERC1155/IERC1155.sol";
 import { IERC1155MetadataURI } from "./ERC1155/IERC1155MetadataURI.sol";
-// import "./IERC1155MetadataURI.sol"; // FIXME
 import { Context } from "@openzeppelin/contracts/GSN/Context.sol";
 import { ERC165 } from "@openzeppelin/contracts/introspection/ERC165.sol";
 import { BequestModule } from "./BequestModule.sol";
@@ -31,8 +30,12 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
     bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
 
     BequestModule public bequest;
+    string private uriImpl;
 
-    constructor(address _initialOwner, BequestModule _bequest) public MyOwnable(_initialOwner) {
+    // Mapping from account to operator approvals
+    mapping (address => mapping(address => bool)) private _operatorApprovals;
+
+    constructor(address _initialOwner, BequestModule _bequest, string memory _uri) public MyOwnable(_initialOwner) {
         // register the supported interfaces to conform to ERC1155 via ERC165
         _registerInterface(_INTERFACE_ID_ERC1155);
 
@@ -40,6 +43,50 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         _registerInterface(_INTERFACE_ID_ERC1155_METADATA_URI);
 
         bequest = _bequest;
+        uriImpl = _uri;
+    }
+
+    function balanceOf(address account, uint256 id) public view returns (uint256) {
+        bytes memory data = abi.encodeWithSelector(
+            IERC20(address(id)).balanceOf.selector,
+            account
+        );
+        (uint256 result) = abi.decode(_executeReturnDataView(address(id), 0, data), (uint256));
+        return result;
+    }
+
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory balances) {
+        require(accounts.length == ids.length, "Lengths don't match.");
+        balances = new uint256[](accounts.length);
+        for (uint i = 0; i < accounts.length; ++i) {
+            balances[i] = balanceOf(accounts[i], ids[i]);
+        }
+    }
+
+    function isApprovedForAll(address account, address operator) public view returns (bool) {
+        return _operatorApprovals[account][operator];
+    }
+
+    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/) public onlyOwner {
+        require(ids.length == amounts.length, "Lengths don't match.");
+        for (uint i = 0; i < ids.length; ++i) {
+            _safeTransferFrom(from, to, ids[i], amounts[i]);
+        }
+        emit TransferBatch(msg.sender, from, to, ids, amounts);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/) public onlyOwner {
+        _safeTransferFrom(from, to, id, amount);
+        emit TransferSingle(msg.sender, from, to, id, amount);
+    }
+
+    function setApprovalForAll(address operator, bool approved) public onlyOwner {
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
+    }
+
+    function uri(uint256 id) external view returns (string memory) {
+        return uriImpl;
     }
 
     function _execute(address to, uint256 value, bytes memory data) internal {
@@ -74,40 +121,6 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         return _returnData;
     }
 
-    function balanceOf(address account, uint256 id) public view returns (uint256) {
-        bytes memory data = abi.encodeWithSelector(
-            IERC20(address(id)).balanceOf.selector,
-            account
-        );
-        (uint256 result) = abi.decode(_executeReturnDataView(address(id), 0, data), (uint256));
-        return result;
-    }
-
-    function balanceOfBatch(address[] memory accounts, uint256[] memory ids) public view returns (uint256[] memory balances) {
-        require(accounts.length == ids.length, "Lengths don't match.");
-        balances = new uint256[](accounts.length);
-        for (uint i = 0; i < accounts.length; ++i) {
-            balances[i] = balanceOf(accounts[i], ids[i]);
-        }
-    }
-
-    function isApprovedForAll(address /*account*/, address /*operator*/) public view returns (bool) {
-        return false; // FIXME
-    }
-
-    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/) public onlyOwner {
-        require(ids.length == amounts.length, "Lengths don't match.");
-        for (uint i = 0; i < ids.length; ++i) {
-            _safeTransferFrom(from, to, ids[i], amounts[i]);
-        }
-        emit TransferBatch(msg.sender, from, to, ids, amounts);
-    }
-
-    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/) public onlyOwner {
-        _safeTransferFrom(from, to, id, amount);
-        emit TransferSingle(msg.sender, from, to, id, amount);
-    }
-
     function _requireSuccess(bool success) pure internal {
         require(success, "Could not execute transaction");
     }
@@ -120,9 +133,5 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
             amount
         );
         _execute(address(id), 0, data);
-    }
-
-    function setApprovalForAll(address /*operator*/, bool /*approved*/) public onlyOwner {
-        revert("Not implemented."); // FIXME
     }
 }
