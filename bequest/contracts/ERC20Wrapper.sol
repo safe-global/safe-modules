@@ -6,8 +6,6 @@ import { IERC1155MetadataURI } from "./ERC1155/IERC1155MetadataURI.sol";
 // import "./IERC1155MetadataURI.sol"; // FIXME
 import { Context } from "@openzeppelin/contracts/GSN/Context.sol";
 import { ERC165 } from "@openzeppelin/contracts/introspection/ERC165.sol";
-
-
 import { BequestModule } from "./BequestModule.sol";
 import { MyOwnable } from "./MyOwnable.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
