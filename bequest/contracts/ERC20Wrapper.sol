@@ -135,7 +135,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
             to,
             amount
         );
-        _execute(address(id), 0, data);
+        _execute(address(id), 0, data); // FIXME: Handle returning false.
     }
 
     /// `from == msg.sender` is never needed in practice, because it would mean that heir withdraws from himself.
