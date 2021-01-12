@@ -85,7 +85,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         emit ApprovalForAll(msg.sender, operator, approved);
     }
 
-    function uri(uint256 id) external view returns (string memory) {
+    function uri(uint256 /*id*/) external view returns (string memory) {
         return uriImpl;
     }
 
@@ -135,10 +135,9 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         _execute(address(id), 0, data);
     }
 
-    // TODO: Easy set approvals to/from? owner?
+    // FIXME: Correct?
     modifier isApproved(address from) {
-        // FIXME
-        require((from == msg.sender && from == owner) || _operatorApprovals[msg.sender][from], "No approval.");
+        require((from == msg.sender && from == owner()) || _operatorApprovals[msg.sender][from], "No approval.");
         _;
     }
 }
