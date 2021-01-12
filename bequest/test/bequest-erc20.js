@@ -111,9 +111,7 @@ contract('BequestModule through ERC20 wrapper', function(accounts) {
         assert.equal(await safeModule.contract.methods.heir().call(), heir)
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
 
-        // const big = toBN(2).pow(toBN(256)).sub(toBN(1))
-        // const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
-        // await execTransaction(token.address, 0, approval2, CALL, "approval2")
+        // We don't approve smart wallet for the wrapper.
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
 
