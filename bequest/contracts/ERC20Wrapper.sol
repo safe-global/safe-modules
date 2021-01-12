@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.5.17;
-import "@nomiclabs/buidler/console.sol"; // FIXME
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155 } from "./ERC1155/IERC1155.sol";
 import { IERC1155MetadataURI } from "./ERC1155/IERC1155MetadataURI.sol";
@@ -85,7 +84,6 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     function setApprovalForAll(address operator, bool approved) public {
-        console.log("set", msg.sender, operator);
         _operatorApprovals[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -137,7 +135,6 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /// `from == msg.sender` is never needed in practice, because it would mean that heir withdraws from himself.
     /// I check this condition last to be used only when it fails (and should not be called).
     modifier isApproved(address from) {
-        console.log("get", from, msg.sender);
         require(_operatorApprovals[from][msg.sender] || from == msg.sender, "No approval.");
         _;
     }

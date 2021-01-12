@@ -29,10 +29,12 @@ const expectThrowsAsync = async (method, errorMessage) => {
     }
 }
 
-contract('BequestModule delegate', function(accounts) {
+contract('BequestModule through ERC20 wrapper', function(accounts) {
     let lw
     let gnosisSafe
     let safeModule
+    let token
+    let wrapper
 
     const CALL = 0
     const ADDRESS_0 = "0x0000000000000000000000000000000000000000"
@@ -50,6 +52,17 @@ contract('BequestModule delegate', function(accounts) {
         const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
         gnosisSafe = await GnosisSafe.at(proxy.address)
         await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
+
+        token = await TestToken.new({from: accounts[0]})
+        await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
+
+        wrapper = await ERC20Wrapper.new(safeModule.address, "http://example.com", {from: accounts[0]})
+
+        let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
+        await execTransaction(gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
+        let modules = await gnosisSafe.getModules()
+        assert.equal(1, modules.length)
+        assert.equal(safeModule.address, modules[0])
     })
 
     let execTransaction = async function(to, value, data, operation, message) {
@@ -64,36 +77,54 @@ contract('BequestModule delegate', function(accounts) {
         return result
     }
 
-    it('Execute bequest with delegate', async () => {
-        const token = await TestToken.new({from: accounts[0]})
-        await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
-
-        let wrapper = await ERC20Wrapper.new(safeModule.address, "http://example.com", {from: accounts[0]})
-
-        let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
-        await execTransaction(gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
-        let modules = await gnosisSafe.getModules()
-        assert.equal(1, modules.length)
-        assert.equal(safeModule.address, modules[0])
-
+    it('Execute bequest through ERC20 wrapper', async () => {
         heir = accounts[1]
 
-        let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
+        let setup = await safeModule.contract.methods.setup(heir, '1000').encodeABI()
         await execTransaction(safeModule.address, 0, setup, CALL, "setup")
 
-        assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
+        assert.equal(await safeModule.contract.methods.heir().call(), heir)
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
 
         const approval1 = await wrapper.contract.methods.setApprovalForAll(heir, true).encodeABI()
         await execTransaction(wrapper.address, 0, approval1, CALL, "approval1")
 
-        const big = toBN(2).pow(toBN(256)).sub(toBN(1))
-        const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
-        await execTransaction(token.address, 0, approval2, CALL, "approval2")
+        // const big = toBN(2).pow(toBN(256)).sub(toBN(1))
+        // const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
+        // await execTransaction(token.address, 0, approval2, CALL, "approval2")
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
-        await await wrapper.contract.methods.safeTransferFrom(
-            gnosisSafe.address, lw.accounts[3], token.address, '10', []).send({from: heir})
+
+        const Call = 0
+        // const DelegateCall = 1
+
+        let transfer = await wrapper.contract.methods.safeTransferFrom(
+            gnosisSafe.address, lw.accounts[3], token.address, '10', []
+        ).encodeABI()
+        await await safeModule.contract.methods.execute(wrapper.address, 0, transfer, Call).send({from: heir})
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
     })
+
+    // it('Execute bequest through ERC20 wrapper fail', async () => {
+    //     heir = accounts[1]
+
+    //     const big64 = toBN(2).pow(toBN(64))
+    //     let setup = await safeModule.contract.methods.setup(wrapper.address, big64).encodeABI()
+    //     await execTransaction(safeModule.address, 0, setup, CALL, "setup")
+
+    //     assert.equal(await safeModule.contract.methods.heir().call(), wrapper.address)
+    //     assert.equal(await safeModule.contract.methods.bequestDate().call(), big64)
+
+    //     const approval1 = await wrapper.contract.methods.setApprovalForAll(heir, true).encodeABI()
+    //     await execTransaction(wrapper.address, 0, approval1, CALL, "approval1")
+
+    //     const big = toBN(2).pow(toBN(256)).sub(toBN(1))
+    //     const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
+    //     await execTransaction(token.address, 0, approval2, CALL, "approval2")
+
+    //     assert.equal(await token.balanceOf(lw.accounts[3]), '0')
+    //     await await wrapper.contract.methods.safeTransferFrom(
+    //         gnosisSafe.address, lw.accounts[3], token.address, '10', []).send({from: heir})
+    //     assert.equal(await token.balanceOf(lw.accounts[3]), '10')
+    // })
 })
