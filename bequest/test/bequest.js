@@ -1,7 +1,6 @@
 const utils = require('@gnosis.pm/safe-contracts/test/utils/general')
 
 const truffleContract = require("@truffle/contract")
-const truffleAssert = require('truffle-assertions');
 
 const GnosisSafeBuildInfo = require("@gnosis.pm/safe-contracts/build/contracts/GnosisSafe.json")
 const GnosisSafe = truffleContract(GnosisSafeBuildInfo)
