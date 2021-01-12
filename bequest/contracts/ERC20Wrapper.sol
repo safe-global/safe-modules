@@ -14,11 +14,6 @@ import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
  
 /// This contract does NOT emit events.
 contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnable {
-    struct Result {
-        bool success;
-        bytes returnData;
-    }
-    
     /*
      *     bytes4(keccak256('balanceOf(address,uint256)')) == 0x00fdd58e
      *     bytes4(keccak256('balanceOfBatch(address[],uint256[])')) == 0x4e1273f4
