@@ -1,4 +1,4 @@
-// // SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.5.17;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155 } from "./ERC1155/IERC1155.sol";
@@ -6,11 +6,10 @@ import { IERC1155MetadataURI } from "./ERC1155/IERC1155MetadataURI.sol";
 import { Context } from "@openzeppelin/contracts/GSN/Context.sol";
 import { ERC165 } from "@openzeppelin/contracts/introspection/ERC165.sol";
 import { BequestModule } from "./BequestModule.sol";
-import { MyOwnable } from "./MyOwnable.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
  
 /// This contract does NOT emit events.
-contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnable {
+contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /*
      *     bytes4(keccak256('balanceOf(address,uint256)')) == 0x00fdd58e
      *     bytes4(keccak256('balanceOfBatch(address[],uint256[])')) == 0x4e1273f4
@@ -35,7 +34,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
     // Mapping from account to operator approvals
     mapping (address => mapping(address => bool)) private _operatorApprovals;
 
-    constructor(address _initialOwner, BequestModule _bequest, string memory _uri) public MyOwnable(_initialOwner) {
+    constructor(BequestModule _bequest, string memory _uri) public {
         // register the supported interfaces to conform to ERC1155 via ERC165
         _registerInterface(_INTERFACE_ID_ERC1155);
 
@@ -67,7 +66,9 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         return _operatorApprovals[account][operator];
     }
 
-    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/) public isApproved(from) {
+    function safeBatchTransferFrom(address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory /*data*/)
+        public isApproved(from)
+    {
         require(ids.length == amounts.length, "Lengths don't match.");
         for (uint i = 0; i < ids.length; ++i) {
             _safeTransferFrom(from, to, ids[i], amounts[i]);
@@ -75,12 +76,14 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         emit TransferBatch(msg.sender, from, to, ids, amounts);
     }
 
-    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/) public isApproved(from) {
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory /*data*/)
+        public isApproved(from)
+    {
         _safeTransferFrom(from, to, id, amount);
         emit TransferSingle(msg.sender, from, to, id, amount);
     }
 
-    function setApprovalForAll(address operator, bool approved) public onlyOwner {
+    function setApprovalForAll(address operator, bool approved) public {
         _operatorApprovals[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -135,9 +138,10 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
         _execute(address(id), 0, data);
     }
 
-    // FIXME: Correct?
+    /// `from == msg.sender` is never needed in practice, because it would mean that heir withdraws from himself.
+    /// I check this condition last to be used only when it fails (and should not be called).
     modifier isApproved(address from) {
-        require((from == msg.sender && from == owner()) || _operatorApprovals[msg.sender][from], "No approval.");
+        require(_operatorApprovals[msg.sender][from] || from == msg.sender, "No approval.");
         _;
     }
 }
