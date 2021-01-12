@@ -117,7 +117,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
             Enum.Operation.Call
         );
         (bool success, bytes memory _returnData) = address(bequest).staticcall(data2);
-        require(success, "Could not execute transaction");
+        _requireSuccess(success);
         return _returnData;
     }
 
