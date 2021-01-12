@@ -127,8 +127,4 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
     function setApprovalForAll(address /*operator*/, bool /*approved*/) public onlyOwner {
         revert("Not implemented."); // FIXME
     }
-
-    function supportsInterface(bytes4 interfaceId) public view returns (bool) {
-
-    }
 }
