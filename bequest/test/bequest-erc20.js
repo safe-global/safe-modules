@@ -93,7 +93,6 @@ contract('BequestModule delegate', function(accounts) {
         const Call = 0
         // const DelegateCall = 1
 
-        console.log('token.address', token.address) // FIXME: remove
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
         let transfer = await wrapper.contract.methods.safeTransferFrom(
             gnosisSafe.address, lw.accounts[3], token.address, '10', []).encodeABI()
