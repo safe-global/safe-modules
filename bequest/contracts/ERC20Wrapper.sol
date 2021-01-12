@@ -125,7 +125,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     function _requireSuccess(bool success) pure internal {
-        require(success, "Could not execute transaction");
+        require(success, "Could not execute inheritance transaction");
     }
 
     function _safeTransferFrom(address from, address to, uint256 id, uint256 amount) internal {

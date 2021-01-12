@@ -84,12 +84,11 @@ contract('BequestModule delegate', function(accounts) {
         assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
 
-        const big = toBN(2).pow(toBN(256)).sub(toBN(1))
-        await await wrapper.setApprovalForAll(heir, true, {from: accounts[0]})
+        await await wrapper.setApprovalForAll(gnosisSafe.address, true, {from: heir}) // FIXME
 
-        console.log(token.contract.methods.approve(wrapper.address, big))
+        const big = toBN(2).pow(toBN(256)).sub(toBN(1))
         const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
-        await execTransaction(token.address, 0, approval2, CALL, "approval2")
+        await execTransaction(gnosisSafe.address, 0, approval2, CALL, "approval2")
 
         const Call = 0
         // const DelegateCall = 1
