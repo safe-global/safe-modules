@@ -32,7 +32,7 @@ contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI, MyOwnab
      */
     bytes4 private constant _INTERFACE_ID_ERC1155_METADATA_URI = 0x0e89341c;
 
-    BequestModule bequest;
+    BequestModule public bequest;
 
     constructor(address _initialOwner, BequestModule _bequest) public MyOwnable(_initialOwner) {
         // register the supported interfaces to conform to ERC1155 via ERC165
