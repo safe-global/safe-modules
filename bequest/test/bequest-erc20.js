@@ -86,12 +86,9 @@ contract('BequestModule through ERC20 wrapper', function(accounts) {
         assert.equal(await safeModule.contract.methods.heir().call(), heir)
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
 
-        const approval1 = await wrapper.contract.methods.setApprovalForAll(heir, true).encodeABI()
-        await execTransaction(wrapper.address, 0, approval1, CALL, "approval1")
-
-        // const big = toBN(2).pow(toBN(256)).sub(toBN(1))
-        // const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
-        // await execTransaction(token.address, 0, approval2, CALL, "approval2")
+        const big = toBN(2).pow(toBN(256)).sub(toBN(1))
+        const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
+        await execTransaction(token.address, 0, approval2, CALL, "approval2")
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
 
@@ -105,26 +102,31 @@ contract('BequestModule through ERC20 wrapper', function(accounts) {
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
     })
 
-    // it('Execute bequest through ERC20 wrapper fail', async () => {
-    //     heir = accounts[1]
+    it('Execute bequest through ERC20 wrapper fail', async () => {
+        heir = accounts[1]
 
-    //     const big64 = toBN(2).pow(toBN(64))
-    //     let setup = await safeModule.contract.methods.setup(wrapper.address, big64).encodeABI()
-    //     await execTransaction(safeModule.address, 0, setup, CALL, "setup")
+        let setup = await safeModule.contract.methods.setup(heir, '1000').encodeABI()
+        await execTransaction(safeModule.address, 0, setup, CALL, "setup")
 
-    //     assert.equal(await safeModule.contract.methods.heir().call(), wrapper.address)
-    //     assert.equal(await safeModule.contract.methods.bequestDate().call(), big64)
+        assert.equal(await safeModule.contract.methods.heir().call(), heir)
+        assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
 
-    //     const approval1 = await wrapper.contract.methods.setApprovalForAll(heir, true).encodeABI()
-    //     await execTransaction(wrapper.address, 0, approval1, CALL, "approval1")
+        // const big = toBN(2).pow(toBN(256)).sub(toBN(1))
+        // const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
+        // await execTransaction(token.address, 0, approval2, CALL, "approval2")
 
-    //     const big = toBN(2).pow(toBN(256)).sub(toBN(1))
-    //     const approval2 = await token.contract.methods.approve(wrapper.address, big).encodeABI()
-    //     await execTransaction(token.address, 0, approval2, CALL, "approval2")
+        assert.equal(await token.balanceOf(lw.accounts[3]), '0')
 
-    //     assert.equal(await token.balanceOf(lw.accounts[3]), '0')
-    //     await await wrapper.contract.methods.safeTransferFrom(
-    //         gnosisSafe.address, lw.accounts[3], token.address, '10', []).send({from: heir})
-    //     assert.equal(await token.balanceOf(lw.accounts[3]), '10')
-    // })
+        const Call = 0
+
+        async function fail() {
+            let transfer = await wrapper.contract.methods.safeTransferFrom(
+                gnosisSafe.address, lw.accounts[3], token.address, '10', []
+            ).encodeABI()
+            await await safeModule.contract.methods.execute(wrapper.address, 0, transfer, Call).send({from: heir})
+        }
+        expectThrowsAsync(fail, "revert Could not execute transaction")
+    })
+
+    // TODO: Check the rest external functions.
 })
