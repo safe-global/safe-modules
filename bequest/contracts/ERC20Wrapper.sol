@@ -9,6 +9,7 @@ import { BequestModule } from "./BequestModule.sol";
 import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// This contract does NOT emit events.
+/// TODO: Duplicate code with another contract.
 contract ERC20Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /*
      *     bytes4(keccak256('balanceOf(address,uint256)')) == 0x00fdd58e
