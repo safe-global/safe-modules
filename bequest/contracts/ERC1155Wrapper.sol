@@ -1,4 +1,4 @@
-// // SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.5.17;
 pragma experimental ABIEncoderV2;
 import { IERC1155 } from "./ERC1155/IERC1155.sol";
@@ -10,12 +10,14 @@ import { Enum } from "@gnosis.pm/safe-contracts/contracts/common/Enum.sol";
 
 /// This contract does NOT emit events.
 /// TODO: Duplicate code with another contract.
-contract GnosisSafeERC1155Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
+contract ERC1155Wrapper is Context, ERC165, IERC1155, IERC1155MetadataURI {
     struct Token {
         IERC1155 contractAddress;
         uint256 tokenId;
     }
-    
+
+    event NewToken(uint64 tokenId);
+
     mapping (uint64 => Token) public tokens;
     uint64 maxId;
 
@@ -55,8 +57,9 @@ contract GnosisSafeERC1155Wrapper is Context, ERC165, IERC1155, IERC1155Metadata
     }
 
     function newToken(Token memory token) public {
-        tokens[maxId++] = token;
-        // TODO: event?
+        uint64 id = maxId++;
+        tokens[id] = token;
+        emit NewToken(id);
     }
 
     function balanceOf(address account, uint256 id) public view returns (uint256) {
