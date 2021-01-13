@@ -126,6 +126,6 @@ contract('BequestModule delegate', function(accounts) {
             await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
         }
 
-        // TODO: Test executeReturnData().
+        // TODO: Test executeReturnData() (requires creation of a special test contract).
     })
 })
