@@ -100,6 +100,12 @@ contract('BequestModule through ERC20 wrapper', function(accounts) {
         ).encodeABI()
         await await safeModule.contract.methods.execute(wrapper.address, 0, transfer, Call).send({from: heir})
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
+
+        let transferBatch = await wrapper.contract.methods.safeBatchTransferFrom(
+            gnosisSafe.address, lw.accounts[3], [token.address], ['10'], []
+        ).encodeABI()
+        await await safeModule.contract.methods.execute(wrapper.address, 0, transferBatch, Call).send({from: heir})
+        assert.equal(await token.balanceOf(lw.accounts[3]), '20')
     })
 
     it('Execute bequest through ERC20 wrapper fail', async () => {
