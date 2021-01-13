@@ -24,6 +24,8 @@ The inheritance is probably most effective if it can be used together with "mone
 
 TODO: Add `ERC721Wrapper`.
 
+TODO: Contract that splits a bequest to several heirs.
+
 ## Running tests
 
 TODO: Add tests.
