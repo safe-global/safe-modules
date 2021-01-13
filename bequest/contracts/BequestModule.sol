@@ -65,7 +65,7 @@ contract BequestModule is Module {
     }
 
     modifier enteredIntoInheritanceRights() {
-        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take"); // FIXME
+        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take");
         _;
     }
 }
