@@ -25,20 +25,17 @@ Social recovery can be turned off by `turnOffSocialRecovery()` method.
 Friends accomplish social recovery like this (if we use JavaScript code, a special not yet written dApp is more likely to be used in the future):
 
 ```javascript
-/// prevOwner Owner that pointed to the owner to be replaced in the linked list
+const socialRecoveryModule = // ...
+/// prevOwner Owner that pointed to the owner to be replaced in the linked list.
 /// oldOwner Owner address to be replaced.
 /// newOwner New owner address.
-data = await gnosisSafe.contract.methods.swapOwner(prevOwner, oldOwner, newOwner).encodeABI()
-// Confirm transaction to be executed without confirmations
-dataHash = await socialRecoveryModule.getDataHash(data)
-await socialRecoveryModule.confirmTransaction(dataHash, {from: accounts[3]})
-await utils.assertRejects(
-    socialRecoveryModule.recoverAccess("0x1", accounts[0], accounts[9], {from: accounts[3]}),
-    "It was not confirmed by the required number of friends"
-)
-// Confirm with 2nd friend
-utils.logGasUsage("confirm recovery", await socialRecoveryModule.confirmTransaction(dataHash, {from: accounts[2]}))
-utils.logGasUsage("recover access", await socialRecoveryModule.recoverAccess(sentinel, accounts[0], accounts[9], {from: accounts[3]}))
+const data = await gnosisSafe.contract.methods.swapOwner(prevOwner, oldOwner, newOwner).encodeABI()
+// Confirm transaction by N friends:
+const dataHash = await socialRecoveryModule.getDataHash(data)
+await socialRecoveryModule.confirmTransaction(dataHash, {from: friend[0]})
+// ...
+await socialRecoveryModule.confirmTransaction(dataHash, {from: friend[N-2]})
+await socialRecoveryModule.recoverAccess(prevOwner, oldOwner, newOwner, {from: friend[N-1]})
 ```
 
 ## TODO
