@@ -42,7 +42,6 @@
   "dependencies": {
     "@gnosis.pm/safe-contracts": "^1.2.0",
     "@gnosis.pm/singleton-deployer-truffle": "^1.1.0",
-    "@openzeppelin/contracts": "2.5.0",
     "@truffle/contract": "^4.2.23",
     "dotenv": "^8.0.0",
     "solc": "0.5.17",
