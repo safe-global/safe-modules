@@ -71,4 +71,5 @@ contract('SocialRecoveryModule', function(accounts) {
     // - that reconfiguration removes old friends
     // - that reconfiguration with the same friends and threshold changes nothing
     // - that reconfiguration requires authorization
+    // TODO: Check `turnOffSocialRecovery()`.
 });

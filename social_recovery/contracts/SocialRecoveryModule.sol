@@ -53,6 +53,19 @@ contract SocialRecoveryModule is Module {
         _reconfigure(_friends, _threshold);
     }
 
+    /// @dev Make social recovery impossible (till the next call of `reconfigure`).
+    function turnOffSocialRecovery()
+        public
+        authorized
+    {
+        for (uint i = 0; i < friends.length; ++i) {
+            address friend = friends[i];
+            isFriend[friend] = false;
+        }
+        friends = new address[](0);
+        threshold = 1; // more than the number of friends
+    }
+
     function _checkConfigParams(address[] memory _friends, uint256 _threshold)
         pure internal
     {
