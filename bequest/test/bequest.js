@@ -127,5 +127,6 @@ contract('BequestModule delegate', function(accounts) {
         }
 
         // TODO: Test executeReturnData().
+        // TODO: Test events.
     })
 })
