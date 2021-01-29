@@ -80,14 +80,11 @@ contract('BequestModule delegate', function(accounts) {
         let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
         await execTransaction(safeModule.address, 0, setup, CALL, "setup")
 
-        // TODO
-        // { // Can't call setup() twice
-        //     async function fails() {
-        //         let setup2 = await safeModule.contract.methods.setup(accounts[2], '2000').encodeABI()
-        //         console.log(await execTransaction(safeModule.address, 0, setup2, CALL, "repeated setup"))
-        //     }
-        //     await expectThrowsAsync(fails, "Returned error: Manager has already been set");
-        // }
+        { // Can't call setup() twice
+            let setup2 = await safeModule.contract.methods.setup(accounts[2], '2000').encodeABI()
+            const tx = await execTransaction(safeModule.address, 0, setup2, CALL, "repeated setup")
+            assert.equal(tx.logs[0].event, "ExecutionFailure")
+        }
 
         assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
