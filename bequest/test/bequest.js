@@ -128,6 +128,6 @@ contract('BequestModule delegate', function(accounts) {
         }
 
         // TODO: Test executeReturnData().
-        // TODO: Test events.
+        // We can't test events with web3.js.
     })
 })
