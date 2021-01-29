@@ -1,3 +1,5 @@
+const chai = require('chai')
+
 const utils = require('@gnosis.pm/safe-contracts/test/utils/general')
 
 const truffleContract = require("@truffle/contract")
@@ -14,6 +16,8 @@ const TestToken = artifacts.require("./TestToken.sol")
 
 const toBN = web3.utils.toBN
 
+chai.use(require('chai-string'));
+
 const expectThrowsAsync = async (method, errorMessage) => {
     let error = null
     try {
@@ -24,7 +28,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
     }
     expect(error).to.be.an('Error')
     if (errorMessage) {
-        expect(error.message).to.equal(errorMessage)
+        chai.assert.startsWith(error.message, errorMessage)
     }
 }
 
@@ -48,7 +52,7 @@ contract('BequestModule delegate', function(accounts) {
         const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
         const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
         gnosisSafe = await GnosisSafe.at(proxy.address)
-        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
+        const tx = await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
     })
 
     let execTransaction = async function(to, value, data, operation, message) {
@@ -101,7 +105,7 @@ contract('BequestModule delegate', function(accounts) {
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10000').encodeABI() // too many tokens
                 await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[1]})
             }
-            await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert Could not execute transaction");
+            await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
         {
@@ -109,7 +113,7 @@ contract('BequestModule delegate', function(accounts) {
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
                 await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[2]}) // wrong account
             }
-            await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
+            await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
         // Time expired:
@@ -123,7 +127,7 @@ contract('BequestModule delegate', function(accounts) {
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
                 await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[2]})
             }
-            await expectThrowsAsync(fails, "Returned error: VM Exception while processing transaction: revert No rights to take");
+            await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
         // TODO: Test executeReturnData().

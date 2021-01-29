@@ -37,13 +37,15 @@
     "ethereumjs-abi": "^0.6.8",
     "ganache-cli": "6.11.0",
     "ipfs-http-client": "^44.2.0",
-    "run-with-testrpc": "^0.3.0",
+    "run-with-testrpc": "^0.3.1",
     "web3": "^1.2.6"
   },
   "dependencies": {
     "@gnosis.pm/safe-contracts": "^1.2.0",
     "@gnosis.pm/singleton-deployer-truffle": "^1.1.0",
     "@truffle/contract": "^4.2.23",
+    "chai": "^4.2.0",
+    "chai-string": "^1.5.0",
     "dotenv": "^8.0.0",
     "solc": "0.5.17",
     "truffle": "^5.1.50",
