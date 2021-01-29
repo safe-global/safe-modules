@@ -32,7 +32,7 @@ contract BequestModule is Module {
         setManager();
         heir = _heir;
         bequestDate = _bequestDate;
-        if (_heir != address(0)) {
+        if (_heir != address(0)) { // Reduce gas usage
             emit SetBequestDate(address(this), _heir, _bequestDate);
         }
     }
