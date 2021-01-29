@@ -44,7 +44,6 @@ contract BequestModule is Module {
     {
         heir = _heir;
         bequestDate = _bequestDate;
-        // FIXME: address(this) is a wrong value here.
         emit SetBequestDate(address(this), _heir, _bequestDate);
     }
 
@@ -66,7 +65,7 @@ contract BequestModule is Module {
     }
 
     modifier enteredIntoInheritanceRights() {
-        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take"); // FIXME
+        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take");
         _;
     }
 }
