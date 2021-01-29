@@ -71,42 +71,26 @@ contract('BequestModule delegate', function(accounts) {
         const token = await TestToken.new({from: accounts[0]})
         await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
         
-        const Call = 0
-        // const DelegateCall = 1
-
         let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
         await execTransaction(gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
         let modules = await gnosisSafe.getModules()
         assert.equal(1, modules.length)
         assert.equal(safeModule.address, modules[0])
 
-        let setup = await safeModule.contract.methods.setup().encodeABI()
+        let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
         await execTransaction(safeModule.address, 0, setup, CALL, "setup")
 
         { // Can't call setup() twice
-            let setup2 = await safeModule.contract.methods.setup().encodeABI()
+            let setup2 = await safeModule.contract.methods.setup(accounts[2], '2000').encodeABI()
             const tx = await execTransaction(safeModule.address, 0, setup2, CALL, "repeated setup")
             assert.equal(tx.logs[0].event, "ExecutionFailure")
         }
 
-        {
-            async function fails() {
-                let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-                await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[2]}) // no bequest yet
-            }
-            await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
-        }
-
-        assert.equal(await safeModule.contract.methods.heir().call(), '0x0000000000000000000000000000000000000000')
-        assert.equal(await safeModule.contract.methods.bequestDate().call(), '0')
-
-        { // Initial setup:
-            let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[1], '1000').encodeABI()
-            await execTransaction(safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
-        }
-
         assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
         assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
+
+        const Call = 0
+        // const DelegateCall = 1
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
         let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
@@ -129,11 +113,9 @@ contract('BequestModule delegate', function(accounts) {
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
-        { // Time expired
-            let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
-            await execTransaction(safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
-        }
-
+        // Time expired:
+        let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
+        await execTransaction(safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
         assert.equal(await safeModule.contract.methods.heir().call(), accounts[2])
         assert.equal(await safeModule.contract.methods.bequestDate().call(), toBN(2).pow(toBN(64)))
 

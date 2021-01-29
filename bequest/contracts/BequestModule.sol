@@ -24,12 +24,17 @@ contract BequestModule is Module {
     uint public bequestDate;
 
     /// @dev Setup function sets initial storage of contract.
-    /// @notice We don't set heir and data in `setup()` because `setup()` cannot emit the right events.
-    function setup()
+    /// @param _heir Who inherits control over the wallet (you can set to 0 to avoid inheriting).
+    /// @param _bequestDate Funds can be withdrawn after this point of time.
+    function setup(address _heir, uint _bequestDate)
         public
     {
         setManager();
-        // assert(heir == address(0))
+        heir = _heir;
+        bequestDate = _bequestDate;
+        if (_heir != address(0)) {
+            emit SetBequestDate(address(this), _heir, _bequestDate);
+        }
     }
 
     /// @dev Changes bequest settings.
