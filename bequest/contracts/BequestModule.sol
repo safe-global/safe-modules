@@ -32,7 +32,9 @@ contract BequestModule is Module {
         setManager();
         heir = _heir;
         bequestDate = _bequestDate;
-        emit SetBequestDate(address(this), _heir, _bequestDate);
+        if (_heir != address(0)) {
+            emit SetBequestDate(address(this), _heir, _bequestDate);
+        }
     }
 
     /// @dev Changes bequest settings.
