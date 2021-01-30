@@ -34,3 +34,9 @@ yarn test
 yarn
 yarn compile
 ```
+
+## Contract addresses
+
+### Rinkeby
+
+`BequestModule` at `0x6D8cA499E4DB1332eAd46A2Fe72138C548549a77`
