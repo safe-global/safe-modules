@@ -38,7 +38,6 @@ contract('BequestModule delegate', function(accounts) {
     let safeModule
 
     const CALL = 0
-    const DELEGATE_CALL = 1
     const ADDRESS_0 = "0x0000000000000000000000000000000000000000"
 
     const Call = 0 // FIXME: remove
