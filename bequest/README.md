@@ -1,6 +1,6 @@
 # Bequest module
 
-WARNING: The module is with a big secrity error!
+WARNING: The module was almost fully tested, but not audited. Use at your own risk.
 
 This contract allows to bequest all funds on the wallet to be withdrawn after a given time.
 Moreover, after the given time the heir can execute any transaction on the inherited wallet.

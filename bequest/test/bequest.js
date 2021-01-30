@@ -54,6 +54,12 @@ contract('BequestModule delegate', function(accounts) {
         const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
         gnosisSafe = await GnosisSafe.at(proxy.address)
         await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
+
+        let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
+        await execTransaction(gnosisSafe, accounts[0], gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
+        let modules = await gnosisSafe.getModules()
+        assert.equal(1, modules.length)
+        assert.equal(safeModule.address, modules[0])
     })
 
     let execTransaction = async function(gnosisSafe, from, to, value, data, operation, message) {
@@ -68,8 +74,8 @@ contract('BequestModule delegate', function(accounts) {
         return result
     }
 
-    let execInheritanceTransaction = async function(from, to, value, data, operation, message) {
-        return await safeModule.contract.methods.execute(to, value, data, operation).send({ from })
+    let execInheritanceTransaction = async function(safe, from, to, value, data, operation, message) {
+        return await safeModule.contract.methods.execute(safe, to, value, data, operation).send({ from })
     }
 
     it('Execute bequest with delegate', async () => {
@@ -77,19 +83,9 @@ contract('BequestModule delegate', function(accounts) {
         const token = await TestToken.new({from: accounts[0]})
         await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
         
-        let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
-        await execTransaction(gnosisSafe, accounts[0], gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
-        let modules = await gnosisSafe.getModules()
-        assert.equal(1, modules.length)
-        assert.equal(safeModule.address, modules[0])
-
-        let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
-        await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setup, CALL, "setup")
-
-        { // Can't call setup() twice
-            let setup2 = await safeModule.contract.methods.setup(accounts[2], '2000').encodeABI()
-            const tx = await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setup2, CALL, "repeated setup")
-            assert.equal(tx.logs[0].event, "ExecutionFailure")
+        {
+            let setBequest = await safeModule.contract.methods.setBequest(accounts[1], '1000').encodeABI()
+            await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setBequest, CALL, "setup")
         }
 
         assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[1])
@@ -97,13 +93,13 @@ contract('BequestModule delegate', function(accounts) {
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
         let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-        await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
+        await execInheritanceTransaction(gnosisSafe.address, accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
 
         {
             async function fails() {
                 let transfer = await token.contract.methods.transfer(lw.accounts[3], '10000').encodeABI()
-                await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+                await execInheritanceTransaction(gnosisSafe.address, accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
@@ -111,26 +107,27 @@ contract('BequestModule delegate', function(accounts) {
         {
             async function fails() {
                 let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI() // wrong account
-                await execInheritanceTransaction(accounts[2], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+                await execInheritanceTransaction(gnosisSafe.address, accounts[2], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
         // Time expired:
-        let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
-        await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
+        {
+            let setBequest = await safeModule.contract.methods.setBequest(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
+            await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setBequest, CALL, "setBequest")
+        }
         assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[2])
         assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe.address).call(), toBN(2).pow(toBN(64)))
 
         {
             async function fails() {
                 let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-                await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+                await execInheritanceTransaction(gnosisSafe.address, accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
-        // FIXME: Check that one can't take funds from another's site.
         // TODO: Test executeReturnData().
         // We can't test events with web3.js.
     })
@@ -153,11 +150,10 @@ contract('BequestModule delegate', function(accounts) {
         assert.equal(safeModule.address, modules[0])
 
         // Setup both two safes for inheritance.
-        let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
+        let setup = await safeModule.contract.methods.setBequest(accounts[1], '1000').encodeABI()
         await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setup, CALL, "setup")
-        let setup2 = await safeModule.contract.methods.setup(accounts[2], '1001').encodeABI()
-        console.log((await execTransaction(gnosisSafe2, accounts[0], safeModule.address, 0, setup2, CALL, "setup")).logs)
-        return
+        let setup2 = await safeModule.contract.methods.setBequest(accounts[2], '1001').encodeABI()
+        await execTransaction(gnosisSafe2, accounts[0], safeModule.address, 0, setup2, CALL, "setup")
 
         assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[1])
         assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe.address).call(), '1000')
@@ -165,16 +161,19 @@ contract('BequestModule delegate', function(accounts) {
         assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe2.address).call(), '1001')
   
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
-        let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-        await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
+        { // Take bequest.
+            let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
+            await execInheritanceTransaction(gnosisSafe.address, accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
+        }
+        return
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
 
-        // {
-        //     async function fails() {
-        //         let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-        //         await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
-        //     }
-        //     await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
-        // }
+        {
+            async function fails() {
+                let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
+                await execInheritanceTransaction(gnosisSafe2.address, accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
+            }
+            await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
+        }
     })
 })

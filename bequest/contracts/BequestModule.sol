@@ -25,25 +25,11 @@ contract BequestModule {
     /// Safe -> seconds since epoch.
     mapping(address => uint) public bequestDates;
 
-    /// @dev Setup function sets initial storage of contract.
-    /// @param _heir Who insherits control over the wallet (you can set to 0 to avoid inheriting).
-    /// @param _bequestDate Funds can be withdrawn after this point of time.
-    /// It can be called by anybody, but the `msg.sender` can change only his own data.
-    function setup(address _heir, uint _bequestDate)
-        public
-    {
-        heirs[msg.sender] = _heir;
-        bequestDates[msg.sender] = _bequestDate;
-        if (_heir != address(0)) { // Reduce gas usage
-            emit SetBequestDate(address(this), _heir, _bequestDate);
-        }
-    }
-
     /// @dev Changes bequest settings.
     /// @param _heir Who inherits control over the wallet (you can set to 0 to avoid inheriting).
     /// @param _bequestDate Funds can be withdrawn after this point of time.
     /// It can be called by anybody, but the `msg.sender` can change only his own data.
-    function changeHeirAndDate(address _heir, uint _bequestDate)
+    function setBequest(address _heir, uint _bequestDate)
         public
     {
         heirs[msg.sender] = _heir;
