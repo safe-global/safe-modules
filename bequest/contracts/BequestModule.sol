@@ -16,22 +16,26 @@ contract BequestModule is Module {
     string public constant NAME = "Bequest Module";
     string public constant VERSION = "0.0.1";
 
-    event SetBequestDate(address wallet, address heir, uint time);
+    event SetBequestDate(address wallet, address heir, uint time); // FIXME
 
     /// Who inherits control over the wallet.
-    address public heir;
+    ///
+    /// Safe -> heir.
+    mapping(address => address) public heirs;
     /// Funds can be withdrawn after this point of time.
-    uint public bequestDate;
+    ///
+    /// Safe -> seconds since epoch.
+    mapping(address => uint public bequestDates;
 
     /// @dev Setup function sets initial storage of contract.
-    /// @param _heir Who inherits control over the wallet (you can set to 0 to avoid inheriting).
+    /// @param _heir Who insherits control over the wallet (you can set to 0 to avoid inheriting).
     /// @param _bequestDate Funds can be withdrawn after this point of time.
     function setup(address _heir, uint _bequestDate)
         public
     {
         setManager();
-        heir = _heir;
-        bequestDate = _bequestDate;
+        heirs[msg.sender] = _heir;
+        bequestDates[msg.sender] = _bequestDate;
         if (_heir != address(0)) { // Reduce gas usage
             emit SetBequestDate(address(this), _heir, _bequestDate);
         }
