@@ -40,8 +40,6 @@ contract('BequestModule delegate', function(accounts) {
     const CALL = 0
     const ADDRESS_0 = "0x0000000000000000000000000000000000000000"
 
-    const Call = 0 // FIXME: remove
-
     beforeEach(async function() {
         // Create lightwallet
         lw = await utils.createLightwallet()
