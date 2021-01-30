@@ -71,7 +71,7 @@ contract BequestModule is Module {
     }
 
     modifier enteredIntoInheritanceRights() {
-        require(msg.sender == heirs[address(this)] && block.timestamp >= bequestDates[address(this)], "No rights to take");
+        require(msg.sender == heirs[address(manager)] && block.timestamp >= bequestDates[address(this)], "No rights to take");
         _;
     }
 }

@@ -71,8 +71,7 @@ contract('BequestModule delegate', function(accounts) {
     }
 
     let execInheritanceTransaction = async function(from, to, value, data, operation, message) {
-        const subTx = await safeModule.contract.methods.execute(to, value, data, operation).encodeABI()
-        return await execTransaction(from, safeModule.address, value, subTx, DELEGATE_CALL, message);
+        return await safeModule.contract.methods.execute(to, value, data, operation).send({ from })
     }
 
     it('Execute bequest with delegate', async () => {
