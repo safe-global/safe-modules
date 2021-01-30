@@ -1,5 +1,5 @@
 {
-  "name": "vporton/safe-bequest-module",
+  "name": "@vporton/safe-bequest-module",
   "version": "0.0.1",
   "description": "Bequest module for the Gnosis Safe",
   "main": "index.js",
