@@ -11,7 +11,7 @@ The contract is designed as a single point registry. This way not every Safe nee
 
 To set an bequest for a Safe it is first required that the Safe adds a **delegate**. For this a Safe transaction needs to be executed that calls `addDelegate`. This method will add the specified **delegate** for `msg.sender`, which is the Safe in case of a Safe transaction. The `addDelegate` method can be called multiple times with the same address for a **delegate** without failure.
 
-To set a bequest need to call `setup` method with the heir address and the date at which the bequest becomes effective. The bequest date (the number of seconds after the epoch) and heir can be changed at any time by calling `changeHeirAndDate` (with the same parameters). To cancel a bequest, call it with heir set to `0x0`.
+To set a bequest need to call `setBequest` method with the heir address and the date at which the bequest becomes effective. The bequest date (the number of seconds after the epoch) and heir can be changed at any time by calling `setBequest` again. To cancel a bequest, call it with heir set to `0x0`.
 
 After the bequest date becomes effecive, the heir account (a simple wallet or a smart contract) can call any method on the bequested wallet using `execute` or `executeReturnData` methods.
 
