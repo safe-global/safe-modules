@@ -48,8 +48,8 @@ contract BequestModule is Module {
         public
         authorized
     {
-        heir = _heir;
-        bequestDate = _bequestDate;
+        heirs[msg.sender] = _heir;
+        bequestDates[msg.sender] = _bequestDate;
         emit SetBequestDate(address(this), _heir, _bequestDate);
     }
 
@@ -71,7 +71,7 @@ contract BequestModule is Module {
     }
 
     modifier enteredIntoInheritanceRights() {
-        require(msg.sender == heir && block.timestamp >= bequestDate, "No rights to take");
+        require(msg.sender == heirs[msg.sender] && block.timestamp >= bequestDates[msg.sender], "No rights to take");
         _;
     }
 }

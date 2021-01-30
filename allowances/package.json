@@ -30,9 +30,9 @@
   "author": "richard@gnosis.io",
   "license": "ISC",
   "devDependencies": {
-    "@openzeppelin/contracts": "^3.2.1-solc-0.7",
     "@gnosis.pm/truffle-nice-tools": "^1.3.0",
-    "@truffle/hdwallet-provider": "^1.0.0",
+    "@openzeppelin/contracts": "^3.2.1-solc-0.7",
+    "@truffle/hdwallet-provider": "^1.2.1",
     "eth-lightwallet": "^4.0.0",
     "ethereumjs-abi": "^0.6.8",
     "ganache-cli": "6.11.0",
@@ -41,12 +41,12 @@
     "web3": "^1.2.6"
   },
   "dependencies": {
-    "@gnosis.pm/singleton-deployer-truffle": "^1.1.0",
     "@gnosis.pm/safe-contracts": "^1.2.0",
+    "@gnosis.pm/singleton-deployer-truffle": "^1.1.0",
     "@truffle/contract": "^4.2.23",
     "dotenv": "^8.0.0",
-    "truffle": "^5.1.50",
-    "solc": "0.7.4"
+    "solc": "0.7.4",
+    "truffle": "^5.1.50"
   },
   "resolutions": {
     "bitcore-lib": "8.1.1",
