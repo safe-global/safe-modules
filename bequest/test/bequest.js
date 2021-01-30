@@ -71,7 +71,7 @@ contract('BequestModule delegate', function(accounts) {
     }
 
     let execInheritanceTransaction = async function(from, to, value, data, operation, message) {
-        const subTx = await safeModule.execute(to, value, data, operation).encodeABI()
+        const subTx = await safeModule.contract.methods.execute(to, value, data, operation).encodeABI()
         return await execTransaction(from, to, value, subTx, DELEGATE_CALL, message); // FIXME: wrong from
     }
 
@@ -100,13 +100,13 @@ contract('BequestModule delegate', function(accounts) {
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
         let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-        await execInheritanceTransaction(accounts[1], token.contract.address, 0, transfer, CALL, "inheritance withdrawal")
+        await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
 
         {
             async function fails() {
                 let transfer = await token.contract.methods.transfer(lw.accounts[3], '10000').encodeABI()
-                await execInheritanceTransaction(accounts[1], token.contract.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+                await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
@@ -114,7 +114,7 @@ contract('BequestModule delegate', function(accounts) {
         {
             async function fails() {
                 let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI() // wrong account
-                await execInheritanceTransaction(accounts[2], token.contract.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+                await execInheritanceTransaction(accounts[2], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
@@ -128,7 +128,7 @@ contract('BequestModule delegate', function(accounts) {
         {
             async function fails() {
                 let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
-                await execInheritanceTransaction(accounts[1], token.contract.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+                await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
