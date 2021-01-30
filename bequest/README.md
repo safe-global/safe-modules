@@ -41,4 +41,4 @@ yarn compile
 
 ### Rinkeby
 
-`BequestModule` at `0x6D8cA499E4DB1332eAd46A2Fe72138C548549a77`
+`BequestModule` at `0x44a41A0C37E4869C6e23a2d4A1fAB61ed8B78e2a`
