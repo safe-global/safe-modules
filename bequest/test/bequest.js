@@ -36,6 +36,7 @@ contract('BequestModule delegate', function(accounts) {
     let lw
     let gnosisSafe
     let safeModule
+    let gnosisSafeMasterCopy
 
     const CALL = 0
     const ADDRESS_0 = "0x0000000000000000000000000000000000000000"
@@ -49,7 +50,7 @@ contract('BequestModule delegate', function(accounts) {
         console.log(amodule.address)
         safeModule = await BequestModule.new()
 
-        const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
+        gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
         const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
         gnosisSafe = await GnosisSafe.at(proxy.address)
         await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
@@ -132,5 +133,48 @@ contract('BequestModule delegate', function(accounts) {
         // FIXME: Check that one can't take funds from another's site.
         // TODO: Test executeReturnData().
         // We can't test events with web3.js.
+    })
+
+    it('Try to withdraw from another safe that bequested', async () => {
+        // Create the second safe"
+        const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
+        const gnosisSafe2 = await GnosisSafe.at(proxy.address)
+        await gnosisSafe2.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
+
+        // "Load" the safes with money:
+        const token = await TestToken.new({from: accounts[0]})
+        await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
+        await token.transfer(gnosisSafe2.address, '1000', {from: accounts[0]}) 
+        
+        let enableModuleData = await gnosisSafe2.contract.methods.enableModule(safeModule.address).encodeABI()
+        await execTransaction(gnosisSafe2, accounts[0], gnosisSafe2.address, 0, enableModuleData, CALL, "enable module")
+        let modules = await gnosisSafe2.getModules()
+        assert.equal(1, modules.length)
+        assert.equal(safeModule.address, modules[0])
+
+        // Setup both two safes for inheritance.
+        let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
+        await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setup, CALL, "setup")
+        let setup2 = await safeModule.contract.methods.setup(accounts[2], '1001').encodeABI()
+        console.log((await execTransaction(gnosisSafe2, accounts[0], safeModule.address, 0, setup2, CALL, "setup")).logs)
+        return
+
+        assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[1])
+        assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe.address).call(), '1000')
+        assert.equal(await safeModule.contract.methods.heirs(gnosisSafe2.address).call(), accounts[2])
+        assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe2.address).call(), '1001')
+  
+        assert.equal(await token.balanceOf(lw.accounts[3]), '0')
+        let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
+        await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal")
+        assert.equal(await token.balanceOf(lw.accounts[3]), '10')
+
+        // {
+        //     async function fails() {
+        //         let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
+        //         await execInheritanceTransaction(accounts[1], token.address, 0, transfer, CALL, "inheritance withdrawal") // too many tokens
+        //     }
+        //     await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
+        // }
     })
 })
