@@ -68,6 +68,7 @@ contract('BequestModule delegate', function(accounts) {
     }
 
     it('Execute bequest with delegate', async () => {
+        // "Load" the safe with money:
         const token = await TestToken.new({from: accounts[0]})
         await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
         
@@ -86,19 +87,21 @@ contract('BequestModule delegate', function(accounts) {
             assert.equal(tx.logs[0].event, "ExecutionFailure")
         }
 
-        assert.equal(await safeModule.contract.methods.heir().call(), accounts[1])
-        assert.equal(await safeModule.contract.methods.bequestDate().call(), '1000')
+        assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[1])
+        assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe.address).call(), '1000')
 
         const Call = 0
         // const DelegateCall = 1
 
         assert.equal(await token.balanceOf(lw.accounts[3]), '0')
+        // FIXME: Use `execTransaction()`.
         let transfer = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
         await await safeModule.contract.methods.execute(token.address, 0, transfer, Call).send({from: accounts[1]})
         assert.equal(await token.balanceOf(lw.accounts[3]), '10')
 
         {
             async function fails() {
+                // FIXME: Use `execTransaction()`.
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10000').encodeABI() // too many tokens
                 await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[1]})
             }
@@ -107,6 +110,7 @@ contract('BequestModule delegate', function(accounts) {
 
         {
             async function fails() {
+                // FIXME: Use `execTransaction()`.
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
                 await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[2]}) // wrong account
             }
@@ -116,17 +120,19 @@ contract('BequestModule delegate', function(accounts) {
         // Time expired:
         let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
         await execTransaction(safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
-        assert.equal(await safeModule.contract.methods.heir().call(), accounts[2])
-        assert.equal(await safeModule.contract.methods.bequestDate().call(), toBN(2).pow(toBN(64)))
+        assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[2])
+        assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe.address).call(), toBN(2).pow(toBN(64)))
 
         {
             async function fails() {
+                // FIXME: Use `execTransaction()`.
                 let transfer2 = await token.contract.methods.transfer(lw.accounts[3], '10').encodeABI()
                 await await safeModule.contract.methods.execute(token.address, 0, transfer2, Call).send({from: accounts[2]})
             }
             await expectThrowsAsync(fails, "Transaction has been reverted by the EVM:");
         }
 
+        // FIXME: Check that one can't take funds from another's site.
         // TODO: Test executeReturnData().
         // We can't test events with web3.js.
     })

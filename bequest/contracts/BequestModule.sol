@@ -25,7 +25,7 @@ contract BequestModule is Module {
     /// Funds can be withdrawn after this point of time.
     ///
     /// Safe -> seconds since epoch.
-    mapping(address => uint public bequestDates;
+    mapping(address => uint) public bequestDates;
 
     /// @dev Setup function sets initial storage of contract.
     /// @param _heir Who insherits control over the wallet (you can set to 0 to avoid inheriting).
