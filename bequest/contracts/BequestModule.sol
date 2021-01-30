@@ -53,7 +53,6 @@ contract BequestModule is Module {
         emit SetBequestDate(address(this), _heir, _bequestDate);
     }
 
-    // FIXME: Is `DelegateCall` a security risk?
     function execute(address to, uint256 value, bytes memory data, Enum.Operation operation)
         public
         enteredIntoInheritanceRights
@@ -61,7 +60,6 @@ contract BequestModule is Module {
         require(manager.execTransactionFromModule(to, value, data, operation), "Could not execute transaction");
     }
 
-    // FIXME: Is `DelegateCall` a security risk?
     function executeReturnData(address to, uint256 value, bytes memory data, Enum.Operation operation)
         public
         enteredIntoInheritanceRights
