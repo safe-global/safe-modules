@@ -55,7 +55,7 @@ contract('BequestModule delegate', function(accounts) {
         await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
     })
 
-    let execTransaction = async function(from, to, value, data, operation, message) {
+    let execTransaction = async function(gnosisSafe, from, to, value, data, operation, message) {
         let nonce = await gnosisSafe.nonce()
         let transactionHash = await gnosisSafe.getTransactionHash(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, nonce)
         let sigs = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1]], transactionHash)
@@ -77,17 +77,17 @@ contract('BequestModule delegate', function(accounts) {
         await token.transfer(gnosisSafe.address, '1000', {from: accounts[0]}) 
         
         let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
-        await execTransaction(accounts[0], gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
+        await execTransaction(gnosisSafe, accounts[0], gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
         let modules = await gnosisSafe.getModules()
         assert.equal(1, modules.length)
         assert.equal(safeModule.address, modules[0])
 
         let setup = await safeModule.contract.methods.setup(accounts[1], '1000').encodeABI()
-        await execTransaction(accounts[0], safeModule.address, 0, setup, CALL, "setup")
+        await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setup, CALL, "setup")
 
         { // Can't call setup() twice
             let setup2 = await safeModule.contract.methods.setup(accounts[2], '2000').encodeABI()
-            const tx = await execTransaction(accounts[0], safeModule.address, 0, setup2, CALL, "repeated setup")
+            const tx = await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, setup2, CALL, "repeated setup")
             assert.equal(tx.logs[0].event, "ExecutionFailure")
         }
 
@@ -117,7 +117,7 @@ contract('BequestModule delegate', function(accounts) {
 
         // Time expired:
         let changeHeirAndDate = await safeModule.contract.methods.changeHeirAndDate(accounts[2], toBN(2).pow(toBN(64))).encodeABI()
-        await execTransaction(accounts[0], safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
+        await execTransaction(gnosisSafe, accounts[0], safeModule.address, 0, changeHeirAndDate, CALL, "changeHeirAndDate")
         assert.equal(await safeModule.contract.methods.heirs(gnosisSafe.address).call(), accounts[2])
         assert.equal(await safeModule.contract.methods.bequestDates(gnosisSafe.address).call(), toBN(2).pow(toBN(64)))
 
