@@ -41,6 +41,6 @@ yarn compile
 
 `BequestModule` at `0x44a41A0C37E4869C6e23a2d4A1fAB61ed8B78e2a`
 
-### Mumbai
+### Binance Smart Chain Test
 
 `BequestModule` at `0x1B377121434Bc726a76bC0A4E3cDf021fDb02A0b`
