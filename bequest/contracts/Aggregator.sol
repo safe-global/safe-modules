@@ -21,7 +21,7 @@ interface IBaseLock {
     function donate(
         IERC1155 _collateralContractAddress,
         uint256 _collateralTokenId,
-        uint64 _oracleId,
+        uint64 oracleId,
         uint256 _amount,
         address _from,
         address _to,
@@ -39,27 +39,40 @@ interface IBequestModule {
 contract Aggregator is ERC721Holder, ERC1155Holder {
     using SafeMath for uint256;
 
+    event CreateAggregator(Aggregator aggregator, IBaseLock locker, uint64 oracleId);
+
     IBequestModule bequest;
     IERC1155 erc20Wrapper;
     IERC1155 erc721Wrapper;
+    IBaseLock locker;
+    uint64 oracleId;
 
     /// (Locker -> (oracleId -> balance))
     mapping(address => mapping(uint64 => uint256)) public oracleBalances;
 
-    constructor(IBequestModule _bequest, IERC1155 _erc20Wrapper, IERC1155 _erc721Wrapper) public {
+    constructor(
+        IBequestModule _bequest,
+        IERC1155 _erc20Wrapper,
+        IERC1155 _erc721Wrapper,
+        IBaseLock _locker,
+        uint64 _oracleId) public
+    {
         bequest = _bequest;
         erc20Wrapper = _erc20Wrapper;
         erc721Wrapper = _erc721Wrapper;
+        locker = _locker;
+        oracleId = _oracleId;
         _erc20Wrapper.setApprovalForAll(address(_erc20Wrapper), true);
         _erc721Wrapper.setApprovalForAll(address(_erc721Wrapper), true);
+        emit CreateAggregator(this, _locker, _oracleId);
     }
 
     /// Can be called by anybody.
-    function takeDonationERC1155(IBaseLock _locker, uint64 _oracleId, ModuleManager _safe, IERC1155 _erc1155Contract, uint256 _tokenId, bytes memory data)
+    function takeDonationERC1155(ModuleManager _safe, IERC1155 _erc1155Contract, uint256 _tokenId, bytes memory data)
         public
     {
         uint256 _amount = _erc1155Contract.balanceOf(address(_safe), _tokenId);
-        oracleBalances[address(_locker)][_oracleId] = oracleBalances[address(_locker)][_oracleId].add(_amount);
+        oracleBalances[address(locker)][oracleId] = oracleBalances[address(locker)][oracleId].add(_amount);
         bytes memory txData = abi.encodeWithSelector(
             bytes4(keccak256("safeTransferFrom(address,address,uint256,uint256,bytes)")),
             address(_safe), address(this), _tokenId, _amount, data);
@@ -67,35 +80,33 @@ contract Aggregator is ERC721Holder, ERC1155Holder {
     }
 
     /// Can be called by anybody.
-    function takeDonationERC20(IBaseLock _locker, uint64 _oracleId, ModuleManager _safe, IERC20 _erc20Contract) public {
+    function takeDonationERC20(ModuleManager _safe, IERC20 _erc20Contract) public {
         bytes memory _data;
-        takeDonationERC1155(_locker, _oracleId, _safe, erc20Wrapper, uint256(address(_erc20Contract)), _data);
+        takeDonationERC1155(_safe, erc20Wrapper, uint256(address(_erc20Contract)), _data);
     }
 
     /// Can be called by anybody.
-    function takeDonationERC721(IBaseLock _locker, uint64 _oracleId, ModuleManager _safe, IERC721 _erc721Contract) public {
+    function takeDonationERC721(ModuleManager _safe, IERC721 _erc721Contract) public {
         bytes memory _data;
-        takeDonationERC1155(_locker, _oracleId, _safe, erc721Wrapper, uint256(address(_erc721Contract)), _data);
+        takeDonationERC1155(_safe, erc721Wrapper, uint256(address(_erc721Contract)), _data);
     }
 
     /// Can be called by anybody.
     function sendDonation(
-        IBaseLock _locker,
-        uint64 _oracleId,
         IERC1155 _contractAddress,
         uint256 _tokenId,
         bytes memory _data) public
     {
         uint256 _amount = _contractAddress.balanceOf(address(this), _tokenId);
-        oracleBalances[address(_locker)][_oracleId] = oracleBalances[address(_locker)][_oracleId].sub(_amount); // reverts on underflow
+        oracleBalances[address(locker)][oracleId] = oracleBalances[address(locker)][oracleId].sub(_amount); // reverts on underflow
         // Last to prevent reentrancy vulnerability:
-        _locker.donate(
+        locker.donate(
             _contractAddress,
             _tokenId,
-            _oracleId,
+            oracleId,
             _amount,
             address(this),
-            address(_locker),
+            address(locker),
             _data);
     }
 }
