@@ -24,8 +24,6 @@ The inheritance is probably most effective if it can be used together with "mone
 
 ## Running tests
 
-TODO: Add tests.
-
 ```bash
 yarn
 yarn test
