@@ -79,7 +79,27 @@ module.exports = {
       },
       network_id: '246',
       gasPrice: 1
-    }
+    },
+    mumbai: {
+      provider: function() {
+        return new HDWalletProvider({
+          privateKeys: [process.env.TESTNET_PRIVATE_KEY],
+          providerOrUrl: "https://rpc-mumbai.maticvigil.com/v1/" + process.env.MATIC_KEY
+        });
+      },
+      network_id: '80001',
+      // gasPrice: 100000000000, // 100 Gwei
+    },
+    bsctest: {
+      provider: function() {
+        return new HDWalletProvider({
+          privateKeys: [process.env.TESTNET_PRIVATE_KEY],
+          providerOrUrl: "https://data-seed-prebsc-1-s1.binance.org:8545"
+        });
+      },
+      network_id: '97',
+      gasPrice: 25000000000, // 25 Gwei
+    },
   },
   compilers: {
     solc: {
