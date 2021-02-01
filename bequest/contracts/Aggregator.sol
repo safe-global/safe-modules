@@ -55,7 +55,7 @@ contract Aggregator is ERC721Holder, ERC1155Holder {
     }
 
     /// Can be called by anybody.
-        function takeDonationERC1155(IBaseLock _locker, uint64 _oracleId, ModuleManager _safe, IERC1155 _erc1155Contract, uint256 _tokenId, bytes memory data)
+    function takeDonationERC1155(IBaseLock _locker, uint64 _oracleId, ModuleManager _safe, IERC1155 _erc1155Contract, uint256 _tokenId, bytes memory data)
         public
     {
         uint256 _amount = _erc1155Contract.balanceOf(address(_safe), _tokenId);
