@@ -83,12 +83,12 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: package.dependencies.solc,
+      version: '0.5.17',
       settings: {
         optimizer: {
           enabled: false
         }
       }
-    }
+    },
   }
 };

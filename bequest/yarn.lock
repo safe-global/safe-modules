@@ -231,10 +231,10 @@
     walk "^2.3.14"
     web3 "^1.0.0-beta.35"
 
-"@openzeppelin/contracts@^2.5.0":
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-2.5.0.tgz#e327a98ba1d26b7756ff62885a0aa0967a375449"
-  integrity sha512-t3jm8FrhL9tkkJTofkznTqo/XXdHi21w5yXwalEnaMOp22ZwZ0f/mmKdlgMMLPFa6bSVHbY88mKESwJT/7m5Lg==
+"@openzeppelin/contracts@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.3.0.tgz#ffdb693c5c349fc33bba420248dd3ac0a2d7c408"
+  integrity sha512-AemZEsQYtUp1WRkcmZm1div5ORfTpLquLaziCIrSagjxyKdmObxuaY1yjQ5SHFMctR8rLwp706NXTbiIRJg7pw==
 
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"
@@ -512,6 +512,19 @@
   integrity sha512-eFiYJKggNrOl0nsD+9cMh2MLk4zVBfXfGnVeRFbpiZzBE20eet4KLA3fXcjSuHaBn0RnQzwLAGdgzgzdet4C0A==
   dependencies:
     web3 "*"
+
+"@vporton/future-contracts@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@vporton/future-contracts/-/future-contracts-0.1.0.tgz#1c00ec538c5356b31ad3527ef501e3da8834670f"
+  integrity sha512-u1e9ey2bj7KofFFnNm9SlWrfOFJANifDmztxPQ37QW3ENEpBRvzpaxbjOWJe9EZIjsxJEV7HMKMo43d+ed413Q==
+  dependencies:
+    "@openzeppelin/contracts" "^3.3.0"
+    abdk-libraries-solidity "^2.4.0"
+
+abdk-libraries-solidity@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/abdk-libraries-solidity/-/abdk-libraries-solidity-2.4.0.tgz#4a9ed6baa2017c0a18118c804e8c9258017d4a35"
+  integrity sha512-C6RpN6hdi5sHNIKt5SGt8pGQAmmGdPIe3Cf95JBiZ+iTO5wushwkDC0r+38fSjsC/uA9rhpl/THyyZuvZv8c6g==
 
 abi-decoder@^1.2.0:
   version "1.2.0"
@@ -4146,7 +4159,7 @@ onetime@^2.0.0:
   dependencies:
     mimic-fn "^1.0.0"
 
-openzeppelin-solidity@^2.0.0:
+openzeppelin-solidity@^2.0.0, openzeppelin-solidity@^2.3.0:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/openzeppelin-solidity/-/openzeppelin-solidity-2.5.1.tgz#1cdcce30c4c6a7b6625dab62ccd0440a813ab597"
   integrity sha512-oCGtQPLOou4su76IMr4XXJavy9a8OZmAXeUZ8diOdFznlL/mlkIlYr7wajqCzH4S47nlKPS7m0+a2nilCTpVPQ==
