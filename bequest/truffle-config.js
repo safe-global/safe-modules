@@ -88,7 +88,7 @@ module.exports = {
         });
       },
       network_id: '80001',
-      // gasPrice: 100000000000, // 100 Gwei
+      gasPrice: 1000000000, // 1 Gwei
     },
     bsctest: {
       provider: function() {
