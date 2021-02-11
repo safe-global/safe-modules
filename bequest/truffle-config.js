@@ -90,6 +90,16 @@ module.exports = {
       network_id: '80001',
       gasPrice: 1000000000, // 1 Gwei
     },
+    bsc: {
+      provider: function() {
+        return new HDWalletProvider({
+          privateKeys: [process.env.MAINNET_PRIVATE_KEY],
+          providerOrUrl: "https://bsc-dataseed1.binance.org"
+        });
+      },
+      network_id: '56',
+      gasPrice: 20000000000, // 20 Gwei
+    },
     bsctest: {
       provider: function() {
         return new HDWalletProvider({
@@ -98,7 +108,7 @@ module.exports = {
         });
       },
       network_id: '97',
-      gasPrice: 25000000000, // 25 Gwei
+      gasPrice: 20000000000, // 20 Gwei
     },
   },
   compilers: {
