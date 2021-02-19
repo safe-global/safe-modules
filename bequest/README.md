@@ -37,6 +37,8 @@ yarn compile
 
 ## Contract addresses
 
+Contracts are from my other repo https://github.com/vporton/safe-modules/tree/bequest/bequest
+
 ### Rinkeby
 
 `BequestModule` at `0x44a41A0C37E4869C6e23a2d4A1fAB61ed8B78e2a`
