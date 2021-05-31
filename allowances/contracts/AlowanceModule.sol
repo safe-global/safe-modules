@@ -3,6 +3,7 @@ pragma solidity >=0.7.0 <0.8.0;
 
 import "./Enum.sol";
 import "./SignatureDecoder.sol";
+import {Gelatofied} from "./Gelatofied.sol";
 
 interface GnosisSafe {
     /// @dev Allows a Module to execute a Safe transaction without any further confirmations.
@@ -15,7 +16,7 @@ interface GnosisSafe {
         returns (bool success);
 }
 
-contract AllowanceModule is SignatureDecoder {
+contract AllowanceModule is SignatureDecoder, Gelatofied {
 
     string public constant NAME = "Allowance Module";
     string public constant VERSION = "0.1.0";
@@ -32,6 +33,8 @@ contract AllowanceModule is SignatureDecoder {
 
     // Safe -> Delegate -> Allowance
     mapping(address => mapping (address => mapping(address => Allowance))) public allowances;
+    // Safe -> maxGasPrice
+    mapping(address => uint256) public maxGasPrice;
     // Safe -> Delegate -> Tokens
     mapping(address => mapping (address => address[])) public tokens;
     // Safe -> Delegates double linked list entry points
@@ -63,6 +66,9 @@ contract AllowanceModule is SignatureDecoder {
     event SetAllowance(address indexed safe, address delegate, address token, uint96 allowanceAmount, uint16 resetTime);
     event ResetAllowance(address indexed safe, address delegate, address token);
     event DeleteAllowance(address indexed safe, address delegate, address token);
+    event NewMaxGasPrice(address indexed safe, uint256 newMaxGasPrice);
+
+    constructor(address payable gelato) Gelatofied(gelato) {}
 
     /// @dev Allows to update the allowance for a specified token. This can only be done via a Safe transaction.
     /// @param delegate Delegate whose allowance should be updated.
@@ -156,10 +162,10 @@ contract AllowanceModule is SignatureDecoder {
         uint96 payment,
         address delegate,
         bytes memory signature
-    ) public {
+    ) public onlyGelato() {
         // Get current state
         Allowance memory allowance = getAllowance(address(safe), delegate, token);
-        bytes memory transferHashData = generateTransferHashData(address(safe), token, to, amount, paymentToken, payment, allowance.nonce);
+        bytes memory transferHashData = generateTransferHashData(address(safe), token, to, amount, paymentToken, allowance.nonce);
 
         // Update state
         allowance.nonce = allowance.nonce + 1;
@@ -167,16 +173,6 @@ contract AllowanceModule is SignatureDecoder {
         // Check new spent amount and overflow
         require(newSpent > allowance.spent && newSpent <= allowance.amount, "newSpent > allowance.spent && newSpent <= allowance.amount");
         allowance.spent = newSpent;
-        if (payment > 0) {
-            // Use updated allowance if token and paymentToken are the same
-            Allowance memory paymentAllowance = paymentToken == token ? allowance : getAllowance(address(safe), delegate, paymentToken);
-            newSpent = paymentAllowance.spent + payment;
-            // Check new spent amount and overflow
-            require(newSpent > paymentAllowance.spent && newSpent <= paymentAllowance.amount, "newSpent > paymentAllowance.spent && newSpent <= paymentAllowance.amount");
-            paymentAllowance.spent = newSpent;
-            // Update payment allowance if different from allowance
-            if (paymentToken != token) updateAllowance(address(safe), delegate, paymentToken, paymentAllowance);
-        }
         updateAllowance(address(safe), delegate, token, allowance);
 
         // Perform external interactions
@@ -184,11 +180,12 @@ contract AllowanceModule is SignatureDecoder {
         checkSignature(delegate, signature, transferHashData, safe);
 
         if (payment > 0) {
+            require(tx.gasprice <= maxGasPrice[address(safe)], "tx.gasprice is > maxGas price");
             // Transfer payment
-            // solium-disable-next-line security/no-tx-origin
-            transfer(safe, paymentToken, tx.origin, payment);
-            // solium-disable-next-line security/no-tx-origin
-            emit PayAllowanceTransfer(address(safe), delegate, paymentToken, tx.origin, payment);
+            // solium-disable-next-line
+            transfer(safe, paymentToken, GELATO, payment);
+            // solium-disable-next-line
+            emit PayAllowanceTransfer(address(safe), delegate, paymentToken, GELATO, payment);
         }
         // Transfer token
         transfer(safe, token, to, amount);
@@ -212,13 +209,12 @@ contract AllowanceModule is SignatureDecoder {
         address to,
         uint96 amount,
         address paymentToken,
-        uint96 payment,
         uint16 nonce
     ) private view returns (bytes memory) {
         uint256 chainId = getChainId();
         bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, this));
         bytes32 transferHash = keccak256(
-            abi.encode(ALLOWANCE_TRANSFER_TYPEHASH, safe, token, to, amount, paymentToken, payment, nonce)
+            abi.encode(ALLOWANCE_TRANSFER_TYPEHASH, safe, token, to, amount, paymentToken, nonce)
         );
         return abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, transferHash);
     }
@@ -230,11 +226,10 @@ contract AllowanceModule is SignatureDecoder {
         address to,
         uint96 amount,
         address paymentToken,
-        uint96 payment,
         uint16 nonce
     ) public view returns (bytes32) {
         return keccak256(generateTransferHashData(
-            safe, token, to, amount, paymentToken, payment, nonce
+            safe, token, to, amount, paymentToken, nonce
         ));
     }
 
@@ -274,7 +269,7 @@ contract AllowanceModule is SignatureDecoder {
     }
 
     function transfer(GnosisSafe safe, address token, address payable to, uint96 amount) private {
-        if (token == address(0)) {
+        if (token == address(0) || token == ETH) {
             // solium-disable-next-line security/no-send
             require(safe.execTransactionFromModule(to, amount, "", Enum.Operation.Call), "Could not execute ether transfer");
         } else {
@@ -315,6 +310,13 @@ contract AllowanceModule is SignatureDecoder {
         delegates[msg.sender][startIndex].prev = index;
         delegatesStart[msg.sender] = index;
         emit AddDelegate(msg.sender, delegate);
+    }
+
+    /// @dev Allows to add a delegate.
+    /// @param newMaxGasPrice New Max Gas Price to set.
+    function setMaxGasPrice(uint256 newMaxGasPrice) public {
+        maxGasPrice[msg.sender] = newMaxGasPrice;
+        emit NewMaxGasPrice(msg.sender, newMaxGasPrice);
     }
 
     /// @dev Allows to remove a delegate.
