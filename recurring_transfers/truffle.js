@@ -29,6 +29,9 @@ const gasPriceGWei = process.env.GAS_PRICE_GWEI || DEFAULT_GAS_PRICE_GWEI
 // Gas limit
 const gas = process.env.GAS_LIMIT || DEFAULT_GAS_LIMIT
 
+const infuraKey = process.env.INFURA_KEY || "9408f47dedf04716a03ef994182cf150";
+
+
 // Allow to add an aditional network (useful for docker-compose setups)
 //  i.e. NETWORK='{ "name": "docker", "networkId": "99999", "url": "http://rpc:8545", "gas": "6700000", "gasPrice": "25000000000"  }'
 let aditionalNetwork = process.env.NETWORK ? JSON.parse(process.env.NETWORK) : null
@@ -37,6 +40,9 @@ module.exports = {
   ...truffleConfig({
     mnemonic,
     privateKey,
+    urlRinkeby: "https://rinkeby.infura.io/v3/".concat(infuraKey),
+    urlKovan: "https://kovan.infura.io/v3/".concat(infuraKey),
+    urlMainnet: "https://mainnet.infura.io/v3/".concat(infuraKey),
     gasPriceGWei,
     gas,
     aditionalNetwork,
