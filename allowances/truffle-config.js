@@ -59,6 +59,20 @@ module.exports = {
       },
       network_id: '246',
       gasPrice: 1
+    },
+    bsc: {
+      provider: () => {
+        return new HDWalletProvider(mnemonic, 'https://bsc-dataseed.binance.org')
+      },
+      network_id: '56',
+      gasPrice: 5000000000 // 5 Gwei
+    },
+    polygon: {
+      provider: () => {
+        return new HDWalletProvider(mnemonic, 'https://polygon-rpc.com/')
+      },
+      network_id: '137',
+      gasPrice: 30000000000 // 30 Gwei
     }
   },
   compilers: {
