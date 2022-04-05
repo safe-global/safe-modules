@@ -48,11 +48,11 @@ async function main() {
         const meta = JSON.parse(contractArtifact.metadata)
         etherscanConfig.language = meta.language
         etherscanConfig.evmVersion = meta.evmVersion
+        
         for (let source in meta.sources) {
             const pathParts = source.split("/")
-            const sourceFile = path.join(process.cwd(), source)
-            await copyFile(sourceFile, path.join(metaDir, pathParts[pathParts.length - 1]));
-            const contractSource = fs.readFileSync(sourceFile)
+            await copyFile(source, path.join(metaDir, pathParts[pathParts.length - 1]));
+            const contractSource = fs.readFileSync(source)
             etherscanConfig.sources[source] = { content: contractSource.toString() }
             if (upload) {
                 for await (const res of ipfs.add(contractSource)) {
