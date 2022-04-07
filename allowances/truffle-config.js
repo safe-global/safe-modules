@@ -59,6 +59,20 @@ module.exports = {
       },
       network_id: '246',
       gasPrice: 1
+    },
+    avalanche: { 
+      provider: () => {
+        return new HDWalletProvider(mnemonic, 'https://api.avax.network/ext/bc/C/rpc')
+      },
+      network_id: '43114',
+      gasPrice: 47000000000, // 47 Gwei
+    },
+    polygon: {
+      provider: () => {
+        return new HDWalletProvider(mnemonic, 'https://polygon-rpc.com/')
+      },
+      network_id: '137',
+      gasPrice: 35000000000, // 47 Gwei
     }
   },
   compilers: {
