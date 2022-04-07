@@ -60,6 +60,13 @@ module.exports = {
       network_id: '246',
       gasPrice: 1
     },
+    bsc: {
+      provider: () => {
+        return new HDWalletProvider(mnemonic, 'https://bsc-dataseed.binance.org')
+      },
+      network_id: '56',
+      gasPrice: 5000000000 // 5 Gwei
+    },
     avalanche: { 
       provider: () => {
         return new HDWalletProvider(mnemonic, 'https://api.avax.network/ext/bc/C/rpc')
@@ -72,7 +79,7 @@ module.exports = {
         return new HDWalletProvider(mnemonic, 'https://polygon-rpc.com/')
       },
       network_id: '137',
-      gasPrice: 35000000000, // 47 Gwei
+      gasPrice: 35000000000, // 35 Gwei
     }
   },
   compilers: {
