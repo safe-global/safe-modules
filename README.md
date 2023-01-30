@@ -1,7 +1,7 @@
-Gnosis Safe Modules
+Safe Modules
 ===================
 
-This repository contains a collection of modules that can be used with the [Gnosis Safe contracts](https://github.com/gnosis/safe-contracts)
+This repository contains a collection of modules that can be used with the [Safe contracts](https://github.com/safe-global/safe-contracts)
 
 Modules
 -------
