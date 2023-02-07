@@ -80,7 +80,14 @@ module.exports = {
       },
       network_id: '137',
       gasPrice: 35000000000, // 35 Gwei
-    }
+    },
+    celo: {
+      network_id: 42220,
+      provider: () => {
+        return new HDWalletProvider(mnemonic, 'https://1rpc.io/celo')
+      },
+      gasPrice: 15000000000, // 15 Gwei
+    },
   },
   compilers: {
     solc: {
