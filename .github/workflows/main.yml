@@ -13,18 +13,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Dependencies
-        run: yarn install --frozen-lockfile
+      - name: Install Dependencies Allowances
+        run: cd allowances; yarn install --frozen-lockfile
+        
+      - name: Install Dependencies Dutchx_seller
+        run: cd dutchx_seller; yarn install --frozen-lockfile  
+      
+      - name: Install Dependencies Recrurring_transfers
+        run: cd recuring_transfers; yarn install --frozen-lockfile  
 
-      - name: Build
-        run: yarn build
+      - name: Build Allowances
+        run: cd allowances; yarn build
+        
+      - name: Build Dutchx_seller
+        run: cd dutchx_seller; yarn build  
+        
+      - name: Build Recrurring_transfers
+        run: cd recuring_transfers; yarn build  
       
       - name: Login to NPM
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
         run: echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" >> ~/.npmrc
 
-      - name: Publish
+      - name: Publish Allowances
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
-        run: npm publish
+        run:  cd allowances;  npm publish
+        
+      - name: Publish Dutchx_Seller
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
+        run:  cd dutchx_seller; npm publish  
+     
+      - name: Publish Recurring_Transfers
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPMJS_TOKEN}}
+        run:  cd recuring_transfers;  npm publish 
