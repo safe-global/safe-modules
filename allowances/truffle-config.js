@@ -1,13 +1,17 @@
 const HDWalletProvider = require('@truffle/hdwallet-provider')
+const Web3 = require("web3");
 require('dotenv').config()
 const package = require('./package')
 const mnemonic = process.env.MNEMONIC
 const token = process.env.INFURA_TOKEN
+Web3.providers.HttpProvider.prototype.sendAsync = Web3.providers.HttpProvider.prototype.send
+
+const provider = new Web3.providers.HttpProvider("https://devnet.neonevm.org");
 
 module.exports = {
   networks: {
     development: {
-      host: "localhost",
+      host: "127.0.0.1",
       port: 8545,
       network_id: "*" // Match any network id
     },
@@ -88,6 +92,13 @@ module.exports = {
       },
       gasPrice: 15000000000, // 15 Gwei
     },
+    neonevm: {
+      network_id: 245022926,
+      provider: () => {
+        return new HDWalletProvider(mnemonic, provider)
+      },
+      gasPrice: 15000000000, // 15 Gwei
+    }
   },
   compilers: {
     solc: {
