@@ -8,7 +8,7 @@ Modules
 
 - [Allowance Module](./allowances)
 - [DutchX Seller Module](./dutchx_seller)
-- [Recurring Transfers Module](./recurring_transfers)
+- [Recurring Transfers Module](./recurring_transfers)xxxxxx
 
 
 Security and Liability
