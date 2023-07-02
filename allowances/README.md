@@ -20,7 +20,7 @@ Note: calling `setAllowance` will not change the `spent` value of an allowance. 
 
 ## Transfer authorization
 
-Transfer are authorized by the delegates and must be within their allowance. To authorize a transfer the delegate needs to generate a signature. The allowance module uses the same [signature scheme as the Gnosis Safe](https://docs.gnosis.io/safe/docs/contracts_signatures/), except that the allowance module does not support contract signatures or approved hashes.
+Transfer are authorized by the delegates and must be within their allowance. To authorize a transfer the delegate needs to generate a signature. The allowance module uses the same [signature scheme as the Gnosis Safe](https://docs.safe.global/learn/safe-core/safe-core-protocol/signatures), except that the allowance module does not support contract signatures or approved hashes.
 
 The allowance module signatures are EIP-712 based. And uses the following scheme:
 
@@ -40,6 +40,7 @@ The allowance module signatures are EIP-712 based. And uses the following scheme
     "AllowanceTransfer": [
         { "type": "address", "name": "safe" },
         { "type": "address", "name": "token" },
+        { "type": "address", "name": "to" },
         { "type": "uint96", "name": "amount" },
         { "type": "address", "name": "paymentToken" },
         { "type": "uint96", "name": "payment" },
