@@ -21,42 +21,42 @@ contract('AllowanceModule', function(accounts) {
     const CALL = 0
     const ADDRESS_0 = "0x0000000000000000000000000000000000000000"
 
-    beforeEach(async function() {
+    beforeEach(async function () {
         // Create lightwallet
         lw = await utils.createLightwallet()
 
         // Create Master Copies
         safeModule = await AllowanceModule.new()
-        const gnosisSafeMasterCopy = await GnosisSafe.new({ from: accounts[0] })
-        const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, { from: accounts[0] })
+        const gnosisSafeMasterCopy = await GnosisSafe.new({from: accounts[0]})
+        const proxy = await GnosisSafeProxy.new(gnosisSafeMasterCopy.address, {from: accounts[0]})
         gnosisSafe = await GnosisSafe.at(proxy.address)
-        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, { from: accounts[0] })
+        await gnosisSafe.setup([lw.accounts[0], lw.accounts[1], accounts[1]], 2, ADDRESS_0, "0x", ADDRESS_0, ADDRESS_0, 0, ADDRESS_0, {from: accounts[0]})
     })
 
-    let currentMinutes = function() {
+    let currentMinutes = function () {
         return Math.floor(Date.now() / (1000 * 60))
     }
 
-    let calculateResetTime = function(baseTime, resetTime) {
+    let calculateResetTime = function (baseTime, resetTime) {
         let cM = currentMinutes()
         return cM - (cM - baseTime) % resetTime
     }
 
-    let execTransaction = async function(to, value, data, operation, message) {
+    let execTransaction = async function (to, value, data, operation, message) {
         let nonce = await gnosisSafe.nonce()
         let transactionHash = await gnosisSafe.getTransactionHash(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, nonce)
         let sigs = utils.signTransaction(lw, [lw.accounts[0], lw.accounts[1]], transactionHash)
         utils.logGasUsage(
             'execTransaction ' + message,
-            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs, { from: accounts[0] })
+            await gnosisSafe.execTransaction(to, value, data, operation, 0, 0, 0, ADDRESS_0, ADDRESS_0, sigs, {from: accounts[0]})
         )
     }
 
     it('Execute allowance without refund', async () => {
         const token = await TestToken.new({from: accounts[0]})
-        await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]}) 
+        await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]})
         //const mintToken = await TestCompound.new(sourceToken.address)
-        
+
         let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
         await execTransaction(gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
         let modules = await gnosisSafe.getModules()
@@ -120,10 +120,10 @@ contract('AllowanceModule', function(accounts) {
         utils.assertRejects(
             safeModule.executeAllowanceTransfer(
                 gnosisSafe.address, token.address, accounts[1], 45, ADDRESS_0, 0, lw.accounts[4], signature
-            ), 
+            ),
             "Should not allow if over the limit"
         )
-        await wait(12*60*60)
+        await wait(12 * 60 * 60)
         transferHash = await safeModule.generateTransferHash(
             gnosisSafe.address, token.address, accounts[1], 40, ADDRESS_0, 0, nonce
         )
@@ -145,7 +145,7 @@ contract('AllowanceModule', function(accounts) {
         assert.equal(3, allowance[4])
 
         // Offset time by 45 min to check that limit is set in specified interval
-        await wait(12*60*60 + 45*60)
+        await wait(12 * 60 * 60 + 45 * 60)
         nonce = allowance[4]
         transferHash = await safeModule.generateTransferHash(
             gnosisSafe.address, token.address, accounts[1], 45, ADDRESS_0, 0, nonce

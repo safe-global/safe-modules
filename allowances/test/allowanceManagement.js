@@ -11,6 +11,7 @@ GnosisSafeProxy.setProvider(web3.currentProvider)
 
 const AllowanceModule = artifacts.require("./AllowanceModule.sol")
 const TestToken = artifacts.require("./TestToken.sol")
+const { calculateAllowanceTransferHash } = require('./utils')(web3);
 
 contract('AllowanceModule delegate', function(accounts) {
     let lw
@@ -99,8 +100,8 @@ contract('AllowanceModule delegate', function(accounts) {
 
     it('Add and remove delegate then try to execute', async () => {
         const token = await TestToken.new({from: accounts[0]})
-        await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]}) 
-        
+        await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]})
+
         let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
         await execTransaction(gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
         let modules = await gnosisSafe.getModules()
@@ -115,7 +116,7 @@ contract('AllowanceModule delegate', function(accounts) {
         assert.equal(1, delegates.results.length)
         assert.equal(lw.accounts[4], delegates.results[0].toLowerCase())
 
-        // Add allowance 
+        // Add allowance
         let setAllowanceData = await safeModule.contract.methods.setAllowance(lw.accounts[4], token.address, 100, 0, 0).encodeABI()
         await execTransaction(safeModule.address, 0, setAllowanceData, CALL, "set allowance")
 
@@ -145,15 +146,15 @@ contract('AllowanceModule delegate', function(accounts) {
 
     it('Use zero delegate', async () => {
         const token = await TestToken.new({from: accounts[0]})
-        await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]}) 
-        
+        await token.transfer(gnosisSafe.address, 1000, {from: accounts[0]})
+
         let enableModuleData = await gnosisSafe.contract.methods.enableModule(safeModule.address).encodeABI()
         await execTransaction(gnosisSafe.address, 0, enableModuleData, CALL, "enable module")
         let modules = await gnosisSafe.getModules()
         assert.equal(1, modules.length)
         assert.equal(safeModule.address, modules[0])
 
-        // Add allowance 
+        // Add allowance
         let setAllowanceData = await safeModule.contract.methods.setAllowance(ADDRESS_0, token.address, 100, 0, 0).encodeABI()
         await execTransaction(safeModule.address, 0, setAllowanceData, CALL, "set allowance")
 
@@ -171,5 +172,32 @@ contract('AllowanceModule delegate', function(accounts) {
 
         assert.equal(1000, await token.balanceOf(gnosisSafe.address))
         assert.equal(0, await token.balanceOf(accounts[1]))
+    })
+
+    it('Generates expected transfer hash', async () => {
+        const token = await TestToken.new({from: accounts[0]})
+
+        const transfer = {
+            safe: gnosisSafe.address,
+            token: token.address,
+            to: accounts[1],
+            amount: 60,
+            paymentToken: ADDRESS_0,
+            payment: 0,
+            nonce: 1
+        }
+
+        let transferHash = await safeModule.generateTransferHash(
+            transfer.safe, transfer.token, transfer.to, transfer.amount, transfer.paymentToken, transfer.payment, transfer.nonce
+        )
+
+        // In ganache the values for eth_chainid and CHAINID opcode are different for legacy reasons
+        // therefore we hardcode the chainId here
+        // From the docs:
+        // --chainId: Specify the Chain ID ganache-cli will use for eth_chainId RPC and the CHAINID opcode.
+        // For legacy reasons, the default is currently 1337 for eth_chainId RPC and 1 for the CHAINID opcode.
+        // Setting this flag will align the chainId values.
+        // This will be fixed in the next major version of ganache-cli and ganache-core!
+        assert.equal(transferHash, calculateAllowanceTransferHash(safeModule.address, transfer, 1))
     })
 })
