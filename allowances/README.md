@@ -114,6 +114,8 @@ Using `delegates` and `tokens` it is possible to query all available allowances 
 
 ```bash
 yarn
+# Ganache network has to be running
+yarn ganache-cli -l 20000000 --noVMErrorsOnRPCResponse
 yarn test
 ```
 

@@ -25,9 +25,9 @@ contract AllowanceModule is SignatureDecoder {
     //     "EIP712Domain(uint256 chainId,address verifyingContract)"
     // );
 
-    bytes32 public constant ALLOWANCE_TRANSFER_TYPEHASH = 0x80b006280932094e7cc965863eb5118dc07e5d272c6670c4a7c87299e04fceeb;
+    bytes32 public constant ALLOWANCE_TRANSFER_TYPEHASH = 0x97c7ed08d51f4a077f71428543a8a2454799e5f6df78c03ef278be094511eda4;
     // keccak256(
-    //     "AllowanceTransfer(address safe,address token,uint96 amount,address paymentToken,uint96 payment,uint16 nonce)"
+    //     "AllowanceTransfer(address safe,address token,address to,uint96 amount,address paymentToken,uint96 payment,uint16 nonce)"
     // );
 
     // Safe -> Delegate -> Allowance
