@@ -4,23 +4,47 @@
   "description": "Allowance module for the gnosis safe",
   "main": "index.js",
   "scripts": {
-    "test": "echo test",
-    "compile": "echo compile",
+    "build": "hardhat compile",
+    "test": "hardhat test",
     "coverage": "echo coverage",
     "deploy": "echo deploy",
     "verify": "echo verify",
-    "do": "echo do",
     "prepare": "echo prepare"
   },
   "author": "richard@gnosis.io",
   "license": "ISC",
   "devDependencies": {
     "@openzeppelin/contracts": "^3.2.1-solc-0.7",
-    "ethers": "^5.7.0",
-    "prettier": "^2.8.4"
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
+    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "@nomiclabs/hardhat-etherscan": "^3.1.4",
+    "@typechain/ethers-v5": "^10.2.0",
+    "@typechain/hardhat": "^6.1.5",
+    "@types/mocha": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.9.0",
+    "@typescript-eslint/parser": "^5.9.0",
+    "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
+    "eslint": "^8.6.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-prettier": "^4.0.0",
+    "hardhat": "^2.12.5",
+    "hardhat-deploy": "^0.11.22",
+    "hardhat-gas-reporter": "^1.0.9",
+    "prettier": "^2.8.3",
+    "prettier-plugin-solidity": "^1.1.1",
+    "rimraf": "^4.1.2",
+    "solidity-coverage": "^0.8.2",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.1.1",
+    "typescript": "^4.9.4"
   },
   "dependencies": {
     "@safe-global/safe-singleton-factory": "^1.0.14",
-    "dotenv": "^8.0.0"
+    "ethers": "^5.7.2"
   }
 }
