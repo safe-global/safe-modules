@@ -14,5 +14,5 @@
       "typechain-types/hardhat.d.ts"
     ]
   },
-  "include": ["test-legacy", "./typechain-types", "./hardhat.config.ts"]
+  "include": ["test", "./typechain-types", "./hardhat.config.ts"]
 }
