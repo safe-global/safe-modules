@@ -1,45 +1,35 @@
-import { Contract, providers } from 'ethers'
+import { Contract } from 'ethers'
 import {
   concat,
   defaultAbiCoder,
   getCreate2Address,
   keccak256,
 } from 'ethers/lib/utils'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
 import { ArtifactGnosisSafe, ArtifactGnosisSafeProxy } from './artifacts'
 import { Singletons } from './deploySingletons'
 
 export default async function deploySafeProxy(
-  owner: SignerWithAddress,
+  ownerAddress: string,
   singletons: Singletons
 ): Promise<Contract> {
   const { safeMastercopy, safeProxyFactory } = singletons
-  const initializer = _initializer(owner, safeMastercopy)
+  const initializer = calculateInitializer(ownerAddress, safeMastercopy)
 
-  await (
-    await owner.sendTransaction({
-      to: safeProxyFactory.address,
-      data: safeProxyFactory.interface.encodeFunctionData(
-        'createProxyWithNonce',
-        [safeMastercopy.address, initializer, Bytes32Zero]
-      ),
-      value: 0,
-    })
-  ).wait()
-
-  const safeProxyAddress = calculateProxyAddress(initializer, singletons)
-
-  return new Contract(
-    safeProxyAddress,
-    ArtifactGnosisSafe.abi,
-    owner.provider as providers.Provider
+  await safeProxyFactory.createProxyWithNonce(
+    safeMastercopy.address,
+    initializer,
+    Bytes32Zero
   )
+
+  const address = calculateProxyAddress(initializer, singletons)
+
+  return new Contract(address, ArtifactGnosisSafe.abi, safeProxyFactory.signer)
 }
 
-function _initializer(owner: SignerWithAddress, safeMastercopy: Contract) {
+function calculateInitializer(ownerAddress: string, safeMastercopy: Contract) {
   const initializer = safeMastercopy.interface.encodeFunctionData('setup', [
-    [owner.address], // owners
+    [ownerAddress], // owners
     1, // threshold
     AddressZero, // to - for setupModules
     '0x', // data - for setupModules

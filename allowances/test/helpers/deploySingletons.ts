@@ -1,4 +1,4 @@
-import { Contract, providers } from 'ethers'
+import { Contract } from 'ethers'
 import { getCreate2Address, keccak256, parseUnits } from 'ethers/lib/utils'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
@@ -12,6 +12,7 @@ import {
   ArtifactGnosisSafe,
   ArtifactGnosisSafeProxyFactory,
 } from './artifacts'
+
 import {
   AllowanceModule,
   AllowanceModule__factory,
@@ -26,7 +27,7 @@ export type Singletons = {
 export default async function deploySingletons(
   signer: SignerWithAddress
 ): Promise<Singletons> {
-  const factoryAddress = await deployFactory(signer)
+  const factoryAddress = await deploySingletonFactory(signer)
 
   const safeMastercopyAddress = await deploySingleton(
     factoryAddress,
@@ -50,21 +51,21 @@ export default async function deploySingletons(
     safeMastercopy: new Contract(
       safeMastercopyAddress,
       ArtifactGnosisSafe.abi,
-      signer.provider
+      signer
     ),
     safeProxyFactory: new Contract(
       safeProxyFactoryAddress,
       ArtifactGnosisSafeProxyFactory.abi,
-      signer.provider
+      signer
     ),
     allowanceModule: AllowanceModule__factory.connect(
       allowanceModuleAddress,
-      signer.provider as providers.Provider
+      signer
     ),
   }
 }
 
-async function deployFactory(signer: SignerWithAddress) {
+async function deploySingletonFactory(signer: SignerWithAddress) {
   const { address, signerAddress, transaction } = getSingletonFactoryInfo(
     await signer.getChainId()
   ) as SingletonFactoryInfo
@@ -86,8 +87,7 @@ async function deploySingleton(
   bytecode: string,
   signer: SignerWithAddress
 ) {
-  const salt =
-    '0x0000000000000000000000000000000000000000000000000000000000000000'
+  const salt = Bytes32Zero
 
   await signer.sendTransaction({
     to: factoryAddress,

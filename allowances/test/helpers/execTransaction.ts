@@ -6,13 +6,11 @@ export default async function execTransaction(
   { to, value = BigNumber.from(0), data }: PopulatedTransaction,
   owner: SignerWithAddress
 ) {
-  const nonce = await safe.nonce()
-
   const { domain, types, message } = paramsToSign(
     safe.address,
     await owner.getChainId(),
     { to, value, data },
-    nonce
+    await safe.nonce()
   )
 
   const signature = await owner._signTypedData(domain, types, message)
