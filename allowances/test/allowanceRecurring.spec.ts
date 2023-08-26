@@ -6,10 +6,10 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
 import { TestToken, TestToken__factory } from '../typechain-types'
 
-import deploySingletons from './helpers/deploySingletons'
-import deploySafeProxy from './helpers/deploySafeProxy'
-import execTransaction from './helpers/execTransaction'
-import execAllowanceTransfer from './helpers/execAllowanceTransfer'
+import deploySingletons from './test-helpers/deploySingletons'
+import deploySafeProxy from './test-helpers/deploySafeProxy'
+import execTransaction from './test-helpers/execTransaction'
+import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 describe('AllowanceModule allowanceRecurring', async () => {
   async function setup() {

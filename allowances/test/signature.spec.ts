@@ -10,7 +10,7 @@ import {
 } from 'ethers/lib/utils'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
-import deploySingletons from './helpers/deploySingletons'
+import deploySingletons from './test-helpers/deploySingletons'
 
 describe('signature', async () => {
   async function setup() {
