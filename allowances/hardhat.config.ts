@@ -1,6 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox'
 import 'hardhat-gas-reporter'
-import 'hardhat-deploy'
 
 import dotenv from 'dotenv'
 import { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
@@ -20,16 +19,24 @@ let config: HardhatUserConfig = {
   paths: {
     artifacts: 'build/artifacts',
     cache: 'build/cache',
-    deploy: 'src/deploy',
     sources: 'contracts',
   },
   solidity: {
-    version: '0.7.6',
-    settings: {
-      optimizer: {
-        enabled: true,
+    compilers: [
+      {
+        // for the Allowance contact
+        version: '0.7.6',
+        settings: {
+          optimizer: {
+            enabled: true,
+          },
+        },
       },
-    },
+      {
+        // for tests
+        version: '0.8.19',
+      },
+    ],
   },
   defaultNetwork: 'hardhat',
   networks: {
