@@ -7,7 +7,7 @@
     "clean": "rimraf build typechain-types",
     "build": "hardhat compile",
     "test": "hardhat test",
-    "coverage": "echo coverage",
+    "coverage": "hardhat coverage",
     "deploy": "echo deploy",
     "verify": "echo verify",
     "prepare": "yarn run clean && yarn run build"
