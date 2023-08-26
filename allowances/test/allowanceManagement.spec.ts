@@ -8,9 +8,9 @@ import { TestToken, TestToken__factory } from '../typechain-types'
 import deploySingletons from './helpers/deploySingletons'
 import deploySafeProxy from './helpers/deploySafeProxy'
 import execTransaction from './helpers/execTransaction'
-import execAllowanceTransfer from './helpers/executeAllowanceTransfer'
+import execAllowanceTransfer from './helpers/execAllowanceTransfer'
 
-describe('AllowanceModule delegate', async () => {
+describe('AllowanceModule allowanceManagement', async () => {
   async function setup() {
     const [owner, alice, bob, spender, receiver, deployer] =
       await hre.ethers.getSigners()
@@ -51,6 +51,11 @@ describe('AllowanceModule delegate', async () => {
       receiver,
     }
   }
+
+  before(
+    async () => await hre.network.provider.request({ method: 'hardhat_reset' })
+  )
+
   it('Add delegates and removes first delegate', async () => {
     const { allowanceModule, safe, owner, alice, bob } = await loadFixture(
       setup
@@ -163,9 +168,9 @@ describe('AllowanceModule delegate', async () => {
     expect(await token.balanceOf(receiver.address)).to.equal(0)
 
     await execAllowanceTransfer(allowanceModule, {
-      safe,
-      token,
-      to: receiver,
+      safe: safe.address,
+      token: token.address,
+      to: receiver.address,
       amount: 100,
       spender,
     })
@@ -186,9 +191,9 @@ describe('AllowanceModule delegate', async () => {
     // does not work after removing delegate
     await expect(
       execAllowanceTransfer(allowanceModule, {
-        safe,
-        token,
-        to: receiver,
+        safe: safe.address,
+        token: token.address,
+        to: receiver.address,
         amount: 100,
         spender,
       })
@@ -221,9 +226,9 @@ describe('AllowanceModule delegate', async () => {
     // does not work without an allowance
     await expect(
       execAllowanceTransfer(allowanceModule, {
-        safe,
-        token,
-        to: receiver,
+        safe: safe.address,
+        token: token.address,
+        to: receiver.address,
         amount: 10,
         spender,
       })

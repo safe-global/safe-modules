@@ -3,13 +3,13 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 
 export default async function execTransaction(
   safe: Contract,
-  { to, value = BigNumber.from(0), data }: PopulatedTransaction,
+  { to, data, value = BigNumber.from(0) }: PopulatedTransaction,
   owner: SignerWithAddress
 ) {
   const { domain, types, message } = paramsToSign(
     safe.address,
     await owner.getChainId(),
-    { to, value, data },
+    { to, data, value },
     await safe.nonce()
   )
 
@@ -36,7 +36,7 @@ export default async function execTransaction(
 function paramsToSign(
   safeAddress: string,
   chainId: number,
-  { to, value, data }: PopulatedTransaction,
+  { to, data, value }: PopulatedTransaction,
   nonce: bigint | number
 ) {
   const domain = { verifyingContract: safeAddress, chainId }

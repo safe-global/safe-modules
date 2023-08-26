@@ -1,8 +1,8 @@
-import { BigNumberish, Contract } from 'ethers'
+import { BigNumberish } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
-import { AllowanceModule, TestToken } from '../../typechain-types'
+import { AllowanceModule } from '../../typechain-types'
 
-export default async function executeAllowanceTransfer(
+export default async function execAllowanceTransfer(
   allowanceMod: AllowanceModule,
   {
     safe,
@@ -11,17 +11,17 @@ export default async function executeAllowanceTransfer(
     amount,
     spender,
   }: {
-    safe: Contract
-    token: TestToken
-    to: SignerWithAddress
+    safe: string
+    token: string
+    to: string
     amount: BigNumberish
     spender: SignerWithAddress
   }
 ) {
   const [, , , , nonce] = await allowanceMod.getTokenAllowance(
-    safe.address,
+    safe,
     spender.address,
-    token.address
+    token
   )
 
   const { domain, types, message } = paramsToSign(
@@ -34,9 +34,9 @@ export default async function executeAllowanceTransfer(
   const signature = await spender._signTypedData(domain, types, message)
 
   await allowanceMod.executeAllowanceTransfer(
-    safe.address,
-    token.address,
-    to.address,
+    safe,
+    token,
+    to,
     amount,
     AddressZero, // paymentToken
     0, // payment
@@ -54,9 +54,9 @@ function paramsToSign(
     to,
     amount,
   }: {
-    safe: Contract
-    token: TestToken
-    to: SignerWithAddress
+    safe: string
+    token: string
+    to: string
     amount: BigNumberish
   },
   nonce: number
@@ -75,9 +75,9 @@ function paramsToSign(
     ],
   }
   const message = {
-    safe: safe.address,
-    token: token.address,
-    to: to.address,
+    safe,
+    token,
+    to,
     amount,
     paymentToken: AddressZero,
     payment: 0,

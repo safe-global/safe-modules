@@ -12,9 +12,9 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import deploySingletons from './helpers/deploySingletons'
 
-describe('AllowanceModule delegate', async () => {
+describe('signature', async () => {
   async function setup() {
-    const [alice, bob, minter, deployer] = await hre.ethers.getSigners()
+    const [alice, bob, deployer] = await hre.ethers.getSigners()
 
     const singletons = await deploySingletons(deployer)
 
@@ -25,13 +25,17 @@ describe('AllowanceModule delegate', async () => {
     }
   }
 
+  before(
+    async () => await hre.network.provider.request({ method: 'hardhat_reset' })
+  )
+
   it('Generates expected transfer hash', async () => {
     const { allowanceModule, alice, bob } = await loadFixture(setup)
 
     const transfer = {
-      safe: '0x1'.padEnd(42, '0'),
-      token: '0x2'.padEnd(42, '0'),
-      to: '0x3'.padEnd(42, '0'),
+      safe: '0x0000000000000000000000000000000000000010',
+      token: '0x0000000000000000000000000000000000000020',
+      to: '0x0000000000000000000000000000000000000030',
       amount: 12345,
       paymentToken: AddressZero,
       payment: 0,
@@ -41,8 +45,6 @@ describe('AllowanceModule delegate', async () => {
     const {
       DOMAIN_SEPARATOR_TYPEHASH,
       ALLOWANCE_TRANSFER_TYPEHASH,
-      domainSeparator,
-      transferHashData,
       transferHash,
     } = calculateTransferHash(
       allowanceModule.address,
