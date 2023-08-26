@@ -1,24 +1,31 @@
 import '@nomicfoundation/hardhat-toolbox'
 import 'hardhat-gas-reporter'
+import 'hardhat-deploy'
+
+import './tasks/deploy_verify'
 
 import dotenv from 'dotenv'
 import { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
+import { DeterministicDeploymentInfo } from 'hardhat-deploy/dist/types'
+import { getSingletonFactoryInfo } from '@safe-global/safe-singleton-factory'
 
 dotenv.config()
+
 const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY } = process.env
-const DEFAULT_MNEMONIC =
-  'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {
   accounts: {
-    mnemonic: MNEMONIC || DEFAULT_MNEMONIC,
+    mnemonic:
+      MNEMONIC ||
+      'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat',
   },
 }
 
-let config: HardhatUserConfig = {
+const config: HardhatUserConfig = {
   paths: {
     artifacts: 'build/artifacts',
     cache: 'build/cache',
+    deploy: 'tasks/deploy',
     sources: 'contracts',
   },
   solidity: {
@@ -90,12 +97,36 @@ let config: HardhatUserConfig = {
       url: `https://api.avax.network/ext/bc/C/rpc`,
     },
   },
+  deterministicDeployment,
+  namedAccounts: {
+    deployer: 0,
+  },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
   gasReporter: {
     enabled: true,
   },
+}
+
+function deterministicDeployment(network: string): DeterministicDeploymentInfo {
+  const info = getSingletonFactoryInfo(parseInt(network))
+  if (!info) {
+    throw new Error(`
+      Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
+      For more information, see https://github.com/safe-global/safe-contracts#replay-protection-eip-155
+    `)
+  }
+
+  const gasLimit = BigInt(info.gasLimit)
+  const gasPrice = BigInt(info.gasPrice)
+
+  return {
+    factory: info.address,
+    deployer: info.signerAddress,
+    funding: String(gasLimit * gasPrice),
+    signedTx: info.transaction,
+  }
 }
 
 export default config
