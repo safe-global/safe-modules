@@ -29,6 +29,9 @@ export default async function setup() {
   )
   const token = await deployTestToken(deployer)
 
+  // both the safe and the allowance work by signature
+  // hook the contracts to a signer that has funds
+  // but has no relevancy in signing
   const safe = ISafe__factory.connect(safeAddress, relayer)
   const allowanceModule = AllowanceModule__factory.connect(
     allowanceModuleAddress,

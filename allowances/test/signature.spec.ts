@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import {
   AbiCoder,
   BigNumberish,
+  ZeroAddress,
   keccak256,
   solidityPacked,
   toUtf8Bytes,
@@ -22,7 +23,7 @@ describe('signature', async () => {
       token: '0x0000000000000000000000000000000000000020',
       to: '0x0000000000000000000000000000000000000030',
       amount: 12345,
-      paymentToken: AddressZero,
+      paymentToken: ZeroAddress,
       payment: 0,
       nonce: 0,
     }
@@ -135,5 +136,3 @@ function calculateTransferHash(
     ),
   }
 }
-
-const AddressZero = '0x'.padEnd(42, '0')

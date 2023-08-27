@@ -1,3 +1,4 @@
+import { ZeroAddress } from 'ethers'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 import { AllowanceModule } from '../../typechain-types'
@@ -18,6 +19,9 @@ export default async function execAllowanceTransfer(
     spender: SignerWithAddress
   }
 ) {
+  const allowanceModAddress = await allowanceMod.getAddress()
+  const chainId = await allowanceMod.getChainId()
+
   const [, , , , nonce] = await allowanceMod.getTokenAllowance(
     safe,
     spender.address,
@@ -25,20 +29,20 @@ export default async function execAllowanceTransfer(
   )
 
   const { domain, types, message } = paramsToSign(
-    await allowanceMod.getAddress(),
-    (await spender.provider.getNetwork()).chainId,
+    allowanceModAddress,
+    chainId,
     { safe, token, to, amount },
     nonce
   )
 
   const signature = await spender.signTypedData(domain, types, message)
 
-  await allowanceMod.executeAllowanceTransfer(
+  return allowanceMod.executeAllowanceTransfer(
     safe,
     token,
     to,
     amount,
-    AddressZero, // paymentToken
+    ZeroAddress, // paymentToken
     0, // payment
     spender.address,
     signature
@@ -79,12 +83,10 @@ function paramsToSign(
     token,
     to,
     amount,
-    paymentToken: AddressZero,
+    paymentToken: ZeroAddress,
     payment: 0,
     nonce,
   }
 
   return { domain, primaryType, types, message }
 }
-
-const AddressZero = '0x'.padEnd(42, '0')

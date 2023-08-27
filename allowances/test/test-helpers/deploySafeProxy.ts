@@ -4,6 +4,8 @@ import {
   concat,
   getCreate2Address,
   keccak256,
+  ZeroAddress,
+  ZeroHash,
 } from 'ethers'
 
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
@@ -15,12 +17,12 @@ import {
 } from './artifacts'
 
 export default async function deploySafeProxy(
-  ownerAddress: string,
+  owner: string,
   factory: string,
   mastercopy: string,
   deployer: SignerWithAddress
 ): Promise<string> {
-  const initializer = calculateInitializer(ownerAddress)
+  const initializer = calculateInitializer(owner)
 
   const iface = new Interface(ArtifactGnosisSafeProxyFactory.abi)
   await deployer.sendTransaction({
@@ -28,25 +30,25 @@ export default async function deploySafeProxy(
     data: iface.encodeFunctionData('createProxyWithNonce', [
       mastercopy,
       initializer,
-      Bytes32Zero,
+      ZeroHash,
     ]),
   })
 
   return calculateProxyAddress(initializer, factory, mastercopy)
 }
 
-function calculateInitializer(ownerAddress: string) {
+function calculateInitializer(owner: string): string {
   const iface = new Interface(ArtifactGnosisSafe.abi)
 
   const initializer = iface.encodeFunctionData('setup', [
-    [ownerAddress], // owners
+    [owner], // owners
     1, // threshold
-    AddressZero, // to - for setupModules
+    ZeroAddress, // to - for setupModules
     '0x', // data - for setupModules
-    AddressZero, // fallbackHandler
-    AddressZero, // paymentToken
+    ZeroAddress, // fallbackHandler
+    ZeroAddress, // paymentToken
     0, // payment
-    AddressZero, // paymentReceiver
+    ZeroAddress, // paymentReceiver
   ])
 
   return initializer
@@ -57,7 +59,7 @@ function calculateProxyAddress(
   factory: string,
   mastercopy: string
 ): string {
-  const salt = keccak256(concat([keccak256(initializer), Bytes32Zero]))
+  const salt = keccak256(concat([keccak256(initializer), ZeroHash]))
 
   const deploymentData = concat([
     ArtifactGnosisSafeProxy.bytecode,
@@ -66,6 +68,3 @@ function calculateProxyAddress(
 
   return getCreate2Address(factory, salt, keccak256(deploymentData))
 }
-
-const AddressZero = '0x'.padEnd(42, '0')
-const Bytes32Zero = '0x'.padEnd(66, '0')

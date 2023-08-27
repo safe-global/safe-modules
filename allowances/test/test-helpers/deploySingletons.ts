@@ -1,4 +1,4 @@
-import { Contract, getCreate2Address, keccak256, parseUnits } from 'ethers'
+import { getCreate2Address, keccak256, parseUnits, ZeroHash } from 'ethers'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 import {
@@ -11,14 +11,6 @@ import {
   ArtifactGnosisSafe,
   ArtifactGnosisSafeProxyFactory,
 } from './artifacts'
-
-import { AllowanceModule } from '../../typechain-types'
-
-export type Singletons = {
-  safeMastercopy: Contract
-  safeProxyFactory: Contract
-  allowanceModule: AllowanceModule
-}
 
 export default async function deploySingletons(deployer: SignerWithAddress) {
   const factoryAddress = await deploySingletonFactory(deployer)
@@ -71,7 +63,7 @@ async function deploySingleton(
   bytecode: string,
   signer: SignerWithAddress
 ) {
-  const salt = Bytes32Zero
+  const salt = ZeroHash
 
   await signer.sendTransaction({
     to: factoryAddress,
@@ -81,5 +73,3 @@ async function deploySingleton(
 
   return getCreate2Address(factoryAddress, salt, keccak256(bytecode))
 }
-
-const Bytes32Zero = '0x'.padEnd(66, '0')

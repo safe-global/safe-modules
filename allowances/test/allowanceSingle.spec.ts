@@ -1,15 +1,14 @@
 import { expect } from 'chai'
 import hre from 'hardhat'
-import { parseUnits } from 'ethers'
+import { ZeroAddress, parseUnits } from 'ethers'
 
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
-
-import { TestToken, TestToken__factory } from '../typechain-types'
 
 import setup from './test-helpers/setup'
 import execTransaction from './test-helpers/execTransaction'
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
+
+const OneEther = parseUnits('1', 'ether')
 
 describe('AllowanceModule allowanceSingle', async () => {
   it('Execute allowance with delegate', async () => {
@@ -178,7 +177,7 @@ describe('AllowanceModule allowanceSingle', async () => {
       safe,
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,
-        AddressZero, // zero means ether
+        ZeroAddress, // zero means ether
         OneEther,
         0,
         0
@@ -191,7 +190,7 @@ describe('AllowanceModule allowanceSingle', async () => {
       await allowanceModule.getTokenAllowance(
         safeAddress,
         alice.address,
-        AddressZero
+        ZeroAddress
       )
     expect(OneEther).to.equal(amount)
     expect(0).to.equal(spent)
@@ -205,7 +204,7 @@ describe('AllowanceModule allowanceSingle', async () => {
     // send 0.001 to bob using alice's allowance
     await execAllowanceTransfer(allowanceModule, {
       safe: safeAddress,
-      token: AddressZero,
+      token: ZeroAddress,
       to: bob,
       amount: parseUnits('0.001', 'ether'),
       spender: alice,
@@ -223,7 +222,7 @@ describe('AllowanceModule allowanceSingle', async () => {
       await allowanceModule.getTokenAllowance(
         safeAddress,
         alice.address,
-        AddressZero
+        ZeroAddress
       )
 
     // expect the last transfer to be reflected
@@ -236,7 +235,7 @@ describe('AllowanceModule allowanceSingle', async () => {
     // send 0.001 more
     await execAllowanceTransfer(allowanceModule, {
       safe: safeAddress,
-      token: AddressZero,
+      token: ZeroAddress,
       to: bob,
       amount: parseUnits('0.001', 'ether'),
       spender: alice,
@@ -254,7 +253,7 @@ describe('AllowanceModule allowanceSingle', async () => {
       await allowanceModule.getTokenAllowance(
         safeAddress,
         alice.address,
-        AddressZero
+        ZeroAddress
       )
 
     // expect the last transfer to be reflected
@@ -265,14 +264,3 @@ describe('AllowanceModule allowanceSingle', async () => {
     expect(3).to.equal(nonce)
   })
 })
-
-async function deployTestToken(minter: SignerWithAddress): Promise<TestToken> {
-  const factory: TestToken__factory = await hre.ethers.getContractFactory(
-    'TestToken',
-    minter
-  )
-  return await factory.connect(minter).deploy()
-}
-
-const OneEther = parseUnits('1', 18)
-const AddressZero = '0x'.padEnd(42, '0')

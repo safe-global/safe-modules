@@ -1,5 +1,6 @@
-import { TransactionRequest } from 'ethers'
+import { TransactionRequest, ZeroAddress } from 'ethers'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
+
 import { ISafe } from '../../typechain-types'
 
 export default async function execTransaction(
@@ -28,8 +29,8 @@ export default async function execTransaction(
     0,
     0,
     0,
-    AddressZero,
-    AddressZero,
+    ZeroAddress,
+    ZeroAddress,
     signature
   )
 }
@@ -64,12 +65,10 @@ function paramsToSign(
     safeTxGas: 0,
     baseGas: 0,
     gasPrice: 0,
-    gasToken: AddressZero,
-    refundReceiver: AddressZero,
+    gasToken: ZeroAddress,
+    refundReceiver: ZeroAddress,
     nonce,
   }
 
   return { domain, primaryType, types, message }
 }
-
-const AddressZero = '0x'.padEnd(42, '0')
