@@ -1,35 +1,21 @@
 import { expect } from 'chai'
-import { BigNumberish } from 'ethers'
-import hre from 'hardhat'
-
 import {
-  defaultAbiCoder,
+  AbiCoder,
+  BigNumberish,
   keccak256,
-  solidityPack,
+  solidityPacked,
   toUtf8Bytes,
-} from 'ethers/lib/utils'
+} from 'ethers'
+
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
-import deploySingletons from './test-helpers/deploySingletons'
+import setup from './test-helpers/setup'
 
 describe('signature', async () => {
-  async function setup() {
-    const [alice, deployer] = await hre.ethers.getSigners()
-
-    const singletons = await deploySingletons(deployer)
-
-    return {
-      allowanceModule: singletons.allowanceModule,
-      alice,
-    }
-  }
-
-  before(
-    async () => await hre.network.provider.request({ method: 'hardhat_reset' })
-  )
-
   it('Generates expected transfer hash', async () => {
     const { allowanceModule, alice } = await loadFixture(setup)
+
+    const allowanceAddress = await allowanceModule.getAddress()
 
     const transfer = {
       safe: '0x0000000000000000000000000000000000000010',
@@ -46,8 +32,8 @@ describe('signature', async () => {
       ALLOWANCE_TRANSFER_TYPEHASH,
       transferHash,
     } = calculateTransferHash(
-      allowanceModule.address,
-      await alice.getChainId(),
+      allowanceAddress,
+      (await alice.provider.getNetwork()).chainId,
       transfer
     )
 
@@ -75,7 +61,7 @@ describe('signature', async () => {
 
 function calculateTransferHash(
   verifyingContract: string,
-  chainId: number,
+  chainId: number | bigint,
   {
     safe,
     token,
@@ -94,6 +80,7 @@ function calculateTransferHash(
     nonce: BigNumberish
   }
 ) {
+  const abi = AbiCoder.defaultAbiCoder()
   const DOMAIN_SEPARATOR_TYPEHASH = keccak256(
     toUtf8Bytes('EIP712Domain(uint256 chainId,address verifyingContract)')
   )
@@ -104,14 +91,14 @@ function calculateTransferHash(
   )
 
   const domainSeparator = keccak256(
-    defaultAbiCoder.encode(
+    abi.encode(
       ['bytes32', 'uint256', 'address'],
       [DOMAIN_SEPARATOR_TYPEHASH, chainId, verifyingContract]
     )
   )
 
   const transferHashData = keccak256(
-    defaultAbiCoder.encode(
+    abi.encode(
       [
         'bytes32',
         'address',
@@ -141,7 +128,7 @@ function calculateTransferHash(
     domainSeparator,
     transferHashData,
     transferHash: keccak256(
-      solidityPack(
+      solidityPacked(
         ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
         ['0x19', '0x01', domainSeparator, transferHashData]
       )

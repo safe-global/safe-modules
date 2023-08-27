@@ -1,6 +1,5 @@
-import { Contract } from 'ethers'
-import { getCreate2Address, keccak256, parseUnits } from 'ethers/lib/utils'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { Contract, getCreate2Address, keccak256, parseUnits } from 'ethers'
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 import {
   SingletonFactoryInfo,
@@ -13,10 +12,7 @@ import {
   ArtifactGnosisSafeProxyFactory,
 } from './artifacts'
 
-import {
-  AllowanceModule,
-  AllowanceModule__factory,
-} from '../../typechain-types'
+import { AllowanceModule } from '../../typechain-types'
 
 export type Singletons = {
   safeMastercopy: Contract
@@ -24,50 +20,38 @@ export type Singletons = {
   allowanceModule: AllowanceModule
 }
 
-export default async function deploySingletons(
-  signer: SignerWithAddress
-): Promise<Singletons> {
-  const factoryAddress = await deploySingletonFactory(signer)
+export default async function deploySingletons(deployer: SignerWithAddress) {
+  const factoryAddress = await deploySingletonFactory(deployer)
 
   const safeMastercopyAddress = await deploySingleton(
     factoryAddress,
     ArtifactGnosisSafe.bytecode,
-    signer
+    deployer
   )
 
   const safeProxyFactoryAddress = await deploySingleton(
     factoryAddress,
     ArtifactGnosisSafeProxyFactory.bytecode,
-    signer
+    deployer
   )
 
   const allowanceModuleAddress = await deploySingleton(
     factoryAddress,
     ArtifactAllowanceModule.bytecode,
-    signer
+    deployer
   )
 
   return {
-    safeMastercopy: new Contract(
-      safeMastercopyAddress,
-      ArtifactGnosisSafe.abi,
-      signer
-    ),
-    safeProxyFactory: new Contract(
-      safeProxyFactoryAddress,
-      ArtifactGnosisSafeProxyFactory.abi,
-      signer
-    ),
-    allowanceModule: AllowanceModule__factory.connect(
-      allowanceModuleAddress,
-      signer
-    ),
+    safeMastercopyAddress,
+    safeProxyFactoryAddress,
+    allowanceModuleAddress,
   }
 }
 
 async function deploySingletonFactory(signer: SignerWithAddress) {
+  const { chainId } = await signer.provider.getNetwork()
   const { address, signerAddress, transaction } = getSingletonFactoryInfo(
-    await signer.getChainId()
+    Number(chainId)
   ) as SingletonFactoryInfo
 
   // fund the presined transaction signer
@@ -77,7 +61,7 @@ async function deploySingletonFactory(signer: SignerWithAddress) {
   })
 
   // shoot the presigned transaction
-  await signer.provider?.sendTransaction(transaction)
+  await signer.provider.broadcastTransaction(transaction)
 
   return address
 }

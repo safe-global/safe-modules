@@ -1,42 +1,43 @@
-import { BigNumber, Contract, PopulatedTransaction } from 'ethers'
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { TransactionRequest } from 'ethers'
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
+import { ISafe } from '../../typechain-types'
 
 export default async function execTransaction(
-  safe: Contract,
-  { to, data, value = BigNumber.from(0) }: PopulatedTransaction,
-  owner: SignerWithAddress
+  safe: ISafe,
+  { to, data, value = 0 }: TransactionRequest,
+  signer: SignerWithAddress
 ) {
+  const safeAddress = await safe.getAddress()
+  const chainId = await safe.getChainId()
+  const nonce = await safe.nonce()
+
   const { domain, types, message } = paramsToSign(
-    safe.address,
-    await owner.getChainId(),
+    safeAddress,
+    chainId,
     { to, data, value },
-    await safe.nonce()
+    nonce
   )
 
-  const signature = await owner._signTypedData(domain, types, message)
+  const signature = await signer.signTypedData(domain, types, message)
 
-  await owner.sendTransaction({
-    to: safe.address,
-    data: safe.interface.encodeFunctionData('execTransaction', [
-      to,
-      value,
-      data,
-      0, // operation
-      0,
-      0,
-      0,
-      AddressZero,
-      AddressZero,
-      signature,
-    ]),
-    value: 0,
-  })
+  return safe.execTransaction(
+    to as string,
+    value as number | bigint,
+    data as string,
+    0, // operation
+    0,
+    0,
+    0,
+    AddressZero,
+    AddressZero,
+    signature
+  )
 }
 
 function paramsToSign(
   safeAddress: string,
-  chainId: number,
-  { to, data, value }: PopulatedTransaction,
+  chainId: bigint,
+  { to, data, value }: TransactionRequest,
   nonce: bigint | number
 ) {
   const domain = { verifyingContract: safeAddress, chainId }

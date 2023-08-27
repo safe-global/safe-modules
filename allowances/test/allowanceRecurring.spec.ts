@@ -1,54 +1,12 @@
 import { expect } from 'chai'
-import hre from 'hardhat'
 
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
 import { loadFixture, mine } from '@nomicfoundation/hardhat-network-helpers'
 
-import { TestToken, TestToken__factory } from '../typechain-types'
-
-import deploySingletons from './test-helpers/deploySingletons'
-import deploySafeProxy from './test-helpers/deploySafeProxy'
+import setup from './test-helpers/setup'
 import execTransaction from './test-helpers/execTransaction'
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 describe('AllowanceModule allowanceRecurring', async () => {
-  async function setup() {
-    const [owner, alice, bob, deployer] = await hre.ethers.getSigners()
-
-    const singletons = await deploySingletons(deployer)
-    const safe = await deploySafeProxy(owner.address, singletons)
-    const token = await deployTestToken(deployer)
-
-    await token.transfer(safe.address, 1000)
-
-    // enable Allowance as mod
-    await execTransaction(
-      safe,
-      {
-        to: safe.address,
-        data: safe.interface.encodeFunctionData('enableModule', [
-          singletons.allowanceModule.address,
-        ]),
-      },
-      owner
-    )
-
-    return {
-      // singletons
-      safeMastercopy: singletons.safeMastercopy,
-      safeProxyFactory: singletons.safeProxyFactory,
-      allowanceModule: singletons.allowanceModule,
-      // the deployed safe
-      safe,
-      // test token
-      token,
-      // some signers
-      owner,
-      alice,
-      bob,
-    }
-  }
-
   function nowInMinutes() {
     return Math.floor(Date.now() / (1000 * 60))
   }
@@ -61,18 +19,17 @@ describe('AllowanceModule allowanceRecurring', async () => {
     return now - ((now - base) % period)
   }
 
-  before(
-    async () => await hre.network.provider.request({ method: 'hardhat_reset' })
-  )
-
   it('Execute allowance without refund', async () => {
-    const { allowanceModule, safe, token, owner, alice, bob } =
+    const { safe, allowanceModule, token, owner, alice, bob } =
       await loadFixture(setup)
+
+    const safeAddress = await safe.getAddress()
+    const tokenAddress = await token.getAddress()
 
     // add alice as delegate
     await execTransaction(
       safe,
-      await allowanceModule.populateTransaction.addDelegate(alice.address),
+      await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
     )
 
@@ -90,9 +47,9 @@ describe('AllowanceModule allowanceRecurring', async () => {
 
     await execTransaction(
       safe,
-      await allowanceModule.populateTransaction.setAllowance(
+      await allowanceModule.setAllowance.populateTransaction(
         alice.address,
-        token.address,
+        tokenAddress,
         100,
         configResetPeriod,
         configResetBase
@@ -103,9 +60,9 @@ describe('AllowanceModule allowanceRecurring', async () => {
     // load an existing allowance
     let [amount, spent, resetPeriod, resetLast, nonce] =
       await allowanceModule.getTokenAllowance(
-        safe.address,
+        safeAddress,
         alice.address,
-        token.address
+        tokenAddress
       )
 
     expect(100).to.equal(amount)
@@ -114,27 +71,27 @@ describe('AllowanceModule allowanceRecurring', async () => {
     expect(firstResetLast).to.equal(resetLast) // this should be set to inti time
     expect(1).to.equal(nonce)
 
-    expect(1000).to.equal(await token.balanceOf(safe.address))
+    expect(1000).to.equal(await token.balanceOf(safeAddress))
     expect(0).to.equal(await token.balanceOf(bob.address))
 
     // transfer 60 bucks to bob
     await execAllowanceTransfer(allowanceModule, {
-      safe: safe.address,
-      token: token.address,
+      safe: await safe.getAddress(),
+      token: tokenAddress,
       to: bob.address,
       amount: 60,
       spender: alice,
     })
 
-    expect(940).to.equal(await token.balanceOf(safe.address))
+    expect(940).to.equal(await token.balanceOf(safeAddress))
     expect(60).to.equal(await token.balanceOf(bob.address))
 
     // load alice's allowance
     ;[amount, spent, resetPeriod, resetLast, nonce] =
       await allowanceModule.getTokenAllowance(
-        safe.address,
+        safeAddress,
         alice.address,
-        token.address
+        tokenAddress
       )
     expect(100).to.equal(amount)
     expect(60).to.equal(spent)
@@ -145,8 +102,8 @@ describe('AllowanceModule allowanceRecurring', async () => {
     // check that it fails over limit
     await expect(
       execAllowanceTransfer(allowanceModule, {
-        safe: safe.address,
-        token: token.address,
+        safe: await safe.getAddress(),
+        token: tokenAddress,
         to: bob.address,
         amount: 45,
         spender: alice,
@@ -154,13 +111,13 @@ describe('AllowanceModule allowanceRecurring', async () => {
     ).to.be.reverted
 
     await execAllowanceTransfer(allowanceModule, {
-      safe: safe.address,
-      token: token.address,
+      safe: await safe.getAddress(),
+      token: tokenAddress,
       to: bob.address,
       amount: 40,
       spender: alice,
     })
-    expect(900).to.equal(await token.balanceOf(safe.address))
+    expect(900).to.equal(await token.balanceOf(safeAddress))
     expect(100).to.equal(await token.balanceOf(bob.address))
 
     // go forward 12 hours (13 intervals with one hour between)
@@ -169,9 +126,9 @@ describe('AllowanceModule allowanceRecurring', async () => {
     // load alice's allowance, with less than resetPeriod elapsed: des not impact spend
     ;[amount, spent, resetPeriod, resetLast, nonce] =
       await allowanceModule.getTokenAllowance(
-        safe.address,
+        safeAddress,
         alice.address,
-        token.address
+        tokenAddress
       )
     expect(100).to.equal(amount)
     expect(100).to.equal(spent)
@@ -183,9 +140,9 @@ describe('AllowanceModule allowanceRecurring', async () => {
     await mine(13, { interval: 60 * 60 })
     ;[amount, spent, resetPeriod, resetLast, nonce] =
       await allowanceModule.getTokenAllowance(
-        safe.address,
+        safeAddress,
         alice.address,
-        token.address
+        tokenAddress
       )
 
     // let's predict the next value calculated by the contract for lastReset
@@ -203,19 +160,19 @@ describe('AllowanceModule allowanceRecurring', async () => {
 
     // lets execute on the replenished allowance
     await execAllowanceTransfer(allowanceModule, {
-      safe: safe.address,
-      token: token.address,
+      safe: await safe.getAddress(),
+      token: tokenAddress,
       to: bob.address,
       amount: 45,
       spender: alice,
     })
-    expect(855).to.equal(await token.balanceOf(safe.address))
+    expect(855).to.equal(await token.balanceOf(safeAddress))
     expect(145).to.equal(await token.balanceOf(bob.address))
     ;[amount, spent, resetPeriod, resetLast, nonce] =
       await allowanceModule.getTokenAllowance(
-        safe.address,
+        safeAddress,
         alice.address,
-        token.address
+        tokenAddress
       )
 
     expect(100).to.equal(amount)
@@ -225,11 +182,3 @@ describe('AllowanceModule allowanceRecurring', async () => {
     expect(4).to.equal(nonce)
   })
 })
-
-async function deployTestToken(minter: SignerWithAddress): Promise<TestToken> {
-  const factory: TestToken__factory = await hre.ethers.getContractFactory(
-    'TestToken',
-    minter
-  )
-  return await factory.connect(minter).deploy()
-}

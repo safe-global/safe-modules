@@ -1,34 +1,44 @@
-import { Contract } from 'ethers'
 import {
+  AbiCoder,
+  Interface,
   concat,
-  defaultAbiCoder,
   getCreate2Address,
   keccak256,
-} from 'ethers/lib/utils'
+} from 'ethers'
 
-import { ArtifactGnosisSafe, ArtifactGnosisSafeProxy } from './artifacts'
-import { Singletons } from './deploySingletons'
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
+
+import {
+  ArtifactGnosisSafe,
+  ArtifactGnosisSafeProxy,
+  ArtifactGnosisSafeProxyFactory,
+} from './artifacts'
 
 export default async function deploySafeProxy(
   ownerAddress: string,
-  singletons: Singletons
-): Promise<Contract> {
-  const { safeMastercopy, safeProxyFactory } = singletons
-  const initializer = calculateInitializer(ownerAddress, safeMastercopy)
+  factory: string,
+  mastercopy: string,
+  deployer: SignerWithAddress
+): Promise<string> {
+  const initializer = calculateInitializer(ownerAddress)
 
-  await safeProxyFactory.createProxyWithNonce(
-    safeMastercopy.address,
-    initializer,
-    Bytes32Zero
-  )
+  const iface = new Interface(ArtifactGnosisSafeProxyFactory.abi)
+  await deployer.sendTransaction({
+    to: factory,
+    data: iface.encodeFunctionData('createProxyWithNonce', [
+      mastercopy,
+      initializer,
+      Bytes32Zero,
+    ]),
+  })
 
-  const address = calculateProxyAddress(initializer, singletons)
-
-  return new Contract(address, ArtifactGnosisSafe.abi, safeProxyFactory.signer)
+  return calculateProxyAddress(initializer, factory, mastercopy)
 }
 
-function calculateInitializer(ownerAddress: string, safeMastercopy: Contract) {
-  const initializer = safeMastercopy.interface.encodeFunctionData('setup', [
+function calculateInitializer(ownerAddress: string) {
+  const iface = new Interface(ArtifactGnosisSafe.abi)
+
+  const initializer = iface.encodeFunctionData('setup', [
     [ownerAddress], // owners
     1, // threshold
     AddressZero, // to - for setupModules
@@ -44,20 +54,17 @@ function calculateInitializer(ownerAddress: string, safeMastercopy: Contract) {
 
 function calculateProxyAddress(
   initializer: string,
-  { safeMastercopy, safeProxyFactory }: Singletons
+  factory: string,
+  mastercopy: string
 ): string {
   const salt = keccak256(concat([keccak256(initializer), Bytes32Zero]))
 
   const deploymentData = concat([
     ArtifactGnosisSafeProxy.bytecode,
-    defaultAbiCoder.encode(['address'], [safeMastercopy.address]),
+    AbiCoder.defaultAbiCoder().encode(['address'], [mastercopy]),
   ])
 
-  return getCreate2Address(
-    safeProxyFactory.address,
-    salt,
-    keccak256(deploymentData)
-  )
+  return getCreate2Address(factory, salt, keccak256(deploymentData))
 }
 
 const AddressZero = '0x'.padEnd(42, '0')
