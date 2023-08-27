@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 import { ISafe } from '../../typechain-types'
 
-export default async function execTransaction(
+export default async function execSafeTransaction(
   safe: ISafe,
   { to, data, value = 0 }: TransactionRequest,
   signer: SignerWithAddress

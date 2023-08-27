@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import setup from './test-helpers/setup'
-import execTransaction from './test-helpers/execTransaction'
+import execSafeTransaction from './test-helpers/execSafeTransaction'
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 describe('AllowanceModule allowanceManagement', async () => {
@@ -18,14 +18,14 @@ describe('AllowanceModule allowanceManagement', async () => {
     expect(await safe.isModuleEnabled(allowanceAddress)).to.equal(true)
 
     // add alice as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
     )
 
     // add bob as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(bob.address),
       owner
@@ -37,7 +37,7 @@ describe('AllowanceModule allowanceManagement', async () => {
     expect(delegates.next).to.equal(0)
 
     // remove bob
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.removeDelegate.populateTransaction(
         bob.address,
@@ -64,14 +64,14 @@ describe('AllowanceModule allowanceManagement', async () => {
     )
 
     // add alice as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
     )
 
     // add bob as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(bob.address),
       owner
@@ -83,7 +83,7 @@ describe('AllowanceModule allowanceManagement', async () => {
     expect(delegates.next).to.equal(0)
 
     // remove alice
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.removeDelegate.populateTransaction(
         alice.address,
@@ -108,14 +108,14 @@ describe('AllowanceModule allowanceManagement', async () => {
     expect(await safe.isModuleEnabled(allowanceAddress)).to.equal(true)
 
     // add alice as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
     )
 
     // add allowance
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,
@@ -142,7 +142,7 @@ describe('AllowanceModule allowanceManagement', async () => {
     expect(await token.balanceOf(bob.address)).to.equal(100)
 
     // remove alice
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.removeDelegate.populateTransaction(
         alice.address,
@@ -177,7 +177,7 @@ describe('AllowanceModule allowanceManagement', async () => {
 
     // does not work without a delegate previously set
     await expect(
-      execTransaction(
+      execSafeTransaction(
         safe,
         await allowanceModule.setAllowance.populateTransaction(
           alice.address,

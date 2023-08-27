@@ -5,7 +5,7 @@ import { ZeroAddress, parseUnits } from 'ethers'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import setup from './test-helpers/setup'
-import execTransaction from './test-helpers/execTransaction'
+import execSafeTransaction from './test-helpers/execSafeTransaction'
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 const OneEther = parseUnits('1', 'ether')
@@ -33,14 +33,14 @@ describe('AllowanceModule allowanceSingle', async () => {
     // safe, via SafeTransaction
 
     // add alice as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
     )
 
     // create an allowance for alice
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,
@@ -119,7 +119,7 @@ describe('AllowanceModule allowanceSingle', async () => {
     expect(2).to.equal(nonce)
 
     // remove Alice's as spender
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.removeDelegate.populateTransaction(
         alice.address,
@@ -166,14 +166,14 @@ describe('AllowanceModule allowanceSingle', async () => {
     const bob = '0x0000000000000000000000000000000000abcdef'
 
     // add alice as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
     )
 
     // create an allowance for alice
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,

@@ -3,7 +3,7 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 import deploySingletons from './deploySingletons'
 import deploySafeProxy from './deploySafeProxy'
-import execTransaction from './execTransaction'
+import execTransaction from './execSafeTransaction'
 
 import {
   AllowanceModule__factory,

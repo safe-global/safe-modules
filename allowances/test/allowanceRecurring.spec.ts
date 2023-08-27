@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { loadFixture, mine } from '@nomicfoundation/hardhat-network-helpers'
 
 import setup from './test-helpers/setup'
-import execTransaction from './test-helpers/execTransaction'
+import execSafeTransaction from './test-helpers/execSafeTransaction'
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 describe('AllowanceModule allowanceRecurring', async () => {
@@ -27,7 +27,7 @@ describe('AllowanceModule allowanceRecurring', async () => {
     const tokenAddress = await token.getAddress()
 
     // add alice as delegate
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.addDelegate.populateTransaction(alice.address),
       owner
@@ -45,7 +45,7 @@ describe('AllowanceModule allowanceRecurring', async () => {
       configResetPeriod
     )
 
-    await execTransaction(
+    await execSafeTransaction(
       safe,
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,
