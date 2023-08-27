@@ -72,4 +72,3 @@ function paramsToSign(
 }
 
 const AddressZero = '0x'.padEnd(42, '0')
-const Bytes32Zero = '0x'.padEnd(66, '0')

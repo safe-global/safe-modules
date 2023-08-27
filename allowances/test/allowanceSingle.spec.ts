@@ -2,8 +2,8 @@ import { expect } from 'chai'
 import hre from 'hardhat'
 
 import { parseUnits } from 'ethers/lib/utils'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import { TestToken, TestToken__factory } from '../typechain-types'
 
@@ -14,8 +14,7 @@ import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 describe('AllowanceModule allowanceSingle', async () => {
   async function setup() {
-    const [owner, alice, bob, spender, receiver, deployer, johndoe] =
-      await hre.ethers.getSigners()
+    const [owner, alice, bob, deployer] = await hre.ethers.getSigners()
 
     const singletons = await deploySingletons(deployer)
     const safe = await deploySafeProxy(owner.address, singletons)
@@ -53,8 +52,6 @@ describe('AllowanceModule allowanceSingle', async () => {
       owner,
       alice,
       bob,
-      spender,
-      receiver,
     }
   }
 

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
+import { BigNumberish } from 'ethers'
 import hre from 'hardhat'
 
-import { BigNumberish } from 'ethers'
 import {
   defaultAbiCoder,
   keccak256,
@@ -14,14 +14,13 @@ import deploySingletons from './test-helpers/deploySingletons'
 
 describe('signature', async () => {
   async function setup() {
-    const [alice, bob, deployer] = await hre.ethers.getSigners()
+    const [alice, deployer] = await hre.ethers.getSigners()
 
     const singletons = await deploySingletons(deployer)
 
     return {
       allowanceModule: singletons.allowanceModule,
       alice,
-      bob,
     }
   }
 
@@ -30,7 +29,7 @@ describe('signature', async () => {
   )
 
   it('Generates expected transfer hash', async () => {
-    const { allowanceModule, alice, bob } = await loadFixture(setup)
+    const { allowanceModule, alice } = await loadFixture(setup)
 
     const transfer = {
       safe: '0x0000000000000000000000000000000000000010',
@@ -151,4 +150,3 @@ function calculateTransferHash(
 }
 
 const AddressZero = '0x'.padEnd(42, '0')
-const Bytes32Zero = '0x'.padEnd(66, '0')

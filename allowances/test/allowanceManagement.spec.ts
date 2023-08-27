@@ -1,7 +1,8 @@
-import hre from 'hardhat'
 import { expect } from 'chai'
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import hre from 'hardhat'
+
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import { TestToken, TestToken__factory } from '../typechain-types'
 
@@ -12,8 +13,7 @@ import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 
 describe('AllowanceModule allowanceManagement', async () => {
   async function setup() {
-    const [owner, alice, bob, spender, receiver, deployer] =
-      await hre.ethers.getSigners()
+    const [owner, alice, bob, deployer] = await hre.ethers.getSigners()
 
     const singletons = await deploySingletons(deployer)
     const safe = await deploySafeProxy(owner.address, singletons)
@@ -47,8 +47,6 @@ describe('AllowanceModule allowanceManagement', async () => {
       owner,
       alice,
       bob,
-      spender,
-      receiver,
     }
   }
 
@@ -139,7 +137,7 @@ describe('AllowanceModule allowanceManagement', async () => {
   })
 
   it('Add and remove delegate and then try to execute', async () => {
-    const { allowanceModule, safe, token, owner, spender, receiver } =
+    const { allowanceModule, safe, token, owner, alice, bob } =
       await loadFixture(setup)
 
     expect(await safe.isModuleEnabled(allowanceModule.address)).to.equal(true)
@@ -147,7 +145,7 @@ describe('AllowanceModule allowanceManagement', async () => {
     // add alice as delegate
     await execTransaction(
       safe,
-      await allowanceModule.populateTransaction.addDelegate(spender.address),
+      await allowanceModule.populateTransaction.addDelegate(alice.address),
       owner
     )
 
@@ -155,7 +153,7 @@ describe('AllowanceModule allowanceManagement', async () => {
     await execTransaction(
       safe,
       await allowanceModule.populateTransaction.setAllowance(
-        spender.address,
+        alice.address,
         token.address,
         1000,
         0,
@@ -164,25 +162,25 @@ describe('AllowanceModule allowanceManagement', async () => {
       owner
     )
 
-    expect(await token.balanceOf(safe.address)).to.equal(1000)
-    expect(await token.balanceOf(receiver.address)).to.equal(0)
+    expect(1000).to.equal(await token.balanceOf(safe.address))
+    expect(0).to.equal(await token.balanceOf(bob.address))
 
     await execAllowanceTransfer(allowanceModule, {
       safe: safe.address,
       token: token.address,
-      to: receiver.address,
+      to: bob.address,
       amount: 100,
-      spender,
+      spender: alice,
     })
 
     expect(await token.balanceOf(safe.address)).to.equal(900)
-    expect(await token.balanceOf(receiver.address)).to.equal(100)
+    expect(await token.balanceOf(bob.address)).to.equal(100)
 
     // remove alice
     await execTransaction(
       safe,
       await allowanceModule.populateTransaction.removeDelegate(
-        spender.address,
+        alice.address,
         true
       ),
       owner
@@ -193,9 +191,9 @@ describe('AllowanceModule allowanceManagement', async () => {
       execAllowanceTransfer(allowanceModule, {
         safe: safe.address,
         token: token.address,
-        to: receiver.address,
+        to: bob.address,
         amount: 100,
-        spender,
+        spender: alice,
       })
     ).to.be.revertedWith(
       'newSpent > allowance.spent && newSpent <= allowance.amount'
@@ -203,7 +201,7 @@ describe('AllowanceModule allowanceManagement', async () => {
   })
 
   it('Cannot set delegate without allowance configured', async () => {
-    const { allowanceModule, safe, token, owner, spender, receiver } =
+    const { allowanceModule, safe, token, owner, alice, bob } =
       await loadFixture(setup)
 
     expect(await safe.isModuleEnabled(allowanceModule.address)).to.equal(true)
@@ -213,7 +211,7 @@ describe('AllowanceModule allowanceManagement', async () => {
       execTransaction(
         safe,
         await allowanceModule.populateTransaction.setAllowance(
-          spender.address,
+          alice.address,
           token.address,
           100,
           0,
@@ -228,16 +226,16 @@ describe('AllowanceModule allowanceManagement', async () => {
       execAllowanceTransfer(allowanceModule, {
         safe: safe.address,
         token: token.address,
-        to: receiver.address,
+        to: bob.address,
         amount: 10,
-        spender,
+        spender: alice,
       })
     ).to.be.revertedWith(
       'newSpent > allowance.spent && newSpent <= allowance.amount'
     )
 
-    expect(await token.balanceOf(safe.address)).to.equal(1000)
-    expect(await token.balanceOf(receiver.address)).to.equal(0)
+    expect(1000).to.equal(await token.balanceOf(safe.address))
+    expect(0).to.equal(await token.balanceOf(bob.address))
   })
 })
 

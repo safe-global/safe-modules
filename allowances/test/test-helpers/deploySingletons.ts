@@ -98,5 +98,4 @@ async function deploySingleton(
   return getCreate2Address(factoryAddress, salt, keccak256(bytecode))
 }
 
-const AddressZero = '0x'.padEnd(42, '0')
 const Bytes32Zero = '0x'.padEnd(66, '0')

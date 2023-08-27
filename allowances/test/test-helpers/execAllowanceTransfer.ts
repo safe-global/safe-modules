@@ -1,5 +1,6 @@
 import { BigNumberish } from 'ethers'
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers'
+
 import { AllowanceModule } from '../../typechain-types'
 
 export default async function execAllowanceTransfer(
@@ -88,4 +89,3 @@ function paramsToSign(
 }
 
 const AddressZero = '0x'.padEnd(42, '0')
-const Bytes32Zero = '0x'.padEnd(66, '0')
