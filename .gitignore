@@ -2,6 +2,7 @@ node_modules
 build
 coverage
 coverage.json
+deployments
 typechain-types
 *.log
 .env
