@@ -1,13 +1,6 @@
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-import {
-  AbiCoder,
-  BigNumberish,
-  keccak256,
-  solidityPacked,
-  toUtf8Bytes,
-  ZeroAddress,
-} from 'ethers'
+import { BigNumberish, TypedDataEncoder, ZeroAddress } from 'ethers'
 
 import setup from './test-helpers/setup'
 
@@ -27,22 +20,10 @@ describe('signature', async () => {
       nonce: 0,
     }
 
-    const {
-      DOMAIN_SEPARATOR_TYPEHASH,
-      ALLOWANCE_TRANSFER_TYPEHASH,
-      transferHash,
-    } = calculateTransferHash(
+    const hash = calculateTransferHash(
       allowanceAddress,
       (await alice.provider.getNetwork()).chainId,
       transfer
-    )
-
-    expect(await allowanceModule.DOMAIN_SEPARATOR_TYPEHASH()).to.equal(
-      DOMAIN_SEPARATOR_TYPEHASH
-    )
-
-    expect(await allowanceModule.ALLOWANCE_TRANSFER_TYPEHASH()).to.equal(
-      ALLOWANCE_TRANSFER_TYPEHASH
     )
 
     expect(
@@ -55,7 +36,7 @@ describe('signature', async () => {
         transfer.payment,
         transfer.nonce
       )
-    ).to.equal(transferHash)
+    ).to.equal(hash)
   })
 })
 
@@ -80,58 +61,54 @@ function calculateTransferHash(
     nonce: BigNumberish
   }
 ) {
-  const abi = AbiCoder.defaultAbiCoder()
-  const DOMAIN_SEPARATOR_TYPEHASH = keccak256(
-    toUtf8Bytes('EIP712Domain(uint256 chainId,address verifyingContract)')
-  )
-  const ALLOWANCE_TRANSFER_TYPEHASH = keccak256(
-    toUtf8Bytes(
-      'AllowanceTransfer(address safe,address token,address to,uint96 amount,address paymentToken,uint96 payment,uint16 nonce)'
-    )
-  )
-
-  const domainSeparator = keccak256(
-    abi.encode(
-      ['bytes32', 'uint256', 'address'],
-      [DOMAIN_SEPARATOR_TYPEHASH, chainId, verifyingContract]
-    )
-  )
-
-  const transferHashData = keccak256(
-    abi.encode(
-      [
-        'bytes32',
-        'address',
-        'address',
-        'address',
-        'uint96',
-        'address',
-        'uint96',
-        'uint16',
-      ],
-      [
-        ALLOWANCE_TRANSFER_TYPEHASH,
-        safe,
-        token,
-        to,
-        amount,
-        paymentToken,
-        payment,
-        nonce,
-      ]
-    )
-  )
-
-  return {
-    DOMAIN_SEPARATOR_TYPEHASH,
-    ALLOWANCE_TRANSFER_TYPEHASH,
-    domainSeparator,
-    transferHashData,
-    transferHash: keccak256(
-      solidityPacked(
-        ['bytes1', 'bytes1', 'bytes32', 'bytes32'],
-        ['0x19', '0x01', domainSeparator, transferHashData]
-      )
-    ),
+  const types = {
+    AllowanceTransfer: [
+      {
+        name: 'safe',
+        type: 'address',
+      },
+      {
+        name: 'token',
+        type: 'address',
+      },
+      {
+        name: 'to',
+        type: 'address',
+      },
+      {
+        name: 'amount',
+        type: 'uint96',
+      },
+      {
+        name: 'paymentToken',
+        type: 'address',
+      },
+      {
+        name: 'payment',
+        type: 'uint96',
+      },
+      {
+        name: 'nonce',
+        type: 'uint16',
+      },
+    ],
   }
+
+  const values = {
+    safe,
+    token,
+    to,
+    amount,
+    paymentToken,
+    payment,
+    nonce,
+  }
+
+  const hash = TypedDataEncoder.hash(
+    { verifyingContract, chainId },
+    types,
+    values
+  )
+
+  return hash
 }
