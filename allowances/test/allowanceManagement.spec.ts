@@ -7,9 +7,8 @@ import setup from './test-helpers/setup'
 
 describe('AllowanceModule allowanceManagement', async () => {
   it('Add delegates and removes first delegate', async () => {
-    const { safe, allowanceModule, owner, alice, bob } = await loadFixture(
-      setup
-    )
+    const { safe, allowanceModule, owner, alice, bob } =
+      await loadFixture(setup)
 
     const safeAddress = await safe.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()
@@ -51,9 +50,8 @@ describe('AllowanceModule allowanceManagement', async () => {
   })
 
   it('Add delegates and removes second delegate', async () => {
-    const { safe, allowanceModule, owner, alice, bob } = await loadFixture(
-      setup
-    )
+    const { safe, allowanceModule, owner, alice, bob } =
+      await loadFixture(setup)
 
     const safeAddress = await safe.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()
