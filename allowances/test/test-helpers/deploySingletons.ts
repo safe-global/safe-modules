@@ -59,17 +59,17 @@ async function deploySingletonFactory(signer: SignerWithAddress) {
 }
 
 async function deploySingleton(
-  factoryAddress: string,
+  factory: string,
   bytecode: string,
   signer: SignerWithAddress
 ) {
   const salt = ZeroHash
 
   await signer.sendTransaction({
-    to: factoryAddress,
+    to: factory,
     data: `${salt}${bytecode.slice(2)}`,
     value: 0,
   })
 
-  return getCreate2Address(factoryAddress, salt, keccak256(bytecode))
+  return getCreate2Address(factory, salt, keccak256(bytecode))
 }

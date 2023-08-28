@@ -19,18 +19,7 @@ describe('AllowanceModule allowanceSingle', async () => {
     const tokenAddress = await token.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()
 
-    /*
-     * Safe will 1000 tokens in balance
-     * Alice configured as spender in Allowance
-     * Bob not configured as spender in any Allowance
-     *
-     * Alice sends to Bob
-     */
-
     expect(await safe.isModuleEnabled(allowanceAddress)).to.equal(true)
-
-    // Note: both Allowance creation, and Delegate setting must be done from the
-    // safe, via SafeTransaction
 
     // add alice as delegate
     await execSafeTransaction(
@@ -71,10 +60,10 @@ describe('AllowanceModule allowanceSingle', async () => {
     expect(100).to.equal(amount)
     expect(0).to.equal(spent)
     expect(0).to.equal(minReset)
-    expect(0).to.not.equal(lastReset) // this should be set to inti time
+    expect(0).to.not.equal(lastReset) // this should be set to init time
     expect(1).to.equal(nonce)
 
-    // load an non existing allowance - bob has non
+    // load an non existing allowance - bob has none
     ;[amount, spent, minReset, lastReset, nonce] =
       await allowanceModule.getTokenAllowance(
         safeAddress,

@@ -22,16 +22,16 @@ export default async function setup() {
   } = await deploySingletons(deployer)
 
   const safeAddress = await deploySafeProxy(
-    owner.address,
     safeProxyFactoryAddress,
     safeMastercopyAddress,
+    owner.address,
     deployer
   )
   const token = await deployTestToken(deployer)
 
   // both the safe and the allowance work by signature
-  // hook the contracts to a signer that has funds
-  // but has no relevancy in signing
+  // connect the contracts to a signer that has funds
+  // but isn't safe owner, or allowance spender
   const safe = ISafe__factory.connect(safeAddress, relayer)
   const allowanceModule = AllowanceModule__factory.connect(
     allowanceModuleAddress,

@@ -17,9 +17,9 @@ import {
 } from './artifacts'
 
 export default async function deploySafeProxy(
-  owner: string,
   factory: string,
   mastercopy: string,
+  owner: string,
   deployer: SignerWithAddress
 ): Promise<string> {
   const initializer = calculateInitializer(owner)

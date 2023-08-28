@@ -4,7 +4,7 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { AllowanceModule } from '../../typechain-types'
 
 export default async function execAllowanceTransfer(
-  allowanceMod: AllowanceModule,
+  module: AllowanceModule,
   {
     safe,
     token,
@@ -19,17 +19,17 @@ export default async function execAllowanceTransfer(
     spender: SignerWithAddress
   }
 ) {
-  const allowanceModAddress = await allowanceMod.getAddress()
-  const chainId = await allowanceMod.getChainId()
+  const address = await module.getAddress()
+  const chainId = await module.getChainId()
 
-  const [, , , , nonce] = await allowanceMod.getTokenAllowance(
+  const [, , , , nonce] = await module.getTokenAllowance(
     safe,
     spender.address,
     token
   )
 
   const { domain, types, message } = paramsToSign(
-    allowanceModAddress,
+    address,
     chainId,
     { safe, token, to, amount },
     nonce
@@ -37,7 +37,7 @@ export default async function execAllowanceTransfer(
 
   const signature = await spender.signTypedData(domain, types, message)
 
-  return allowanceMod.executeAllowanceTransfer(
+  return module.executeAllowanceTransfer(
     safe,
     token,
     to,
@@ -50,7 +50,7 @@ export default async function execAllowanceTransfer(
 }
 
 function paramsToSign(
-  allowanceModAddress: string,
+  address: string,
   chainId: bigint,
   {
     safe,
@@ -65,7 +65,7 @@ function paramsToSign(
   },
   nonce: bigint
 ) {
-  const domain = { chainId, verifyingContract: allowanceModAddress }
+  const domain = { chainId, verifyingContract: address }
   const primaryType = 'AllowanceTransfer'
   const types = {
     AllowanceTransfer: [

@@ -8,12 +8,12 @@ export default async function execSafeTransaction(
   { to, data, value = 0 }: TransactionRequest,
   signer: SignerWithAddress
 ) {
-  const safeAddress = await safe.getAddress()
+  const address = await safe.getAddress()
   const chainId = await safe.getChainId()
   const nonce = await safe.nonce()
 
   const { domain, types, message } = paramsToSign(
-    safeAddress,
+    address,
     chainId,
     { to, data, value },
     nonce
@@ -36,12 +36,12 @@ export default async function execSafeTransaction(
 }
 
 function paramsToSign(
-  safeAddress: string,
+  address: string,
   chainId: bigint,
   { to, data, value }: TransactionRequest,
   nonce: bigint | number
 ) {
-  const domain = { verifyingContract: safeAddress, chainId }
+  const domain = { verifyingContract: address, chainId }
   const primaryType = 'SafeTx' as const
   const types = {
     SafeTx: [
