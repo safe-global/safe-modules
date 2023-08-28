@@ -9,7 +9,6 @@ import {
   ZeroHash,
 } from 'ethers'
 
-
 import {
   ArtifactGnosisSafe,
   ArtifactGnosisSafeProxy,

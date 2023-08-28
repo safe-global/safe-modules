@@ -9,7 +9,6 @@ import {
   ZeroAddress,
 } from 'ethers'
 
-
 import setup from './test-helpers/setup'
 
 describe('signature', async () => {

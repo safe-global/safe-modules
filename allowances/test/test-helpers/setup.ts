@@ -12,7 +12,6 @@ import deploySafeProxy from './deploySafeProxy'
 import deploySingletons from './deploySingletons'
 import execTransaction from './execSafeTransaction'
 
-
 export default async function setup() {
   const [owner, alice, bob, deployer, relayer] = await hre.ethers.getSigners()
 
