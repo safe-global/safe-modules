@@ -1,14 +1,14 @@
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import {
   AbiCoder,
-  Interface,
   concat,
   getCreate2Address,
+  Interface,
   keccak256,
   ZeroAddress,
   ZeroHash,
 } from 'ethers'
 
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 
 import {
   ArtifactGnosisSafe,

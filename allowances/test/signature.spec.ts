@@ -1,14 +1,14 @@
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import {
   AbiCoder,
   BigNumberish,
-  ZeroAddress,
   keccak256,
   solidityPacked,
   toUtf8Bytes,
+  ZeroAddress,
 } from 'ethers'
 
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 import setup from './test-helpers/setup'
 

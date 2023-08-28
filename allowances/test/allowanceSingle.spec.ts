@@ -1,12 +1,12 @@
-import { expect } from 'chai'
-import hre from 'hardhat'
-import { ZeroAddress, parseUnits } from 'ethers'
-
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
+import { expect } from 'chai'
+import { parseUnits, ZeroAddress } from 'ethers'
+import hre from 'hardhat'
 
-import setup from './test-helpers/setup'
-import execSafeTransaction from './test-helpers/execSafeTransaction'
+
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
+import execSafeTransaction from './test-helpers/execSafeTransaction'
+import setup from './test-helpers/setup'
 
 const OneEther = parseUnits('1', 'ether')
 

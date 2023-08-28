@@ -1,9 +1,5 @@
-import hre from 'hardhat'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
-
-import deploySingletons from './deploySingletons'
-import deploySafeProxy from './deploySafeProxy'
-import execTransaction from './execSafeTransaction'
+import hre from 'hardhat'
 
 import {
   AllowanceModule__factory,
@@ -11,6 +7,11 @@ import {
   TestToken,
   TestToken__factory,
 } from '../../typechain-types'
+
+import deploySafeProxy from './deploySafeProxy'
+import deploySingletons from './deploySingletons'
+import execTransaction from './execSafeTransaction'
+
 
 export default async function setup() {
   const [owner, alice, bob, deployer, relayer] = await hre.ethers.getSigners()

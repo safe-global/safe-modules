@@ -1,10 +1,9 @@
-import { getCreate2Address, keccak256, parseUnits, ZeroHash } from 'ethers'
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
-
 import {
-  SingletonFactoryInfo,
   getSingletonFactoryInfo,
+  SingletonFactoryInfo,
 } from '@safe-global/safe-singleton-factory'
+import { getCreate2Address, keccak256, parseUnits, ZeroHash } from 'ethers'
 
 import {
   ArtifactAllowanceModule,
