@@ -6,7 +6,6 @@ deployments
 typechain-types
 *.log
 .env
-.DS_Store
 
 
 .DS_Store
