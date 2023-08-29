@@ -1,5 +1,13 @@
-build/
-node_modules/
+node_modules
+build
+coverage
+coverage.json
+deployments
+typechain-types
+*.log
+.env
+
+
 .DS_Store
 .zos.session
 env/

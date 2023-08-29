@@ -10,13 +10,15 @@ interface GnosisSafe {
     /// @param value Ether value of module transaction.
     /// @param data Data payload of module transaction.
     /// @param operation Operation type of module transaction.
-    function execTransactionFromModule(address to, uint256 value, bytes calldata data, Enum.Operation operation)
-        external
-        returns (bool success);
+    function execTransactionFromModule(
+        address to,
+        uint256 value,
+        bytes calldata data,
+        Enum.Operation operation
+    ) external returns (bool success);
 }
 
 contract AllowanceModule is SignatureDecoder {
-
     string public constant NAME = "Allowance Module";
     string public constant VERSION = "0.1.0";
 
@@ -31,15 +33,15 @@ contract AllowanceModule is SignatureDecoder {
     // );
 
     // Safe -> Delegate -> Allowance
-    mapping(address => mapping (address => mapping(address => Allowance))) public allowances;
+    mapping(address => mapping(address => mapping(address => Allowance))) public allowances;
     // Safe -> Delegate -> Tokens
-    mapping(address => mapping (address => address[])) public tokens;
+    mapping(address => mapping(address => address[])) public tokens;
     // Safe -> Delegates double linked list entry points
     mapping(address => uint48) public delegatesStart;
     // Safe -> Delegates double linked list
-    mapping(address => mapping (uint48 => Delegate)) public delegates;
+    mapping(address => mapping(uint48 => Delegate)) public delegates;
 
-    // We use a double linked list for the delegates. The id is the first 6 bytes. 
+    // We use a double linked list for the delegates. The id is the first 6 bytes.
     // To double check the address in case of collision, the address is part of the struct.
     struct Delegate {
         address delegate;
@@ -70,13 +72,15 @@ contract AllowanceModule is SignatureDecoder {
     /// @param allowanceAmount allowance in smallest token unit.
     /// @param resetTimeMin Time after which the allowance should reset
     /// @param resetBaseMin Time based on which the reset time should be increased
-    function setAllowance(address delegate, address token, uint96 allowanceAmount, uint16 resetTimeMin, uint32 resetBaseMin)
-        public
-    {
+    function setAllowance(address delegate, address token, uint96 allowanceAmount, uint16 resetTimeMin, uint32 resetBaseMin) public {
         require(delegate != address(0), "delegate != address(0)");
-        require(delegates[msg.sender][uint48(delegate)].delegate == delegate, "delegates[msg.sender][uint48(delegate)].delegate == delegate");
+        require(
+            delegates[msg.sender][uint48(delegate)].delegate == delegate,
+            "delegates[msg.sender][uint48(delegate)].delegate == delegate"
+        );
         Allowance memory allowance = getAllowance(msg.sender, delegate, token);
-        if (allowance.nonce == 0) { // New token
+        if (allowance.nonce == 0) {
+            // New token
             // Nonce should never be 0 once allowance has been activated
             allowance.nonce = 1;
             tokens[msg.sender][delegate].push(token);
@@ -126,9 +130,7 @@ contract AllowanceModule is SignatureDecoder {
     /// @dev Allows to remove the allowance for a specific delegate and token. This will set all values except the `nonce` to 0.
     /// @param delegate Delegate whose allowance should be updated.
     /// @param token Token contract address.
-    function deleteAllowance(address delegate, address token)
-        public
-    {
+    function deleteAllowance(address delegate, address token) public {
         Allowance memory allowance = getAllowance(msg.sender, delegate, token);
         allowance.amount = 0;
         allowance.spent = 0;
@@ -172,7 +174,10 @@ contract AllowanceModule is SignatureDecoder {
             Allowance memory paymentAllowance = paymentToken == token ? allowance : getAllowance(address(safe), delegate, paymentToken);
             newSpent = paymentAllowance.spent + payment;
             // Check new spent amount and overflow
-            require(newSpent > paymentAllowance.spent && newSpent <= paymentAllowance.amount, "newSpent > paymentAllowance.spent && newSpent <= paymentAllowance.amount");
+            require(
+                newSpent > paymentAllowance.spent && newSpent <= paymentAllowance.amount,
+                "newSpent > paymentAllowance.spent && newSpent <= paymentAllowance.amount"
+            );
             paymentAllowance.spent = newSpent;
             // Update payment allowance if different from allowance
             if (paymentToken != token) updateAllowance(address(safe), delegate, paymentToken, paymentAllowance);
@@ -217,10 +222,8 @@ contract AllowanceModule is SignatureDecoder {
     ) private view returns (bytes memory) {
         uint256 chainId = getChainId();
         bytes32 domainSeparator = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, chainId, this));
-        bytes32 transferHash = keccak256(
-            abi.encode(ALLOWANCE_TRANSFER_TYPEHASH, safe, token, to, amount, paymentToken, payment, nonce)
-        );
-        return abi.encodePacked(byte(0x19), byte(0x01), domainSeparator, transferHash);
+        bytes32 transferHash = keccak256(abi.encode(ALLOWANCE_TRANSFER_TYPEHASH, safe, token, to, amount, paymentToken, payment, nonce));
+        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator, transferHash);
     }
 
     /// @dev Generates the transfer hash that should be signed to authorize a transfer
@@ -233,9 +236,7 @@ contract AllowanceModule is SignatureDecoder {
         uint96 payment,
         uint16 nonce
     ) public view returns (bytes32) {
-        return keccak256(generateTransferHashData(
-            safe, token, to, amount, paymentToken, payment, nonce
-        ));
+        return keccak256(generateTransferHashData(safe, token, to, amount, paymentToken, payment, nonce));
     }
 
     function checkSignature(address expectedDelegate, bytes memory signature, bytes memory transferHashData, GnosisSafe safe) private view {
@@ -304,7 +305,7 @@ contract AllowanceModule is SignatureDecoder {
         uint48 index = uint48(delegate);
         require(index != uint(0), "index != uint(0)");
         address currentDelegate = delegates[msg.sender][index].delegate;
-        if(currentDelegate != address(0)) {
+        if (currentDelegate != address(0)) {
             // We have a collision for the indices of delegates
             require(currentDelegate == delegate, "currentDelegate == delegate");
             // Delegate already exists, nothing to do
@@ -323,7 +324,7 @@ contract AllowanceModule is SignatureDecoder {
     function removeDelegate(address delegate, bool removeAllowances) public {
         Delegate memory current = delegates[msg.sender][uint48(delegate)];
         // Delegate doesn't exists, nothing to do
-        if(current.delegate == address(0)) return;
+        if (current.delegate == address(0)) return;
         if (removeAllowances) {
             address[] storage delegateTokens = tokens[msg.sender][delegate];
             for (uint256 i = 0; i < delegateTokens.length; i++) {
@@ -355,7 +356,7 @@ contract AllowanceModule is SignatureDecoder {
         uint8 i = 0;
         uint48 initialIndex = (start != 0) ? start : delegatesStart[safe];
         Delegate memory current = delegates[safe][initialIndex];
-        while(current.delegate != address(0) && i < pageSize) {
+        while (current.delegate != address(0) && i < pageSize) {
             results[i] = current.delegate;
             i++;
             current = delegates[safe][current.next];
