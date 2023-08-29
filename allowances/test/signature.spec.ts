@@ -4,7 +4,7 @@ import { BigNumberish, TypedDataEncoder, ZeroAddress } from 'ethers'
 
 import setup from './test-helpers/setup'
 
-describe('signature', async () => {
+describe('signature', () => {
   it('Generates expected transfer hash', async () => {
     const { allowanceModule, alice } = await loadFixture(setup)
 

@@ -9,7 +9,7 @@ import setup from './test-helpers/setup'
 
 const OneEther = parseUnits('1', 'ether')
 
-describe('AllowanceModule allowanceSingle', async () => {
+describe('AllowanceModule allowanceSingle', () => {
   it('Execute allowance with delegate', async () => {
     const { safe, allowanceModule, token, owner, alice, bob } =
       await loadFixture(setup)

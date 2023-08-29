@@ -5,7 +5,7 @@ import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
 import setup from './test-helpers/setup'
 
-describe('AllowanceModule allowanceRecurring', async () => {
+describe('AllowanceModule allowanceRecurring', () => {
   function nowInMinutes() {
     return Math.floor(Date.now() / (1000 * 60))
   }

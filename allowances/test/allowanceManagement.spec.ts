@@ -5,7 +5,7 @@ import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
 import setup from './test-helpers/setup'
 
-describe('AllowanceModule allowanceManagement', async () => {
+describe('AllowanceModule allowanceManagement', () => {
   it('Add delegates and removes first delegate', async () => {
     const { safe, allowanceModule, owner, alice, bob } =
       await loadFixture(setup)
