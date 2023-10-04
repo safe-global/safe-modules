@@ -1,7 +1,7 @@
 {
   "name": "@safeglobal/safe-eip4337",
   "version": "1.0.0",
-  "description": "Safe Add-On for EIP-4337 support",
+  "description": "Safe Module for EIP-4337 support",
   "homepage": "https://github.com/5afe/eip4337-diatomic/",
   "license": "GPL-3.0",
   "main": "dist/index.js",
