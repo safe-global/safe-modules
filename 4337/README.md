@@ -82,7 +82,7 @@ sequenceDiagram
     participant P as Safe Proxy
     participant M as MultiSend
     B->>+E: Submit User Operations with `initCode`
-    E->>F: Deploy Proxy with `deployData`
+    E->>+F: Deploy Proxy with `deployData`
     F->>+P: Create Proxy
     F->>P: Setup Proxy with `setupData`
     P->>+M: Execute transaction batch
