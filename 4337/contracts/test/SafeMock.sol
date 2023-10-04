@@ -5,6 +5,8 @@ import "../UserOperation.sol";
 
 import "@gnosis.pm/safe-contracts/contracts/proxies/GnosisSafeProxyFactory.sol";
 
+import {INonceManager} from "../interfaces/ERC4337.sol";
+
 contract SafeMock {
     address public immutable supportedEntryPoint;
 
@@ -228,7 +230,7 @@ contract Safe4337Mock is SafeMock {
         return block.chainid;
     }
 
-    /// @dev Validates that the user operation is correctly signed. Users methods from Gnosis Safe contract, reverts if signatures are invalid
+    /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
     /// @param entryPoint Address of the entry point
     /// @param userOp User operation struct
     function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view {
@@ -248,16 +250,14 @@ contract Safe4337Mock is SafeMock {
         checkSignatures(operationHash, operationData, userOp.signature);
     }
 
-    mapping(address => mapping(bytes32 => uint64)) private nonces;
-
     function validateReplayProtection(UserOperation calldata userOp) internal {
-        // We need to increase the nonce to make it impossible to drain the safe by making it send prefunds for the same transaction
+        
+        // The entrypoints handles the increase of the nonce
         // Right shifting fills up with 0s from the left
-        bytes32 key = bytes32(userOp.nonce >> 64);
-        uint64 safeNonce = nonces[userOp.sender][key];
-        nonces[userOp.sender][key]++;
+        uint192 key = uint192(userOp.nonce >> 64);
+        uint256 safeNonce = INonceManager(supportedEntryPoint).getNonce(userOp.sender, key);
 
-        // Casting to uint64 to remove the key segment
-        require(safeNonce == uint64(userOp.nonce), "Invalid Nonce");
+        // Check returned nonce against the user operation nonce
+        require(safeNonce == userOp.nonce, "Invalid Nonce");
     }
 }
