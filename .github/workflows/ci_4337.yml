@@ -20,7 +20,7 @@ jobs:
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
-          path-to-lcov: './4337/coverage/lcov.info'
+          path-to-lcov: '4337/coverage/lcov.info'
           github-token: ${{ secrets.GITHUB_TOKEN }}
   lint:
     runs-on: ubuntu-latest
