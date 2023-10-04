@@ -2,7 +2,7 @@
 
 ## Execution Flow
 
-The diagram below outlines the flow that is triggered when a user operation is submitted to via the entrypoint. Additionally the gas overhead compared to a native implementation is mentioned.
+The diagram below outlines the flow that is triggered when a user operation is submitted to the entrypoint. Additionally the gas overhead compared to a native implementation is mentioned.
 
 ```mermaid
 sequenceDiagram
