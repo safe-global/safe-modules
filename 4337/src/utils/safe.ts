@@ -53,13 +53,15 @@ const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalCo
 export class Safe4337 {
 
     public address: string;
-    private config: SafeConfig | undefined;
-    private initCode: string | undefined;
+    private configs: { safe: SafeConfig, global: GlobalConfig } | undefined;
 
-    private constructor(address: string, config?: SafeConfig, initCode?: string) {
+    constructor(address: string, configs?: { safe: SafeConfig, global: GlobalConfig }) {
+        if (configs) {
+            const initParams = buildInitParamsForConfig(configs.safe, configs.global)
+            if (address !== initParams.safeAddress) throw Error("Invalid configs");
+        }
         this.address = address;
-        this.config = config;
-        this.initCode = initCode;
+        this.configs = configs;
     }
 
     static async withSigner(signer: string, globalConfig: GlobalConfig): Promise<Safe4337> {
@@ -68,21 +70,21 @@ export class Safe4337 {
             threshold: 1,
             nonce: 0
         }
-        return Safe4337.withConfig(safeConfig, globalConfig)
+        return Safe4337.withConfigs(safeConfig, globalConfig)
     }
 
     getInitCode(): string {
-        const initCode = this.initCode
-        if (!initCode) throw Error("Init code not available");
-        return initCode
+        if (!this.configs) throw Error("Init code not available");
+        const initParams = buildInitParamsForConfig(this.configs.safe, this.configs.global)
+        return initParams.initCode
     }
 
     async getSigners(): Promise<string[]> {
-        return this.config?.signers!!
+        return this.configs?.safe.signers!!
     }
 
-    static async withConfig(safeConfig: SafeConfig, globalConfig: GlobalConfig): Promise<Safe4337> {
-        const initParams = buildInitParamsForConfig(safeConfig, globalConfig);
-        return new Safe4337(initParams.safeAddress, safeConfig, initParams.initCode)
+    static async withConfigs(safeConfig: SafeConfig, globalConfig: GlobalConfig): Promise<Safe4337> {
+        const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
+        return new Safe4337(initParams.safeAddress, { safe: safeConfig, global: globalConfig })
     } 
 }
