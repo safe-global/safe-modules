@@ -79,6 +79,11 @@
   "peerDependencies": {
     "ethers": "^5.1.4"
   },
+  "overrides": {
+    "@safe-global/safe-contracts": {
+      "ethers": "^5.6.8"
+    }
+  },
   "dependencies": {
     "@safe-global/safe-contracts": "^1.4.1"
   }
