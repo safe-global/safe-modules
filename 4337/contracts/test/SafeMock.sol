@@ -251,7 +251,6 @@ contract Safe4337Mock is SafeMock {
     }
 
     function validateReplayProtection(UserOperation calldata userOp) internal {
-        
         // The entrypoints handles the increase of the nonce
         // Right shifting fills up with 0s from the left
         uint192 key = uint192(userOp.nonce >> 64);

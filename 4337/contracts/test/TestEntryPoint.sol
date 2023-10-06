@@ -17,7 +17,6 @@ contract TestEntryPoint is INonceManager {
     mapping(address => uint256) balances;
     mapping(address => mapping(uint192 => uint256)) public nonceSequenceNumber;
 
-
     receive() external payable {
         balances[msg.sender] = balances[msg.sender] + msg.value;
     }
@@ -31,7 +30,7 @@ contract TestEntryPoint is INonceManager {
             revert NotEnoughFunds(requiredPrefund, userBalance);
         }
         balances[userOp.sender] = userBalance - requiredPrefund;
-        
+
         if (!_validateAndUpdateNonce(userOp.sender, userOp.nonce)) {
             revert InvalidNonce(userOp.nonce);
         }
@@ -40,7 +39,7 @@ contract TestEntryPoint is INonceManager {
         userOp.sender.call{gas: userOp.callGasLimit}(userOp.callData);
     }
 
-    function getNonce(address sender, uint192 key) external override view returns (uint256 nonce) {
+    function getNonce(address sender, uint192 key) external view override returns (uint256 nonce) {
         return nonceSequenceNumber[sender][key] | (uint256(key) << 64);
     }
 
