@@ -49,7 +49,7 @@ describe('EIP4337Module', async () => {
     })
   })
 
-  describe('execTransaction', () => {
+  describe('execTransaction - existing account', () => {
     it('should execute contract calls without fee', async () => {
       const { safe, validator, entryPoint } = await setupTests()
 

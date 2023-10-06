@@ -58,7 +58,7 @@ export const signSafeOp = async(
   ): Promise<SafeSignature> => {
     return {
       signer: await signer.getAddress(),
-      data: await signer._signTypedData({ verifyingContract: moduleAddress, chainId }, EIP712_SAFE_OPERATION_TYPE, safeOp),
+      data: await signer._signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
     }
 }
 
@@ -71,8 +71,8 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
     nonce: template.nonce,
     entryPoint: template.entryPoint,
     callData: template.callData || '0x',
-    verificationGas: template.verificationGas || '300000',
-    preVerificationGas: template.preVerificationGas || '50000',
+    verificationGas: template.verificationGas || '500000',
+    preVerificationGas: template.preVerificationGas || '60000',
     callGas: template.callGas || '2000000',
     maxFeePerGas: template.maxFeePerGas || '10000000000',
     maxPriorityFeePerGas: template.maxPriorityFeePerGas || '10000000000',
@@ -126,23 +126,25 @@ export const buildSafeUserOpContractCall = (
 export const buildUserOperationFromSafeUserOperation = ({
   safeOp,
   signature,
+  initCode = "0x"
 }: {
   safeAddress: string
   safeOp: SafeUserOperation
-  signature: string
+  signature: string,
+  initCode?: string
 }): UserOperation => {
   return {
-    nonce: safeOp.nonce,
+    nonce: ethers.utils.hexlify(BigInt(safeOp.nonce)),
     callData: safeOp.callData || '0x',
-    verificationGasLimit: safeOp.verificationGas || '300000',
-    preVerificationGas: safeOp.preVerificationGas || '50000',
-    callGasLimit: safeOp.callGas || '2000000',
+    verificationGasLimit: ethers.utils.hexValue(BigInt(safeOp.verificationGas || '300000')),
+    preVerificationGas: ethers.utils.hexlify(BigInt(safeOp.preVerificationGas || '50000')),
+    callGasLimit: ethers.utils.hexlify(BigInt(safeOp.callGas || '2000000')),
     // use same maxFeePerGas and maxPriorityFeePerGas to ease testing prefund validation
     // otherwise it's tricky to calculate the prefund because of dynamic parameters like block.basefee
     // check UserOperation.sol#gasPrice()
-    maxFeePerGas: safeOp.maxFeePerGas || '5000000000',
-    maxPriorityFeePerGas: safeOp.maxPriorityFeePerGas || '1500000000',
-    initCode: '0x',
+    maxFeePerGas: ethers.utils.hexlify(BigInt(safeOp.maxFeePerGas || '5000000000')),
+    maxPriorityFeePerGas: ethers.utils.hexlify(BigInt(safeOp.maxPriorityFeePerGas || '1500000000')),
+    initCode,
     paymasterAndData: '0x',
     sender: safeOp.safe,
     signature: signature,
@@ -154,7 +156,6 @@ export const getRequiredGas = (userOp: UserOperation): string => {
   if (userOp.paymasterAndData === "0x") {
     multiplier = 1
   }
-  console.log({multiplier})
 
   return BigNumber.from(userOp.callGasLimit)
     .add(BigNumber.from(userOp.verificationGasLimit).mul(multiplier))

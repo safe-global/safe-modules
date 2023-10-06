@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import {HandlerContext} from "@gnosis.pm/safe-contracts/contracts/handler/HandlerContext.sol";
-import {CompatibilityFallbackHandler} from "./vendor/CompatibilityFallbackHandler.sol";
+import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
+import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
 import {UserOperation, UserOperationLib} from "./UserOperation.sol";
 import {INonceManager} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";

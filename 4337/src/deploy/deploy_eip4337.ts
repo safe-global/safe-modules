@@ -9,7 +9,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
 
   let entryPointAddress;
-  if (!ENTRY_POINT) {
+  if (hre.network.name === 'hardhat' || !ENTRY_POINT) {
     const entryPoint = await deploy('TestEntryPoint', {
       from: deployer,
       args: [],

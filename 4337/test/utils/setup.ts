@@ -11,7 +11,13 @@ const getRandomIntAsString = (min = 0, max: number = Number.MAX_SAFE_INTEGER): s
   return getRandomInt(min, max).toString();
 };
 
-export const getSafeSingleton = async (for4337: boolean) => {
+export const getSafeL2Singleton = async () => {
+  const SafeDeployment = await deployments.get("SafeL2");
+  const Safe = await hre.ethers.getContractFactory("SafeL2");
+  return Safe.attach(SafeDeployment.address);
+};
+
+export const getMockSafeSingleton = async (for4337: boolean) => {
   const version = for4337 ? "Safe4337Mock" : "SafeMock"
   const SafeDeployment = await deployments.get(version);
   const Safe = await hre.ethers.getContractFactory(version);
@@ -19,13 +25,13 @@ export const getSafeSingleton = async (for4337: boolean) => {
 };
 
 export const getFactory = async () => {
-    const FactoryDeployment = await deployments.get("GnosisSafeProxyFactory");
-    const Factory = await hre.ethers.getContractFactory("GnosisSafeProxyFactory");
+    const FactoryDeployment = await deployments.get("SafeProxyFactory");
+    const Factory = await hre.ethers.getContractFactory("SafeProxyFactory");
     return Factory.attach(FactoryDeployment.address);
 };
 
 export const getSafeTemplate = async (for4337: boolean = false, saltNumber: string = getRandomIntAsString()) => {
-    const singleton = await getSafeSingleton(for4337);
+    const singleton = await getMockSafeSingleton(for4337);
     console.log("singleton", singleton.address)
     console.log("saltNumber", saltNumber)
     const factory = await getFactory();
@@ -33,6 +39,12 @@ export const getSafeTemplate = async (for4337: boolean = false, saltNumber: stri
     await factory.createProxyWithNonce(singleton.address, "0x", saltNumber).then((tx: any) => tx.wait());
     const Safe = await hre.ethers.getContractFactory(for4337 ? "Safe4337Mock" : "SafeMock");
     return Safe.attach(template);
+};
+
+export const getAddModulesLib = async () => {
+  const LibDeployment = await deployments.get("AddModulesLib");
+  const Lib = await hre.ethers.getContractFactory("AddModulesLib");
+  return Lib.attach(LibDeployment.address);
 };
 
 export const getSimple4337Module = async () => {
