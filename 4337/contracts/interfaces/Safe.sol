@@ -49,4 +49,11 @@ interface ISafe {
      * @return next Start of the next page.
      */
     function getModulesPaginated(address start, uint256 pageSize) external view returns (address[] memory array, address next);
+
+    /**
+     * @notice Enables the module `module` for the Safe.
+     * @dev This can only be done via a Safe transaction.
+     * @param module Module to be whitelisted.
+     */
+    function enableModule(address module) external;
 }

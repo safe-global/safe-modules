@@ -1,35 +1,44 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 
+const ENTRY_POINT = process.env.DEPLOY_ENTRY_POINT
+
 const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  const entryPoint = await deploy('TestEntryPoint', {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: true,
-  })
+  let entryPointAddress;
+  if (!ENTRY_POINT) {
+    const entryPoint = await deploy('TestEntryPoint', {
+      from: deployer,
+      args: [],
+      log: true,
+      deterministicDeployment: true,
+    })
 
-  await deploy('SafeMock', {
-    from: deployer,
-    args: [entryPoint.address],
-    log: true,
-    deterministicDeployment: true,
-  })
+    entryPointAddress = entryPoint.address
 
-  await deploy('Safe4337Mock', {
-    from: deployer,
-    args: [entryPoint.address],
-    log: true,
-    deterministicDeployment: true,
-  })
+    await deploy('SafeMock', {
+      from: deployer,
+      args: [entryPointAddress],
+      log: true,
+      deterministicDeployment: true,
+    })
+
+    await deploy('Safe4337Mock', {
+      from: deployer,
+      args: [entryPointAddress],
+      log: true,
+      deterministicDeployment: true,
+    })
+  } else {
+    entryPointAddress = ENTRY_POINT
+  }
 
   await deploy('Simple4337Module', {
     from: deployer,
-    args: [entryPoint.address],
+    args: [entryPointAddress],
     log: true,
     deterministicDeployment: true,
   })
