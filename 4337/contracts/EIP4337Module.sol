@@ -10,11 +10,16 @@ import {ISafe} from "./interfaces/Safe.sol";
 /// @title EIP4337Module
 abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler {
     using UserOperationLib for UserOperation;
+
+    //return value in case of signature failure, with no time-range.
+    // equivalent to _packValidationData(true,0,0);
+    uint256 constant internal SIG_VALIDATION_FAILED = 1;
+
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 verificationGas,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint256 callGas,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
         );
 
     address public immutable supportedEntryPoint;
@@ -32,10 +37,10 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         UserOperation calldata userOp,
         bytes32,
         uint256 requiredPrefund
-    ) external returns (uint256) {
+    ) external returns (uint256 validationResult) {
         address payable safeAddress = payable(userOp.sender);
         // The entryPoint address is appended to the calldata in `HandlerContext` contract
-        // Because of this, the relayer may be manipulate the entryPoint address, therefore we have to verify that
+        // Because of this, the relayer may manipulate the entryPoint address, therefore we have to verify that
         // the sender is the Safe specified in the userOperation
         require(safeAddress == msg.sender, "Invalid Caller");
 
@@ -48,12 +53,12 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
-        _validateSignatures(entryPoint, userOp);
+        validationResult = validateSignatures(entryPoint, userOp);
 
+        // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work
         if (requiredPrefund != 0) {
             ISafe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
         }
-        return 0;
     }
 
     function validateReplayProtection(UserOperation calldata userOp) internal virtual;
@@ -66,22 +71,22 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
     /// @param safe Safe address
     /// @param callData Call data
     /// @param nonce Nonce of the operation
-    /// @param verificationGas Gas required for verification
     /// @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification)
+    /// @param verificationGasLimit Gas required for verification
+    /// @param callGasLimit Gas available during the execution of the call
     /// @param maxFeePerGas Max fee per gas
     /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param callGas Gas available during the execution of the call
     /// @param entryPoint Address of the entry point
     /// @return Operation hash bytes
     function encodeOperationData(
         address safe,
         bytes calldata callData,
         uint256 nonce,
-        uint256 verificationGas,
         uint256 preVerificationGas,
+        uint256 verificationGasLimit,
+        uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint256 callGas,
         address entryPoint
     ) public view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
@@ -90,11 +95,11 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
                 safe,
                 keccak256(callData),
                 nonce,
-                verificationGas,
                 preVerificationGas,
+                verificationGasLimit,
+                callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
-                callGas,
                 entryPoint
             )
         );
@@ -106,11 +111,11 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         address safe,
         bytes calldata callData,
         uint256 nonce,
-        uint256 verificationGas,
         uint256 preVerificationGas,
+        uint256 verificationGasLimit,
+        uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint256 callGas,
         address entryPoint
     ) public view returns (bytes32) {
         return
@@ -119,11 +124,11 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
                     safe,
                     callData,
                     nonce,
-                    verificationGas,
                     preVerificationGas,
+                    verificationGasLimit,
+                    callGasLimit,
                     maxFeePerGas,
                     maxPriorityFeePerGas,
-                    callGas,
                     entryPoint
                 )
             );
@@ -132,20 +137,24 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
     /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
     /// @param entryPoint Address of the entry point
     /// @param userOp User operation struct
-    function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view {
+    function validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256) {
         bytes32 operationHash = getOperationHash(
             payable(userOp.sender),
             userOp.callData,
             userOp.nonce,
-            userOp.verificationGasLimit,
             userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
-            userOp.callGasLimit,
             entryPoint
         );
 
-        ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature);
+        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature) {
+            return 0;
+        } catch {
+            return SIG_VALIDATION_FAILED;
+        }
     }
 }
 

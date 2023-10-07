@@ -31,7 +31,8 @@ describe('EIP4337Module', async () => {
       erc4337module: module.address,
       proxyFactory: proxyFactory.address,
       addModulesLib: addModulesLib.address,
-      proxyCreationCode
+      proxyCreationCode,
+      chainId: await chainId()
     })
 
     return {

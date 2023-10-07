@@ -37,11 +37,11 @@ describe('EIP4337Module', async () => {
         safe.address,
         operation.callData,
         operation.nonce,
-        operation.verificationGas,
         operation.preVerificationGas,
+        operation.verificationGasLimit,
+        operation.callGasLimit,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
-        operation.callGas,
         operation.entryPoint,
       )
 
