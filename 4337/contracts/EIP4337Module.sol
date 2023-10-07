@@ -13,7 +13,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
     //return value in case of signature failure, with no time-range.
     // equivalent to _packValidationData(true,0,0);
-    uint256 constant internal SIG_VALIDATION_FAILED = 1;
+    uint256 internal constant SIG_VALIDATION_FAILED = 1;
 
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
