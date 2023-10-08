@@ -203,26 +203,30 @@ export class Safe4337Operation {
             paymasterAndData: "0x",
             nonce: utils.hexlify(nonce),
             initCode,
-            signature: "0x"
+            signature: "0x".padEnd(130, "a"),
+            // For some providers we need to set some really high values to allow estimation
+            preVerificationGas: utils.hexlify(1000000),
+            verificationGasLimit: utils.hexlify(1000000),
+            callGasLimit: utils.hexlify(10000000),
+            // To keep the required funds low, the gas fee is set close to the minimum
+            maxFeePerGas: "0x10",
+            maxPriorityFeePerGas: "0x10",
         }
-        console.log({estimateOperation})
         const estimates = await provider.send('eth_estimateUserOperationGas', [{
             ...estimateOperation
           }, globalConfig.entryPoint])
-        /*
-        const callGasLimit: bigint = (await provider.estimateGas({ from: safe.address, to: action.to, data: action.data })).toBigInt()
-        const deploymentGasLimit: bigint = (await safe.isDeployed()) ? BigInt(400000) : BigInt(0)
-        const verificationGasLimit: bigint = BigInt(50000) * BigInt(await safe.getThreshold()) + deploymentGasLimit
-        */
+        console.log(estimates)
 
         const feeData = await provider.getFeeData()
         const params: OperationParams = {
             nonce,
             maxFeePerGas: feeData.maxFeePerGas!!.toBigInt(),
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!!.toBigInt(),
-            preVerificationGas: BigInt(estimates.preVerificationGas),
-            verificationGasLimit: BigInt(estimates.verificationGasLimit),
-            callGasLimit: BigInt(estimates.callGasLimit),
+            // Add a small margin as some dataoverhead calculation is not always accurate
+            preVerificationGas: BigInt(estimates.preVerificationGas) + BigInt(1000),
+            // Add 20% to the gas limits to account for inaccurate estimations
+            verificationGasLimit: BigInt(estimates.verificationGasLimit) * BigInt(12) / BigInt(10),
+            callGasLimit: BigInt(estimates.callGasLimit) * BigInt(12) / BigInt(10),
         }
         return new Safe4337Operation(safe, action, params, globalConfig)
     }
