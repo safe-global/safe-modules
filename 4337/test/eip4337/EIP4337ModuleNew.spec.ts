@@ -1,11 +1,9 @@
 import { expect } from 'chai'
 import { deployments, ethers, waffle } from 'hardhat'
 import '@nomiclabs/hardhat-ethers'
-import { getTestSafe, getSimple4337Module, getEntryPoint, getFactory, getAddModulesLib, getSafeL2Singleton } from '../utils/setup'
-import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
+import { getSimple4337Module, getEntryPoint, getFactory, getAddModulesLib, getSafeL2Singleton } from '../utils/setup'
+import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
-  buildSafeUserOp,
-  calculateSafeOperationHash,
   buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
   signSafeOp,
@@ -44,7 +42,7 @@ describe('EIP4337Module', async () => {
     }
   })
 
-  describe('execTransaction - existing account', () => {
+  describe('execTransaction - new account', () => {
     it('should execute contract calls without fee', async () => {
       const { safe, validator, entryPoint } = await setupTests()
 

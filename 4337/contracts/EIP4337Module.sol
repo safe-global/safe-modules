@@ -11,7 +11,7 @@ import {ISafe} from "./interfaces/Safe.sol";
 abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler {
     using UserOperationLib for UserOperation;
 
-    //return value in case of signature failure, with no time-range.
+    // value in case of signature failure, with no time-range.
     // equivalent to _packValidationData(true,0,0);
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
 
@@ -48,13 +48,11 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
         require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
 
-        // We need to make sure that the entryPoint's requested prefund is in bounds
-        require(requiredPrefund <= userOp.requiredPreFund(), "Prefund too high");
-
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
         validationResult = validateSignatures(entryPoint, userOp);
 
+        // We trust the entrypoint to set the correct prefund value, based on the operation params
         // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work
         if (requiredPrefund != 0) {
             ISafe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
@@ -78,7 +76,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
     /// @param maxPriorityFeePerGas Max priority fee per gas
     /// @param entryPoint Address of the entry point
     /// @return Operation hash bytes
-    function encodeOperationData(
+    function getOperationHash(
         address safe,
         bytes calldata callData,
         uint256 nonce,
@@ -88,7 +86,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
         address entryPoint
-    ) public view returns (bytes memory) {
+    ) public view returns (bytes32) {
         bytes32 safeOperationHash = keccak256(
             abi.encode(
                 SAFE_OP_TYPEHASH,
@@ -103,35 +101,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
                 entryPoint
             )
         );
-
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash);
-    }
-
-    function getOperationHash(
-        address safe,
-        bytes calldata callData,
-        uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
-        uint256 callGasLimit,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        address entryPoint
-    ) public view returns (bytes32) {
-        return
-            keccak256(
-                encodeOperationData(
-                    safe,
-                    callData,
-                    nonce,
-                    preVerificationGas,
-                    verificationGasLimit,
-                    callGasLimit,
-                    maxFeePerGas,
-                    maxPriorityFeePerGas,
-                    entryPoint
-                )
-            );
+        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash));
     }
 
     /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
