@@ -121,5 +121,7 @@ yarn test
 ## Compiling contracts
 ```bash
 yarn
-yarn compile
+
+yarn build
 ```
+

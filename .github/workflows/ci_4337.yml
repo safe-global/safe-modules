@@ -1,0 +1,39 @@
+name: safe-modules-4337
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./4337
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18.17.1
+          cache: 'npm'
+          cache-dependency-path: 4337/package-lock.json
+      - run: npm ci 
+      - run: npm run build
+      - run: npm run coverage
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          path-to-lcov: '4337/coverage/lcov.info'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./4337
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 18.17.1
+          cache: 'npm'
+          cache-dependency-path: 4337/package-lock.json
+      - run: npm ci 
+        working-directory: ./4337
+      - run: npm run lint:sol

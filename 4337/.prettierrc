@@ -1,0 +1,20 @@
+{
+    "overrides": [
+        {
+            "files": "*.sol",
+            "options": {
+                "printWidth": 140,
+                "tabWidth": 4,
+                "useTabs": false,
+                "singleQuote": false,
+                "bracketSpacing": false,
+                "explicitTypes": "always"
+            }
+        }
+    ],
+    "tabWidth": 2,
+    "printWidth": 140,
+    "trailingComma": "all",
+    "singleQuote": true,
+    "semi": false
+}

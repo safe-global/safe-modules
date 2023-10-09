@@ -1,0 +1,85 @@
+{
+  "name": "@safeglobal/safe-eip4337",
+  "version": "1.0.0",
+  "description": "Safe Module for EIP-4337 support",
+  "homepage": "https://github.com/safe-global/safe-modules/4337",
+  "license": "GPL-3.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "contracts",
+    "dist",
+    "src",
+    "test",
+    "build"
+  ],
+  "scripts": {
+    "build": "hardhat compile",
+    "build:ts": "yarn rimraf dist && tsc",
+    "test": "hardhat test --deploy-fixture",
+    "coverage": "hardhat coverage --network hardhat",
+    "benchmark": "yarn test benchmark/*.ts",
+    "deploy-all": "hardhat deploy-contracts --network",
+    "deploy": "hardhat deploy --network",
+    "lint": "yarn lint:sol && yarn lint:ts",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "lint:ts": "eslint --max-warnings 0 .",
+    "fmt:sol": "prettier 'contracts/**/*.sol' -w",
+    "prepack": "yarn build",
+    "prepare": "cd .. && husky install 4337/.husky",
+    "prepublish": "yarn rimraf build && yarn build && yarn build:ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/safe-global/safe-modules.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe"
+  ],
+  "author": "@safe-global",
+  "bugs": {
+    "url": "https://github.com/safe-global/safe-modules/issues"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-etherscan": "^3.1.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^17.0.42",
+    "@types/yargs": "^17.0.10",
+    "@typescript-eslint/eslint-plugin": "^5.28.0",
+    "@typescript-eslint/parser": "^5.28.0",
+    "argv": "^0.0.2",
+    "chai": "^4.2.0",
+    "debug": "^4.3.4",
+    "dotenv": "^16.0.1",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-no-only-tests": "^2.4.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.6.8",
+    "hardhat": "2.9.9",
+    "hardhat-deploy": "0.11.10",
+    "husky": "^8.0.1",
+    "prettier": "^2.7.0",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solc": "0.8.14-fixed",
+    "solhint": "^3.3.7",
+    "solhint-plugin-prettier": "^0.0.5",
+    "solidity-coverage": "^0.7.21",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3",
+    "yargs": "^17.5.1"
+  },
+  "peerDependencies": {
+    "ethers": "^5.1.4"
+  },
+  "dependencies": {
+    "@gnosis.pm/safe-contracts": "^1.3.0"
+  }
+}
