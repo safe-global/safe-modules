@@ -50,6 +50,19 @@ describe('EIP4337Module', async () => {
   })
 
   describe('execTransaction - existing account', () => {
+
+    it('should revert with invalid signature', async () => {
+      const { safe, entryPoint } = await setupTests()
+
+      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
+      const signature = buildSignatureBytes([await signHash(user1, ethers.utils.keccak256("0xbaddad42"))])
+      const userOp = buildUserOperationFromSafeUserOperation({safeAddress: safe.address, safeOp, signature})
+      await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWith("Signature validation failed")
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
+    })
+
     it('should execute contract calls without fee', async () => {
       const { safe, validator, entryPoint } = await setupTests()
 
@@ -64,6 +77,23 @@ describe('EIP4337Module', async () => {
         entryPoint.executeUserOp(userOp, 0)
       )
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.5"))
+    })
+
+    it('should not be able to execute contract calls twice', async () => {
+      const { safe, validator, entryPoint } = await setupTests()
+
+      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
+      const safeOpHash = calculateSafeOperationHash(validator.address, safeOp, await chainId())
+      const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
+      const userOp = buildUserOperationFromSafeUserOperation({safeAddress: safe.address, safeOp, signature})
+      await logGas(
+        "Execute UserOp without fee payment",
+        entryPoint.executeUserOp(userOp, 0)
+      )
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.5"))
+      await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWith("InvalidNonce(0)")
     })
 
     it('should execute contract calls with fee', async () => {

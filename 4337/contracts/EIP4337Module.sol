@@ -44,8 +44,6 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         // the sender is the Safe specified in the userOperation
         require(safeAddress == msg.sender, "Invalid Caller");
 
-        validateReplayProtection(userOp);
-
         require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
 
         address entryPoint = _msgSender();
@@ -58,8 +56,6 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
             ISafe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
         }
     }
-
-    function validateReplayProtection(UserOperation calldata userOp) internal virtual;
 
     function domainSeparator() public view returns (bytes32) {
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
@@ -132,14 +128,4 @@ contract Simple4337Module is EIP4337Module {
     constructor(address entryPoint)
         EIP4337Module(entryPoint, bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)")))
     {}
-
-    function validateReplayProtection(UserOperation calldata userOp) internal override {
-        // The entrypoints handles the increase of the nonce
-        // Right shifting fills up with 0s from the left
-        uint192 key = uint192(userOp.nonce >> 64);
-        uint256 safeNonce = INonceManager(supportedEntryPoint).getNonce(userOp.sender, key);
-
-        // Check returned nonce against the user operation nonce
-        require(safeNonce == userOp.nonce, "Invalid Nonce");
-    }
 }
