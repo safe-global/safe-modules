@@ -48,7 +48,7 @@ Important to note that [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337#first-
 
 > The initCode field (if non-zero length) is parsed as a 20-byte address, followed by "calldata" to pass to this address.
 
-To deploy a Safe with 4337 directly enabled we require a setup library that enables multiple modules (`AddModulesLib`). This is necessary because to enable a Module the Safe has to do a call to itself. Before calling setup we do not know the address of the Safe yet (as the address depends on the setup parameters) and using MultiSend will not result in the correct `msg.sender` for a selfcall.
+To deploy a Safe with 4337 directly enabled, we require a setup library that enables multiple modules (`AddModulesLib`). This is necessary because to enable a Module, the Safe has to do a call to itself. Before calling the setup method, we do not know the address of the Safe yet (as the address depends on the setup parameters) and using MultiSend will not result in the correct `msg.sender` for a selfcall.
 
 The `initCode` for the Safe with a 4337 module enabled is composed in the following way:
 

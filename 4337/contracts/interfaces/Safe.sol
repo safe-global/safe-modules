@@ -53,7 +53,7 @@ interface ISafe {
     /**
      * @notice Enables the module `module` for the Safe.
      * @dev This can only be done via a Safe transaction.
-     * @param module Module to be whitelisted.
+     * @param module Module to be enabled.
      */
     function enableModule(address module) external;
 }
