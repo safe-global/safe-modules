@@ -3,7 +3,8 @@ pragma solidity >=0.8.0;
 
 import "../UserOperation.sol";
 
-import "@gnosis.pm/safe-contracts/contracts/proxies/GnosisSafeProxyFactory.sol";
+import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
+import "@safe-global/safe-contracts/contracts/SafeL2.sol";
 
 import {INonceManager} from "../interfaces/ERC4337.sol";
 
