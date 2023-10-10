@@ -44,10 +44,12 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         // the sender is the Safe specified in the userOperation
         require(safeAddress == msg.sender, "Invalid Caller");
 
+        // We verify that the userOp calls the expected execution function
         require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
 
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
         validationResult = validateSignatures(entryPoint, userOp);
 
         // We trust the entrypoint to set the correct prefund value, based on the operation params
