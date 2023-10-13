@@ -48,22 +48,18 @@ Important to note that [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337#first-
 
 > The initCode field (if non-zero length) is parsed as a 20-byte address, followed by "calldata" to pass to this address.
 
+To deploy a Safe with 4337 directly enabled, we require a setup library that enables multiple modules (`AddModulesLib`). This is necessary because to enable a Module, the Safe has to do a call to itself. Before calling the setup method, we do not know the address of the Safe yet (as the address depends on the setup parameters) and using MultiSend will not result in the correct `msg.sender` for a selfcall.
+
 The `initCode` for the Safe with a 4337 module enabled is composed in the following way:
 
 ```solidity
 /** Enable Modules **/
-bytes memory enableModuleCalldata = abi.encodeWithSignature("enableModule", 4337_MODULE_ADDRESS);
-bytes memory enableEntryPointCalldata = abi.encodeWithSignature("enableModule", ENTRY_POINT_ADDRESS);
-bytes memory initExecutor = MULTISEND_ADDRESS;
-// Might be more gas efficient to use delegate call to the singleton here, but also more error prone.
-bytes memory initData = abi.encodePacked(
-    uint8(0), sender, uint256(0), enableModuleCalldata.length, enableModuleCalldata,
-    uint8(0), sender, uint256(0), enableEntryPointCalldata.length, enableEntryPointCalldata
-);
+bytes memory initExecutor = ADD_MODULES_LIB_ADDRESS;
+bytes memory initData =  abi.encodeWithSignature("enableModules", [4337_MODULE_ADDRESS, ENTRY_POINT_ADDRESS]);
 
 /** Setup Safe **/
 // We do not want to use any payment logic therefore this is all set to 0
-bytes memory setupData = abi.encodeWithSignature("setup", owners, threhsold, initExecutor, initData, address(0), 0, address(0));
+bytes memory setupData = abi.encodeWithSignature("setup", owners, threshold, initExecutor, initData, 4337_MODULE_ADDRESS, address(0), 0, address(0));
 
 /** Deploy Proxy **/
 bytes memory deployData = abi.encodeWithSignature("createProxyWithNonce", SAFE_SINGLETON_ADDRESS, setupData, salt);

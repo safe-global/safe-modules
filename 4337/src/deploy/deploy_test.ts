@@ -6,7 +6,16 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployer } = await getNamedAccounts();
     const { deploy } = deployments;
 
-    await deploy("GnosisSafeProxyFactory", {
+    if (hre.network.name !== 'hardhat') return
+
+    await deploy("SafeProxyFactory", {
+        from: deployer,
+        args: [],
+        log: true,
+        deterministicDeployment: true,
+    });
+
+    await deploy("SafeL2", {
         from: deployer,
         args: [],
         log: true,

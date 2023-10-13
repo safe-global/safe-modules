@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-interface Safe {
+interface ISafe {
     /**
      * @dev Reads `length` bytes of storage in the currents contract
      * @param offset - the offset in the current contract's storage in words to start reading from
@@ -49,4 +49,11 @@ interface Safe {
      * @return next Start of the next page.
      */
     function getModulesPaginated(address start, uint256 pageSize) external view returns (address[] memory array, address next);
+
+    /**
+     * @notice Enables the module `module` for the Safe.
+     * @dev This can only be done via a Safe transaction.
+     * @param module Module to be enabled.
+     */
+    function enableModule(address module) external;
 }

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import "@gnosis.pm/safe-contracts/contracts/handler/HandlerContext.sol";
-import "./vendor/CompatibilityFallbackHandler.sol";
-import "./UserOperation.sol";
-import "./interfaces/Safe.sol";
+import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
+import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
+import {UserOperation, UserOperationLib} from "./UserOperation.sol";
+import {INonceManager} from "./interfaces/ERC4337.sol";
+import {ISafe} from "./interfaces/Safe.sol";
 
 /// @title EIP4337Module
-/// TODO should implement default fallback methods
 abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler {
     using UserOperationLib for UserOperation;
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
@@ -51,7 +51,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         _validateSignatures(entryPoint, userOp);
 
         if (requiredPrefund != 0) {
-            Safe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
+            ISafe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
         }
         return 0;
     }
@@ -129,7 +129,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
             );
     }
 
-    /// @dev Validates that the user operation is correctly signed. Users methods from Gnosis Safe contract, reverts if signatures are invalid
+    /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
     /// @param entryPoint Address of the entry point
     /// @param userOp User operation struct
     function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view {
@@ -145,85 +145,22 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
             entryPoint
         );
 
-        Safe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature);
+        ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature);
     }
 }
 
 contract Simple4337Module is EIP4337Module {
-    // NOTE There is a change proposed to EIP-4337 to move nonce tracking to the entrypoint
-    mapping(address => mapping(bytes32 => uint64)) private nonces;
-
     constructor(address entryPoint)
         EIP4337Module(entryPoint, bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)")))
     {}
 
     function validateReplayProtection(UserOperation calldata userOp) internal override {
-        // We need to increase the nonce to make it impossible to drain the safe by making it send prefunds for the same transaction
+        // The entrypoints handles the increase of the nonce
         // Right shifting fills up with 0s from the left
-        bytes32 key = bytes32(userOp.nonce >> 64);
-        uint64 safeNonce = nonces[userOp.sender][key];
-        nonces[userOp.sender][key]++;
+        uint192 key = uint192(userOp.nonce >> 64);
+        uint256 safeNonce = INonceManager(supportedEntryPoint).getNonce(userOp.sender, key);
 
-        // Casting to uint64 to remove the key segment
-        require(safeNonce == uint64(userOp.nonce), "Invalid Nonce");
-    }
-}
-
-contract DoubleCheck4337Module is EIP4337Module {
-    bytes32 private constant SAFE_4337_EXECUTION_TYPEHASH =
-        keccak256("Safe4337Execution(address safe,address target,uint256 value,bytes calldata data,uint8 operation,uint256 nonce)");
-
-    struct ExecutionStatus {
-        bool approved;
-        bool executed;
-    }
-
-    mapping(address => mapping(bytes32 => ExecutionStatus)) private hashes;
-
-    constructor(address entryPoint)
-        EIP4337Module(entryPoint, bytes4(keccak256("checkAndExecTransaction(address,address,uint256,bytes,uint8,uint256)")))
-    {}
-
-    function encodeSafeExecutionData(
-        address safe,
-        address target,
-        uint256 value,
-        bytes memory data,
-        uint8 operation,
-        uint256 nonce
-    ) public view returns (bytes memory) {
-        bytes32 safeExecutionTypeData = keccak256(
-            abi.encode(SAFE_4337_EXECUTION_TYPEHASH, safe, target, value, keccak256(data), operation, nonce)
-        );
-
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeExecutionTypeData);
-    }
-
-    function validateReplayProtection(UserOperation calldata userOp) internal override {
-        (address safe, address target, uint256 value, bytes memory data, uint8 operation, uint256 nonce) = abi.decode(
-            userOp.callData,
-            (address, address, uint256, bytes, uint8, uint256)
-        );
-        bytes32 executionHash = keccak256(encodeSafeExecutionData(safe, target, value, data, operation, nonce));
-        require(userOp.sender == safe, "Unexpected Safe in calldata");
-        require(userOp.nonce == nonce, "Unexpected nonce in calldata");
-        ExecutionStatus memory status = hashes[userOp.sender][executionHash];
-        require(!status.approved && !status.executed, "Unexpected status");
-        hashes[userOp.sender][executionHash].approved = true;
-    }
-
-    function checkAndExecTransactionFromModule(
-        address safe,
-        address target,
-        uint256 value,
-        bytes calldata data,
-        uint8 operation,
-        uint256 nonce
-    ) external {
-        bytes32 executionHash = keccak256(encodeSafeExecutionData(safe, target, value, data, operation, nonce));
-        ExecutionStatus memory status = hashes[safe][executionHash];
-        require(status.approved && !status.executed, "Unexpected status");
-        hashes[safe][executionHash].executed = true;
-        Safe(safe).execTransactionFromModule(target, value, data, operation);
+        // Check returned nonce against the user operation nonce
+        require(safeNonce == userOp.nonce, "Invalid Nonce");
     }
 }
