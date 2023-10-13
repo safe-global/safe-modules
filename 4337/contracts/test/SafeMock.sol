@@ -122,7 +122,7 @@ contract Safe4337Mock is SafeMock {
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 verificationGas,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint256 callGas,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
         );
 
     bytes4 public immutable expectedExecutionFunctionId;
@@ -164,22 +164,22 @@ contract Safe4337Mock is SafeMock {
     /// @param safe Safe address
     /// @param callData Call data
     /// @param nonce Nonce of the operation
-    /// @param verificationGas Gas required for verification
     /// @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification)
+    /// @param verificationGasLimit Gas required for verification
+    /// @param callGasLimit Gas available during the execution of the call
     /// @param maxFeePerGas Max fee per gas
     /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param callGas Gas available during the execution of the call
     /// @param entryPoint Address of the entry point
     /// @return Operation hash bytes
     function encodeOperationData(
         address safe,
         bytes calldata callData,
         uint256 nonce,
-        uint256 verificationGas,
         uint256 preVerificationGas,
+        uint256 verificationGasLimit,
+        uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint256 callGas,
         address entryPoint
     ) public view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
@@ -188,11 +188,11 @@ contract Safe4337Mock is SafeMock {
                 safe,
                 keccak256(callData),
                 nonce,
-                verificationGas,
                 preVerificationGas,
+                verificationGasLimit,
+                callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
-                callGas,
                 entryPoint
             )
         );
@@ -204,11 +204,11 @@ contract Safe4337Mock is SafeMock {
         address safe,
         bytes calldata callData,
         uint256 nonce,
-        uint256 verificationGas,
         uint256 preVerificationGas,
+        uint256 verificationGasLimit,
+        uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint256 callGas,
         address entryPoint
     ) public view returns (bytes32) {
         return
@@ -217,11 +217,11 @@ contract Safe4337Mock is SafeMock {
                     safe,
                     callData,
                     nonce,
-                    verificationGas,
                     preVerificationGas,
+                    verificationGasLimit,
+                    callGasLimit,
                     maxFeePerGas,
                     maxPriorityFeePerGas,
-                    callGas,
                     entryPoint
                 )
             );
@@ -239,11 +239,11 @@ contract Safe4337Mock is SafeMock {
             payable(userOp.sender),
             userOp.callData,
             userOp.nonce,
-            userOp.verificationGasLimit,
             userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
-            userOp.callGasLimit,
             entryPoint
         );
         bytes32 operationHash = keccak256(operationData);

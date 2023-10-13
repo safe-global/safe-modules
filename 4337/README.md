@@ -1,5 +1,7 @@
 # Safe Module/Fallback handler for EIP4337 Support
 
+:warning: **This module MUST only be used with Safe 1.4.1 or newer** :warning:
+
 ## Execution Flow
 
 The diagram below outlines the flow that is triggered when a user operation is submitted to the entrypoint. Additionally the gas overhead compared to a native implementation is mentioned.
