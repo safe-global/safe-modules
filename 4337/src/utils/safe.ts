@@ -14,6 +14,7 @@ const INTERFACES = new ethers.utils.Interface([
     'function proxyCreationCode() returns (bytes)',
     'function enableModules(address[])',
     'function execTransactionFromModule(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bool success)',
+    'function executeUserOp(bytes executionData)',
     'function getNonce(address,uint192) returns (uint256 nonce)',
     'function supportedEntryPoint() returns (address)',
     'function getOwners() returns (address[])',
@@ -70,7 +71,7 @@ const calculateProxyAddress = (globalConfig: GlobalConfig, inititalizer: string,
   };
 
 const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalConfig): { safeAddress: string, initCode: string } => {
-    const initData = INTERFACES.encodeFunctionData("enableModules", [[globalConfig.erc4337module, globalConfig.entryPoint]])
+    const initData = INTERFACES.encodeFunctionData("enableModules", [[globalConfig.erc4337module]])
     const setupData = INTERFACES.encodeFunctionData("setup", [
         safeConfig.signers, safeConfig.threshold, globalConfig.addModulesLib, initData, globalConfig.erc4337module, constants.AddressZero, 0, constants.AddressZero
     ])
@@ -95,9 +96,14 @@ const callInterface = async(provider: providers.Provider, contract: string, meth
 }
 
 const actionCalldata = (action: MetaTransaction): string => {
-    return INTERFACES.encodeFunctionData(
+    const execTransactionFromModuleCallData = INTERFACES.encodeFunctionData(
         'execTransactionFromModule',
         [action.to, action.value, action.data, action.operation]
+    )
+
+    return INTERFACES.encodeFunctionData(
+        'executeUserOp',
+        [execTransactionFromModuleCallData]
     )
 }
 

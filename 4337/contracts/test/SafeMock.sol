@@ -128,7 +128,7 @@ contract Safe4337Mock is SafeMock {
     bytes4 public immutable expectedExecutionFunctionId;
 
     constructor(address entryPoint) SafeMock(entryPoint) {
-        expectedExecutionFunctionId = bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)"));
+        expectedExecutionFunctionId = bytes4(keccak256("executeUserOp(bytes)"));
     }
 
     /// @dev Validates user operation provided by the entry point
@@ -154,6 +154,24 @@ contract Safe4337Mock is SafeMock {
             entryPoint.call{value: requiredPrefund}("");
         }
         return 0;
+    }
+
+    /// @notice Executes user operation provided by the entry point
+    /// @dev Reverts if unsuccessful
+    /// @param executionData Execution data. Expects it to be a call to the `execTransactionFromModule` function of the Safe.
+    ///                      Validated in the `validateUserOp` function.
+    function executeUserOp(bytes calldata executionData) external {
+        address entryPoint = msg.sender;
+        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+
+        // [4:] slice is needed to remove the function selector, abi.decode will not work with it because
+        // it is not 32 bytes
+        (address to, uint256 value, bytes memory data, uint8 operation) = abi.decode(executionData[4:], (address, uint256, bytes, uint8));
+
+        bool success;
+        if (operation == 1) (success, ) = to.delegatecall(data);
+        else (success, ) = to.call{value: value}(data);
+        require(success, "Execution failed");
     }
 
     function domainSeparator() public view returns (bytes32) {

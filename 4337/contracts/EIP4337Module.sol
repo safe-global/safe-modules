@@ -6,6 +6,7 @@ import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contract
 import {UserOperation, UserOperationLib} from "./UserOperation.sol";
 import {INonceManager} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
+import "hardhat/console.sol";
 
 /// @title EIP4337Module
 abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler {
@@ -23,11 +24,17 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         );
 
     address public immutable supportedEntryPoint;
-    bytes4 public immutable expectedExecutionFunctionId;
+    bytes4 public immutable expectedOuterExecutionFunctionId;
+    bytes4 public immutable expectedInnerExecutionFunctionId;
 
-    constructor(address entryPoint, bytes4 executionFunctionId) {
+    constructor(
+        address entryPoint,
+        bytes4 outerExecutionFunctionId,
+        bytes4 innerExecutionFunctionId
+    ) {
         supportedEntryPoint = entryPoint;
-        expectedExecutionFunctionId = executionFunctionId;
+        expectedOuterExecutionFunctionId = outerExecutionFunctionId;
+        expectedInnerExecutionFunctionId = innerExecutionFunctionId;
     }
 
     /// @dev Validates user operation provided by the entry point
@@ -44,11 +51,13 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         // the sender is the Safe specified in the userOperation
         require(safeAddress == msg.sender, "Invalid Caller");
 
-        // We verify that the userOp calls the expected execution function
-        require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
+        // We check the execution function signature to make sure the entryPoint can't call any other function
+        // and make sure the execution of the user operation is handled by the module
+        require(expectedOuterExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
 
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+
         // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
         validationResult = validateSignatures(entryPoint, userOp);
 
@@ -56,6 +65,27 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work
         if (requiredPrefund != 0) {
             ISafe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
+        }
+    }
+
+    /// @notice Executes user operation provided by the entry point
+    /// @dev Reverts if unsuccessful
+    /// @param executionData Execution data. Expects it to be a call to the `execTransactionFromModule` function of the Safe.
+    ///                      Validated in the `validateUserOp` function.
+    function executeUserOp(bytes calldata executionData) external {
+        address entryPoint = _msgSender();
+        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+
+        // We check the execution function signature to make sure the entryPoint can't call any other function
+        // and make sure the execution of the user operation is handled by the module
+        require(expectedInnerExecutionFunctionId == bytes4(executionData), "Unsupported execution function id");
+
+        (bool outerCallSuccess, bytes memory returnData) = msg.sender.call(executionData);
+        require(returnData.length == 32, "Invalid return data length");
+
+        bool internalCallSuccess = returnData[31] == 0x01;
+        if (!outerCallSuccess || !internalCallSuccess) {
+            revert("Execution failed");
         }
     }
 
@@ -128,6 +158,10 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
 contract Simple4337Module is EIP4337Module {
     constructor(address entryPoint)
-        EIP4337Module(entryPoint, bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)")))
+        EIP4337Module(
+            entryPoint,
+            bytes4(keccak256("executeUserOp(bytes)")),
+            bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)"))
+        )
     {}
 }

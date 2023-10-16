@@ -50,16 +50,16 @@ export const calculateSafeOperationHash = (eip4337ModuleAddress: string, safeOp:
   return ethersUtils._TypedDataEncoder.hash({ chainId, verifyingContract: eip4337ModuleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp)
 }
 
-export const signSafeOp = async(
+export const signSafeOp = async (
   signer: Signer & TypedDataSigner,
   moduleAddress: string,
   safeOp: SafeUserOperation,
   chainId: BigNumberish
-  ): Promise<SafeSignature> => {
-    return {
-      signer: await signer.getAddress(),
-      data: await signer._signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
-    }
+): Promise<SafeSignature> => {
+  return {
+    signer: await signer.getAddress(),
+    data: await signer._signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
+  }
 }
 
 export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, 'safe' | 'nonce' | 'entryPoint'>): SafeUserOperation => {
@@ -91,8 +91,10 @@ export const buildSafeUserOpTransaction = (
 ): SafeUserOperation => {
   const abi = [
     'function execTransactionFromModule(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bool success)',
+    'function executeUserOp(bytes calldata executionData) external',
   ]
-  const callData = new ethersUtils.Interface(abi).encodeFunctionData('execTransactionFromModule', [to, value, data, delegateCall ? 1 : 0])
+  const execTransactionFromModuleCallData = new ethersUtils.Interface(abi).encodeFunctionData('execTransactionFromModule', [to, value, data, delegateCall ? 1 : 0])
+  const callData = new ethersUtils.Interface(abi).encodeFunctionData('executeUserOp', [execTransactionFromModuleCallData])
 
   return buildSafeUserOp(
     Object.assign(
@@ -178,6 +180,6 @@ export const calculateIntermediateTxHash = (callData: string, nonce: BigNumberis
 
 export const getSupportedEntryPoints = async (provider: ethers.providers.JsonRpcProvider): Promise<string[]> => {
   const supportedEntryPoints = await provider.send('eth_supportedEntryPoints', [])
-  console.log({supportedEntryPoints})
+  console.log({ supportedEntryPoints })
   return supportedEntryPoints.map(ethers.utils.getAddress)
 }
