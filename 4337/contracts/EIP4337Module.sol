@@ -9,7 +9,7 @@ import {ISafe} from "./interfaces/Safe.sol";
 
 
 /// @title EIP4337Module
-abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler {
+contract Simple4337Module is HandlerContext, CompatibilityFallbackHandler {
     using UserOperationLib for UserOperation;
 
     // value in case of signature failure, with no time-range.
@@ -24,11 +24,9 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         );
 
     address public immutable supportedEntryPoint;
-    bytes4 public immutable expectedExecutionFunctionId;
 
-    constructor(address entryPoint, bytes4 executionFunctionId) {
+    constructor(address entryPoint) {
         supportedEntryPoint = entryPoint;
-        expectedExecutionFunctionId = executionFunctionId;
     }
 
     /// @dev Validates user operation provided by the entry point
@@ -47,7 +45,10 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
         // We check the execution function signature to make sure the entryPoint can't call any other function
         // and make sure the execution of the user operation is handled by the module
-        require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
+        require(
+            this.executeUserOp.selector == bytes4(userOp.callData) || this.executeUserOpWithErrorString.selector == bytes4(userOp.callData),
+            "Unsupported execution function id"
+        );
 
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
@@ -78,6 +79,29 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
 
         require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
+    }
+
+    /// @notice Executes user operation provided by the entry point
+    /// @dev Reverts if unsuccessful and bubbles up the error message
+    /// @param to Destination address of the user operation.
+    /// @param value Ether value of the user operation.
+    /// @param data Data payload of the user operation.
+    /// @param operation Operation type of the user operation.
+    function executeUserOpWithErrorString(
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
+    ) external {
+        address entryPoint = _msgSender();
+        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+
+        (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
+        if (!success) {
+            assembly {
+                revert(add(returnData, 0x20), returnData)
+            }
+        }
     }
 
     function domainSeparator() public view returns (bytes32) {
@@ -147,6 +171,4 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
     }
 }
 
-contract Simple4337Module is EIP4337Module {
-    constructor(address entryPoint) EIP4337Module(entryPoint, bytes4(keccak256("executeUserOp(address,uint256,bytes,uint8)"))) {}
-}
+

@@ -87,12 +87,15 @@ export const buildSafeUserOpTransaction = (
   nonce: string,
   entryPoint: string,
   delegateCall?: boolean,
+  bubbleUpRevertReason?: boolean,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const abi = [
     'function executeUserOp(address to, uint256 value, bytes calldata data, uint8 operation) external',
+    'function executeUserOpWithErrorString(address to, uint256 value, bytes calldata data, uint8 operation) external',
   ]
-  const callData = new ethersUtils.Interface(abi).encodeFunctionData('executeUserOp', [to, value, data, delegateCall ? 1 : 0])
+  const method = bubbleUpRevertReason ? 'executeUserOpWithErrorString' : 'executeUserOp'
+  const callData = new ethersUtils.Interface(abi).encodeFunctionData(method, [to, value, data, delegateCall ? 1 : 0])
 
   return buildSafeUserOp(
     Object.assign(
@@ -116,11 +119,12 @@ export const buildSafeUserOpContractCall = (
   operationValue: string,
   entryPoint: string,
   delegateCall?: boolean,
+  bubbleUpRevertReason?: boolean,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const data = contract.interface.encodeFunctionData(method, params)
 
-  return buildSafeUserOpTransaction(safeAddress, contract.address, operationValue, data, nonce, entryPoint, delegateCall, overrides)
+  return buildSafeUserOpTransaction(safeAddress, contract.address, operationValue, data, nonce, entryPoint, delegateCall, bubbleUpRevertReason, overrides)
 }
 
 export const buildUserOperationFromSafeUserOperation = ({

@@ -39,10 +39,12 @@ contract SenderCreator {
 contract TestEntryPoint is INonceManager {
     error NotEnoughFunds(uint256 expected, uint256 available);
     error InvalidNonce(uint256 userNonce);
-    event UserOpReverted();
+    event UserOpReverted(bytes reason);
     SenderCreator public immutable senderCreator;
     mapping(address => uint256) balances;
     mapping(address => mapping(uint192 => uint256)) public nonceSequenceNumber;
+
+    uint256 private constant REVERT_REASON_MAX_LEN = 2048;
 
     constructor() {
         senderCreator = new SenderCreator();
@@ -77,9 +79,23 @@ contract TestEntryPoint is INonceManager {
         }
 
         require(gasleft() > userOp.callGasLimit, "Not enough gas for execution");
-        (bool success, ) = userOp.sender.call{gas: userOp.callGasLimit}(userOp.callData);
+        (bool success, bytes memory returnData) = userOp.sender.call{gas: userOp.callGasLimit}(userOp.callData);
         if (!success) {
-            emit UserOpReverted();
+            emit UserOpReverted(returnData);
+        }
+    }
+
+    function getRevertReason(uint256 maxLen) internal pure returns (string memory errorString) {
+        assembly {
+            let len := returndatasize()
+            if gt(len, maxLen) {
+                len := maxLen
+            }
+            let ptr := mload(0x40)
+            mstore(0x40, add(ptr, len))
+            mstore(ptr, len)
+            returndatacopy(ptr, 0, len)
+            errorString := ptr
         }
     }
 
