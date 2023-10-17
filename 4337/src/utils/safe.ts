@@ -14,7 +14,7 @@ const INTERFACES = new ethers.utils.Interface([
     'function proxyCreationCode() returns (bytes)',
     'function enableModules(address[])',
     'function execTransactionFromModule(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bool success)',
-    'function executeUserOp(bytes executionData)',
+    'function executeUserOp(address to, uint256 value, bytes calldata data, uint8 operation)',
     'function getNonce(address,uint192) returns (uint256 nonce)',
     'function supportedEntryPoint() returns (address)',
     'function getOwners() returns (address[])',
@@ -96,14 +96,9 @@ const callInterface = async(provider: providers.Provider, contract: string, meth
 }
 
 const actionCalldata = (action: MetaTransaction): string => {
-    const execTransactionFromModuleCallData = INTERFACES.encodeFunctionData(
-        'execTransactionFromModule',
-        [action.to, action.value, action.data, action.operation]
-    )
-
     return INTERFACES.encodeFunctionData(
         'executeUserOp',
-        [execTransactionFromModuleCallData]
+        [action.to, action.value, action.data, action.operation]
     )
 }
 

@@ -90,11 +90,9 @@ export const buildSafeUserOpTransaction = (
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const abi = [
-    'function execTransactionFromModule(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bool success)',
-    'function executeUserOp(bytes calldata executionData) external',
+    'function executeUserOp(address to, uint256 value, bytes calldata data, uint8 operation) external',
   ]
-  const execTransactionFromModuleCallData = new ethersUtils.Interface(abi).encodeFunctionData('execTransactionFromModule', [to, value, data, delegateCall ? 1 : 0])
-  const callData = new ethersUtils.Interface(abi).encodeFunctionData('executeUserOp', [execTransactionFromModuleCallData])
+  const callData = new ethersUtils.Interface(abi).encodeFunctionData('executeUserOp', [to, value, data, delegateCall ? 1 : 0])
 
   return buildSafeUserOp(
     Object.assign(

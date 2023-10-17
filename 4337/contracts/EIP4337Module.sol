@@ -6,7 +6,7 @@ import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contract
 import {UserOperation, UserOperationLib} from "./UserOperation.sol";
 import {INonceManager} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
-import "hardhat/console.sol";
+
 
 /// @title EIP4337Module
 abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler {
@@ -24,17 +24,11 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
         );
 
     address public immutable supportedEntryPoint;
-    bytes4 public immutable expectedOuterExecutionFunctionId;
-    bytes4 public immutable expectedInnerExecutionFunctionId;
+    bytes4 public immutable expectedExecutionFunctionId;
 
-    constructor(
-        address entryPoint,
-        bytes4 outerExecutionFunctionId,
-        bytes4 innerExecutionFunctionId
-    ) {
+    constructor(address entryPoint, bytes4 executionFunctionId) {
         supportedEntryPoint = entryPoint;
-        expectedOuterExecutionFunctionId = outerExecutionFunctionId;
-        expectedInnerExecutionFunctionId = innerExecutionFunctionId;
+        expectedExecutionFunctionId = executionFunctionId;
     }
 
     /// @dev Validates user operation provided by the entry point
@@ -53,7 +47,7 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
         // We check the execution function signature to make sure the entryPoint can't call any other function
         // and make sure the execution of the user operation is handled by the module
-        require(expectedOuterExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
+        require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
 
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
@@ -70,23 +64,20 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 
     /// @notice Executes user operation provided by the entry point
     /// @dev Reverts if unsuccessful
-    /// @param executionData Execution data. Expects it to be a call to the `execTransactionFromModule` function of the Safe.
-    ///                      Validated in the `validateUserOp` function.
-    function executeUserOp(bytes calldata executionData) external {
+    /// @param to Destination address of the user operation.
+    /// @param value Ether value of the user operation.
+    /// @param data Data payload of the user operation.
+    /// @param operation Operation type of the user operation.
+    function executeUserOp(
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
+    ) external {
         address entryPoint = _msgSender();
         require(entryPoint == supportedEntryPoint, "Unsupported entry point");
 
-        // We check the execution function signature to make sure the entryPoint can't call any other function
-        // and make sure the execution of the user operation is handled by the module
-        require(expectedInnerExecutionFunctionId == bytes4(executionData), "Unsupported execution function id");
-
-        (bool outerCallSuccess, bytes memory returnData) = msg.sender.call(executionData);
-        require(returnData.length == 32, "Invalid return data length");
-
-        bool internalCallSuccess = returnData[31] == 0x01;
-        if (!outerCallSuccess || !internalCallSuccess) {
-            revert("Execution failed");
-        }
+        require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
     }
 
     function domainSeparator() public view returns (bytes32) {
@@ -157,11 +148,5 @@ abstract contract EIP4337Module is HandlerContext, CompatibilityFallbackHandler 
 }
 
 contract Simple4337Module is EIP4337Module {
-    constructor(address entryPoint)
-        EIP4337Module(
-            entryPoint,
-            bytes4(keccak256("executeUserOp(bytes)")),
-            bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)"))
-        )
-    {}
+    constructor(address entryPoint) EIP4337Module(entryPoint, bytes4(keccak256("executeUserOp(address,uint256,bytes,uint8)"))) {}
 }
