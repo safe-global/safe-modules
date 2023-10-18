@@ -36,13 +36,6 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     entryPointAddress = ENTRY_POINT
   }
 
-  await deploy('HariWillibaldToken', {
-    from: deployer,
-    args: [deployer],
-    log: true,
-    deterministicDeployment: true,
-  })
-
   await deploy('Simple4337Module', {
     from: deployer,
     args: [entryPointAddress],

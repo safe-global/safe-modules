@@ -9,6 +9,7 @@ import { chainId } from '../test/utils/encoding'
 import { getSimple4337Module } from '../test/utils/setup'
 import { Result } from 'ethers/lib/utils'
 import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
+import { BigNumberish } from 'ethers'
 
 const DEBUG = process.env.SCRIPT_DEBUG || false
 const MNEMONIC = process.env.SCRIPT_MNEMONIC
@@ -82,13 +83,15 @@ const runOp = async () => {
 
   let toAddress = '0x02270bd144e70cE6963bA02F575776A16184E1E6'
   let callData = "0x"
+  let value: BigNumberish = parseEther('0.0001')
   if (ERC20_TOKEN_ADDRESS) {
     toAddress = ERC20_TOKEN_ADDRESS
     callData = buildData("transfer(address,uint256)", [user1.address, parseEther('1')])
+    value = 0n
   }
   const operation = await safe.operate({
     to: toAddress,
-    value: parseEther('0.0001'),
+    value,
     data: callData,
     operation: 0
   })
