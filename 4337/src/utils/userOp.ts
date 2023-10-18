@@ -50,16 +50,16 @@ export const calculateSafeOperationHash = (eip4337ModuleAddress: string, safeOp:
   return ethersUtils._TypedDataEncoder.hash({ chainId, verifyingContract: eip4337ModuleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp)
 }
 
-export const signSafeOp = async(
+export const signSafeOp = async (
   signer: Signer & TypedDataSigner,
   moduleAddress: string,
   safeOp: SafeUserOperation,
   chainId: BigNumberish
-  ): Promise<SafeSignature> => {
-    return {
-      signer: await signer.getAddress(),
-      data: await signer._signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
-    }
+): Promise<SafeSignature> => {
+  return {
+    signer: await signer.getAddress(),
+    data: await signer._signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
+  }
 }
 
 export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, 'safe' | 'nonce' | 'entryPoint'>): SafeUserOperation => {
@@ -87,12 +87,15 @@ export const buildSafeUserOpTransaction = (
   nonce: string,
   entryPoint: string,
   delegateCall?: boolean,
+  bubbleUpRevertReason?: boolean,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const abi = [
-    'function execTransactionFromModule(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bool success)',
+    'function executeUserOp(address to, uint256 value, bytes calldata data, uint8 operation) external',
+    'function executeUserOpWithErrorString(address to, uint256 value, bytes calldata data, uint8 operation) external',
   ]
-  const callData = new ethersUtils.Interface(abi).encodeFunctionData('execTransactionFromModule', [to, value, data, delegateCall ? 1 : 0])
+  const method = bubbleUpRevertReason ? 'executeUserOpWithErrorString' : 'executeUserOp'
+  const callData = new ethersUtils.Interface(abi).encodeFunctionData(method, [to, value, data, delegateCall ? 1 : 0])
 
   return buildSafeUserOp(
     Object.assign(
@@ -116,11 +119,12 @@ export const buildSafeUserOpContractCall = (
   operationValue: string,
   entryPoint: string,
   delegateCall?: boolean,
+  bubbleUpRevertReason?: boolean,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const data = contract.interface.encodeFunctionData(method, params)
 
-  return buildSafeUserOpTransaction(safeAddress, contract.address, operationValue, data, nonce, entryPoint, delegateCall, overrides)
+  return buildSafeUserOpTransaction(safeAddress, contract.address, operationValue, data, nonce, entryPoint, delegateCall, bubbleUpRevertReason, overrides)
 }
 
 export const buildUserOperationFromSafeUserOperation = ({
@@ -178,6 +182,6 @@ export const calculateIntermediateTxHash = (callData: string, nonce: BigNumberis
 
 export const getSupportedEntryPoints = async (provider: ethers.providers.JsonRpcProvider): Promise<string[]> => {
   const supportedEntryPoints = await provider.send('eth_supportedEntryPoints', [])
-  console.log({supportedEntryPoints})
+  console.log({ supportedEntryPoints })
   return supportedEntryPoints.map(ethers.utils.getAddress)
 }

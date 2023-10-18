@@ -11,7 +11,7 @@ import {
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
-describe('EIP4337Module', async () => {
+describe('EIP4337Module - Newly deployed safe', async () => {
   const [user1] = waffle.provider.getWallets()
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {

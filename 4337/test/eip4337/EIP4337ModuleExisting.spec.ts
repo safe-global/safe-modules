@@ -11,7 +11,7 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
-describe('EIP4337Module', async () => {
+describe('EIP4337Module - Existing Safe', async () => {
   const [user1] = waffle.provider.getWallets()
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -110,6 +110,43 @@ describe('EIP4337Module', async () => {
         entryPoint.executeUserOp(userOp, ethers.utils.parseEther("0.000001"))
       )
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.499999"))
+    })
+
+    it('reverts on failure', async () => {
+      const { safe, validator, entryPoint } = await setupTests()
+
+      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("0.000001")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.000001"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
+      const safeOpHash = calculateSafeOperationHash(validator.address, safeOp, await chainId())
+      const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
+      const userOp = buildUserOperationFromSafeUserOperation({safeAddress: safe.address, safeOp, signature})
+
+      const transaction = await entryPoint.executeUserOp(userOp, ethers.utils.parseEther("0.000001")).then((tx: any) => tx.wait())
+      const logs = transaction.logs.map((log: any) => entryPoint.interface.parseLog(log))
+      const emittedRevert = logs.some((l: any) => l.name === "UserOpReverted")
+
+      expect(emittedRevert).to.be.true
+    })
+
+    it('executeUserOpWithErrorString reverts on failure and bubbles up the revert reason', async () => {
+      const { safe, validator, entryPoint } = await setupTests()
+      const reverterContract = await ethers.getContractFactory("TestReverter").then(factory => factory.deploy())
+      const callData = reverterContract.interface.encodeFunctionData("alwaysReverting", [])
+
+      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("0.000001")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.000001"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, reverterContract.address, 0, callData, '0', entryPoint.address, false, true)
+      const safeOpHash = calculateSafeOperationHash(validator.address, safeOp, await chainId())
+      const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
+      const userOp = buildUserOperationFromSafeUserOperation({safeAddress: safe.address, safeOp, signature})
+
+      const transaction = await entryPoint.executeUserOp(userOp, ethers.utils.parseEther("0.000001")).then((tx: any) => tx.wait())
+      const logs = transaction.logs.map((log: any) => entryPoint.interface.parseLog(log))
+      const emittedRevert = logs.find((l: any) => l.name === "UserOpReverted")
+      const decodedError = ethers.utils.defaultAbiCoder.decode(["string"], `0x${emittedRevert.args.reason.slice(10)}`)
+      expect(decodedError[0]).to.equal("You called a function that always reverts")
+
     })
   })
 })

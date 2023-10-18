@@ -73,6 +73,18 @@ contract SafeMock {
         else (success, ) = to.call{value: value}(data);
     }
 
+    function execTransactionFromModuleReturnData(
+        address payable to,
+        uint256 value,
+        bytes calldata data,
+        uint8 operation
+    ) external returns (bool success, bytes memory returnData) {
+        require(modules[msg.sender], "not executing that");
+
+        if (operation == 1) (success, returnData) = to.delegatecall(data);
+        else (success, returnData) = to.call{value: value}(data);
+    }
+
     /**
      * @dev Reads `length` bytes of storage in the currents contract
      * @param offset - the offset in the current contract's storage in words to start reading from
@@ -125,11 +137,7 @@ contract Safe4337Mock is SafeMock {
             "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
         );
 
-    bytes4 public immutable expectedExecutionFunctionId;
-
-    constructor(address entryPoint) SafeMock(entryPoint) {
-        expectedExecutionFunctionId = bytes4(keccak256("execTransactionFromModule(address,uint256,bytes,uint8)"));
-    }
+    constructor(address entryPoint) SafeMock(entryPoint) {}
 
     /// @dev Validates user operation provided by the entry point
     /// @param userOp User operation struct
@@ -144,7 +152,12 @@ contract Safe4337Mock is SafeMock {
 
         validateReplayProtection(userOp);
 
-        require(expectedExecutionFunctionId == bytes4(userOp.callData), "Unsupported execution function id");
+        // We check the execution function signature to make sure the entryPoint can't call any other function
+        // and make sure the execution of the user operation is handled by the module
+        require(
+            this.executeUserOp.selector == bytes4(userOp.callData) || this.executeUserOpWithErrorString.selector == bytes4(userOp.callData),
+            "Unsupported execution function id"
+        );
 
         // We need to make sure that the entryPoint's requested prefund is in bounds
         require(requiredPrefund <= userOp.requiredPreFund(), "Prefund too high");
@@ -154,6 +167,49 @@ contract Safe4337Mock is SafeMock {
             entryPoint.call{value: requiredPrefund}("");
         }
         return 0;
+    }
+
+    /// @notice Executes user operation provided by the entry point
+    /// @dev Reverts if unsuccessful
+    /// @param to Destination address of the user operation.
+    /// @param value Ether value of the user operation.
+    /// @param data Data payload of the user operation.
+    /// @param operation Operation type of the user operation.
+    function executeUserOp(
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
+    ) external {
+        address entryPoint = msg.sender;
+        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+
+        bool success;
+        if (operation == 1) (success, ) = to.delegatecall(data);
+        else (success, ) = to.call{value: value}(data);
+        require(success, "Execution failed");
+    }
+
+    /// @notice Executes user operation provided by the entry point
+    /// @dev Reverts if unsuccessful and bubbles up the error message
+    /// @param to Destination address of the user operation.
+    /// @param value Ether value of the user operation.
+    /// @param data Data payload of the user operation.
+    /// @param operation Operation type of the user operation.
+    function executeUserOpWithErrorString(
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
+    ) external {
+        address entryPoint = msg.sender;
+        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+
+        bool success;
+        bytes memory returnData;
+        if (operation == 1) (success, returnData) = to.delegatecall(data);
+        else (success, returnData) = to.call{value: value}(data);
+        require(success, string(returnData));
     }
 
     function domainSeparator() public view returns (bytes32) {

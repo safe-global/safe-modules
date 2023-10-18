@@ -39,6 +39,7 @@ contract SenderCreator {
 contract TestEntryPoint is INonceManager {
     error NotEnoughFunds(uint256 expected, uint256 available);
     error InvalidNonce(uint256 userNonce);
+    event UserOpReverted(bytes reason);
     SenderCreator public immutable senderCreator;
     mapping(address => uint256) balances;
     mapping(address => mapping(uint192 => uint256)) public nonceSequenceNumber;
@@ -76,7 +77,10 @@ contract TestEntryPoint is INonceManager {
         }
 
         require(gasleft() > userOp.callGasLimit, "Not enough gas for execution");
-        userOp.sender.call{gas: userOp.callGasLimit}(userOp.callData);
+        (bool success, bytes memory returnData) = userOp.sender.call{gas: userOp.callGasLimit}(userOp.callData);
+        if (!success) {
+            emit UserOpReverted(returnData);
+        }
     }
 
     function getNonce(address sender, uint192 key) external view override returns (uint256 nonce) {
