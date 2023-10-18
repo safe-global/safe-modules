@@ -17,6 +17,7 @@ const SAFE_SINGLETON_ADDRESS = process.env.SCRIPT_SAFE_SINGLETON_ADDRESS!!
 const PROXY_FACTORY_ADDRESS = process.env.SCRIPT_PROXY_FACTORY_ADDRESS!!
 const ADD_MODULES_LIB_ADDRESS = process.env.SCRIPT_ADD_MODULES_LIB_ADDRESS!!
 const MODULE_ADDRESS = process.env.SCRIPT_MODULE_ADDRESS!!
+const ERC20_TOKEN_ADDRESS = process.env.SCRIPT_ERC20_TOKEN_ADDRESS!!
 
 const INTERFACES = new ethers.utils.Interface([
   'function enableModule(address)',
@@ -79,10 +80,16 @@ const runOp = async () => {
     await(await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("0.01")})).wait()
   }
 
+  let toAddress = '0x02270bd144e70cE6963bA02F575776A16184E1E6'
+  let callData = "0x"
+  if (ERC20_TOKEN_ADDRESS) {
+    toAddress = ERC20_TOKEN_ADDRESS
+    callData = buildData("transfer(address,uint256)", [user1.address, parseEther('1')])
+  }
   const operation = await safe.operate({
-    to: '0x02270bd144e70cE6963bA02F575776A16184E1E6',
+    to: toAddress,
     value: parseEther('0.0001'),
-    data: '0x',
+    data: callData,
     operation: 0
   })
   

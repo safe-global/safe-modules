@@ -8,7 +8,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  let entryPointAddress;
+  let entryPointAddress
   if (hre.network.name === 'hardhat' || !ENTRY_POINT) {
     const entryPoint = await deploy('TestEntryPoint', {
       from: deployer,
@@ -35,6 +35,13 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   } else {
     entryPointAddress = ENTRY_POINT
   }
+
+  await deploy('HariWillibaldToken', {
+    from: deployer,
+    args: [deployer],
+    log: true,
+    deterministicDeployment: true,
+  })
 
   await deploy('Simple4337Module', {
     from: deployer,
