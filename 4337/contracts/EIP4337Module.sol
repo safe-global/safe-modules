@@ -7,7 +7,6 @@ import {UserOperation, UserOperationLib} from "./UserOperation.sol";
 import {INonceManager} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
-
 /// @title EIP4337Module
 contract Simple4337Module is HandlerContext, CompatibilityFallbackHandler {
     using UserOperationLib for UserOperation;
@@ -170,5 +169,3 @@ contract Simple4337Module is HandlerContext, CompatibilityFallbackHandler {
         }
     }
 }
-
-
