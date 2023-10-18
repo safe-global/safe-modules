@@ -36,8 +36,8 @@ import './src/tasks/local_verify'
 import './src/tasks/deploy_contracts'
 import './src/tasks/show_codesize'
 
-const primarySolidityVersion = SOLIDITY_VERSION || '0.8.14'
-const soliditySettings = !!SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : { optimizer: { enabled: true, runs: 200 } }
+const primarySolidityVersion = SOLIDITY_VERSION || '0.8.21'
+const soliditySettings = !!SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : { optimizer: { enabled: true, runs: 10_000_000 } }
 
 const userConfig: HardhatUserConfig = {
   paths: {
@@ -47,7 +47,7 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    compilers: [{ version: primarySolidityVersion, settings: soliditySettings }, { version: '0.6.12' }, { version: '0.5.17' }],
+    compilers: [{ version: primarySolidityVersion, settings: { evmVersion: 'paris', ...soliditySettings }}, { version: '0.6.12' }, { version: '0.5.17' }],
   },
   networks: {
     hardhat: {
