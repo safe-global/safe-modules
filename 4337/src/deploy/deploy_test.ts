@@ -6,21 +6,28 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployer } = await getNamedAccounts();
     const { deploy } = deployments;
 
-    if (hre.network.name !== 'hardhat') return
+    if (hre.network.name == 'hardhat') {
+        await deploy("SafeProxyFactory", {
+            from: deployer,
+            args: [],
+            log: true,
+            deterministicDeployment: true,
+        });
 
-    await deploy("SafeProxyFactory", {
+        await deploy("SafeL2", {
+            from: deployer,
+            args: [],
+            log: true,
+            deterministicDeployment: true, 
+        });
+    }
+
+    await deploy('HariWillibaldToken', {
         from: deployer,
-        args: [],
+        args: [deployer],
         log: true,
         deterministicDeployment: true,
-    });
-
-    await deploy("SafeL2", {
-        from: deployer,
-        args: [],
-        log: true,
-        deterministicDeployment: true,
-    });
+    })
 };
 
 deploy.tags = ["factory", "l2-suite", "main-suite"];

@@ -9,6 +9,7 @@ import { chainId } from '../test/utils/encoding'
 import { getSimple4337Module } from '../test/utils/setup'
 import { Result } from 'ethers/lib/utils'
 import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
+import { BigNumberish } from 'ethers'
 
 const DEBUG = process.env.SCRIPT_DEBUG || false
 const MNEMONIC = process.env.SCRIPT_MNEMONIC
@@ -17,6 +18,7 @@ const SAFE_SINGLETON_ADDRESS = process.env.SCRIPT_SAFE_SINGLETON_ADDRESS!!
 const PROXY_FACTORY_ADDRESS = process.env.SCRIPT_PROXY_FACTORY_ADDRESS!!
 const ADD_MODULES_LIB_ADDRESS = process.env.SCRIPT_ADD_MODULES_LIB_ADDRESS!!
 const MODULE_ADDRESS = process.env.SCRIPT_MODULE_ADDRESS!!
+const ERC20_TOKEN_ADDRESS = process.env.SCRIPT_ERC20_TOKEN_ADDRESS!!
 
 const INTERFACES = new ethers.utils.Interface([
   'function enableModule(address)',
@@ -79,10 +81,18 @@ const runOp = async () => {
     await(await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("0.01")})).wait()
   }
 
+  let toAddress = '0x02270bd144e70cE6963bA02F575776A16184E1E6'
+  let callData = "0x"
+  let value: BigNumberish = parseEther('0.0001')
+  if (ERC20_TOKEN_ADDRESS) {
+    toAddress = ERC20_TOKEN_ADDRESS
+    callData = buildData("transfer(address,uint256)", [user1.address, parseEther('1')])
+    value = 0n
+  }
   const operation = await safe.operate({
-    to: '0x02270bd144e70cE6963bA02F575776A16184E1E6',
-    value: parseEther('0.0001'),
-    data: '0x',
+    to: toAddress,
+    value,
+    data: callData,
     operation: 0
   })
   

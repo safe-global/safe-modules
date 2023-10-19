@@ -35,7 +35,7 @@ export const EIP712_SAFE_MESSAGE_TYPE = {
 
 export interface MetaTransaction {
   to: string
-  value: string | number | BigNumber
+  value: BigNumberish
   data: string
   operation: number
 }
@@ -222,7 +222,7 @@ export const executeContractCallWithSigners = async (
 
 export const buildSafeTransaction = (template: {
   to: string
-  value?: BigNumber | number | string
+  value?: BigNumberish
   data?: string
   operation?: number
   safeTxGas?: number | string
