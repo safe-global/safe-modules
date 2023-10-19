@@ -1,4 +1,4 @@
-import hre, { deployments } from 'hardhat'
+import hre, { deployments, ethers } from 'hardhat'
 import { Signer, Contract } from 'ethers'
 import solc from 'solc'
 import { logGas } from '../../src/utils/execution';
@@ -32,11 +32,11 @@ export const getFactory = async () => {
 
 export const getSafeTemplate = async (for4337: boolean = false, saltNumber: string = getRandomIntAsString()) => {
     const singleton = await getMockSafeSingleton(for4337);
-    console.log("singleton", singleton.address)
+    console.log("singleton", await singleton.getAddress())
     console.log("saltNumber", saltNumber)
     const factory = await getFactory();
-    const template = await factory.callStatic.createProxyWithNonce(singleton.address, "0x", saltNumber);
-    await factory.createProxyWithNonce(singleton.address, "0x", saltNumber).then((tx: any) => tx.wait());
+    const template = await factory.createProxyWithNonce.staticCall(await singleton.getAddress(), "0x", saltNumber);
+    await factory.createProxyWithNonce(await singleton.getAddress(), "0x", saltNumber).then((tx: any) => tx.wait());
     const Safe = await hre.ethers.getContractFactory(for4337 ? "Safe4337Mock" : "SafeMock");
     return Safe.attach(template);
 };
@@ -50,6 +50,7 @@ export const getAddModulesLib = async () => {
 export const getSimple4337Module = async () => {
   const ModuleDeployment = await deployments.get("Simple4337Module");
   const Module = await hre.ethers.getContractFactory("Simple4337Module");
+  const m = Module.attach(ModuleDeployment.address);
   return Module.attach(ModuleDeployment.address);
 };
 
@@ -120,5 +121,5 @@ export const deployContract = async (deployer: Signer, source: string): Promise<
   const output = await compile(source)
   const transaction = await deployer.sendTransaction({ data: output.data, gasLimit: 6000000 })
   const receipt = await transaction.wait()
-  return new Contract(receipt.contractAddress, output.interface, deployer)
+  return new Contract(receipt!.contractAddress!, output.interface, deployer)
 }

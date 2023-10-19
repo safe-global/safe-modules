@@ -1,13 +1,12 @@
-import { constants, ethers, utils, providers } from 'ethers'
-import { TypedDataSigner } from '@ethersproject/abstract-signer'
+import { JsonRpcProvider, Provider, ethers } from 'ethers'
+
 // Import from Safe contracts repo once fixed
 import { MetaTransaction, SafeSignature, buildSignatureBytes } from './execution'
 import { UserOperation } from './userOp'
 
 const AddressOne = "0x0000000000000000000000000000000000000001";
 
-
-const INTERFACES = new ethers.utils.Interface([
+const INTERFACES = new ethers.Interface([
     'function enableModule(address)',
     'function setup(address[],uint256,address,bytes,address,address,uint256,address)',
     'function createProxyWithNonce(address,bytes,uint256) returns (address)',
@@ -65,28 +64,28 @@ export interface SafeConfig {
 }
 
 const calculateProxyAddress = (globalConfig: GlobalConfig, inititalizer: string, nonce: number | string): string => {
-    const deploymentCode = ethers.utils.solidityPack(["bytes", "uint256"], [globalConfig.proxyCreationCode, globalConfig.safeSingleton]);
-    const salt = ethers.utils.solidityKeccak256(["bytes32", "uint256"], [ethers.utils.solidityKeccak256(["bytes"], [inititalizer]), nonce]);
-    return ethers.utils.getCreate2Address(globalConfig.proxyFactory, salt, ethers.utils.keccak256(deploymentCode));
+    const deploymentCode = ethers.solidityPacked(["bytes", "uint256"], [globalConfig.proxyCreationCode, globalConfig.safeSingleton]);
+    const salt = ethers.solidityPackedKeccak256(["bytes32", "uint256"], [ethers.solidityPackedKeccak256(["bytes"], [inititalizer]), nonce]);
+    return ethers.getCreate2Address(globalConfig.proxyFactory, salt, ethers.keccak256(deploymentCode));
   };
 
 const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalConfig): { safeAddress: string, initCode: string } => {
     const initData = INTERFACES.encodeFunctionData("enableModules", [[globalConfig.erc4337module]])
     const setupData = INTERFACES.encodeFunctionData("setup", [
-        safeConfig.signers, safeConfig.threshold, globalConfig.addModulesLib, initData, globalConfig.erc4337module, constants.AddressZero, 0, constants.AddressZero
+        safeConfig.signers, safeConfig.threshold, globalConfig.addModulesLib, initData, globalConfig.erc4337module, ethers.ZeroAddress, 0, ethers.ZeroAddress
     ])
     const deployData = INTERFACES.encodeFunctionData("createProxyWithNonce", [
         globalConfig.safeSingleton, setupData, safeConfig.nonce
     ])
     const safeAddress = calculateProxyAddress(globalConfig, setupData, safeConfig.nonce)
-    const initCode = ethers.utils.solidityPack(["address", "bytes"], [globalConfig.proxyFactory, deployData])
+    const initCode = ethers.solidityPacked(["address", "bytes"], [globalConfig.proxyFactory, deployData])
     return {
         safeAddress,
         initCode
     }
 }
 
-const callInterface = async(provider: providers.Provider, contract: string, method: string, params: any[]): Promise<ethers.utils.Result> => {
+const callInterface = async(provider: Provider, contract: string, method: string, params: any[]): Promise<ethers.Result> => {
   const result = await provider.call({ 
     to: contract, 
     data: INTERFACES.encodeFunctionData(method, params)
@@ -102,9 +101,13 @@ const actionCalldata = (action: MetaTransaction): string => {
     )
 }
 
-export class MultiProvider4337 extends providers.JsonRpcProvider {
-    generalProvider: providers.JsonRpcProvider
-    constructor(aaProviderUrl: string, generalProvider: providers.JsonRpcProvider) {
+export interface RpcProvider extends Provider {
+    send(method: string, params: any[]): Promise<any>
+}
+
+export class MultiProvider4337 extends JsonRpcProvider {
+    generalProvider: RpcProvider
+    constructor(aaProviderUrl: string, generalProvider: RpcProvider) {
         super(aaProviderUrl)
         this.generalProvider = generalProvider;
     }
@@ -141,7 +144,7 @@ export class Safe4337Operation {
     }
 
     operationHash(): string {
-        return utils._TypedDataEncoder.hash(
+        return ethers.TypedDataEncoder.hash(
             { chainId: this.globalConfig.chainId, verifyingContract: this.globalConfig.erc4337module }, 
             EIP712_SAFE_OPERATION_TYPE, 
             {
@@ -160,13 +163,13 @@ export class Safe4337Operation {
     async userOperation(paymasterAndData: string = "0x"): Promise<UserOperation> {
         const initCode = await this.safe.isDeployed() ? "0x" : this.safe.getInitCode()
         return {
-            nonce: utils.hexlify(this.params.nonce),
+            nonce: ethers.toBeHex(this.params.nonce),
             callData: actionCalldata(this.action),
-            verificationGasLimit: utils.hexValue(this.params.verificationGasLimit),
-            preVerificationGas: utils.hexlify(this.params.preVerificationGas),
-            callGasLimit: utils.hexlify(this.params.callGasLimit),
-            maxFeePerGas: utils.hexlify(this.params.maxFeePerGas),
-            maxPriorityFeePerGas: utils.hexlify(this.params.maxPriorityFeePerGas),
+            verificationGasLimit: ethers.toBeHex(this.params.verificationGasLimit),
+            preVerificationGas: ethers.toBeHex(this.params.preVerificationGas),
+            callGasLimit: ethers.toBeHex(this.params.callGasLimit),
+            maxFeePerGas: ethers.toBeHex(this.params.maxFeePerGas),
+            maxPriorityFeePerGas: ethers.toBeHex(this.params.maxPriorityFeePerGas),
             initCode,
             paymasterAndData,
             sender: this.safe.address,
@@ -174,14 +177,14 @@ export class Safe4337Operation {
           }
     }
 
-    async authorize(signer: ethers.Signer & TypedDataSigner) {
+    async authorize(signer: ethers.Signer) {
         const validSigners = await this.safe.getSigners()
         const signerAddress = await signer.getAddress()
         if (validSigners.indexOf(signerAddress) < 0) throw Error("Invalid Signer")
         if (this.signatures.findIndex((signature) => signature.signer === signerAddress) >= 0) throw Error("Already signed")
         this.signatures.push({
             signer: signerAddress,
-            data: await signer._signTypedData(
+            data: await signer.signTypedData(
                 { chainId: this.globalConfig.chainId, verifyingContract: this.globalConfig.erc4337module }, 
                 EIP712_SAFE_OPERATION_TYPE, 
                 {
@@ -195,20 +198,20 @@ export class Safe4337Operation {
         console.log(this.signatures)
     }
 
-    static async build(provider: providers.JsonRpcProvider, safe: Safe4337, action: MetaTransaction, globalConfig: GlobalConfig): Promise<Safe4337Operation> {
+    static async build(provider: JsonRpcProvider, safe: Safe4337, action: MetaTransaction, globalConfig: GlobalConfig): Promise<Safe4337Operation> {
         const initCode = await safe.isDeployed() ? "0x" : safe.getInitCode()
         const nonce = (await callInterface(provider, globalConfig.entryPoint, "getNonce", [safe.address, 0]))[0]
         const estimateOperation = {
             sender: safe.address,
             callData: actionCalldata(action),
             paymasterAndData: "0x",
-            nonce: utils.hexlify(nonce),
+            nonce: ethers.toBeHex(nonce),
             initCode,
             signature: "0x".padEnd(130, "a"),
             // For some providers we need to set some really high values to allow estimation
-            preVerificationGas: utils.hexlify(1000000),
-            verificationGasLimit: utils.hexlify(1000000),
-            callGasLimit: utils.hexlify(10000000),
+            preVerificationGas: ethers.toBeHex(1000000),
+            verificationGasLimit: ethers.toBeHex(1000000),
+            callGasLimit: ethers.toBeHex(10000000),
             // To keep the required funds low, the gas fee is set close to the minimum
             maxFeePerGas: "0x10",
             maxPriorityFeePerGas: "0x10",
@@ -221,13 +224,13 @@ export class Safe4337Operation {
         const feeData = await provider.getFeeData()
         const params: OperationParams = {
             nonce,
-            maxFeePerGas: feeData.maxFeePerGas!!.toBigInt(),
-            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!!.toBigInt(),
+            maxFeePerGas: feeData.maxFeePerGas!,
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
             // Add a small margin as some dataoverhead calculation is not always accurate
-            preVerificationGas: BigInt(estimates.preVerificationGas) + BigInt(1000),
+            preVerificationGas: BigInt(estimates.preVerificationGas) + 1000n,
             // Add 20% to the gas limits to account for inaccurate estimations
-            verificationGasLimit: BigInt(estimates.verificationGasLimit) * BigInt(12) / BigInt(10),
-            callGasLimit: BigInt(estimates.callGasLimit) * BigInt(12) / BigInt(10),
+            verificationGasLimit: BigInt(estimates.verificationGasLimit) * 12n / 10n,
+            callGasLimit: BigInt(estimates.callGasLimit) * 12n / 10n,
         }
         return new Safe4337Operation(safe, action, params, globalConfig)
     }
@@ -238,7 +241,7 @@ export class Safe4337 {
     public address: string;
     private globalConfig: GlobalConfig;
     private safeConfig: SafeConfig | undefined;
-    private provider: providers.JsonRpcProvider | undefined;
+    private provider: JsonRpcProvider | undefined;
 
     constructor(address: string, globalConfig: GlobalConfig, safeConfig?: SafeConfig) {
         if (safeConfig) {
@@ -250,7 +253,7 @@ export class Safe4337 {
         this.safeConfig = safeConfig
     }
 
-    connect(provider: providers.JsonRpcProvider): Safe4337 {
+    connect(provider: JsonRpcProvider): Safe4337 {
         this.provider = provider;
         return this;
     }

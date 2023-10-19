@@ -1,6 +1,5 @@
 import { expect } from 'chai'
-import { deployments, ethers, waffle } from 'hardhat'
-import '@nomiclabs/hardhat-ethers'
+import { deployments, ethers } from 'hardhat'
 import { getSimple4337Module, getEntryPoint, getFactory, getAddModulesLib, getSafeL2Singleton } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
@@ -12,7 +11,7 @@ import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
 describe('EIP4337Module - Newly deployed safe', async () => {
-  const [user1] = waffle.provider.getWallets()
+  const [user1] = await ethers.getSigners()
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
@@ -24,13 +23,13 @@ describe('EIP4337Module - Newly deployed safe', async () => {
     const addModulesLib = await getAddModulesLib()
     const singleton = await getSafeL2Singleton()
     const safe = await Safe4337.withSigner(user1.address, {
-      safeSingleton: singleton.address,
-      entryPoint: entryPoint.address,
-      erc4337module: module.address,
-      proxyFactory: proxyFactory.address,
-      addModulesLib: addModulesLib.address,
+      safeSingleton: await singleton.getAddress(),
+      entryPoint: await entryPoint.getAddress(),
+      erc4337module: await module.getAddress(),
+      proxyFactory: await proxyFactory.getAddress(),
+      addModulesLib: await addModulesLib.getAddress(),
       proxyCreationCode,
-      chainId: await chainId()
+      chainId: Number(await chainId()),
     })
 
     return {
@@ -47,9 +46,9 @@ describe('EIP4337Module - Newly deployed safe', async () => {
     it('should revert with invalid signature', async () => {
       const { safe, entryPoint } = await setupTests()
 
-      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("1.0")})
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
-      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
+      await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.parseEther("0.5"), "0x", '0', await entryPoint.getAddress())
       const signature = buildSignatureBytes([await signSafeOp(user1, user1.address, safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
         safeAddress: safe.address, 
@@ -58,16 +57,16 @@ describe('EIP4337Module - Newly deployed safe', async () => {
         initCode: safe.getInitCode()
       })
       await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWith("Signature validation failed")
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
     })
 
     it('should execute contract calls without fee', async () => {
       const { safe, validator, entryPoint } = await setupTests()
 
-      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("1.0")})
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
-      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
-      const signature = buildSignatureBytes([await signSafeOp(user1, validator.address, safeOp, await chainId())])
+      await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.parseEther("0.5"), "0x", '0', await entryPoint.getAddress())
+      const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
         safeAddress: safe.address, 
         safeOp, 
@@ -78,16 +77,16 @@ describe('EIP4337Module - Newly deployed safe', async () => {
         "Execute UserOp without fee payment",
         entryPoint.executeUserOp(userOp, 0)
       )
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.5"))
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("0.5"))
     })
 
     it('should not be able to execute contract calls twice', async () => {
       const { safe, validator, entryPoint } = await setupTests()
 
-      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("1.0")})
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
-      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
-      const signature = buildSignatureBytes([await signSafeOp(user1, validator.address, safeOp, await chainId())])
+      await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.parseEther("0.5"), "0x", '0', await entryPoint.getAddress())
+      const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
         safeAddress: safe.address, 
         safeOp, 
@@ -98,17 +97,17 @@ describe('EIP4337Module - Newly deployed safe', async () => {
         "Execute UserOp without fee payment",
         entryPoint.executeUserOp(userOp, 0)
       )
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.5"))
-      await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWith("InvalidNonce(0)")
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("0.5"))
+      await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWithCustomError(entryPoint, "InvalidNonce").withArgs(0)
     })
 
     it('should execute contract calls with fee', async () => {
       const { safe, validator, entryPoint } = await setupTests()
 
-      await user1.sendTransaction({to: safe.address, value: ethers.utils.parseEther("1.0")})
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("1.0"))
-      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.utils.parseEther("0.5"), "0x", '0', entryPoint.address)
-      const signature = buildSignatureBytes([await signSafeOp(user1, validator.address, safeOp, await chainId())])
+      await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(safe.address, user1.address, ethers.parseEther("0.5"), "0x", '0', await entryPoint.getAddress())
+      const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
         safeAddress: safe.address, 
         safeOp, 
@@ -117,9 +116,9 @@ describe('EIP4337Module - Newly deployed safe', async () => {
       })
       await logGas(
         "Execute UserOp with fee payment",
-        entryPoint.executeUserOp(userOp, ethers.utils.parseEther("0.000001"))
+        entryPoint.executeUserOp(userOp, ethers.parseEther("0.000001"))
       )
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.utils.parseEther("0.499999"))
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("0.499999"))
     })
   })
 })
