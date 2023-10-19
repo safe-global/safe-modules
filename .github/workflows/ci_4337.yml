@@ -8,11 +8,11 @@ jobs:
       run:
         working-directory: ./4337
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
         with:
-          node-version: 18.17.1
-          cache: 'npm'
+          node-version: 18.x
+          cache: npm
           cache-dependency-path: 4337/package-lock.json
       - run: npm ci 
       - run: npm run build
@@ -20,7 +20,7 @@ jobs:
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
-          path-to-lcov: '4337/coverage/lcov.info'
+          path-to-lcov: 4337/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
   lint:
     runs-on: ubuntu-latest
@@ -28,12 +28,11 @@ jobs:
       run:
         working-directory: ./4337
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
         with:
-          node-version: 18.17.1
-          cache: 'npm'
+          node-version: 18.x
+          cache: npm
           cache-dependency-path: 4337/package-lock.json
-      - run: npm ci 
-        working-directory: ./4337
+      - run: npm ci
       - run: npm run lint:sol
