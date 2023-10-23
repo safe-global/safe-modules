@@ -17,9 +17,8 @@ describe('EIP4337Safe', async () => {
     await deployments.fixture()
 
     const entryPoint = await getEntryPoint()
-    const module = await getSimple4337Module()
     const safe = await get4337TestSafe(user1, ethers.ZeroAddress, ethers.ZeroAddress)
-    const safe4337 = module.attach(await safe.getAddress()) as typeof module;
+    const safe4337 = await ethers.getContractAt("Simple4337Module", await safe.getAddress());
 
     return {
       safe,

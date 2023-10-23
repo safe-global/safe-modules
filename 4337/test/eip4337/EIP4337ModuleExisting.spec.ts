@@ -130,7 +130,7 @@ describe('EIP4337Module - Existing Safe', async () => {
     it('executeUserOpWithErrorString reverts on failure and bubbles up the revert reason', async () => {
       const { safe, validator, entryPoint } = await setupTests()
       const reverterContract = await ethers.getContractFactory("TestReverter").then(factory => factory.deploy())
-      const callData = reverterContract.interface.encodeFunctionData("alwaysReverting", [])
+      const callData = reverterContract.interface.encodeFunctionData("alwaysReverting")
 
       await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("0.000001")})
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("0.000001"))
