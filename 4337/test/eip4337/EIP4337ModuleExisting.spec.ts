@@ -11,15 +11,16 @@ import {
 import { chainId } from '../utils/encoding'
 
 describe('EIP4337Module - Existing Safe', async () => {
-  const [user1] = await ethers.getSigners()
-
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
+
+    const [user1] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
     const module = await getSimple4337Module()
     const safe = await getTestSafe(user1, await module.getAddress(), await module.getAddress())
 
     return {
+      user1,
       safe,
       validator: module,
       entryPoint
@@ -50,7 +51,7 @@ describe('EIP4337Module - Existing Safe', async () => {
   describe('execTransaction - existing account', () => {
 
     it('should revert with invalid signature', async () => {
-      const { safe, entryPoint } = await setupTests()
+      const { user1, safe, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("1.0"))
@@ -62,7 +63,7 @@ describe('EIP4337Module - Existing Safe', async () => {
     })
 
     it('should execute contract calls without fee', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("1.0"))
@@ -78,7 +79,7 @@ describe('EIP4337Module - Existing Safe', async () => {
     })
 
     it('should not be able to execute contract calls twice', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("1.0"))
@@ -95,7 +96,7 @@ describe('EIP4337Module - Existing Safe', async () => {
     })
 
     it('should execute contract calls with fee', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("1.0"))
@@ -111,7 +112,7 @@ describe('EIP4337Module - Existing Safe', async () => {
     })
 
     it('reverts on failure', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("0.000001")})
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("0.000001"))
@@ -128,7 +129,7 @@ describe('EIP4337Module - Existing Safe', async () => {
     })
 
     it('executeUserOpWithErrorString reverts on failure and bubbles up the revert reason', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
       const reverterContract = await ethers.getContractFactory("TestReverter").then(factory => factory.deploy())
       const callData = reverterContract.interface.encodeFunctionData("alwaysReverting")
 

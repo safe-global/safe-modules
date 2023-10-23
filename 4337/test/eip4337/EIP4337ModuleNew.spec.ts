@@ -11,11 +11,10 @@ import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
 describe('EIP4337Module - Newly deployed safe', async () => {
-  const [user1] = await ethers.getSigners()
-
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
     
+    const [user1] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
     const module = await getSimple4337Module()
     const proxyFactory = await getFactory()
@@ -33,6 +32,7 @@ describe('EIP4337Module - Newly deployed safe', async () => {
     })
 
     return {
+      user1,
       safe,
       proxyFactory,
       addModulesLib,
@@ -44,7 +44,7 @@ describe('EIP4337Module - Newly deployed safe', async () => {
   describe('execTransaction - new account', () => {
 
     it('should revert with invalid signature', async () => {
-      const { safe, entryPoint } = await setupTests()
+      const { user1, safe, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
@@ -61,7 +61,7 @@ describe('EIP4337Module - Newly deployed safe', async () => {
     })
 
     it('should execute contract calls without fee', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
@@ -81,7 +81,7 @@ describe('EIP4337Module - Newly deployed safe', async () => {
     })
 
     it('should not be able to execute contract calls twice', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))
@@ -102,7 +102,7 @@ describe('EIP4337Module - Newly deployed safe', async () => {
     })
 
     it('should execute contract calls with fee', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({to: safe.address, value: ethers.parseEther("1.0")})
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther("1.0"))

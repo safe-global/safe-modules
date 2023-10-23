@@ -11,16 +11,16 @@ import {
 import { chainId } from '../utils/encoding'
 
 describe('EIP4337Safe', async () => {
-  const [user1] = await ethers.getSigners()
-
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 
+    const [user1] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
     const safe = await get4337TestSafe(user1, ethers.ZeroAddress, ethers.ZeroAddress)
     const safe4337 = await ethers.getContractAt("Simple4337Module", await safe.getAddress());
 
     return {
+      user1,
       safe,
       validator: safe4337,
       entryPoint,
@@ -50,7 +50,7 @@ describe('EIP4337Safe', async () => {
 
   describe('execTransaction', () => {
     it('should execute contract calls without fee', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
@@ -63,7 +63,7 @@ describe('EIP4337Safe', async () => {
     })
 
     it('should execute contract calls with fee', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
