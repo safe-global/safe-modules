@@ -182,10 +182,6 @@ export const getRequiredPrefund = (userOp: UserOperation): string => {
   return requiredPrefund
 }
 
-export const calculateIntermediateTxHash = (callData: string, nonce: BigNumberish, entryPoint: string, chainId: BigNumberish): string => {
-  return ethers.solidityPackedKeccak256(['bytes', 'uint256', 'address', 'uint256'], [callData, nonce, entryPoint, chainId])
-}
-
 export const getSupportedEntryPoints = async (provider: ethers.JsonRpcProvider): Promise<string[]> => {
   const supportedEntryPoints = await provider.send('eth_supportedEntryPoints', [])
   console.log({ supportedEntryPoints })
