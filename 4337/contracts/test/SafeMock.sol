@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import "../UserOperation.sol";
-
 import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@safe-global/safe-contracts/contracts/SafeL2.sol";
 
-import {INonceManager} from "../interfaces/ERC4337.sol";
+import {INonceManager, UserOperation} from "../interfaces/ERC4337.sol";
+import {UserOperationLib} from "./UserOperationLib.sol";
 
 contract SafeMock {
     address public immutable supportedEntryPoint;
@@ -164,7 +163,8 @@ contract Safe4337Mock is SafeMock {
         _validateSignatures(entryPoint, userOp);
 
         if (requiredPrefund != 0) {
-            entryPoint.call{value: requiredPrefund}("");
+            (bool success, ) = entryPoint.call{value: requiredPrefund}("");
+            success;
         }
         return 0;
     }
@@ -307,7 +307,7 @@ contract Safe4337Mock is SafeMock {
         checkSignatures(operationHash, operationData, userOp.signature);
     }
 
-    function validateReplayProtection(UserOperation calldata userOp) internal {
+    function validateReplayProtection(UserOperation calldata userOp) internal view {
         // The entrypoints handles the increase of the nonce
         // Right shifting fills up with 0s from the left
         uint192 key = uint192(userOp.nonce >> 64);

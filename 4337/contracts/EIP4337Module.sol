@@ -3,14 +3,11 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
-import {UserOperation, UserOperationLib} from "./UserOperation.sol";
-import {INonceManager} from "./interfaces/ERC4337.sol";
+import {IAccount, INonceManager, UserOperation} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /// @title EIP4337Module
-contract Simple4337Module is HandlerContext, CompatibilityFallbackHandler {
-    using UserOperationLib for UserOperation;
-
+contract Simple4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     // value in case of signature failure, with no time-range.
     // equivalent to _packValidationData(true,0,0);
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
@@ -97,6 +94,7 @@ contract Simple4337Module is HandlerContext, CompatibilityFallbackHandler {
 
         (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
         if (!success) {
+            // solhint-disable-next-line no-inline-assembly
             assembly {
                 revert(add(returnData, 0x20), returnData)
             }
