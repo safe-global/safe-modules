@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
-import {INonceManager} from "../interfaces/ERC4337.sol";
-import {UserOperation, UserOperationLib} from "../UserOperation.sol";
-
-interface Account {
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32,
-        uint256 requiredPrefund
-    ) external returns (uint256);
-}
+import {INonceManager, IAccount, UserOperation} from "../interfaces/ERC4337.sol";
+import {UserOperationLib} from "./UserOperationLib.sol";
 
 /**
  * helper contract for EntryPoint, to call userOp.initCode from a "neutral" address,
@@ -41,7 +33,7 @@ contract TestEntryPoint is INonceManager {
     error InvalidNonce(uint256 userNonce);
     event UserOpReverted(bytes reason);
     SenderCreator public immutable senderCreator;
-    mapping(address => uint256) balances;
+    mapping(address => uint256) public balances;
     mapping(address => mapping(uint192 => uint256)) public nonceSequenceNumber;
 
     constructor() {
@@ -60,7 +52,7 @@ contract TestEntryPoint is INonceManager {
 
         require(gasleft() > userOp.verificationGasLimit, "Not enough gas for verification");
 
-        uint256 validationResult = Account(userOp.sender).validateUserOp{gas: userOp.verificationGasLimit}(
+        uint256 validationResult = IAccount(userOp.sender).validateUserOp{gas: userOp.verificationGasLimit}(
             userOp,
             bytes32(0),
             requiredPrefund
