@@ -106,12 +106,6 @@ npm run build
 npm run test
 ```
 
-### Run script
-
-```bash
-npx hardhat run scripts/runOp.ts --network goerli
-```
-
 ### Deploy
 
 > :warning: **Make sure to use the correct commit when deploying the contracts.** Any change (even comments) within the contract files will result in different addresses. The tagged versions that are used by the Safe team can be found in the [releases](https://github.com/safe-modules/releases).
@@ -134,6 +128,17 @@ npm run build
 npx hardhat --network <network> deploy
 npx hardhat --network <network> etherscan-verify
 npx hardhat --network <network> local-verify
+```
+
+### Run script
+
+Preparation:
+- Set `DEPLOY_ENTRY_POINT` in `.env`, this should be the entry point supported by the 4337 bundler RPC endpoint that you are connected to.
+- Deploy contracts (see _Deploy_ section)
+- Set `SCRIPT_*` in `.env`
+
+```bash
+npx hardhat run scripts/runOp.ts --network goerli
 ```
 
 ### Compiler settings
