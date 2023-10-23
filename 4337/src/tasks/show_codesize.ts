@@ -1,5 +1,3 @@
-import 'hardhat-deploy'
-import '@nomiclabs/hardhat-ethers'
 import { task, types } from 'hardhat/config'
 import { loadSolc } from '../utils/solc'
 
@@ -14,7 +12,7 @@ task('codesize', 'Displays the codesize of the contracts')
     for (const contract of contracts) {
       const artifact = await hre.artifacts.readArtifact(contract)
       if (taskArgs.contractname && taskArgs.contractname !== artifact.contractName) continue
-      console.log(artifact.contractName, Math.max(0, (artifact.deployedBytecode.length - 2) / 2), 'bytes (limit is 24576)')
+      console.log(artifact.contractName, hre.ethers.dataLength(artifact.deployedBytecode), 'bytes (limit is 24576)')
     }
   })
 

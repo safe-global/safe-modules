@@ -1,5 +1,5 @@
-import { Contract, BigNumber, utils as ethersUtils, BigNumberish, ethers, Signer } from 'ethers'
-import { TypedDataSigner } from '@ethersproject/abstract-signer'
+import { BigNumberish, Contract, Signer, ethers } from 'ethers'
+
 import { SafeSignature } from './execution'
 
 type OptionalExceptFor<T, TRequired extends keyof T = keyof T> = Partial<Pick<T, Exclude<keyof T, TRequired>>> &
@@ -47,18 +47,18 @@ export const EIP712_SAFE_OPERATION_TYPE = {
 }
 
 export const calculateSafeOperationHash = (eip4337ModuleAddress: string, safeOp: SafeUserOperation, chainId: BigNumberish): string => {
-  return ethersUtils._TypedDataEncoder.hash({ chainId, verifyingContract: eip4337ModuleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp)
+  return ethers.TypedDataEncoder.hash({ chainId, verifyingContract: eip4337ModuleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp)
 }
 
 export const signSafeOp = async (
-  signer: Signer & TypedDataSigner,
+  signer: Signer,
   moduleAddress: string,
   safeOp: SafeUserOperation,
-  chainId: BigNumberish
+  chainId: BigNumberish,
 ): Promise<SafeSignature> => {
   return {
     signer: await signer.getAddress(),
-    data: await signer._signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
+    data: await signer.signTypedData({ chainId, verifyingContract: moduleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp),
   }
 }
 
@@ -95,7 +95,7 @@ export const buildSafeUserOpTransaction = (
     'function executeUserOpWithErrorString(address to, uint256 value, bytes calldata data, uint8 operation) external',
   ]
   const method = bubbleUpRevertReason ? 'executeUserOpWithErrorString' : 'executeUserOp'
-  const callData = new ethersUtils.Interface(abi).encodeFunctionData(method, [to, value, data, delegateCall ? 1 : 0])
+  const callData = new ethers.Interface(abi).encodeFunctionData(method, [to, value, data, delegateCall ? 1 : 0])
 
   return buildSafeUserOp(
     Object.assign(
@@ -110,7 +110,7 @@ export const buildSafeUserOpTransaction = (
   )
 }
 
-export const buildSafeUserOpContractCall = (
+export const buildSafeUserOpContractCall = async (
   contract: Contract,
   method: string,
   params: any[],
@@ -121,33 +121,43 @@ export const buildSafeUserOpContractCall = (
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
   overrides?: Partial<SafeUserOperation>,
-): SafeUserOperation => {
+): Promise<SafeUserOperation> => {
   const data = contract.interface.encodeFunctionData(method, params)
 
-  return buildSafeUserOpTransaction(safeAddress, contract.address, operationValue, data, nonce, entryPoint, delegateCall, bubbleUpRevertReason, overrides)
+  return buildSafeUserOpTransaction(
+    safeAddress,
+    await contract.getAddress(),
+    operationValue,
+    data,
+    nonce,
+    entryPoint,
+    delegateCall,
+    bubbleUpRevertReason,
+    overrides,
+  )
 }
 
 export const buildUserOperationFromSafeUserOperation = ({
   safeOp,
   signature,
-  initCode = "0x"
+  initCode = '0x',
 }: {
   safeAddress: string
   safeOp: SafeUserOperation
-  signature: string,
+  signature: string
   initCode?: string
 }): UserOperation => {
   return {
-    nonce: ethers.utils.hexlify(BigInt(safeOp.nonce)),
+    nonce: ethers.toBeHex(safeOp.nonce),
     callData: safeOp.callData || '0x',
-    verificationGasLimit: ethers.utils.hexValue(BigInt(safeOp.verificationGasLimit || '300000')),
-    preVerificationGas: ethers.utils.hexlify(BigInt(safeOp.preVerificationGas || '50000')),
-    callGasLimit: ethers.utils.hexlify(BigInt(safeOp.callGasLimit || '2000000')),
+    verificationGasLimit: ethers.toBeHex(safeOp.verificationGasLimit || '300000'),
+    preVerificationGas: ethers.toBeHex(safeOp.preVerificationGas || '50000'),
+    callGasLimit: ethers.toBeHex(safeOp.callGasLimit || '2000000'),
     // use same maxFeePerGas and maxPriorityFeePerGas to ease testing prefund validation
     // otherwise it's tricky to calculate the prefund because of dynamic parameters like block.basefee
     // check UserOperation.sol#gasPrice()
-    maxFeePerGas: ethers.utils.hexlify(BigInt(safeOp.maxFeePerGas || '5000000000')),
-    maxPriorityFeePerGas: ethers.utils.hexlify(BigInt(safeOp.maxPriorityFeePerGas || '1500000000')),
+    maxFeePerGas: ethers.toBeHex(safeOp.maxFeePerGas || '5000000000'),
+    maxPriorityFeePerGas: ethers.toBeHex(safeOp.maxPriorityFeePerGas || '1500000000'),
     initCode,
     paymasterAndData: '0x',
     sender: safeOp.safe,
@@ -156,32 +166,24 @@ export const buildUserOperationFromSafeUserOperation = ({
 }
 
 export const getRequiredGas = (userOp: UserOperation): string => {
-  let multiplier = 3
-  if (userOp.paymasterAndData === "0x") {
-    multiplier = 1
+  let multiplier = 3n
+  if (userOp.paymasterAndData === '0x') {
+    multiplier = 1n
   }
 
-  return BigNumber.from(userOp.callGasLimit)
-    .add(BigNumber.from(userOp.verificationGasLimit).mul(multiplier))
-    .add(userOp.preVerificationGas)
-    .toString()
+  return (BigInt(userOp.callGasLimit) + BigInt(userOp.verificationGasLimit) * multiplier + BigInt(userOp.preVerificationGas)).toString()
 }
 
 export const getRequiredPrefund = (userOp: UserOperation): string => {
-  console.log({
-    requiredGas: getRequiredGas(userOp),
-    requiredPrefund: BigNumber.from(getRequiredGas(userOp)).mul(BigNumber.from(userOp.maxFeePerGas)).toString(),
-  })
+  const requiredGas = getRequiredGas(userOp)
+  const requiredPrefund = (BigInt(requiredGas) * BigInt(userOp.maxFeePerGas)).toString()
+  console.log({ requiredGas, requiredPrefund })
 
-  return BigNumber.from(getRequiredGas(userOp)).mul(BigNumber.from(userOp.maxFeePerGas)).toString()
+  return requiredPrefund
 }
 
-export const calculateIntermediateTxHash = (callData: string, nonce: BigNumberish, entryPoint: string, chainId: BigNumberish): string => {
-  return ethersUtils.solidityKeccak256(['bytes', 'uint256', 'address', 'uint256'], [callData, nonce, entryPoint, chainId])
-}
-
-export const getSupportedEntryPoints = async (provider: ethers.providers.JsonRpcProvider): Promise<string[]> => {
+export const getSupportedEntryPoints = async (provider: ethers.JsonRpcProvider): Promise<string[]> => {
   const supportedEntryPoints = await provider.send('eth_supportedEntryPoints', [])
   console.log({ supportedEntryPoints })
-  return supportedEntryPoints.map(ethers.utils.getAddress)
+  return supportedEntryPoints.map(ethers.getAddress)
 }
