@@ -12,7 +12,7 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
-describe('Simple4337Module', async () => {
+describe('Simple4337Module', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 

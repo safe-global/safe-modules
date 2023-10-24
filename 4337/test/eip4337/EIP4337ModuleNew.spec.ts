@@ -10,7 +10,7 @@ import {
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
-describe('EIP4337Module - Newly deployed safe', async () => {
+describe('EIP4337Module - Newly deployed safe', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
     
@@ -42,7 +42,6 @@ describe('EIP4337Module - Newly deployed safe', async () => {
   })
 
   describe('execTransaction - new account', () => {
-
     it('should revert with invalid signature', async () => {
       const { user1, safe, entryPoint } = await setupTests()
 

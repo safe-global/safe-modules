@@ -10,7 +10,7 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
-describe('EIP4337Safe', async () => {
+describe('EIP4337Safe', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 
