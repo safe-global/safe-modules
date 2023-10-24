@@ -44,7 +44,11 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    compilers: [{ version: primarySolidityVersion, settings: { evmVersion: 'paris', ...soliditySettings }}, { version: '0.6.12' }, { version: '0.5.17' }],
+    compilers: [
+      { version: primarySolidityVersion, settings: { evmVersion: 'paris', ...soliditySettings } },
+      { version: '0.6.12' },
+      { version: '0.5.17' },
+    ],
   },
   networks: {
     hardhat: {

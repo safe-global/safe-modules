@@ -17,7 +17,7 @@ describe('EIP4337Safe', () => {
     const [user1] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
     const safe = await get4337TestSafe(user1, ethers.ZeroAddress, ethers.ZeroAddress)
-    const safe4337 = await ethers.getContractAt("Simple4337Module", await safe.getAddress());
+    const safe4337 = await ethers.getContractAt('Simple4337Module', await safe.getAddress())
 
     return {
       user1,
@@ -54,7 +54,14 @@ describe('EIP4337Safe', () => {
 
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
-      const safeOp = buildSafeUserOpTransaction(await safe.getAddress(), user1.address, ethers.parseEther('0.5'), '0x', '0', await entryPoint.getAddress())
+      const safeOp = buildSafeUserOpTransaction(
+        await safe.getAddress(),
+        user1.address,
+        ethers.parseEther('0.5'),
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+      )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
@@ -67,7 +74,14 @@ describe('EIP4337Safe', () => {
 
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
-      const safeOp = buildSafeUserOpTransaction(await safe.getAddress(), user1.address, ethers.parseEther('0.5'), '0x', '0', await entryPoint.getAddress())
+      const safeOp = buildSafeUserOpTransaction(
+        await safe.getAddress(),
+        user1.address,
+        ethers.parseEther('0.5'),
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+      )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })

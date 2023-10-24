@@ -2,78 +2,72 @@ import hre, { deployments, ethers } from 'hardhat'
 import { Signer, Contract } from 'ethers'
 import solc from 'solc'
 import { logGas } from '../../src/utils/execution'
-import { Safe4337Mock, SafeMock } from '../../typechain-types';
+import { Safe4337Mock, SafeMock } from '../../typechain-types'
 
 const getRandomInt = (min = 0, max: number = Number.MAX_SAFE_INTEGER): number => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
 
 const getRandomIntAsString = (min = 0, max: number = Number.MAX_SAFE_INTEGER): string => {
-  return getRandomInt(min, max).toString();
-};
+  return getRandomInt(min, max).toString()
+}
 
 export const getSafeL2Singleton = async () => {
-  const SafeDeployment = await deployments.get("SafeL2");
-  return await ethers.getContractAt("SafeL2", SafeDeployment.address);
-};
+  const SafeDeployment = await deployments.get('SafeL2')
+  return await ethers.getContractAt('SafeL2', SafeDeployment.address)
+}
 
 export const getMockSafeSingleton = async (for4337: boolean) => {
-  const version = for4337 ? "Safe4337Mock" : "SafeMock";
-  const SafeDeployment = await deployments.get(version);
-  return await ethers.getContractAt(version, SafeDeployment.address);
-};
+  const version = for4337 ? 'Safe4337Mock' : 'SafeMock'
+  const SafeDeployment = await deployments.get(version)
+  return await ethers.getContractAt(version, SafeDeployment.address)
+}
 
 export const getFactory = async () => {
-    const FactoryDeployment = await deployments.get("SafeProxyFactory");
-    return await ethers.getContractAt("SafeProxyFactory", FactoryDeployment.address);
-};
+  const FactoryDeployment = await deployments.get('SafeProxyFactory')
+  return await ethers.getContractAt('SafeProxyFactory', FactoryDeployment.address)
+}
 
 export const getSafeTemplate = async (for4337: boolean = false, saltNumber: string = getRandomIntAsString()) => {
-    const singleton = await getMockSafeSingleton(for4337);
-    console.log("singleton", await singleton.getAddress())
-    console.log("saltNumber", saltNumber)
-    const factory = await getFactory();
-    const template = await factory.createProxyWithNonce.staticCall(await singleton.getAddress(), "0x", saltNumber);
-    await factory.createProxyWithNonce(await singleton.getAddress(), "0x", saltNumber).then((tx: any) => tx.wait());
-    return await ethers.getContractAt(for4337 ? "Safe4337Mock" : "SafeMock", template);
-};
+  const singleton = await getMockSafeSingleton(for4337)
+  console.log('singleton', await singleton.getAddress())
+  console.log('saltNumber', saltNumber)
+  const factory = await getFactory()
+  const template = await factory.createProxyWithNonce.staticCall(await singleton.getAddress(), '0x', saltNumber)
+  await factory.createProxyWithNonce(await singleton.getAddress(), '0x', saltNumber).then((tx: any) => tx.wait())
+  return await ethers.getContractAt(for4337 ? 'Safe4337Mock' : 'SafeMock', template)
+}
 
 export const getAddModulesLib = async () => {
-  const LibDeployment = await deployments.get("AddModulesLib");
-  return await ethers.getContractAt("AddModulesLib", LibDeployment.address);
-};
+  const LibDeployment = await deployments.get('AddModulesLib')
+  return await ethers.getContractAt('AddModulesLib', LibDeployment.address)
+}
 
 export const getSimple4337Module = async () => {
-  const ModuleDeployment = await deployments.get("Simple4337Module");
-  return await ethers.getContractAt("Simple4337Module", ModuleDeployment.address);
-};
+  const ModuleDeployment = await deployments.get('Simple4337Module')
+  return await ethers.getContractAt('Simple4337Module', ModuleDeployment.address)
+}
 
 export const getEntryPoint = async () => {
-  const EntryPointDeployment = await deployments.get("TestEntryPoint");
-  return await ethers.getContractAt("TestEntryPoint", EntryPointDeployment.address);
-};
+  const EntryPointDeployment = await deployments.get('TestEntryPoint')
+  return await ethers.getContractAt('TestEntryPoint', EntryPointDeployment.address)
+}
 
 export const getSafeAtAddress = async (address: string) => {
   return await ethers.getContractAt('SafeMock', address)
 }
 
 export const getTestSafe = async (deployer: Signer, fallbackHandler: string, moduleAddr: string) => {
-  const template = await getSafeTemplate() as unknown as SafeMock;
-  console.log("Template", await template.getAddress())
-  await logGas(
-      `Setup Safe for ${await deployer.getAddress()}`,
-      template.setup(fallbackHandler, moduleAddr)
-  );
-  return template;
+  const template = (await getSafeTemplate()) as unknown as SafeMock
+  console.log('Template', await template.getAddress())
+  await logGas(`Setup Safe for ${await deployer.getAddress()}`, template.setup(fallbackHandler, moduleAddr))
+  return template
 }
 
 export const get4337TestSafe = async (deployer: Signer, fallbackHandler: string, moduleAddr: string) => {
-  const template = await getSafeTemplate(true) as unknown as Safe4337Mock;
-  await logGas(
-      `Setup Safe for ${await deployer.getAddress()}`,
-      template.setup(fallbackHandler, moduleAddr)
-  );
-  return template;
+  const template = (await getSafeTemplate(true)) as unknown as Safe4337Mock
+  await logGas(`Setup Safe for ${await deployer.getAddress()}`, template.setup(fallbackHandler, moduleAddr))
+  return template
 }
 
 export const compile = async (source: string) => {

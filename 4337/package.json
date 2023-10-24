@@ -24,7 +24,7 @@
     "lint": "yarn lint:sol && yarn lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint --max-warnings 0 .",
-    "fmt:sol": "prettier 'contracts/**/*.sol' -w",
+    "fmt": "prettier --ignore-path .gitignore --write .",
     "prepack": "yarn build",
     "prepare": "cd .. && husky install 4337/.husky",
     "prepublish": "yarn rimraf build && yarn build && yarn build:ts"
