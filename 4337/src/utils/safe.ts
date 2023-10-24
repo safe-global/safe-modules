@@ -198,7 +198,7 @@ export class Safe4337Operation {
         console.log(this.signatures)
     }
 
-    static async build(provider: JsonRpcProvider, safe: Safe4337, action: MetaTransaction, globalConfig: GlobalConfig): Promise<Safe4337Operation> {
+    static async build(provider: RpcProvider, safe: Safe4337, action: MetaTransaction, globalConfig: GlobalConfig): Promise<Safe4337Operation> {
         const initCode = await safe.isDeployed() ? "0x" : safe.getInitCode()
         const nonce = (await callInterface(provider, globalConfig.entryPoint, "getNonce", [safe.address, 0]))[0]
         const estimateOperation = {
@@ -241,7 +241,7 @@ export class Safe4337 {
     public address: string;
     private globalConfig: GlobalConfig;
     private safeConfig: SafeConfig | undefined;
-    private provider: JsonRpcProvider | undefined;
+    private provider: RpcProvider | undefined;
 
     constructor(address: string, globalConfig: GlobalConfig, safeConfig?: SafeConfig) {
         if (safeConfig) {
@@ -253,7 +253,7 @@ export class Safe4337 {
         this.safeConfig = safeConfig
     }
 
-    connect(provider: JsonRpcProvider): Safe4337 {
+    connect(provider: RpcProvider): Safe4337 {
         this.provider = provider;
         return this;
     }

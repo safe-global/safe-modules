@@ -1,4 +1,4 @@
-import { AddressLike, BigNumberish, Contract, ContractTransaction, Signer, TransactionResponse, Wallet, ethers } from 'ethers'
+import { BigNumberish, Contract, ContractTransaction, Signer, TransactionResponse, Wallet, ethers } from 'ethers'
 import { Safe } from '../../typechain-types'
 
 export const EIP_DOMAIN = {
@@ -128,7 +128,7 @@ export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
   return signatureBytes
 }
 
-export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<any> => {
+export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {
   return tx.then(async (result) => {
     const receipt = await result.wait()
     if (!skip) console.log(`           Used ${receipt!.gasUsed} gas for >${message}<`)
