@@ -76,7 +76,7 @@ export const safeApproveHash = async (
     if (!signer.provider) throw Error('Provider required for on-chain approval')
     const chainId = (await signer.provider.getNetwork()).chainId
     const typedDataHash = ethers.getBytes(calculateSafeTransactionHash(await safe.getAddress(), safeTx, chainId))
-    const signerSafe = safe.connect(signer);
+    const signerSafe = safe.connect(signer)
     await signerSafe.approveHash(typedDataHash)
   }
   const signerAddress = await signer.getAddress()
@@ -198,7 +198,7 @@ export const buildContractCall = async (
 }
 
 export const executeTxWithSigners = async (safe: Safe, tx: SafeTransaction, signers: Wallet[], overrides?: any) => {
-  const safeAddress = await safe.getAddress();
+  const safeAddress = await safe.getAddress()
   const sigs = await Promise.all(signers.map((signer) => safeSignTypedData(signer, safeAddress, tx)))
   return executeTx(safe, tx, sigs, overrides)
 }

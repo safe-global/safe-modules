@@ -44,7 +44,7 @@ Note: The gas overhead is only the very base line using storage access and call 
 
 ## Setup Flow
 
-If the Account that the Entry Point should interact with is not deployed yet it is necessary to provide the necessary initialization data (`initCode`) to deploy it. 
+If the Account that the Entry Point should interact with is not deployed yet it is necessary to provide the necessary initialization data (`initCode`) to deploy it.
 
 Important to note that [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337#first-time-account-creation) defined the `initCode` as the following:
 
@@ -133,6 +133,7 @@ npx hardhat --network <network> local-verify
 ### Run script
 
 Preparation:
+
 - Set `DEPLOY_ENTRY_POINT` in `.env`, this should be the entry point supported by the 4337 bundler RPC endpoint that you are connected to.
 - Deploy contracts (see _Deploy_ section)
 - Set `SCRIPT_*` in `.env`
@@ -146,6 +147,7 @@ npx hardhat run scripts/runOp.ts --network goerli
 The project uses Solidity compiler version `0.8.21` with 10 million optimizer runs, as we want to optimize for the code execution costs. The evm version is set to `paris`, because not all of our target networks support the opcodes introduced in the `Shanghai` EVM upgrade.
 
 After careful consideration, we decided to enable the optimizer for the following reasons:
+
 - The most critical functionality is handled by the Safe and Entrypoint contracts, such as signature checks and replay protection.
 - The Entrypoint contract uses the optimizer.
 

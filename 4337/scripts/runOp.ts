@@ -1,10 +1,7 @@
 import { BigNumberish, Result } from 'ethers'
 import { ethers } from 'hardhat'
 
-import {
-  getRequiredPrefund,
-  getSupportedEntryPoints,
-} from '../src/utils/userOp'
+import { getRequiredPrefund, getSupportedEntryPoints } from '../src/utils/userOp'
 import { chainId } from '../test/utils/encoding'
 import { getSimple4337Module } from '../test/utils/setup'
 import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
@@ -28,7 +25,7 @@ const INTERFACES = new ethers.Interface([
   'function supportedEntryPoint() returns (address)',
   'function getOwners() returns (address[])',
   'function getModulesPaginated(address, uint256) returns (address[], address)',
-  'function getOperationHash(address,bytes,uint256,uint256,uint256,uint256,uint256,uint256,address)'
+  'function getOperationHash(address,bytes,uint256,uint256,uint256,uint256,uint256,uint256,address)',
 ])
 
 const buildData = (method: string, params?: any[]): string => {
@@ -36,10 +33,10 @@ const buildData = (method: string, params?: any[]): string => {
   return iface.encodeFunctionData(method, params)
 }
 
-const callInterface = async(contract: string, method: string, params: any[] = []): Promise<Result> => {
-  const result = await ethers.provider.call({ 
-    to: contract, 
-    data: INTERFACES.encodeFunctionData(method, params)
+const callInterface = async (contract: string, method: string, params: any[] = []): Promise<Result> => {
+  const result = await ethers.provider.call({
+    to: contract,
+    data: INTERFACES.encodeFunctionData(method, params),
   })
   return INTERFACES.decodeFunctionResult(method, result)
 }
@@ -52,11 +49,11 @@ const runOp = async () => {
   const accountAbstractionProvider = new MultiProvider4337(BUNDLER_URL!!, ethers.provider)
   const entryPoints = await getSupportedEntryPoints(accountAbstractionProvider)
   const entryPoint = entryPoints[0]
-  const moduleAddress = MODULE_ADDRESS ?? await getSimple4337Module().then(module => module.getAddress())
-  const moduleSupportedEntrypoint = await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData("supportedEntryPoint")})
-  console.log({moduleAddress, moduleSupportedEntrypoint})
-  
-  const proxyCreationCode = (await callInterface(PROXY_FACTORY_ADDRESS, "proxyCreationCode"))[0]
+  const moduleAddress = MODULE_ADDRESS ?? (await getSimple4337Module().then((module) => module.getAddress()))
+  const moduleSupportedEntrypoint = await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData('supportedEntryPoint') })
+  console.log({ moduleAddress, moduleSupportedEntrypoint })
+
+  const proxyCreationCode = (await callInterface(PROXY_FACTORY_ADDRESS, 'proxyCreationCode'))[0]
 
   const globalConfig: GlobalConfig = {
     entryPoint,
@@ -73,70 +70,81 @@ const runOp = async () => {
 
   console.log(safe.address)
   const safeBalance = await ethers.provider.getBalance(safe.address)
-  const minBalance = ethers.parseEther("0.01")
+  const minBalance = ethers.parseEther('0.01')
   console.log(safeBalance)
   if (safeBalance < minBalance) {
-    await(await user1.sendTransaction({to: safe.address, value: ethers.parseEther("0.01")})).wait()
+    await (await user1.sendTransaction({ to: safe.address, value: ethers.parseEther('0.01') })).wait()
   }
 
   let toAddress = '0x02270bd144e70cE6963bA02F575776A16184E1E6'
-  let callData = "0x"
+  let callData = '0x'
   let value: BigNumberish = ethers.parseEther('0.0001')
   if (ERC20_TOKEN_ADDRESS) {
     toAddress = ERC20_TOKEN_ADDRESS
-    callData = buildData("transfer(address,uint256)", [user1.address, ethers.parseEther('1')])
+    callData = buildData('transfer(address,uint256)', [user1.address, ethers.parseEther('1')])
     value = 0n
   }
   const operation = await safe.operate({
     to: toAddress,
     value,
     data: callData,
-    operation: 0
+    operation: 0,
   })
-  
-  await operation.authorize(user1);
+
+  await operation.authorize(user1)
 
   const userOp = await operation.userOperation()
-  console.log({userOp})
+  console.log({ userOp })
 
-  console.log("checkSignatures", await ethers.provider.send("eth_call", [{
-    from: entryPoint,
-    to: safe.address,
-    data: buildData("checkSignatures(bytes32,bytes,bytes)", [
-      operation.operationHash(),
-      "0x",
-      await operation.encodedSignatures()
+  console.log(
+    'checkSignatures',
+    await ethers.provider.send('eth_call', [
+      {
+        from: entryPoint,
+        to: safe.address,
+        data: buildData('checkSignatures(bytes32,bytes,bytes)', [operation.operationHash(), '0x', await operation.encodedSignatures()]),
+      },
+      'latest',
     ]),
-  }, "latest"]))
+  )
 
-  console.log("validateUserOp", await ethers.provider.send("eth_call", [{
-    from: entryPoint,
-    to: safe.address,
-    data: buildData("validateUserOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)", [
-      [
-        userOp.sender,
-        userOp.nonce,
-        userOp.initCode,
-        userOp.callData,
-        userOp.callGasLimit,
-        userOp.verificationGasLimit,
-        userOp.preVerificationGas,
-        userOp.maxFeePerGas,
-        userOp.maxPriorityFeePerGas,
-        userOp.paymasterAndData,
-        userOp.signature
-      ],
-      "0x0000000000000000000000000000000000000000000000000000000000000000",
-      getRequiredPrefund(userOp)
+  console.log(
+    'validateUserOp',
+    await ethers.provider.send('eth_call', [
+      {
+        from: entryPoint,
+        to: safe.address,
+        data: buildData(
+          'validateUserOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)',
+          [
+            [
+              userOp.sender,
+              userOp.nonce,
+              userOp.initCode,
+              userOp.callData,
+              userOp.callGasLimit,
+              userOp.verificationGasLimit,
+              userOp.preVerificationGas,
+              userOp.maxFeePerGas,
+              userOp.maxPriorityFeePerGas,
+              userOp.paymasterAndData,
+              userOp.signature,
+            ],
+            '0x0000000000000000000000000000000000000000000000000000000000000000',
+            getRequiredPrefund(userOp),
+          ],
+        ),
+      },
+      'latest',
     ]),
-  }, "latest"]))
+  )
 
   if (DEBUG) {
     console.log('Usign account with address:', user1.address)
     console.log('Using EIP4337Diatomic deployed at:', moduleAddress)
     console.log('Using Safe contract deployed at:', safe.address)
     console.log('Using entrypoint at:', entryPoint)
-    console.log('Balance of Safe:', ethers.formatEther(await ethers.provider.getBalance(safe.address)), "ETH")
+    console.log('Balance of Safe:', ethers.formatEther(await ethers.provider.getBalance(safe.address)), 'ETH')
   }
 
   await accountAbstractionProvider.send('eth_sendUserOperation', [userOp, entryPoint])
