@@ -49,7 +49,6 @@ describe('EIP4337Module - Existing Safe', async () => {
   })
 
   describe('execTransaction - existing account', () => {
-
     it('should revert with invalid signature', async () => {
       const { user1, safe, entryPoint } = await setupTests()
 
@@ -126,6 +125,22 @@ describe('EIP4337Module - Existing Safe', async () => {
       const emittedRevert = logs.some((l: any) => l.name === "UserOpReverted")
 
       expect(emittedRevert).to.be.true
+    })
+
+    it('executeUserOpWithErrorString should execute contract calls', async () => {
+      const { user1, safe, validator, entryPoint } = await setupTests()
+
+      await user1.sendTransaction({to: await safe.getAddress(), value: ethers.parseEther("1.0")})
+      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("1.0"))
+      const safeOp = buildSafeUserOpTransaction(await safe.getAddress(), user1.address, ethers.parseEther("0.5"), "0x", '0', await entryPoint.getAddress(), false, true)
+      const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
+      const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
+      const userOp = buildUserOperationFromSafeUserOperation({safeAddress: await safe.getAddress(), safeOp, signature})
+      await logGas(
+        "Execute UserOp without fee payment",
+        entryPoint.executeUserOp(userOp, 0)
+      )
+      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther("0.5"))
     })
 
     it('executeUserOpWithErrorString reverts on failure and bubbles up the revert reason', async () => {
