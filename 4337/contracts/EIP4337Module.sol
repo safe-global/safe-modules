@@ -6,10 +6,13 @@ import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contract
 import {IAccount, INonceManager, UserOperation} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
-/// @title Safe4337Module
+/**
+ * @title Safe4337Module
+ * @dev A Solidity contract that acts as a module to facilitate Safe transactions and user operation validation.
+ */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
-    // value in case of signature failure, with no time-range.
-    // equivalent to _packValidationData(true,0,0);
+    // A constant representing a signature validation failure, defined in the ERC4337 spec.
+    // Equivalent to `_packValidationData(true, 0, 0);`
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
 
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
@@ -25,9 +28,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         supportedEntryPoint = entryPoint;
     }
 
-    /// @dev Validates user operation provided by the entry point
-    /// @param userOp User operation struct
-    /// @param requiredPrefund Required prefund to execute the operation
+    /**
+     * @notice Validates a user operation provided by the entry point.
+     * @param userOp User operation struct.
+     * @param requiredPrefund Required prefund to execute the operation.
+     * @return validationResult An integer indicating the result of the validation.
+     */
     function validateUserOp(
         UserOperation calldata userOp,
         bytes32,
@@ -59,12 +65,13 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         }
     }
 
-    /// @notice Executes user operation provided by the entry point
-    /// @dev Reverts if unsuccessful
-    /// @param to Destination address of the user operation.
-    /// @param value Ether value of the user operation.
-    /// @param data Data payload of the user operation.
-    /// @param operation Operation type of the user operation.
+    /**
+     * @notice Executes a user operation provided by the entry point.
+     * @param to Destination address of the user operation.
+     * @param value Ether value of the user operation.
+     * @param data Data payload of the user operation.
+     * @param operation Operation type of the user operation.
+     */
     function executeUserOp(
         address to,
         uint256 value,
@@ -77,12 +84,13 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
     }
 
-    /// @notice Executes user operation provided by the entry point
-    /// @dev Reverts if unsuccessful and bubbles up the error message
-    /// @param to Destination address of the user operation.
-    /// @param value Ether value of the user operation.
-    /// @param data Data payload of the user operation.
-    /// @param operation Operation type of the user operation.
+    /**
+     * @notice Executes a user operation provided by the entry point and returns error message on failure.
+     * @param to Destination address of the user operation.
+     * @param value Ether value of the user operation.
+     * @param data Data payload of the user operation.
+     * @param operation Operation type of the user operation.
+     */
     function executeUserOpWithErrorString(
         address to,
         uint256 value,
@@ -101,21 +109,26 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         }
     }
 
+    /**
+     * @return The EIP-712 domain separator hash for this contract.
+     */
     function domainSeparator() public view returns (bytes32) {
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
     }
 
-    /// @dev Returns the bytes that are hashed to be signed by owners.
-    /// @param safe Safe address
-    /// @param callData Call data
-    /// @param nonce Nonce of the operation
-    /// @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification)
-    /// @param verificationGasLimit Gas required for verification
-    /// @param callGasLimit Gas available during the execution of the call
-    /// @param maxFeePerGas Max fee per gas
-    /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param entryPoint Address of the entry point
-    /// @return Operation hash bytes
+    /**
+     * @dev Returns the bytes that are hashed to be signed by owners.
+     * @param safe Safe address.
+     * @param callData Call data.
+     * @param nonce Nonce of the operation.
+     * @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification).
+     * @param verificationGasLimit Gas required for verification.
+     * @param callGasLimit Gas available during the execution of the call.
+     * @param maxFeePerGas Max fee per gas.
+     * @param maxPriorityFeePerGas Max priority fee per gas.
+     * @param entryPoint Address of the entry point.
+     * @return Operation hash bytes.
+     */
     function getOperationHash(
         address safe,
         bytes calldata callData,
@@ -144,9 +157,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash));
     }
 
-    /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
-    /// @param entryPoint Address of the entry point
-    /// @param userOp User operation struct
+    /**
+     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
+     * @param entryPoint Address of the entry point.
+     * @param userOp User operation struct.
+     * @return validationResult An integer indicating the result of the validation.
+     */
     function validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256) {
         bytes32 operationHash = getOperationHash(
             payable(userOp.sender),

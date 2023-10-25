@@ -2,7 +2,7 @@ import { JsonRpcProvider, Provider, ethers } from 'ethers'
 
 // Import from Safe contracts repo once fixed
 import { MetaTransaction, SafeSignature, buildSignatureBytes } from './execution'
-import { UserOperation } from './userOp'
+import { UserOperation, EIP712_SAFE_OPERATION_TYPE } from './userOp'
 
 const AddressOne = '0x0000000000000000000000000000000000000001'
 
@@ -21,21 +21,6 @@ const INTERFACES = new ethers.Interface([
   'function getModulesPaginated(address, uint256) returns (address[], address)',
   'function getOperationHash(address,bytes,uint256,uint256,uint256,uint256,uint256,uint256,address)',
 ])
-
-const EIP712_SAFE_OPERATION_TYPE = {
-  // "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
-  SafeOp: [
-    { type: 'address', name: 'safe' },
-    { type: 'bytes', name: 'callData' },
-    { type: 'uint256', name: 'nonce' },
-    { type: 'uint256', name: 'preVerificationGas' },
-    { type: 'uint256', name: 'verificationGasLimit' },
-    { type: 'uint256', name: 'callGasLimit' },
-    { type: 'uint256', name: 'maxFeePerGas' },
-    { type: 'uint256', name: 'maxPriorityFeePerGas' },
-    { type: 'address', name: 'entryPoint' },
-  ],
-}
 
 export interface OperationParams {
   nonce: bigint
