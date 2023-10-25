@@ -12,8 +12,9 @@ sequenceDiagram
     participant E as Entry Point
     participant P as Safe Proxy
     participant S as Safe Singleton
-    participant M as 4337 Module
+    participant M as Safe 4337 Module
     actor T as Target
+
     B->>+E: Submit User Operations
     E->>+P: Validate User Operation
     P-->>S: Load Safe logic
@@ -32,10 +33,21 @@ sequenceDiagram
     M-->>-P: Validation response
     P-->>-E: Validation response
     Note over P, M: Total gas overhead<br>Without fee payment ~4.900 gas<br>With fee payment ~7.200 gas
-    Note over B, T: This execution flow is similar<br>for native 4337 support<br>therefore there is no gas overhead
-    E->>+P: executeTransactionFromModule
+
+    E->>+P: Execute User Operation
     P-->>S: Load Safe logic
-    P->>-T: Perform transaction
+    P->>+M: Forward execution
+    Note over P, M: Call to Safe Proxy ~100 gas<br>Call to fallback handler ~100 gas
+    M->>P: Execute From Module
+    P-->>S: Load Safe logic
+    Note over P, M: Call to Safe Proxy ~100 gas<br>Module check ~100 gas
+    P->>+T: Perform transaction
+    opt Bubble up return data
+        T-->>-P: Call Return Data
+        P-->>M: Call Return Data
+        M-->>-P: Call return data
+        P-->>-E: Call return data
+    end
 ```
 
 The gas overhead is based on [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929). It is possible to reduce the gas overhead by using [access lists](https://eips.ethereum.org/EIPS/eip-2930).
