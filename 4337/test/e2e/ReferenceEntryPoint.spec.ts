@@ -1,7 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { Signer, Log, EventLog } from 'ethers'
-import { EntryPoint } from '@account-abstraction/contracts'
+import { EventLog, Log, Signer } from 'ethers'
 import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { getFactory, getAddModulesLib } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
@@ -14,7 +13,7 @@ describe('E2E - Reference EntryPoint', () => {
     await deployments.fixture()
     const [deployer, user, relayer] = await ethers.getSigners()
 
-    const entryPoint = await deployEntryPoint(deployer)
+    const entryPoint = await deployEntryPoint(deployer, relayer)
     const moduleFactory = await ethers.getContractFactory('Safe4337Module')
     const module = await moduleFactory.deploy(await entryPoint.getAddress())
     const proxyFactory = await getFactory()
@@ -38,16 +37,15 @@ describe('E2E - Reference EntryPoint', () => {
       relayer,
       safe,
       validator: module,
-      entryPoint: entryPoint.connect(relayer),
+      entryPoint,
     }
   }
 
-  const deployEntryPoint = async (deployer: Signer) => {
+  const deployEntryPoint = async (deployer: Signer, relayer: Signer) => {
     const { abi, bytecode } = EntryPointArtifact
     const transaction = await deployer.sendTransaction({ data: bytecode })
     const receipt = await transaction.wait()
-    const contract = new ethers.Contract(receipt!.contractAddress!, abi)
-    return contract as unknown as EntryPoint
+    return new ethers.Contract(receipt!.contractAddress!, abi, relayer)
   }
 
   it('should deploy a Safe and execute transactions', async () => {
