@@ -3,7 +3,7 @@ import { ethers } from 'hardhat'
 
 import { getRequiredPrefund, getSupportedEntryPoints } from '../src/utils/userOp'
 import { chainId } from '../test/utils/encoding'
-import { getSimple4337Module } from '../test/utils/setup'
+import { getSafe4337Module } from '../test/utils/setup'
 import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
 
 const DEBUG = process.env.SCRIPT_DEBUG || false
@@ -49,7 +49,7 @@ const runOp = async () => {
   const accountAbstractionProvider = new MultiProvider4337(BUNDLER_URL!!, ethers.provider)
   const entryPoints = await getSupportedEntryPoints(accountAbstractionProvider)
   const entryPoint = entryPoints[0]
-  const moduleAddress = MODULE_ADDRESS ?? (await getSimple4337Module().then((module) => module.getAddress()))
+  const moduleAddress = MODULE_ADDRESS ?? (await getSafe4337Module().then((module) => module.getAddress()))
   const moduleSupportedEntrypoint = await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData('supportedEntryPoint') })
   console.log({ moduleAddress, moduleSupportedEntrypoint })
 

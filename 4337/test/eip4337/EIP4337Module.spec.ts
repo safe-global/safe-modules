@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { Signer } from 'ethers'
-import { getTestSafe, getSimple4337Module, getEntryPoint } from '../utils/setup'
+import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
@@ -12,16 +12,16 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
-describe('Simple4337Module', () => {
+describe('Safe4337Module', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 
     const [user, untrusted] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
-    const module = await getSimple4337Module()
+    const module = await getSafe4337Module()
     const makeSafeModule = async (user: Signer) => {
       const safe = await getTestSafe(user, await module.getAddress(), await module.getAddress())
-      return await ethers.getContractAt('Simple4337Module', await safe.getAddress())
+      return await ethers.getContractAt('Safe4337Module', await safe.getAddress())
     }
     const safeModule = await makeSafeModule(user)
 

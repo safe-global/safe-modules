@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { getTestSafe, getSimple4337Module, getEntryPoint } from '../utils/setup'
+import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
@@ -16,7 +16,7 @@ describe('EIP4337Module - Existing Safe', () => {
 
     const [user1] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
-    const module = await getSimple4337Module()
+    const module = await getSafe4337Module()
     const safe = await getTestSafe(user1, await module.getAddress(), await module.getAddress())
 
     return {
