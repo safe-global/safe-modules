@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
-import {IAccount, INonceManager, UserOperation} from "./interfaces/ERC4337.sol";
+import {IAccount, UserOperation} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**
@@ -22,10 +22,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
         );
 
-    address public immutable supportedEntryPoint;
+    address public immutable SUPPORTED_ENTRYPOINT;
 
     constructor(address entryPoint) {
-        supportedEntryPoint = entryPoint;
+        SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
     /**
@@ -34,11 +34,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param requiredPrefund Required prefund to execute the operation.
      * @return validationResult An integer indicating the result of the validation.
      */
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32,
-        uint256 requiredPrefund
-    ) external returns (uint256 validationResult) {
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 requiredPrefund) external returns (uint256 validationResult) {
         address payable safeAddress = payable(userOp.sender);
         // The entryPoint address is appended to the calldata in `HandlerContext` contract
         // Because of this, the relayer may manipulate the entryPoint address, therefore we have to verify that
@@ -53,7 +49,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         );
 
         address entryPoint = _msgSender();
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
         validationResult = validateSignatures(entryPoint, userOp);
@@ -72,14 +68,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param data Data payload of the user operation.
      * @param operation Operation type of the user operation.
      */
-    function executeUserOp(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint8 operation
-    ) external {
+    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external {
         address entryPoint = _msgSender();
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
     }
@@ -91,14 +82,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param data Data payload of the user operation.
      * @param operation Operation type of the user operation.
      */
-    function executeUserOpWithErrorString(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint8 operation
-    ) external {
+    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external {
         address entryPoint = _msgSender();
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
         if (!success) {

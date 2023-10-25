@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
+/* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
 import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
@@ -8,7 +9,7 @@ import {INonceManager, UserOperation} from "../interfaces/ERC4337.sol";
 import {UserOperationLib} from "./UserOperationLib.sol";
 
 contract SafeMock {
-    address public immutable supportedEntryPoint;
+    address public immutable SUPPORTED_ENTRYPOINT;
 
     address public singleton;
     address public owner;
@@ -17,7 +18,7 @@ contract SafeMock {
 
     constructor(address entryPoint) {
         owner = msg.sender;
-        supportedEntryPoint = entryPoint;
+        SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
     function setup(address _fallbackHandler, address _module) public virtual {
@@ -25,18 +26,10 @@ contract SafeMock {
         owner = msg.sender;
         fallbackHandler = _fallbackHandler;
         modules[_module] = true;
-        modules[supportedEntryPoint] = true;
+        modules[SUPPORTED_ENTRYPOINT] = true;
     }
 
-    function signatureSplit(bytes memory signature)
-        internal
-        pure
-        returns (
-            uint8 v,
-            bytes32 r,
-            bytes32 s
-        )
-    {
+    function signatureSplit(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             r := mload(add(signature, 0x20))
@@ -45,11 +38,7 @@ contract SafeMock {
         }
     }
 
-    function checkSignatures(
-        bytes32 dataHash,
-        bytes memory,
-        bytes memory signature
-    ) public view {
+    function checkSignatures(bytes32 dataHash, bytes memory, bytes memory signature) public view {
         uint8 v;
         bytes32 r;
         bytes32 s;
@@ -123,13 +112,9 @@ contract Safe4337Mock is SafeMock {
     /// @dev Validates user operation provided by the entry point
     /// @param userOp User operation struct
     /// @param requiredPrefund Required prefund to execute the operation
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32,
-        uint256 requiredPrefund
-    ) external returns (uint256) {
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 requiredPrefund) external returns (uint256) {
         address entryPoint = msg.sender;
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         validateReplayProtection(userOp);
 
@@ -157,14 +142,9 @@ contract Safe4337Mock is SafeMock {
     /// @param value Ether value of the user operation.
     /// @param data Data payload of the user operation.
     /// @param operation Operation type of the user operation.
-    function executeUserOp(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint8 operation
-    ) external {
+    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external {
         address entryPoint = msg.sender;
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         bool success;
         if (operation == 1) (success, ) = to.delegatecall(data);
@@ -178,14 +158,9 @@ contract Safe4337Mock is SafeMock {
     /// @param value Ether value of the user operation.
     /// @param data Data payload of the user operation.
     /// @param operation Operation type of the user operation.
-    function executeUserOpWithErrorString(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint8 operation
-    ) external {
+    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external {
         address entryPoint = msg.sender;
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         bool success;
         bytes memory returnData;
@@ -293,7 +268,7 @@ contract Safe4337Mock is SafeMock {
         // The entrypoints handles the increase of the nonce
         // Right shifting fills up with 0s from the left
         uint192 key = uint192(userOp.nonce >> 64);
-        uint256 safeNonce = INonceManager(supportedEntryPoint).getNonce(userOp.sender, key);
+        uint256 safeNonce = INonceManager(SUPPORTED_ENTRYPOINT).getNonce(userOp.sender, key);
 
         // Check returned nonce against the user operation nonce
         require(safeNonce == userOp.nonce, "Invalid Nonce");

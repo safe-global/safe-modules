@@ -1,5 +1,4 @@
-import { BigNumberish, Contract, ContractTransaction, Signer, TransactionResponse, Wallet, ethers } from 'ethers'
-import { Safe } from '../../typechain-types'
+import { BigNumberish, Signer, TransactionResponse, ethers } from 'ethers'
 
 export const EIP_DOMAIN = {
   EIP712Domain: [
@@ -54,7 +53,9 @@ export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
 export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {
   return tx.then(async (result) => {
     const receipt = await result.wait()
-    if (!skip) console.log(`           Used ${receipt!.gasUsed} gas for >${message}<`)
+    if (!receipt?.gasUsed) throw new Error('No gas used in receipt')
+
+    if (!skip) console.log(`           Used ${receipt.gasUsed} gas for >${message}<`)
     return result
   })
 }
