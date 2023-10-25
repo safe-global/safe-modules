@@ -1,4 +1,4 @@
-import hre, { deployments, ethers } from 'hardhat'
+import { deployments, ethers } from 'hardhat'
 import { Signer, Contract } from 'ethers'
 import solc from 'solc'
 import { logGas } from '../../src/utils/execution'
@@ -43,9 +43,9 @@ export const getAddModulesLib = async () => {
   return await ethers.getContractAt('AddModulesLib', LibDeployment.address)
 }
 
-export const getSimple4337Module = async () => {
-  const ModuleDeployment = await deployments.get('Simple4337Module')
-  return await ethers.getContractAt('Simple4337Module', ModuleDeployment.address)
+export const getSafe4337Module = async () => {
+  const ModuleDeployment = await deployments.get('Safe4337Module')
+  return await ethers.getContractAt('Safe4337Module', ModuleDeployment.address)
 }
 
 export const getEntryPoint = async () => {

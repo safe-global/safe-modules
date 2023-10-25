@@ -6,8 +6,8 @@ import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contract
 import {IAccount, INonceManager, UserOperation} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
-/// @title EIP4337Module
-contract Simple4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
+/// @title Safe4337Module
+contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     // value in case of signature failure, with no time-range.
     // equivalent to _packValidationData(true,0,0);
     uint256 internal constant SIG_VALIDATION_FAILED = 1;

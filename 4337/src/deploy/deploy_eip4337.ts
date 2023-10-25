@@ -36,7 +36,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     entryPointAddress = ENTRY_POINT
   }
 
-  await deploy('Simple4337Module', {
+  await deploy('Safe4337Module', {
     from: deployer,
     args: [entryPointAddress],
     log: true,
