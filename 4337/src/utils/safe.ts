@@ -2,7 +2,7 @@ import { JsonRpcProvider, Provider, ethers } from 'ethers'
 
 // Import from Safe contracts repo once fixed
 import { MetaTransaction, SafeSignature, buildSignatureBytes } from './execution'
-import { UserOperation } from './userOp'
+import { UserOperation, EIP712_SAFE_OPERATION_TYPE } from './userOp'
 
 const AddressOne = '0x0000000000000000000000000000000000000001'
 
@@ -21,21 +21,6 @@ const INTERFACES = new ethers.Interface([
   'function getModulesPaginated(address, uint256) returns (address[], address)',
   'function getOperationHash(address,bytes,uint256,uint256,uint256,uint256,uint256,uint256,address)',
 ])
-
-const EIP712_SAFE_OPERATION_TYPE = {
-  // "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
-  SafeOp: [
-    { type: 'address', name: 'safe' },
-    { type: 'bytes', name: 'callData' },
-    { type: 'uint256', name: 'nonce' },
-    { type: 'uint256', name: 'preVerificationGas' },
-    { type: 'uint256', name: 'verificationGasLimit' },
-    { type: 'uint256', name: 'callGasLimit' },
-    { type: 'uint256', name: 'maxFeePerGas' },
-    { type: 'uint256', name: 'maxPriorityFeePerGas' },
-    { type: 'address', name: 'entryPoint' },
-  ],
-}
 
 export interface OperationParams {
   nonce: bigint
@@ -89,7 +74,7 @@ const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalCo
   }
 }
 
-const callInterface = async (provider: Provider, contract: string, method: string, params: any[]): Promise<ethers.Result> => {
+const callInterface = async (provider: Provider, contract: string, method: string, params: unknown[]): Promise<ethers.Result> => {
   const result = await provider.call({
     to: contract,
     data: INTERFACES.encodeFunctionData(method, params),
@@ -103,7 +88,7 @@ const actionCalldata = (action: MetaTransaction): string => {
 }
 
 export interface RpcProvider extends Provider {
-  send(method: string, params: any[]): Promise<any>
+  send(method: string, params: unknown[]): Promise<any>
 }
 
 export class MultiProvider4337 extends JsonRpcProvider {
@@ -113,7 +98,7 @@ export class MultiProvider4337 extends JsonRpcProvider {
     this.generalProvider = generalProvider
   }
 
-  send(method: string, params: any[]): Promise<any> {
+  send(method: string, params: unknown[]): Promise<any> {
     if (
       [
         'eth_chainId',
@@ -162,7 +147,7 @@ export class Safe4337Operation {
     return buildSignatureBytes(this.signatures)
   }
 
-  async userOperation(paymasterAndData: string = '0x'): Promise<UserOperation> {
+  async userOperation(paymasterAndData = '0x'): Promise<UserOperation> {
     const initCode = (await this.safe.isDeployed()) ? '0x' : this.safe.getInitCode()
     return {
       nonce: ethers.toBeHex(this.params.nonce),
@@ -232,10 +217,13 @@ export class Safe4337Operation {
     console.log(estimates)
 
     const feeData = await provider.getFeeData()
+
+    if (!feeData.maxFeePerGas || !feeData.maxPriorityFeePerGas) throw Error('Missing fee data')
+
     const params: OperationParams = {
       nonce,
-      maxFeePerGas: feeData.maxFeePerGas!,
-      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas!,
+      maxFeePerGas: feeData.maxFeePerGas,
+      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
       // Add a small margin as some dataoverhead calculation is not always accurate
       preVerificationGas: BigInt(estimates.preVerificationGas) + 1000n,
       // Add 20% to the gas limits to account for inaccurate estimations
@@ -285,29 +273,29 @@ export class Safe4337 {
   }
 
   async getSigners(): Promise<string[]> {
-    if (!(await this.isDeployed())) {
+    if (!this.provider || !(await this.isDeployed())) {
       if (!this.safeConfig) throw Error('Not deployed and no config available')
       return this.safeConfig.signers
     }
-    const result = await callInterface(this.provider!!, this.address, 'getOwners', [])
+    const result = await callInterface(this.provider, this.address, 'getOwners', [])
     return result[0]
   }
 
   async getModules(): Promise<string[]> {
-    if (!(await this.isDeployed())) {
+    if (!this.provider || !(await this.isDeployed())) {
       if (!this.safeConfig) throw Error('Not deployed and no config available')
       return [this.globalConfig.erc4337module, this.globalConfig.entryPoint]
     }
-    const result = await callInterface(this.provider!!, this.address, 'getModulesPaginated', [AddressOne, 10])
+    const result = await callInterface(this.provider, this.address, 'getModulesPaginated', [AddressOne, 10])
     return result[0]
   }
 
   async getThreshold(): Promise<number> {
-    if (!(await this.isDeployed())) {
+    if (!this.provider || !(await this.isDeployed())) {
       if (!this.safeConfig) throw Error('Not deployed and no config available')
       return this.safeConfig.threshold
     }
-    const result = await callInterface(this.provider!!, this.address, 'getThreshold', [])
+    const result = await callInterface(this.provider, this.address, 'getThreshold', [])
     return result[0]
   }
 

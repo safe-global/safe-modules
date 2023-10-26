@@ -3,13 +3,23 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
-import {IAccount, INonceManager, UserOperation} from "./interfaces/ERC4337.sol";
+import {IAccount, UserOperation} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
-/// @title Safe4337Module
+/**
+ * @title Safe4337Module - An extension to the Safe contract that implements the ERC4337 interface.
+ * @dev The contract is both a module and fallback handler.
+ *      Safe forwards the `validateUserOp` call to this contract, it validates the user operation and returns the result.
+ *      It also executes a module transaction to pay the prefund. Similar flow for the actual operation execution.
+ *      Security considerations:
+ *      - The module is limited to the entry point address specified in the constructor.
+ *      - The user operation hash is signed by the Safe owner(s) and validated by the module.
+ *      - The user operation is not allowed to execute any other function than `executeUserOp` and `executeUserOpWithErrorString`.
+ *      - Replay protection is handled by the entry point.
+ */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
-    // value in case of signature failure, with no time-range.
-    // equivalent to _packValidationData(true,0,0);
+    // A constant representing a signature validation failure, defined in the ERC4337 spec.
+    // Equivalent to `_packValidationData(true, 0, 0);`
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
 
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
@@ -19,20 +29,19 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
         );
 
-    address public immutable supportedEntryPoint;
+    address public immutable SUPPORTED_ENTRYPOINT;
 
     constructor(address entryPoint) {
-        supportedEntryPoint = entryPoint;
+        SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
-    /// @dev Validates user operation provided by the entry point
-    /// @param userOp User operation struct
-    /// @param requiredPrefund Required prefund to execute the operation
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32,
-        uint256 requiredPrefund
-    ) external returns (uint256 validationResult) {
+    /**
+     * @notice Validates a user operation provided by the entry point.
+     * @param userOp User operation struct.
+     * @param requiredPrefund Required prefund to execute the operation.
+     * @return validationResult An integer indicating the result of the validation.
+     */
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 requiredPrefund) external returns (uint256 validationResult) {
         address payable safeAddress = payable(userOp.sender);
         // The entryPoint address is appended to the calldata in `HandlerContext` contract
         // Because of this, the relayer may manipulate the entryPoint address, therefore we have to verify that
@@ -47,7 +56,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         );
 
         address entryPoint = _msgSender();
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
         validationResult = validateSignatures(entryPoint, userOp);
@@ -59,38 +68,30 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         }
     }
 
-    /// @notice Executes user operation provided by the entry point
-    /// @dev Reverts if unsuccessful
-    /// @param to Destination address of the user operation.
-    /// @param value Ether value of the user operation.
-    /// @param data Data payload of the user operation.
-    /// @param operation Operation type of the user operation.
-    function executeUserOp(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint8 operation
-    ) external {
+    /**
+     * @notice Executes a user operation provided by the entry point.
+     * @param to Destination address of the user operation.
+     * @param value Ether value of the user operation.
+     * @param data Data payload of the user operation.
+     * @param operation Operation type of the user operation.
+     */
+    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external {
         address entryPoint = _msgSender();
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
     }
 
-    /// @notice Executes user operation provided by the entry point
-    /// @dev Reverts if unsuccessful and bubbles up the error message
-    /// @param to Destination address of the user operation.
-    /// @param value Ether value of the user operation.
-    /// @param data Data payload of the user operation.
-    /// @param operation Operation type of the user operation.
-    function executeUserOpWithErrorString(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint8 operation
-    ) external {
+    /**
+     * @notice Executes a user operation provided by the entry point and returns error message on failure.
+     * @param to Destination address of the user operation.
+     * @param value Ether value of the user operation.
+     * @param data Data payload of the user operation.
+     * @param operation Operation type of the user operation.
+     */
+    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external {
         address entryPoint = _msgSender();
-        require(entryPoint == supportedEntryPoint, "Unsupported entry point");
+        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
         if (!success) {
@@ -101,21 +102,26 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         }
     }
 
+    /**
+     * @return The EIP-712 domain separator hash for this contract.
+     */
     function domainSeparator() public view returns (bytes32) {
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
     }
 
-    /// @dev Returns the bytes that are hashed to be signed by owners.
-    /// @param safe Safe address
-    /// @param callData Call data
-    /// @param nonce Nonce of the operation
-    /// @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification)
-    /// @param verificationGasLimit Gas required for verification
-    /// @param callGasLimit Gas available during the execution of the call
-    /// @param maxFeePerGas Max fee per gas
-    /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param entryPoint Address of the entry point
-    /// @return Operation hash bytes
+    /**
+     * @dev Returns the bytes that are hashed to be signed by owners.
+     * @param safe Safe address.
+     * @param callData Call data.
+     * @param nonce Nonce of the operation.
+     * @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification).
+     * @param verificationGasLimit Gas required for verification.
+     * @param callGasLimit Gas available during the execution of the call.
+     * @param maxFeePerGas Max fee per gas.
+     * @param maxPriorityFeePerGas Max priority fee per gas.
+     * @param entryPoint Address of the entry point.
+     * @return Operation hash bytes.
+     */
     function getOperationHash(
         address safe,
         bytes calldata callData,
@@ -144,9 +150,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash));
     }
 
-    /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
-    /// @param entryPoint Address of the entry point
-    /// @param userOp User operation struct
+    /**
+     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
+     * @param entryPoint Address of the entry point.
+     * @param userOp User operation struct.
+     * @return validationResult An integer indicating the result of the validation.
+     */
     function validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256) {
         bytes32 operationHash = getOperationHash(
             payable(userOp.sender),

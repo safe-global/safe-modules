@@ -3,14 +3,6 @@ pragma solidity >=0.7.0 <0.9.0;
 
 interface ISafe {
     /**
-     * @dev Reads `length` bytes of storage in the currents contract
-     * @param offset - the offset in the current contract's storage in words to start reading from
-     * @param length - the number of words (32 bytes) of data to read
-     * @return the bytes that were read.
-     */
-    function getStorageAt(uint256 offset, uint256 length) external view returns (bytes memory);
-
-    /**
      * @dev Allows a Module to execute a Safe transaction without any further confirmations.
      * @param to Destination address of module transaction.
      * @param value Ether value of module transaction.
@@ -51,9 +43,6 @@ interface ISafe {
         bytes memory data,
         bytes memory signatures
     ) external view;
-
-    // Mapping to keep track of all message hashes that have been approve by ALL REQUIRED owners
-    function signedMessages(bytes32 messageHash) external view returns (uint256);
 
     function domainSeparator() external view returns (bytes32);
 
