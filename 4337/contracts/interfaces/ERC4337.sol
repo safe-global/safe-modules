@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
+/* solhint-disable one-contract-per-file */
 pragma solidity >=0.7.0 <0.9.0;
 
 interface INonceManager {
