@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
+/* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 import {INonceManager, IAccount, UserOperation} from "../interfaces/ERC4337.sol";
-import {UserOperationLib} from "./UserOperationLib.sol";
 
 /**
  * helper contract for EntryPoint, to call userOp.initCode from a "neutral" address,
@@ -32,12 +32,12 @@ contract TestEntryPoint is INonceManager {
     error NotEnoughFunds(uint256 expected, uint256 available);
     error InvalidNonce(uint256 userNonce);
     event UserOpReverted(bytes reason);
-    SenderCreator public immutable senderCreator;
+    SenderCreator public immutable SENDER_CREATOR;
     mapping(address => uint256) public balances;
     mapping(address => mapping(uint192 => uint256)) public nonceSequenceNumber;
 
     constructor() {
-        senderCreator = new SenderCreator();
+        SENDER_CREATOR = new SenderCreator();
     }
 
     receive() external payable {
@@ -47,7 +47,7 @@ contract TestEntryPoint is INonceManager {
     function executeUserOp(UserOperation calldata userOp, uint256 requiredPrefund) external {
         if (userOp.sender.code.length == 0) {
             require(userOp.initCode.length >= 20, "Invalid initCode provided");
-            require(userOp.sender == senderCreator.createSender(userOp.initCode), "Could not create expected account");
+            require(userOp.sender == SENDER_CREATOR.createSender(userOp.initCode), "Could not create expected account");
         }
 
         require(gasleft() > userOp.verificationGasLimit, "Not enough gas for verification");

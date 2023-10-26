@@ -113,7 +113,7 @@ export const buildSafeUserOpTransaction = (
 export const buildSafeUserOpContractCall = async (
   contract: Contract,
   method: string,
-  params: any[],
+  params: unknown[],
   safeAddress: string,
   nonce: string,
   operationValue: string,
