@@ -7,8 +7,15 @@ import {IAccount, UserOperation} from "./interfaces/ERC4337.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**
- * @title Safe4337Module
- * @dev A Solidity contract that acts as a module to facilitate Safe transactions and user operation validation.
+ * @title Safe4337Module - An extension to the Safe contract that implements the ERC4337 interface.
+ * @dev The contract is both a module and fallback handler.
+ *      Safe forwards the `validateUserOp` call to this contract, it validates the user operation and returns the result.
+ *      It also executes a module transaction to pay the prefund. Similar flow for the actual operation execution.
+ *      Security considerations:
+ *      - The module is limited to the entry point address specified in the constructor.
+ *      - The user operation hash is signed by the Safe owner(s) and validated by the module.
+ *      - The user operation is not allowed to execute any other function than `executeUserOp` and `executeUserOpWithErrorString`.
+ *      - Replay protection is handled by the entry point.
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     // A constant representing a signature validation failure, defined in the ERC4337 spec.
