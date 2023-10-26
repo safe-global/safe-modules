@@ -3,7 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
-import {IAccount, UserOperation} from "./interfaces/ERC4337.sol";
+import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
+import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**

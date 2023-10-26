@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
-import {INonceManager, IAccount, UserOperation} from "../interfaces/ERC4337.sol";
+import {INonceManager} from "@account-abstraction/contracts/interfaces/INonceManager.sol";
+import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
+import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 
 /**
  * helper contract for EntryPoint, to call userOp.initCode from a "neutral" address,
