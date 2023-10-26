@@ -5,8 +5,8 @@ pragma solidity >=0.8.0;
 import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@safe-global/safe-contracts/contracts/SafeL2.sol";
 
-import {INonceManager, UserOperation} from "../interfaces/ERC4337.sol";
-import {UserOperationLib} from "./UserOperationLib.sol";
+import {INonceManager} from "@account-abstraction/contracts/interfaces/INonceManager.sol";
+import {UserOperation, UserOperationLib} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 
 contract SafeMock {
     address public immutable SUPPORTED_ENTRYPOINT;
@@ -125,8 +125,6 @@ contract Safe4337Mock is SafeMock {
             "Unsupported execution function id"
         );
 
-        // We need to make sure that the entryPoint's requested prefund is in bounds
-        require(requiredPrefund <= userOp.requiredPreFund(), "Prefund too high");
         _validateSignatures(entryPoint, userOp);
 
         if (requiredPrefund != 0) {
