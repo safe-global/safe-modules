@@ -8,7 +8,6 @@ import {
   calculateSafeOperationHash,
   buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
-  signSafeOp,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
