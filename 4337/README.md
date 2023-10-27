@@ -90,15 +90,14 @@ sequenceDiagram
     participant E as Entry Point
     participant F as Safe Proxy Factory
     participant P as Safe Proxy
-    participant M as MultiSend
+    participant L as AddModulesLib
     B->>+E: Submit User Operations with `initCode`
     E->>+F: Deploy Proxy with `deployData`
     F->>+P: Create Proxy
-    F->>P: Setup Proxy with `setupData`
-    P->>+M: Execute transaction batch
-    M->>P: Enable 4337 module
-    M->>P: Enable Entry Point as module
-    deactivate M
+    F->>P: Setup Proxy with `setupData` and 4337 module as a fallback handler
+    P->>+L: Execute a delegatecall
+    L->>P: Enable 4337 module
+    deactivate L
     deactivate P
     F->>-E: Return Account Address
 ```
