@@ -4,7 +4,7 @@
 
 ## Execution Flow
 
-The diagram below outlines the flow that is triggered when a user operation is submitted to the entrypoint. Additionally the gas overhead compared to a native implementation is mentioned.
+The diagram below outlines the flow triggered when a user operation is submitted to the entrypoint. Additionally, the gas overhead compared to a native implementation is mentioned.
 
 ```mermaid
 sequenceDiagram
@@ -52,11 +52,11 @@ sequenceDiagram
 
 The gas overhead is based on [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929). It is possible to reduce the gas overhead by using [access lists](https://eips.ethereum.org/EIPS/eip-2930).
 
-Note: The gas overhead is only the very base line using storage access and call costs. As also additional costs occur to handle the storage access and calls the actual gas overhead is higher. The tests indicate an overhead of ~11.6k gas when a fee payment is required and 7.8k gas otherwise. This shows that there is still room for optimization in the contracts used in the tests.
+Note: The gas overhead is only the baseline using storage access and call costs. The actual gas overhead is higher as additional costs occur to handle the storage access and calls. The tests indicate an overhead of ~12.1k gas when a fee payment is required and ~10.3k gas otherwise. This shows that there is still room for optimization in the contracts used in the tests.
 
 ## Setup Flow
 
-If the Account that the Entry Point should interact with is not deployed yet it is necessary to provide the necessary initialization data (`initCode`) to deploy it.
+If the Account that the Entry Point should interact with is not deployed yet, it is necessary to provide the required initialization data (`initCode`) to deploy it.
 
 Important to note that [ERC-4337](https://eips.ethereum.org/EIPS/eip-4337#first-time-account-creation) defined the `initCode` as the following:
 
@@ -72,7 +72,7 @@ bytes memory initExecutor = ADD_MODULES_LIB_ADDRESS;
 bytes memory initData =  abi.encodeWithSignature("enableModules", [4337_MODULE_ADDRESS, ENTRY_POINT_ADDRESS]);
 
 /** Setup Safe **/
-// We do not want to use any payment logic therefore this is all set to 0
+// We do not want to use any payment logic therefore, this is all set to 0
 bytes memory setupData = abi.encodeWithSignature("setup", owners, threshold, initExecutor, initData, 4337_MODULE_ADDRESS, address(0), 0, address(0));
 
 /** Deploy Proxy **/
@@ -82,7 +82,7 @@ bytes memory deployData = abi.encodeWithSignature("createProxyWithNonce", SAFE_S
 bytes memory initCode = abi.encodePacked(SAFE_PROXY_FACTORY_ADDRESS, deployData);
 ```
 
-The diagram below outlines the flow that is triggered by the initialization data to deploy a Safe with the 4337 module enabled.
+The diagram below outlines the flow triggered by the initialization data to deploy a Safe with the 4337 module enabled.
 
 ```mermaid
 sequenceDiagram
@@ -90,15 +90,14 @@ sequenceDiagram
     participant E as Entry Point
     participant F as Safe Proxy Factory
     participant P as Safe Proxy
-    participant M as MultiSend
+    participant L as AddModulesLib
     B->>+E: Submit User Operations with `initCode`
     E->>+F: Deploy Proxy with `deployData`
     F->>+P: Create Proxy
-    F->>P: Setup Proxy with `setupData`
-    P->>+M: Execute transaction batch
-    M->>P: Enable 4337 module
-    M->>P: Enable Entry Point as module
-    deactivate M
+    F->>P: Setup Proxy with `setupData` and 4337 module as a fallback handler
+    P->>+L: Execute a delegatecall
+    L->>P: Enable 4337 module
+    deactivate L
     deactivate P
     F->>-E: Return Account Address
 ```
@@ -120,7 +119,7 @@ npm run test
 
 ### Deploy
 
-> :warning: **Make sure to use the correct commit when deploying the contracts.** Any change (even comments) within the contract files will result in different addresses. The tagged versions that are used by the Safe team can be found in the [releases](https://github.com/safe-modules/releases).
+> :warning: **Make sure to use the correct commit when deploying the contracts.** Any change (even comments) within the contract files will result in different addresses. The tagged versions used by the Safe team can be found in the [releases](https://github.com/safe-modules/releases).
 
 This will deploy the contracts deterministically and verify the contracts on etherscan using [Solidity 0.7.6](https://github.com/ethereum/solidity/releases/tag/v0.7.6) by default.
 
@@ -146,7 +145,7 @@ npx hardhat --network <network> local-verify
 
 Preparation:
 
-- Set `DEPLOY_ENTRY_POINT` in `.env`, this should be the entry point supported by the 4337 bundler RPC endpoint that you are connected to.
+- Set `DEPLOY_ENTRY_POINT` in `.env`. This should be the entry point supported by the 4337 bundler RPC endpoint you are connected to.
 - Deploy contracts (see _Deploy_ section)
 - Set `SCRIPT_*` in `.env`
 
@@ -156,32 +155,32 @@ npx hardhat run scripts/runOp.ts --network goerli
 
 ### Compiler settings
 
-The project uses Solidity compiler version `0.8.21` with 10 million optimizer runs, as we want to optimize for the code execution costs. The evm version is set to `paris`, because not all of our target networks support the opcodes introduced in the `Shanghai` EVM upgrade.
+The project uses Solidity compiler version `0.8.21` with 10 million optimizer runs, as we want to optimize for the code execution costs. The EVM version is set to `paris` because not all our target networks support the opcodes introduced in the `Shanghai` EVM upgrade.
 
 After careful consideration, we decided to enable the optimizer for the following reasons:
 
-- The most critical functionality is handled by the Safe and Entrypoint contracts, such as signature checks and replay protection.
-- The Entrypoint contract uses the optimizer.
+- The most critical functionality, such as signature checks and replay protection, is handled by the Safe and Entrypoint contracts.
+- The entrypoint contract uses the optimizer.
 
 #### Custom Networks
 
-It is possible to use the `NODE_URL` env var to connect to any EVM based network via an RPC endpoint. This connection then can be used with the `custom` network.
+It is possible to use the `NODE_URL` env var to connect to any EVM-based network via an RPC endpoint. This connection can then be used with the `custom` network.
 
-E.g. to deploy the Safe contract suite on that network you would run `yarn deploy-all custom`.
+E.g. to deploy the Safe contract suite on that network, you would run `yarn deploy-all custom`.
 
 The resulting addresses should be on all networks the same.
 
-Note: Address will vary if contract code is changed or a different Solidity version is used.
+Note: The address will vary if the contract code changes or a different Solidity version is used.
 
 ### Verify contract
 
-This command will use the deployment artifacts to compile the contracts and compare them to the onchain code
+This command will use the deployment artifacts to compile the contracts and compare them to the onchain code.
 
 ```bash
 npx hardhat --network <network> local-verify
 ```
 
-This command will upload the contract source to Etherescan
+This command will upload the contract source to Etherscan.
 
 ```bash
 npx hardhat --network <network> etherscan-verify
@@ -197,4 +196,4 @@ All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MER
 
 ## License
 
-All smart contracts are released under LGPL-3.0
+All smart contracts are released under LGPL-3.0.
