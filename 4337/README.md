@@ -52,7 +52,7 @@ sequenceDiagram
 
 The gas overhead is based on [EIP-2929](https://eips.ethereum.org/EIPS/eip-2929). It is possible to reduce the gas overhead by using [access lists](https://eips.ethereum.org/EIPS/eip-2930).
 
-Note: The gas overhead is only the baseline using storage access and call costs. The actual gas overhead is higher as additional costs occur to handle the storage access and calls. The tests indicate an overhead of ~11.6k gas when a fee payment is required and 7.8k gas otherwise. This shows that there is still room for optimization in the contracts used in the tests.
+Note: The gas overhead is only the baseline using storage access and call costs. The actual gas overhead is higher as additional costs occur to handle the storage access and calls. The tests indicate an overhead of ~12.1k gas when a fee payment is required and ~10.3k gas otherwise. This shows that there is still room for optimization in the contracts used in the tests.
 
 ## Setup Flow
 

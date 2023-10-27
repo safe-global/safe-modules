@@ -106,7 +106,7 @@ describe('EIP4337Module - Newly deployed safe', () => {
         signature,
         initCode: safe.getInitCode(),
       })
-      await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
+      await entryPoint.executeUserOp(userOp, 0)
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.5'))
       await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWithCustomError(entryPoint, 'InvalidNonce').withArgs(0)
     })
@@ -185,7 +185,10 @@ describe('EIP4337Module - Newly deployed safe', () => {
         signature,
         initCode: safe.getInitCode(),
       })
-      await logGas('Execute UserOp with fee payment', entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')))
+      await logGas(
+        'Execute UserOp with fee payment and bubble up error string',
+        entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')),
+      )
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.499999'))
     })
 
