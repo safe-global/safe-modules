@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
+/* solhint-disable no-global-import */
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
 import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
 import "@safe-global/safe-contracts/contracts/SafeL2.sol";
 
+import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {INonceManager} from "@account-abstraction/contracts/interfaces/INonceManager.sol";
 import {UserOperation, UserOperationLib} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 
@@ -98,7 +100,7 @@ contract SafeMock {
     receive() external payable {}
 }
 
-contract Safe4337Mock is SafeMock {
+contract Safe4337Mock is SafeMock, IAccount {
     using UserOperationLib for UserOperation;
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
@@ -110,9 +112,8 @@ contract Safe4337Mock is SafeMock {
     constructor(address entryPoint) SafeMock(entryPoint) {}
 
     /// @dev Validates user operation provided by the entry point
-    /// @param userOp User operation struct
-    /// @param requiredPrefund Required prefund to execute the operation
-    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 requiredPrefund) external returns (uint256) {
+    /// @inheritdoc IAccount
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external returns (uint256) {
         address entryPoint = msg.sender;
         require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
@@ -127,8 +128,8 @@ contract Safe4337Mock is SafeMock {
 
         _validateSignatures(entryPoint, userOp);
 
-        if (requiredPrefund != 0) {
-            (bool success, ) = entryPoint.call{value: requiredPrefund}("");
+        if (missingAccountFunds != 0) {
+            (bool success, ) = entryPoint.call{value: missingAccountFunds}("");
             success;
         }
         return 0;

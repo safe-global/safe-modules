@@ -54,13 +54,17 @@ contract TestEntryPoint is INonceManager {
 
         require(gasleft() > userOp.verificationGasLimit, "Not enough gas for verification");
 
+        uint256 userBalance = balances[userOp.sender];
+        uint256 missingAccountFunds = requiredPrefund > userBalance ? requiredPrefund - userBalance : 0;
+
         uint256 validationResult = IAccount(userOp.sender).validateUserOp{gas: userOp.verificationGasLimit}(
             userOp,
             bytes32(0),
-            requiredPrefund
+            missingAccountFunds
         );
         require(validationResult == 0, "Signature validation failed");
-        uint256 userBalance = balances[userOp.sender];
+
+        userBalance = balances[userOp.sender];
         if (userBalance < requiredPrefund) {
             revert NotEnoughFunds(requiredPrefund, userBalance);
         }

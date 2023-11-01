@@ -38,11 +38,13 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     /**
      * @notice Validates a user operation provided by the entry point.
-     * @param userOp User operation struct.
-     * @param requiredPrefund Required prefund to execute the operation.
-     * @return validationResult An integer indicating the result of the validation.
+     * @inheritdoc IAccount
      */
-    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 requiredPrefund) external returns (uint256 validationResult) {
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32,
+        uint256 missingAccountFunds
+    ) external returns (uint256 validationResult) {
         address payable safeAddress = payable(userOp.sender);
         // The entryPoint address is appended to the calldata in `HandlerContext` contract
         // Because of this, the relayer may manipulate the entryPoint address, therefore we have to verify that
@@ -64,8 +66,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
         // We trust the entrypoint to set the correct prefund value, based on the operation params
         // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work
-        if (requiredPrefund != 0) {
-            ISafe(safeAddress).execTransactionFromModule(entryPoint, requiredPrefund, "", 0);
+        if (missingAccountFunds != 0) {
+            ISafe(safeAddress).execTransactionFromModule(entryPoint, missingAccountFunds, "", 0);
         }
     }
 
