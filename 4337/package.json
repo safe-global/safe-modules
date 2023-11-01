@@ -24,7 +24,7 @@
     "lint": "yarn lint:sol && yarn lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint ./src && eslint ./test",
-    "fmt": "prettier --ignore-path .gitignore --write .",
+    "fmt": "prettier --ignore-path .gitignore --write . && prettier --write 'contracts/**/*.sol'",
     "fmt:check": "prettier --ignore-path .gitignore --check .",
     "prepack": "yarn build",
     "prepare": "cd .. && husky install 4337/.husky",
