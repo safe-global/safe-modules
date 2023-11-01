@@ -40,11 +40,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Validates a user operation provided by the entry point.
      * @inheritdoc IAccount
      */
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32,
-        uint256 missingAccountFunds
-    ) external returns (uint256 validationResult) {
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
         // The entryPoint address is appended to the calldata in `HandlerContext` contract
         // Because of this, the relayer may manipulate the entryPoint address, therefore we have to verify that
@@ -62,7 +58,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
-        validationResult = validateSignatures(entryPoint, userOp);
+        validationData = validateSignatures(entryPoint, userOp);
 
         // We trust the entrypoint to set the correct prefund value, based on the operation params
         // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work
@@ -157,9 +153,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
      * @param entryPoint Address of the entry point.
      * @param userOp User operation struct.
-     * @return validationResult An integer indicating the result of the validation.
+     * @return validationData An integer indicating the result of the validation.
      */
-    function validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256) {
+    function validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
         bytes32 operationHash = getOperationHash(
             payable(userOp.sender),
             userOp.callData,
@@ -173,9 +169,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         );
 
         try ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature) {
-            return 0;
+            validationData = 0;
         } catch {
-            return SIG_VALIDATION_FAILED;
+            validationData = SIG_VALIDATION_FAILED;
         }
     }
 }

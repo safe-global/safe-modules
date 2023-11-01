@@ -57,12 +57,12 @@ contract TestEntryPoint is INonceManager {
         uint256 userBalance = balances[userOp.sender];
         uint256 missingAccountFunds = requiredPrefund > userBalance ? requiredPrefund - userBalance : 0;
 
-        uint256 validationResult = IAccount(userOp.sender).validateUserOp{gas: userOp.verificationGasLimit}(
+        uint256 validationData = IAccount(userOp.sender).validateUserOp{gas: userOp.verificationGasLimit}(
             userOp,
             bytes32(0),
             missingAccountFunds
         );
-        require(validationResult == 0, "Signature validation failed");
+        require(validationData == 0, "Signature validation failed");
 
         userBalance = balances[userOp.sender];
         if (userBalance < requiredPrefund) {
