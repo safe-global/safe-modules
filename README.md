@@ -1,7 +1,7 @@
 Safe Modules
 ===================
 
-This repository contains a collection of modules that can be used with the [Safe contracts](https://github.com/safe-global/safe-contracts)
+This repository contains a collection of modules for the [Safe Smart Account](https://github.com/safe-global/safe-contracts)
 
 Modules
 -------
