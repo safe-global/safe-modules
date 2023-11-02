@@ -16,13 +16,13 @@ const MODULE_ADDRESS = process.env.SCRIPT_MODULE_ADDRESS!!
 const ERC20_TOKEN_ADDRESS = process.env.SCRIPT_ERC20_TOKEN_ADDRESS!!
 
 const INTERFACES = new ethers.Interface([
+  'function SUPPORTED_ENTRYPOINT() returns (address)',
   'function enableModule(address)',
   'function setup(address[],uint256,address,bytes,address,address,uint256,address)',
   'function createProxyWithNonce(address,bytes,uint256) returns (address)',
   'function proxyCreationCode() returns (bytes)',
   'function enableModules(address[])',
   'function getNonce(address,uint192) returns (uint256 nonce)',
-  'function supportedEntryPoint() returns (address)',
   'function getOwners() returns (address[])',
   'function getModulesPaginated(address, uint256) returns (address[], address)',
   'function getOperationHash(address,bytes,uint256,uint256,uint256,uint256,uint256,uint256,address)',
@@ -50,7 +50,7 @@ const runOp = async () => {
   const entryPoints = await getSupportedEntryPoints(accountAbstractionProvider)
   const entryPoint = entryPoints[0]
   const moduleAddress = MODULE_ADDRESS ?? (await getSafe4337Module().then((module) => module.getAddress()))
-  const moduleSupportedEntrypoint = await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData('supportedEntryPoint') })
+  const moduleSupportedEntrypoint = await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData('SUPPORTED_ENTRYPOINT') })
   console.log({ moduleAddress, moduleSupportedEntrypoint })
 
   const proxyCreationCode = (await callInterface(PROXY_FACTORY_ADDRESS, 'proxyCreationCode'))[0]
