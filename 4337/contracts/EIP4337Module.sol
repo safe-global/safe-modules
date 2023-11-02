@@ -20,14 +20,14 @@ import {ISafe} from "./interfaces/Safe.sol";
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     // A constant representing a valid signature, defined in the ERC4337 spec.
-    // Equivalent to `_packValidationData(address(0), 0, 0);`
+    // Equivalent to `_packValidationData(false, 0, 0);`
     //
     // Note that this implies that `validUntil = 0` which is defined to be a marker value indicating an "infinite" timestamp,
     // and `validFrom = 0`, meaning that the signature is always valid.
     uint256 internal constant SIG_VALIDATION_SUCCESS = 0;
 
     // A constant representing a signature validation failure, defined in the ERC4337 spec.
-    // Equivalent to `_packValidationData(address(1), 0, 0);`
+    // Equivalent to `_packValidationData(true, 0, 0);`
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
 
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
