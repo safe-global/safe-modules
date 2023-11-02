@@ -19,6 +19,13 @@ import {ISafe} from "./interfaces/Safe.sol";
  *      - Replay protection is handled by the entry point.
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
+    // A constant representing a valid signature, defined in the ERC4337 spec.
+    // Equivalent to `_packValidationData(false, 0, 0);`
+    //
+    // Note that this implies that `validUntil = 0` which is defined to be a marker value indicating an "infinite" timestamp,
+    // and `validFrom = 0`, meaning that the signature is always valid.
+    uint256 internal constant SIG_VALIDATION_SUCCESS = 0;
+
     // A constant representing a signature validation failure, defined in the ERC4337 spec.
     // Equivalent to `_packValidationData(true, 0, 0);`
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
@@ -169,7 +176,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         );
 
         try ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature) {
-            validationData = 0;
+            validationData = SIG_VALIDATION_SUCCESS;
         } catch {
             validationData = SIG_VALIDATION_FAILED;
         }
