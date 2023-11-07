@@ -264,7 +264,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     }
 
     function _validateReplayProtection(UserOperation calldata userOp) internal view {
-        // The entrypoints handles the increase of the nonce
+        // The entry point handles the increase of the nonce
         // Right shifting fills up with 0s from the left
         uint192 key = uint192(userOp.nonce >> 64);
         uint256 safeNonce = INonceManager(SUPPORTED_ENTRYPOINT).getNonce(userOp.sender, key);

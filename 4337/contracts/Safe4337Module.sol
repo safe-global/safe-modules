@@ -40,6 +40,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     address public immutable SUPPORTED_ENTRYPOINT;
 
     constructor(address entryPoint) {
+        require(entryPoint != address(0), "Invalid entry point");
         SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
@@ -49,12 +50,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      */
     function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
-        // The entryPoint address is appended to the calldata in `HandlerContext` contract
-        // Because of this, the relayer may manipulate the entryPoint address, therefore we have to verify that
+        // The entry point address is appended to the calldata in `HandlerContext` contract
+        // Because of this, the relayer may manipulate the entry point address, therefore we have to verify that
         // the sender is the Safe specified in the userOperation
-        require(safeAddress == msg.sender, "Invalid Caller");
+        require(safeAddress == msg.sender, "Invalid caller");
 
-        // We check the execution function signature to make sure the entryPoint can't call any other function
+        // We check the execution function signature to make sure the entry point can't call any other function
         // and make sure the execution of the user operation is handled by the module
         require(
             this.executeUserOp.selector == bytes4(userOp.callData) || this.executeUserOpWithErrorString.selector == bytes4(userOp.callData),
@@ -64,13 +65,13 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         address entryPoint = _msgSender();
         require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
-        // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
+        // The userOp nonce is validated in the entry point (for 0.6.0+), therefore we will not check it again
         validationData = _validateSignatures(entryPoint, userOp);
 
-        // We trust the entrypoint to set the correct prefund value, based on the operation params
-        // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work.
+        // We trust the entry point to set the correct prefund value, based on the operation params
+        // We need to perform this even if the signature is not valid, else the simulation function of the entry point will not work.
         if (missingAccountFunds != 0) {
-            // We intentionally ignore errors in paying the missing account funds, as the Entrypoint is responsible for
+            // We intentionally ignore errors in paying the missing account funds, as the entry point is responsible for
             // verifying the prefund has been paid. This behaviour matches the reference base account implementation.
             ISafe(safeAddress).execTransactionFromModule(entryPoint, missingAccountFunds, "", 0);
         }
