@@ -6,7 +6,7 @@ import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, si
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
-describe('EIP4337Module - Newly deployed safe', () => {
+describe('Safe4337Module - Newly deployed safe', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 

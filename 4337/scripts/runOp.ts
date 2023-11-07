@@ -140,10 +140,10 @@ const runOp = async () => {
   )
 
   if (DEBUG) {
-    console.log('Usign account with address:', user1.address)
-    console.log('Using EIP4337Diatomic deployed at:', moduleAddress)
-    console.log('Using Safe contract deployed at:', safe.address)
-    console.log('Using entrypoint at:', entryPoint)
+    console.log('Usign account:', user1.address)
+    console.log('Using Safe4337Module:', moduleAddress)
+    console.log('Using Safe:', safe.address)
+    console.log('Using EntryPoint:', entryPoint)
     console.log('Balance of Safe:', ethers.formatEther(await ethers.provider.getBalance(safe.address)), 'ETH')
   }
 
