@@ -2,7 +2,7 @@ import ArtifactGnosisSafe from '@gnosis.pm/safe-contracts/build/artifacts/contra
 import ArtifactGnosisSafeProxy from '@gnosis.pm/safe-contracts/build/artifacts/contracts/proxies/GnosisSafeProxy.sol/GnosisSafeProxy.json'
 import ArtifactGnosisSafeProxyFactory from '@gnosis.pm/safe-contracts/build/artifacts/contracts/proxies/GnosisSafeProxyFactory.sol/GnosisSafeProxyFactory.json'
 
-import ArtifactAllowanceModule from '../../build/artifacts/contracts/AlowanceModule.sol/AllowanceModule.json'
+import ArtifactAllowanceModule from '../../build/artifacts/contracts/AllowanceModule.sol/AllowanceModule.json'
 
 export {
   ArtifactGnosisSafe,
