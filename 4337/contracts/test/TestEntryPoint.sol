@@ -7,7 +7,7 @@ import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOpera
 
 /**
  * helper contract for EntryPoint, to call userOp.initCode from a "neutral" address,
- * which is explicitly not the entryPoint itself.
+ * which is explicitly not the entry point itself.
  */
 contract SenderCreator {
     /**

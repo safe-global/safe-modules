@@ -34,6 +34,13 @@ describe('Safe4337Module', () => {
     }
   })
 
+  describe('constructor', () => {
+    it('should revert when entry point is not specified', async () => {
+      const factory = await ethers.getContractFactory('Safe4337Module')
+      await expect(factory.deploy(ethers.ZeroAddress)).to.be.revertedWith('Invalid entry point')
+    })
+  })
+
   describe('validateUserOp', () => {
     it('should revert when validating user ops for a different Safe', async () => {
       const { user, entryPoint, validator, safeModule, makeSafeModule } = await setupTests()
@@ -52,7 +59,7 @@ describe('Safe4337Module', () => {
       expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(0)
 
       const otherSafe = (await makeSafeModule(user)).connect(entryPointImpersonator)
-      await expect(otherSafe.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.be.revertedWith('Invalid Caller')
+      await expect(otherSafe.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.be.revertedWith('Invalid caller')
     })
 
     it('should revert when calling an unsupported Safe method', async () => {
