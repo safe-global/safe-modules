@@ -68,8 +68,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         validationData = validateSignatures(entryPoint, userOp);
 
         // We trust the entrypoint to set the correct prefund value, based on the operation params
-        // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work
+        // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work.
         if (missingAccountFunds != 0) {
+            // We intentionally ignore errors in paying the missing account funds, as the Entrypoint is responsible for
+            // verifying the prefund has been paid. This behaviour matches the reference base account implementation.
             ISafe(safeAddress).execTransactionFromModule(entryPoint, missingAccountFunds, "", 0);
         }
     }
