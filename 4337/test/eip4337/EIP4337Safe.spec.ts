@@ -10,7 +10,7 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
-describe('EIP4337Safe', () => {
+describe('Safe4337Mock', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 
@@ -48,7 +48,7 @@ describe('EIP4337Safe', () => {
     })
   })
 
-  describe('execTransaction', () => {
+  describe('executeUserOp', () => {
     it('should execute contract calls without fee', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()
 
