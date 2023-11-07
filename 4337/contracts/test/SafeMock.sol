@@ -31,7 +31,7 @@ contract SafeMock {
         modules[SUPPORTED_ENTRYPOINT] = true;
     }
 
-    function signatureSplit(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
+    function _signatureSplit(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         // solhint-disable-next-line no-inline-assembly
         assembly {
             r := mload(add(signature, 0x20))
@@ -44,7 +44,7 @@ contract SafeMock {
         uint8 v;
         bytes32 r;
         bytes32 s;
-        (v, r, s) = signatureSplit(signature);
+        (v, r, s) = _signatureSplit(signature);
         require(
             owner == ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v, r, s),
             "Invalid signature"
@@ -117,7 +117,7 @@ contract Safe4337Mock is SafeMock, IAccount {
         address entryPoint = msg.sender;
         require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
-        validateReplayProtection(userOp);
+        _validateReplayProtection(userOp);
 
         // We check the execution function signature to make sure the entryPoint can't call any other function
         // and make sure the execution of the user operation is handled by the module
@@ -263,7 +263,7 @@ contract Safe4337Mock is SafeMock, IAccount {
         checkSignatures(operationHash, operationData, userOp.signature);
     }
 
-    function validateReplayProtection(UserOperation calldata userOp) internal view {
+    function _validateReplayProtection(UserOperation calldata userOp) internal view {
         // The entrypoints handles the increase of the nonce
         // Right shifting fills up with 0s from the left
         uint192 key = uint192(userOp.nonce >> 64);

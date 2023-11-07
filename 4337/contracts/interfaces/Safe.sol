@@ -35,6 +35,10 @@ interface ISafe {
      */
     function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) external view;
 
+    /**
+     * @dev Returns the domain separator for this contract, as defined in the EIP-712 standard.
+     * @return bytes32 The domain separator hash.
+     */
     function domainSeparator() external view returns (bytes32);
 
     /**
