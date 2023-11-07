@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { Signer } from 'ethers'
 import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
-import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, signHash } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
   calculateSafeOperationHash,

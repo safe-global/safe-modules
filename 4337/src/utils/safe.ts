@@ -88,6 +88,7 @@ const actionCalldata = (action: MetaTransaction): string => {
 }
 
 export interface RpcProvider extends Provider {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   send(method: string, params: unknown[]): Promise<any>
 }
 
@@ -98,6 +99,7 @@ export class MultiProvider4337 extends JsonRpcProvider {
     this.generalProvider = generalProvider
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   send(method: string, params: unknown[]): Promise<any> {
     if (
       [

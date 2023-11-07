@@ -44,8 +44,13 @@ describe('E2E - Reference EntryPoint', () => {
   const deployEntryPoint = async (deployer: Signer, relayer: Signer) => {
     const { abi, bytecode } = EntryPointArtifact
     const transaction = await deployer.sendTransaction({ data: bytecode })
-    const receipt = await transaction.wait()
-    return new ethers.Contract(receipt!.contractAddress!, abi, relayer)
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const receipt = (await transaction.wait())!
+    const contractAddress = receipt.contractAddress
+    if (contractAddress === null) {
+      throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
+    }
+    return new ethers.Contract(contractAddress, abi, relayer)
   }
 
   it('should deploy a Safe and execute transactions', async () => {
@@ -75,14 +80,12 @@ describe('E2E - Reference EntryPoint', () => {
       }),
     )
 
-    const transaction = await logGas(
-      'Execute UserOps with reference EntryPoint',
-      entryPoint.handleOps(userOps, await relayer.getAddress()) as any,
-    )
-    const receipt = await transaction.wait()
+    const transaction = await logGas('Execute UserOps with reference EntryPoint', entryPoint.handleOps(userOps, await relayer.getAddress()))
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const receipt = (await transaction.wait())!
 
     const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
-    const deposits = receipt!.logs
+    const deposits = receipt.logs
       .filter(isEventLog)
       .filter((log) => log.eventName === 'Deposited')
       .reduce((acc, { args: [, deposit] }) => acc + deposit, 0n)
@@ -90,6 +93,6 @@ describe('E2E - Reference EntryPoint', () => {
   })
 
   function isEventLog(log: Log): log is EventLog {
-    return typeof (log as any).eventName === 'string'
+    return typeof (log as Partial<EventLog>).eventName === 'string'
   }
 })

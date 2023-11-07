@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import { Interface } from 'ethers'
 import { deployments, ethers } from 'hardhat'
 import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
@@ -9,6 +10,8 @@ import {
   buildSafeUserOpTransaction,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
+
+type ParseLog = Parameters<Interface['parseLog']>[0]
 
 describe('Safe4337Module - Existing Safe', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -146,9 +149,10 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
 
-      const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx: any) => tx.wait())
-      const logs = transaction.logs.map((log: any) => entryPoint.interface.parseLog(log))
-      const emittedRevert = logs.some((l: any) => l.name === 'UserOpReverted')
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const transaction = (await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx) => tx.wait()))!
+      const logs = transaction.logs.map((log) => entryPoint.interface.parseLog(log as unknown as ParseLog))
+      const emittedRevert = logs.some((l) => l?.name === 'UserOpReverted')
 
       expect(emittedRevert).to.be.true
     })
@@ -196,10 +200,11 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
 
-      const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx: any) => tx.wait())
-      const logs = transaction.logs.map((log: any) => entryPoint.interface.parseLog(log))
-      const emittedRevert = logs.find((l: any) => l.name === 'UserOpReverted')
-      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert.args.reason.slice(10)}`)
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const transaction = (await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx) => tx.wait()))!
+      const logs = transaction.logs.map((log) => entryPoint.interface.parseLog(log as unknown as ParseLog)) ?? []
+      const emittedRevert = logs.find((l) => l?.name === 'UserOpReverted')
+      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert?.args.reason.slice(10) || ''}`)
       expect(decodedError).to.equal('You called a function that always reverts')
     })
   })
