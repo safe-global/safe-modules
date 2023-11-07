@@ -24,11 +24,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     //
     // Note that this implies that `validUntil = 0` which is defined to be a marker value indicating an "infinite" timestamp,
     // and `validFrom = 0`, meaning that the signature is always valid.
-    uint256 internal constant SIG_VALIDATION_SUCCESS = 0;
+    uint256 private constant SIG_VALIDATION_SUCCESS = 0;
 
     // A constant representing a signature validation failure, defined in the ERC4337 spec.
     // Equivalent to `_packValidationData(true, 0, 0);`
-    uint256 internal constant SIG_VALIDATION_FAILED = 1;
+    uint256 private constant SIG_VALIDATION_FAILED = 1;
 
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
@@ -65,7 +65,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         // The userOp nonce is validated in the Entrypoint (for 0.6.0+), therefore we will not check it again
-        validationData = validateSignatures(entryPoint, userOp);
+        validationData = _validateSignatures(entryPoint, userOp);
 
         // We trust the entrypoint to set the correct prefund value, based on the operation params
         // We need to perform this even if the signature is not valid, else the simulation function of the Entrypoint will not work.
@@ -164,7 +164,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
      */
-    function validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
+    function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
         bytes32 operationHash = getOperationHash(
             payable(userOp.sender),
             userOp.callData,
