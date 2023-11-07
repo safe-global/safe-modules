@@ -67,19 +67,34 @@ To deploy a Safe with 4337 directly enabled, we require a setup library that ena
 The `initCode` for the Safe with a 4337 module enabled is composed in the following way:
 
 ```solidity
-/** Enable Modules **/
-bytes memory initExecutor = ADD_MODULES_LIB_ADDRESS;
-bytes memory initData =  abi.encodeWithSignature("enableModules", [4337_MODULE_ADDRESS, ENTRY_POINT_ADDRESS]);
-
 /** Setup Safe **/
-// We do not want to use any payment logic therefore, this is all set to 0
-bytes memory setupData = abi.encodeWithSignature("setup", owners, threshold, initExecutor, initData, 4337_MODULE_ADDRESS, address(0), 0, address(0));
+address[] memory modules = new address[](1);
+{
+    modules[0] = SAFE_4337_MODULE_ADDRESS;
+}
+bytes memory initializer = abi.encodeWithSignature(
+    "setup(address[],uint256,address,bytes,address,address,uint256,address)",
+    owners,
+    threshold,
+    ADD_MODULES_LIB_ADDRESS,
+    abi.encodeWithSignature("enableModules(address[])", modules),
+    SAFE_4337_MODULE_ADDRESS,
+    // We do not want to use any payment logic therefore, this is all set to 0
+    address(0),
+    0,
+    address(0)
+);
 
 /** Deploy Proxy **/
-bytes memory deployData = abi.encodeWithSignature("createProxyWithNonce", SAFE_SINGLETON_ADDRESS, setupData, salt);
+bytes memory initCallData = abi.encodeWithSignature(
+    "createProxyWithNonce(address,bytes,uint256)",
+    SAFE_SINGLETON_ADDRESS,
+    initializer,
+    saltNonce
+);
 
 /** Encode for 4337 **/
-bytes memory initCode = abi.encodePacked(SAFE_PROXY_FACTORY_ADDRESS, deployData);
+bytes memory initCode = abi.encodePacked(SAFE_PROXY_FACTORY_ADDRESS, initCallData);
 ```
 
 The diagram below outlines the flow triggered by the initialization data to deploy a Safe with the 4337 module enabled.
