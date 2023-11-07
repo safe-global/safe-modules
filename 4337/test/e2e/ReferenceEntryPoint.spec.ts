@@ -44,8 +44,7 @@ describe('E2E - Reference EntryPoint', () => {
   const deployEntryPoint = async (deployer: Signer, relayer: Signer) => {
     const { abi, bytecode } = EntryPointArtifact
     const transaction = await deployer.sendTransaction({ data: bytecode })
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const receipt = (await transaction.wait())!
+    const receipt = await transaction.wait()
     const contractAddress = receipt.contractAddress
     if (contractAddress === null) {
       throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
@@ -81,8 +80,7 @@ describe('E2E - Reference EntryPoint', () => {
     )
 
     const transaction = await logGas('Execute UserOps with reference EntryPoint', entryPoint.handleOps(userOps, await relayer.getAddress()))
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const receipt = (await transaction.wait())!
+    const receipt = await transaction.wait()
 
     const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
     const deposits = receipt.logs

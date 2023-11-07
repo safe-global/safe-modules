@@ -105,8 +105,7 @@ export const compile = async (source: string) => {
 export const deployContract = async (deployer: Signer, source: string): Promise<Contract> => {
   const output = await compile(source)
   const transaction = await deployer.sendTransaction({ data: output.data, gasLimit: 6000000 })
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const receipt = (await transaction.wait())!
+  const receipt = await transaction.wait()
   const contractAddress = receipt.contractAddress
   if (contractAddress === null) {
     throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
