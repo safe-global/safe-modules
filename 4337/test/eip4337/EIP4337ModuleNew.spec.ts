@@ -133,7 +133,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
       })
       const transaction = await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
       const receipt = await transaction.wait()
-      const logs = receipt!.logs.map((log: any) => entryPoint.interface.parseLog(log))
+      const logs = receipt.logs.map((log) => entryPoint.interface.parseLog(log))
       const emittedRevert = logs.some((log) => log?.name === 'UserOpReverted')
       expect(emittedRevert).to.be.true
       expect(await safe.isDeployed()).to.be.true
@@ -219,9 +219,9 @@ describe('Safe4337Module - Newly deployed safe', () => {
       })
       const transaction = await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
       const receipt = await transaction.wait()
-      const logs = receipt!.logs.map((log: any) => entryPoint.interface.parseLog(log))
+      const logs = receipt.logs.map((log) => entryPoint.interface.parseLog(log))
       const emittedRevert = logs.find((log) => log?.name === 'UserOpReverted')
-      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert!.args.reason.slice(10)}`)
+      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert?.args.reason.slice(10) ?? ''}`)
       expect(decodedError).to.equal('You called a function that always reverts')
       expect(await safe.isDeployed()).to.be.true
     })

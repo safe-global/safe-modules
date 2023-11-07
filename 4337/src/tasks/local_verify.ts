@@ -14,7 +14,7 @@ task('local-verify', 'Verifies that the local deployment files correspond to the
     delete meta.compiler
     delete meta.output
     delete meta.version
-    const sources = Object.values<any>(meta.sources)
+    const sources = Object.values<Record<string, unknown>>(meta.sources)
     for (const source of sources) {
       for (const key of Object.keys(source)) {
         if (allowedSourceKey.indexOf(key) < 0) delete source[key]

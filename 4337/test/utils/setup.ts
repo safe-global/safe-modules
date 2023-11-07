@@ -1,5 +1,5 @@
 import { deployments, ethers } from 'hardhat'
-import { Signer, Contract } from 'ethers'
+import { Contract, Signer } from 'ethers'
 import solc from 'solc'
 import { logGas } from '../../src/utils/execution'
 import { Safe4337Mock, SafeMock } from '../../typechain-types'
@@ -28,13 +28,13 @@ export const getFactory = async () => {
   return await ethers.getContractAt('SafeProxyFactory', FactoryDeployment.address)
 }
 
-export const getSafeTemplate = async (for4337: boolean = false, saltNumber: string = getRandomIntAsString()) => {
+export const getSafeTemplate = async (for4337 = false, saltNumber = getRandomIntAsString()) => {
   const singleton = await getMockSafeSingleton(for4337)
   console.log('singleton', await singleton.getAddress())
   console.log('saltNumber', saltNumber)
   const factory = await getFactory()
   const template = await factory.createProxyWithNonce.staticCall(await singleton.getAddress(), '0x', saltNumber)
-  await factory.createProxyWithNonce(await singleton.getAddress(), '0x', saltNumber).then((tx: any) => tx.wait())
+  await factory.createProxyWithNonce(await singleton.getAddress(), '0x', saltNumber).then((tx) => tx.wait())
   return await ethers.getContractAt(for4337 ? 'Safe4337Mock' : 'SafeMock', template)
 }
 
@@ -106,5 +106,9 @@ export const deployContract = async (deployer: Signer, source: string): Promise<
   const output = await compile(source)
   const transaction = await deployer.sendTransaction({ data: output.data, gasLimit: 6000000 })
   const receipt = await transaction.wait()
-  return new Contract(receipt!.contractAddress!, output.interface, deployer)
+  const contractAddress = receipt.contractAddress
+  if (contractAddress === null) {
+    throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
+  }
+  return new Contract(contractAddress, output.interface, deployer)
 }

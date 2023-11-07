@@ -146,9 +146,9 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
 
-      const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx: any) => tx.wait())
-      const logs = transaction.logs.map((log: any) => entryPoint.interface.parseLog(log))
-      const emittedRevert = logs.some((l: any) => l.name === 'UserOpReverted')
+      const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx) => tx.wait())
+      const logs = transaction.logs.map((log) => entryPoint.interface.parseLog(log))
+      const emittedRevert = logs.some((l) => l?.name === 'UserOpReverted')
 
       expect(emittedRevert).to.be.true
     })
@@ -196,10 +196,10 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
 
-      const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx: any) => tx.wait())
-      const logs = transaction.logs.map((log: any) => entryPoint.interface.parseLog(log))
-      const emittedRevert = logs.find((l: any) => l.name === 'UserOpReverted')
-      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert.args.reason.slice(10)}`)
+      const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx) => tx.wait())
+      const logs = transaction.logs.map((log) => entryPoint.interface.parseLog(log)) ?? []
+      const emittedRevert = logs.find((l) => l?.name === 'UserOpReverted')
+      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert?.args.reason.slice(10) || ''}`)
       expect(decodedError).to.equal('You called a function that always reverts')
     })
   })
