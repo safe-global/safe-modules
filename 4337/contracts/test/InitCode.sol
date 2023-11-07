@@ -21,6 +21,10 @@ contract InitCode {
         SAFE_PROXY_FACTORY_ADDRESS = config.proxyFactory;
     }
 
+    /**
+     * @dev Compute ERC-4337 initCode for a new Safe with the Safe4337Module.
+     * @notice CHANGES TO THIS FUNCTION SHOULD BE MIRRORED IN THE README!
+     */
     function getInitCode(address[] memory owners, uint256 threshold, uint256 saltNonce) external view returns (bytes memory) {
         /** Setup Safe **/
         address[] memory modules = new address[](1);
