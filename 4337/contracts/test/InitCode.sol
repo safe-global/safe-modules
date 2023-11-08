@@ -38,7 +38,7 @@ contract InitCode {
             ADD_MODULES_LIB_ADDRESS,
             abi.encodeWithSignature("enableModules(address[])", modules),
             SAFE_4337_MODULE_ADDRESS,
-            // We do not want to use any payment logic therefore, this is all set to 0
+            // We do not want to use any refund logic; therefore, this is all set to 0
             address(0),
             0,
             address(0)
