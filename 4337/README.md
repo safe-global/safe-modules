@@ -205,9 +205,9 @@ npx hardhat --network <network> etherscan-verify
 
 - [Safe developer portal](http://docs.safe.global)
 
-## Audits/ Formal Verification
+## Audits
 
-- [for Version 0.1.0 by Ackee Blockchain](docs/v0.1.0/audit.md)
+- [For version 0.1.0 by Ackee Blockchain](docs/v0.1.0/audit.md)
 
 ## Security and Liability
 
