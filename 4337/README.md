@@ -205,6 +205,10 @@ npx hardhat --network <network> etherscan-verify
 
 - [Safe developer portal](http://docs.safe.global)
 
+## Audits/ Formal Verification
+
+- [for Version 0.1.0 by Ackee Blockchain](docs/v0.1.0/audit.md)
+
 ## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
