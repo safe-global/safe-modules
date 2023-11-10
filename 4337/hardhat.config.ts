@@ -61,29 +61,17 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://mainnet.infura.io/v3/${INFURA_KEY}`,
     },
-    xdai: {
+    gnosis: {
       ...sharedNetworkConfig,
-      url: 'https://xdai.poanetwork.dev',
-    },
-    ewc: {
-      ...sharedNetworkConfig,
-      url: `https://rpc.energyweb.org`,
-    },
-    rinkeby: {
-      ...sharedNetworkConfig,
-      url: `https://rinkeby.infura.io/v3/${INFURA_KEY}`,
+      url: 'https://rpc.gnosis.gateway.fm',
     },
     goerli: {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
     },
-    ropsten: {
+    sepolia: {
       ...sharedNetworkConfig,
-      url: `https://ropsten.infura.io/v3/${INFURA_KEY}`,
-    },
-    kovan: {
-      ...sharedNetworkConfig,
-      url: `https://kovan.infura.io/v3/${INFURA_KEY}`,
+      url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
     },
     mumbai: {
       ...sharedNetworkConfig,
@@ -92,10 +80,6 @@ const userConfig: HardhatUserConfig = {
     polygon: {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
-    },
-    volta: {
-      ...sharedNetworkConfig,
-      url: `https://volta-rpc.energyweb.org`,
     },
   },
   namedAccounts: {
