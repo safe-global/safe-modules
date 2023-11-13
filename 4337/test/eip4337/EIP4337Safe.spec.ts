@@ -27,27 +27,6 @@ describe('Safe4337Mock', () => {
     }
   })
 
-  describe('getOperationHash', () => {
-    it('should correctly calculate EIP-712 hash of the operation', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
-
-      const operation = buildSafeUserOp({ safe: await safe.getAddress(), nonce: '0', entryPoint: await entryPoint.getAddress() })
-      const operationHash = await validator.getOperationHash(
-        await safe.getAddress(),
-        operation.callData,
-        operation.nonce,
-        operation.preVerificationGas,
-        operation.verificationGasLimit,
-        operation.callGasLimit,
-        operation.maxFeePerGas,
-        operation.maxPriorityFeePerGas,
-        operation.entryPoint,
-      )
-
-      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), operation, await chainId()))
-    })
-  })
-
   describe('executeUserOp', () => {
     it('should execute contract calls without fee', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()

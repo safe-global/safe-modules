@@ -28,6 +28,7 @@ export interface SafeUserOperation {
   callGasLimit: string
   maxFeePerGas: string
   maxPriorityFeePerGas: string
+  signatureTimestamps: BigNumberish
   entryPoint: string
 }
 
@@ -42,6 +43,7 @@ export const EIP712_SAFE_OPERATION_TYPE = {
     { type: 'uint256', name: 'callGasLimit' },
     { type: 'uint256', name: 'maxFeePerGas' },
     { type: 'uint256', name: 'maxPriorityFeePerGas' },
+    { type: 'uint96', name: 'signatureTimestamps' },
     { type: 'address', name: 'entryPoint' },
   ],
 }
@@ -76,6 +78,7 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
     callGasLimit: template.callGasLimit || '2000000',
     maxFeePerGas: template.maxFeePerGas || '10000000000',
     maxPriorityFeePerGas: template.maxPriorityFeePerGas || '10000000000',
+    signatureTimestamps: template.signatureTimestamps || '0',
   }
 }
 
@@ -186,4 +189,15 @@ export const getSupportedEntryPoints = async (provider: ethers.JsonRpcProvider):
   const supportedEntryPoints = await provider.send('eth_supportedEntryPoints', [])
   console.log({ supportedEntryPoints })
   return supportedEntryPoints.map(ethers.getAddress)
+}
+
+export const encodeSignatureTimestamp = (validAfter: BigNumberish, validUntil: BigNumberish) => {
+  // Ensure that the values don't exceed 48 bits
+  if (BigInt(validAfter) > 0xffffffffffff || BigInt(validUntil) > 0xffffffffffff) {
+    throw new Error('Value exceeds 48 bits')
+  }
+
+  // Combine the two uint48 values into a uint96
+  const result = (BigInt(validAfter) << 48n) | BigInt(validUntil)
+  return result
 }

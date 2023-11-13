@@ -33,8 +33,8 @@ import './src/tasks/local_verify'
 import './src/tasks/deploy_contracts'
 import './src/tasks/show_codesize'
 
-const primarySolidityVersion = SOLIDITY_VERSION || '0.8.21'
-const soliditySettings = !!SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : { optimizer: { enabled: true, runs: 10_000_000 } }
+const primarySolidityVersion = SOLIDITY_VERSION || '0.8.23'
+const soliditySettings = SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : { optimizer: { enabled: true, runs: 10_000_000 } }
 
 const userConfig: HardhatUserConfig = {
   paths: {
@@ -93,7 +93,7 @@ const userConfig: HardhatUserConfig = {
   },
 }
 if (NODE_URL) {
-  userConfig.networks!!.custom = {
+  userConfig.networks!.custom = {
     ...sharedNetworkConfig,
     url: NODE_URL,
   }

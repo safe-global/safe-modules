@@ -5,6 +5,7 @@ import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/Hand
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
 import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**
@@ -19,22 +20,11 @@ import {ISafe} from "./interfaces/Safe.sol";
  *      - Replay protection is handled by the entry point.
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
-    // A constant representing a valid signature, defined in the ERC4337 spec.
-    // Equivalent to `_packValidationData(false, 0, 0);`
-    //
-    // Note that this implies that `validUntil = 0` which is defined to be a marker value indicating an "infinite" timestamp,
-    // and `validFrom = 0`, meaning that the signature is always valid.
-    uint256 private constant SIG_VALIDATION_SUCCESS = 0;
-
-    // A constant representing a signature validation failure, defined in the ERC4337 spec.
-    // Equivalent to `_packValidationData(true, 0, 0);`
-    uint256 private constant SIG_VALIDATION_FAILED = 1;
-
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint96 signatureTimestamps,address entryPoint)"
         );
 
     address public immutable SUPPORTED_ENTRYPOINT;
@@ -105,7 +95,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
-            assembly {
+            assembly ("memory-safe") {
                 revert(add(returnData, 0x20), returnData)
             }
         }
@@ -133,13 +123,14 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      */
     function getOperationHash(
         address safe,
-        bytes calldata callData,
+        bytes memory callData,
         uint256 nonce,
         uint256 preVerificationGas,
         uint256 verificationGasLimit,
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        uint96 signatureTimestamps,
         address entryPoint
     ) public view returns (bytes32) {
         bytes32 safeOperationHash = keccak256(
@@ -153,6 +144,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
+                signatureTimestamps,
                 entryPoint
             )
         );
@@ -166,22 +158,30 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @return validationData An integer indicating the result of the validation.
      */
     function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
-        bytes32 operationHash = getOperationHash(
-            payable(userOp.sender),
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            entryPoint
-        );
+        (uint96 signatureTimestamps, bytes memory signatures) = abi.decode(userOp.signature, (uint96, bytes));
 
-        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature) {
-            validationData = SIG_VALIDATION_SUCCESS;
+        bytes32 operationHash;
+        {
+            operationHash = getOperationHash(
+                payable(userOp.sender),
+                userOp.callData,
+                userOp.nonce,
+                userOp.preVerificationGas,
+                userOp.verificationGasLimit,
+                userOp.callGasLimit,
+                userOp.maxFeePerGas,
+                userOp.maxPriorityFeePerGas,
+                signatureTimestamps,
+                entryPoint
+            );
+        }
+
+        uint48 validAfter = uint48(signatureTimestamps >> 48);
+        uint48 validUntil = uint48(signatureTimestamps);
+        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", signatures) {
+            validationData = _packValidationData(false, validUntil, validAfter);
         } catch {
-            validationData = SIG_VALIDATION_FAILED;
+            validationData = _packValidationData(true, validUntil, validAfter);
         }
     }
 }
