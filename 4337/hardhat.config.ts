@@ -65,10 +65,14 @@ const userConfig: HardhatUserConfig = {
     settings: soliditySettings,
   },
   networks: {
+    localhost: {
+      tags: ['dev'],
+    },
     hardhat: {
       blockGasLimit: 100000000,
       gas: 100000000,
       gasPrice: 10000000000,
+      tags: ['test'],
     },
     mainnet: {
       ...sharedNetworkConfig,
@@ -78,21 +82,24 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: 'https://rpc.gnosis.gateway.fm',
     },
+    polygon: {
+      ...sharedNetworkConfig,
+      url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
+    },
     goerli: {
       ...sharedNetworkConfig,
       url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
+      tags: ['dev'],
     },
     sepolia: {
       ...sharedNetworkConfig,
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
+      tags: ['dev'],
     },
     mumbai: {
       ...sharedNetworkConfig,
       url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
-    },
-    polygon: {
-      ...sharedNetworkConfig,
-      url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
+      tags: ['dev'],
     },
     ...customNetwork,
   },
