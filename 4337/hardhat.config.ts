@@ -33,7 +33,7 @@ import './src/tasks/local_verify'
 import './src/tasks/deploy_contracts'
 import './src/tasks/show_codesize'
 
-const solidityVersion = SOLIDITY_VERSION || '0.8.21'
+const solidityVersion = SOLIDITY_VERSION || '0.8.23'
 const soliditySettings = !!SOLIDITY_SETTINGS
   ? JSON.parse(SOLIDITY_SETTINGS)
   : {
