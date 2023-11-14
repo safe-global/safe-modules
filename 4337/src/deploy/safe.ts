@@ -1,7 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
 const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }) => {
-  if (!network.tags.dev && !network.tags.test) {
+  if (!network.tags.safe && !network.tags.test) {
     return
   }
 

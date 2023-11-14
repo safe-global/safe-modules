@@ -66,7 +66,7 @@ const userConfig: HardhatUserConfig = {
   },
   networks: {
     localhost: {
-      tags: ['dev'],
+      tags: ['dev', 'safe'],
     },
     hardhat: {
       blockGasLimit: 100000000,
