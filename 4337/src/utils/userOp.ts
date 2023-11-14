@@ -91,6 +91,7 @@ export const buildSafeUserOpTransaction = (
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
+  signatureTimestamps?: BigNumberish,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const abi = [
@@ -107,6 +108,7 @@ export const buildSafeUserOpTransaction = (
         callData,
         nonce,
         entryPoint,
+        signatureTimestamps,
       },
       overrides,
     ),
@@ -123,6 +125,7 @@ export const buildSafeUserOpContractCall = async (
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
+  signatureTimestamps?: BigNumberish,
   overrides?: Partial<SafeUserOperation>,
 ): Promise<SafeUserOperation> => {
   const data = contract.interface.encodeFunctionData(method, params)
@@ -136,6 +139,7 @@ export const buildSafeUserOpContractCall = async (
     entryPoint,
     delegateCall,
     bubbleUpRevertReason,
+    signatureTimestamps,
     overrides,
   )
 }
@@ -164,7 +168,7 @@ export const buildUserOperationFromSafeUserOperation = ({
     initCode,
     paymasterAndData: '0x',
     sender: safeOp.safe,
-    signature: signature,
+    signature,
   }
 }
 

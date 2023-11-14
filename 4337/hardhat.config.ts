@@ -25,7 +25,7 @@ if (PK) {
   }
 }
 
-if (['mainnet', 'rinkeby', 'kovan', 'goerli', 'ropsten', 'mumbai', 'polygon'].includes(argv.network) && INFURA_KEY === undefined) {
+if (['mainnet', 'goerli', 'mumbai', 'polygon'].includes(argv.network) && INFURA_KEY === undefined) {
   throw new Error(`Could not find Infura key in env, unable to connect to network ${argv.network}`)
 }
 
@@ -33,8 +33,25 @@ import './src/tasks/local_verify'
 import './src/tasks/deploy_contracts'
 import './src/tasks/show_codesize'
 
-const primarySolidityVersion = SOLIDITY_VERSION || '0.8.23'
-const soliditySettings = SOLIDITY_SETTINGS ? JSON.parse(SOLIDITY_SETTINGS) : { optimizer: { enabled: true, runs: 10_000_000 } }
+const solidityVersion = SOLIDITY_VERSION || '0.8.23'
+const soliditySettings = SOLIDITY_SETTINGS
+  ? JSON.parse(SOLIDITY_SETTINGS)
+  : {
+      evmVersion: 'paris',
+      optimizer: {
+        enabled: true,
+        runs: 10_000_000,
+      },
+    }
+
+const customNetwork = NODE_URL
+  ? {
+      custom: {
+        ...sharedNetworkConfig,
+        url: NODE_URL,
+      },
+    }
+  : {}
 
 const userConfig: HardhatUserConfig = {
   paths: {
@@ -44,15 +61,11 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    compilers: [
-      { version: primarySolidityVersion, settings: { evmVersion: 'paris', ...soliditySettings } },
-      { version: '0.6.12' },
-      { version: '0.5.17' },
-    ],
+    version: solidityVersion,
+    settings: soliditySettings,
   },
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true,
       blockGasLimit: 100000000,
       gas: 100000000,
       gasPrice: 10000000000,
@@ -81,6 +94,7 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
     },
+    ...customNetwork,
   },
   namedAccounts: {
     deployer: 0,
@@ -91,11 +105,5 @@ const userConfig: HardhatUserConfig = {
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
-}
-if (NODE_URL) {
-  userConfig.networks!.custom = {
-    ...sharedNetworkConfig,
-    url: NODE_URL,
-  }
 }
 export default userConfig

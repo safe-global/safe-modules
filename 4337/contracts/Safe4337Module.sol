@@ -160,21 +160,18 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
         (uint96 signatureTimestamps, bytes memory signatures) = abi.decode(userOp.signature, (uint96, bytes));
 
-        bytes32 operationHash;
-        {
-            operationHash = getOperationHash(
-                payable(userOp.sender),
-                userOp.callData,
-                userOp.nonce,
-                userOp.preVerificationGas,
-                userOp.verificationGasLimit,
-                userOp.callGasLimit,
-                userOp.maxFeePerGas,
-                userOp.maxPriorityFeePerGas,
-                signatureTimestamps,
-                entryPoint
-            );
-        }
+        bytes32 operationHash = getOperationHash(
+            payable(userOp.sender),
+            userOp.callData,
+            userOp.nonce,
+            userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
+            userOp.maxFeePerGas,
+            userOp.maxPriorityFeePerGas,
+            signatureTimestamps,
+            entryPoint
+        );
 
         uint48 validAfter = uint48(signatureTimestamps >> 48);
         uint48 validUntil = uint48(signatureTimestamps);
