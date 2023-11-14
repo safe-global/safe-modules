@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-/* solhint-disable no-global-import */
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
-
-import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
-import "@safe-global/safe-contracts/contracts/SafeL2.sol";
 
 import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {INonceManager} from "@account-abstraction/contracts/interfaces/INonceManager.sol";
