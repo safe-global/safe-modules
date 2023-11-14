@@ -19,7 +19,7 @@ describe('E2E - Reference EntryPoint', () => {
     const proxyFactory = await getFactory()
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
     const addModulesLib = await getAddModulesLib()
-    const singletonFactory = await ethers.getContractFactory('Safe', deployer)
+    const singletonFactory = await ethers.getContractFactory('SafeL2', deployer)
     const singleton = await singletonFactory.deploy()
 
     const safe = await Safe4337.withSigner(user.address, {
