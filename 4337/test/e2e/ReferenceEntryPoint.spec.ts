@@ -1,33 +1,43 @@
 import { expect } from 'chai'
-import { deployments, ethers } from 'hardhat'
-import { EventLog, Log, Signer } from 'ethers'
-import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPoint.json'
-import { getFactory, getAddModulesLib } from '../utils/setup'
+import { deployments, ethers, network } from 'hardhat'
+import { EventLog, Log } from 'ethers'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
+import { makeAccounts } from '../utils/accounts'
 
 describe('E2E - Reference EntryPoint', () => {
-  const setupTests = async () => {
-    await deployments.fixture()
-    const [deployer, user, relayer] = await ethers.getSigners()
+  before(function () {
+    if (network.name !== 'localhost') {
+      this.skip()
+    }
+  })
 
-    const entryPoint = await deployEntryPoint(deployer, relayer)
-    const moduleFactory = await ethers.getContractFactory('Safe4337Module')
-    const module = await moduleFactory.deploy(await entryPoint.getAddress())
-    const proxyFactory = await getFactory()
+  const setupTests = async () => {
+    const {
+      AddModulesLib,
+      EntryPoint,
+      Safe4337Module,
+      SafeL2,
+      SafeProxyFactory,
+    } = await deployments.fixture()
+    const [user, relayer] = await makeAccounts({
+      count: 2,
+      fund: ethers.parseEther("1.1"),
+    });
+
+    const entryPoint = new ethers.Contract(EntryPoint.address, EntryPoint.abi, relayer)
+    const validator = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
+    const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
-    const addModulesLib = await getAddModulesLib()
-    const singletonFactory = await ethers.getContractFactory('SafeL2', deployer)
-    const singleton = await singletonFactory.deploy()
 
     const safe = await Safe4337.withSigner(user.address, {
-      safeSingleton: await singleton.getAddress(),
-      entryPoint: await entryPoint.getAddress(),
-      erc4337module: await module.getAddress(),
-      proxyFactory: await proxyFactory.getAddress(),
-      addModulesLib: await addModulesLib.getAddress(),
+      safeSingleton: SafeL2.address,
+      entryPoint: EntryPoint.address,
+      erc4337module: Safe4337Module.address,
+      proxyFactory: SafeProxyFactory.address,
+      addModulesLib: AddModulesLib.address,
       proxyCreationCode,
       chainId: Number(await chainId()),
     })
@@ -36,20 +46,9 @@ describe('E2E - Reference EntryPoint', () => {
       user,
       relayer,
       safe,
-      validator: module,
+      validator,
       entryPoint,
     }
-  }
-
-  const deployEntryPoint = async (deployer: Signer, relayer: Signer) => {
-    const { abi, bytecode } = EntryPointArtifact
-    const transaction = await deployer.sendTransaction({ data: bytecode })
-    const receipt = await transaction.wait()
-    const contractAddress = receipt.contractAddress
-    if (contractAddress === null) {
-      throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
-    }
-    return new ethers.Contract(contractAddress, abi, relayer)
   }
 
   it('should deploy a Safe and execute transactions', async () => {

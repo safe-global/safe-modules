@@ -17,6 +17,7 @@
     "build": "hardhat compile",
     "build:ts": "yarn rimraf dist && tsc",
     "test": "hardhat test --deploy-fixture",
+    "test:e2e": "hardhat test --deploy-fixture --network localhost --grep '^E2E - '",
     "coverage": "hardhat coverage --network hardhat",
     "benchmark": "yarn test benchmark/*.ts",
     "deploy-all": "hardhat deploy-contracts --network",
