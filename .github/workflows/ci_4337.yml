@@ -14,14 +14,30 @@ jobs:
           node-version: 18.x
           cache: npm
           cache-dependency-path: 4337/package-lock.json
-      - run: npm ci 
-      - run: npm run build
+      - run: npm ci
+      - run: npm run build && npm run build:ts
       - run: npm run coverage
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
           path-to-lcov: 4337/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./4337
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: npm
+          cache-dependency-path: 4337/package-lock.json
+      - run: npm ci
+      - run: |
+          docker compose up -d
+          npm run test:e2e
   lint:
     runs-on: ubuntu-latest
     defaults:
@@ -35,5 +51,5 @@ jobs:
           cache: npm
           cache-dependency-path: 4337/package-lock.json
       - run: npm ci
-      - run: npm run lint:sol
+      - run: npm run lint
       - run: npm run fmt:check

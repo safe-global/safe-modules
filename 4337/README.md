@@ -119,17 +119,25 @@ sequenceDiagram
 
 ## Usage
 
-### Install requirements with yarn:
+### Install Requirements With NPM:
 
 ```bash
-npm i
+npm install
 ```
 
-### Run all tests:
+### Run Tests:
 
 ```bash
-npm run build
-npm run test
+npm test
+```
+
+### Run End-to-end Tests:
+
+End-to-end tests with the reference bundler implementation are also provided. These automated tests verify that no user operation validation rules are broken by the implementation.
+
+```bash
+docker compose up -d
+npm test:e2e
 ```
 
 ### Deploy
