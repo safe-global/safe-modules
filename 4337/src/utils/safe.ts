@@ -1,4 +1,4 @@
-import { JsonRpcProvider, Provider, ethers } from 'ethers'
+import { AddressLike, JsonRpcProvider, Provider, ethers } from 'ethers'
 
 // Import from Safe contracts repo once fixed
 import { MetaTransaction, SafeSignature, buildSignatureBytes } from './execution'
@@ -103,7 +103,6 @@ export class MultiProvider4337 extends JsonRpcProvider {
   send(method: string, params: unknown[]): Promise<any> {
     if (
       [
-        'eth_chainId',
         'eth_supportedEntryPoints',
         'eth_estimateUserOperationGas',
         'eth_sendUserOperation',
@@ -115,6 +114,10 @@ export class MultiProvider4337 extends JsonRpcProvider {
     } else {
       return this.generalProvider.send(method, params)
     }
+  }
+
+  public async sendUserOperation(userOp: UserOperation, entryPoint: AddressLike): Promise<string> {
+    return await super.send('eth_sendUserOperation', [userOp, await ethers.resolveAddress(entryPoint, this)])
   }
 }
 
