@@ -49,7 +49,7 @@ export const getSafe4337Module = async () => {
 }
 
 export const getEntryPoint = async () => {
-  const EntryPointDeployment = await deployments.get('TestEntryPoint')
+  const EntryPointDeployment = await deployments.get('EntryPoint')
   return await ethers.getContractAt('TestEntryPoint', EntryPointDeployment.address)
 }
 
