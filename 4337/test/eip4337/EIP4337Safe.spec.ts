@@ -35,7 +35,7 @@ describe('Safe4337Mock', () => {
       const safeAddress = ethers.hexlify(ethers.randomBytes(20))
       const validAfter = Date.now() + 10000
       const validUntil = validAfter + 10000000000
-      const packedSignatureTimestamps = encodeSignatureTimestamp(validAfter, validUntil)
+      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
 
       const operation = buildSafeUserOp({
         safe: safeAddress,

@@ -48,9 +48,9 @@ export const buildSignatureBytes = (signatures: SafeSignature[], timestamps: Big
     signatureBytes += sig.data.slice(2)
   }
 
-  const withTimestamps = ethers.AbiCoder.defaultAbiCoder().encode(['uint96', 'bytes'], [timestamps, signatureBytes])
+  const signatureWithTimestamps = ethers.solidityPacked(['uint96', 'bytes'], [timestamps.toString(), signatureBytes])
 
-  return withTimestamps
+  return signatureWithTimestamps
 }
 
 export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {

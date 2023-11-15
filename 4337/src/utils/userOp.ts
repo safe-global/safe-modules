@@ -33,7 +33,7 @@ export interface SafeUserOperation {
 }
 
 export const EIP712_SAFE_OPERATION_TYPE = {
-  // "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
+  // "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint96 signatureTimestamps,address entryPoint)"
   SafeOp: [
     { type: 'address', name: 'safe' },
     { type: 'bytes', name: 'callData' },
@@ -195,13 +195,35 @@ export const getSupportedEntryPoints = async (provider: ethers.JsonRpcProvider):
   return supportedEntryPoints.map(ethers.getAddress)
 }
 
-export const encodeSignatureTimestamp = (validAfter: BigNumberish, validUntil: BigNumberish) => {
+export const encodeSignatureTimestamp = (validUntil: BigNumberish, validAfter: BigNumberish) => {
   // Ensure that the values don't exceed 48 bits
   if (BigInt(validAfter) > 0xffffffffffff || BigInt(validUntil) > 0xffffffffffff) {
     throw new Error('Value exceeds 48 bits')
   }
 
+  if (BigInt(validAfter) > BigInt(validUntil)) {
+    throw new Error('ValidAfter cannot be greater than ValidUntil')
+  }
+
   // Combine the two uint48 values into a uint96
-  const result = (BigInt(validAfter) << 48n) | BigInt(validUntil)
+  const result = (BigInt(validUntil) << 48n) | BigInt(validAfter)
+  return result
+}
+
+/**
+ * Packs validation data into a string using the Ethereum ABI encoding.
+ *
+ * @param {BigNumberish} authorizer - The address of the authorizer. 0 for validation success, 1 for validation failure.
+ * @param {BigNumberish} validUntil - The timestamp until which the validation remains valid.
+ * @param {BigNumberish} validAfter - The timestamp when the validation becomes valid.
+ * @returns {string} The packed validation data.
+ */
+export const packValidationData = (authorizer: BigNumberish, validUntil: BigNumberish, validAfter: BigNumberish): bigint => {
+  const addrBigInt = BigInt(authorizer)
+  const validUntilBigInt = BigInt(validUntil)
+  const validAfterBigInt = BigInt(validAfter)
+
+  const result = addrBigInt | (validUntilBigInt << BigInt(160)) | (validAfterBigInt << BigInt(160 + 48))
+
   return result
 }

@@ -247,8 +247,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @param entryPoint Address of the entry point
     /// @param userOp User operation struct
     function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view {
-        (uint96 signatureTimestamps, bytes memory signatures) = abi.decode(userOp.signature, (uint96, bytes));
-
+        uint96 signatureTimestamps = uint96(bytes12(userOp.signature[:12]));
         bytes memory operationData = encodeOperationData(
             payable(userOp.sender),
             userOp.callData,
@@ -263,7 +262,7 @@ contract Safe4337Mock is SafeMock, IAccount {
         );
         bytes32 operationHash = keccak256(operationData);
 
-        checkSignatures(operationHash, operationData, signatures);
+        checkSignatures(operationHash, operationData, userOp.signature[12:]);
     }
 
     function _validateReplayProtection(UserOperation calldata userOp) internal view {

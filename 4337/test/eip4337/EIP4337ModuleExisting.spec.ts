@@ -22,7 +22,7 @@ describe('Safe4337Module - Existing Safe', () => {
     }
   })
 
-  describe('execTransaction - existing account', () => {
+  describe('executeUserOp - existing account', () => {
     it('should revert with invalid signature', async () => {
       const { user1, safe, entryPoint } = await setupTests()
 

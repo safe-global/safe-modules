@@ -1,10 +1,16 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
+import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { EventLog, Log, Signer } from 'ethers'
 import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { getFactory, getAddModulesLib } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
-import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
+import {
+  buildUserOperationFromSafeUserOperation,
+  buildSafeUserOpTransaction,
+  signSafeOp,
+  encodeSignatureTimestamp,
+} from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
@@ -78,6 +84,62 @@ describe('E2E - Reference EntryPoint', () => {
         })
       }),
     )
+
+    const transaction = await logGas('Execute UserOps with reference EntryPoint', entryPoint.handleOps(userOps, await relayer.getAddress()))
+    const receipt = await transaction.wait()
+
+    const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
+    const deposits = receipt.logs
+      .filter(isEventLog)
+      .filter((log) => log.eventName === 'Deposited')
+      .reduce((acc, { args: [, deposit] }) => acc + deposit, 0n)
+    expect(await ethers.provider.getBalance(safe.address)).to.be.eq(accountBalance - transfers - deposits)
+  })
+
+  it('should correctly bubble up the signature timestamps to the entrypoint', async () => {
+    const { user, relayer, safe, validator, entryPoint } = await setupTests()
+
+    const accountBalance = ethers.parseEther('1.0')
+    const now = await time.latest()
+    const validAfter = now + 86400 // 1 day from now
+    const validUntil = validAfter + 86400 // 1 day after validAfter
+    const signatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
+
+    if (!now) throw new Error("Failed to fetch the latest block's timestamp found")
+
+    await user.sendTransaction({ to: safe.address, value: accountBalance })
+    expect(await ethers.provider.getBalance(safe.address)).to.be.eq(accountBalance)
+
+    const userOps = await Promise.all(
+      [...Array(2)].map(async (_, nonce) => {
+        const safeOp = buildSafeUserOpTransaction(
+          safe.address,
+          user.address,
+          ethers.parseEther('0.1'),
+          '0x',
+          `${nonce}`,
+          await entryPoint.getAddress(),
+          false,
+          false,
+          signatureTimestamps,
+        )
+        const signature = buildSignatureBytes(
+          [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
+          signatureTimestamps,
+        )
+        return buildUserOperationFromSafeUserOperation({
+          safeAddress: safe.address,
+          safeOp,
+          signature,
+          initCode: nonce === 0 ? safe.getInitCode() : '0x',
+        })
+      }),
+    )
+
+    await expect(entryPoint.handleOps(userOps, await relayer.getAddress()))
+      .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+      .withArgs(0, 'AA22 expired or not due')
+    await time.increaseTo(validAfter + 1)
 
     const transaction = await logGas('Execute UserOps with reference EntryPoint', entryPoint.handleOps(userOps, await relayer.getAddress()))
     const receipt = await transaction.wait()
