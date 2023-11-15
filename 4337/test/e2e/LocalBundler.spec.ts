@@ -85,7 +85,7 @@ describe('E2E - Local Bundler', () => {
     }
   }
 
-  it('should deploy a Safe and execute transactions', async () => {
+  it('should deploy a new Safe and execute a transaction', async () => {
     const { user, bundler, safe, validator, entryPoint, token } = await setupTests()
 
     await token.transfer(safe.address, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
@@ -117,7 +117,7 @@ describe('E2E - Local Bundler', () => {
     expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
   })
 
-  it('should execute a transaction for a deployed Safe', async () => {
+  it('should execute a transaction for an exsiting Safe', async () => {
     const { user, bundler, safe, validator, entryPoint, token } = await setupTests()
 
     const initCode = safe.getInitCode()
