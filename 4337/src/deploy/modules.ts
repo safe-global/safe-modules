@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types'
 
-const ENTRY_POINT = process.env.DEPLOY_ENTRY_POINT
+const ENTRY_POINT = process.env.DEPLOYMENT_ENTRY_POINT_ADDRESS
 
 const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
   const { deployer } = await getNamedAccounts()

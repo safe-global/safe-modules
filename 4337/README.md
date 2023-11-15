@@ -160,7 +160,7 @@ npx hardhat --network <network> local-verify
 
 Preparation:
 
-- Set `DEPLOY_ENTRY_POINT` in `.env`. This should be the entry point supported by the 4337 bundler RPC endpoint you are connected to.
+- Set `DEPLOYMENT_ENTRY_POINT_ADDRESS` in `.env`. This should be the entry point supported by the 4337 bundler RPC endpoint you are connected to.
 - Deploy contracts (see _Deploy_ section)
 - Set `SCRIPT_*` in `.env`
 
