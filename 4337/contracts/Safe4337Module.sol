@@ -48,7 +48,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Validates the call is initiated by the entry point.
      */
     modifier onlySupportedEntryPoint() {
-        _onlySupportedEntryPoint();
+        require(_msgSender() == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
         _;
     }
 
@@ -188,12 +188,5 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         } catch {
             validationData = SIG_VALIDATION_FAILED;
         }
-    }
-
-    /**
-     * @notice Internal function to validates the call is initiated by the entry point.
-     */
-    function _onlySupportedEntryPoint() internal view {
-        require(_msgSender() == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
     }
 }
