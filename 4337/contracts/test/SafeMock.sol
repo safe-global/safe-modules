@@ -107,11 +107,18 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     constructor(address entryPoint) SafeMock(entryPoint) {}
 
+    /**
+     * @notice Validates the call is initiated by the entry point.
+     */
+    modifier onlySupportedEntryPoint() {
+        require(msg.sender == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
+        _;
+    }
+
     /// @dev Validates user operation provided by the entry point
     /// @inheritdoc IAccount
-    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external returns (uint256) {
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external onlySupportedEntryPoint returns (uint256) {
         address entryPoint = msg.sender;
-        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         _validateReplayProtection(userOp);
 
@@ -137,10 +144,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @param value Ether value of the user operation.
     /// @param data Data payload of the user operation.
     /// @param operation Operation type of the user operation.
-    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external {
-        address entryPoint = msg.sender;
-        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
-
+    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
         bool success;
         if (operation == 1) (success, ) = to.delegatecall(data);
         else (success, ) = to.call{value: value}(data);
@@ -153,10 +157,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @param value Ether value of the user operation.
     /// @param data Data payload of the user operation.
     /// @param operation Operation type of the user operation.
-    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external {
-        address entryPoint = msg.sender;
-        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
-
+    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint{
         bool success;
         bytes memory returnData;
         if (operation == 1) (success, returnData) = to.delegatecall(data);

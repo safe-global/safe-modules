@@ -45,10 +45,18 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
+     * @notice Validates the call is initiated by the entry point.
+     */
+    modifier onlySupportedEntryPoint() {
+        require(_msgSender() == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
+        _;
+    }
+
+    /**
      * @notice Validates a user operation provided by the entry point.
      * @inheritdoc IAccount
      */
-    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external returns (uint256 validationData) {
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external onlySupportedEntryPoint returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
         // The entry point address is appended to the calldata in `HandlerContext` contract
         // Because of this, the relayer may manipulate the entry point address, therefore we have to verify that
@@ -63,7 +71,6 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         );
 
         address entryPoint = _msgSender();
-        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
 
         // The userOp nonce is validated in the entry point (for 0.6.0+), therefore we will not check it again
         validationData = _validateSignatures(entryPoint, userOp);
@@ -84,10 +91,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param data Data payload of the user operation.
      * @param operation Operation type of the user operation.
      */
-    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external {
-        address entryPoint = _msgSender();
-        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
-
+    function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
         require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
     }
 
@@ -98,10 +102,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param data Data payload of the user operation.
      * @param operation Operation type of the user operation.
      */
-    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external {
-        address entryPoint = _msgSender();
-        require(entryPoint == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
-
+    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
         (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
