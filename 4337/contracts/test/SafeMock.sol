@@ -117,7 +117,11 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     /// @dev Validates user operation provided by the entry point
     /// @inheritdoc IAccount
-    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external onlySupportedEntryPoint returns (uint256) {
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32,
+        uint256 missingAccountFunds
+    ) external onlySupportedEntryPoint returns (uint256) {
         address entryPoint = msg.sender;
 
         _validateReplayProtection(userOp);
@@ -157,7 +161,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @param value Ether value of the user operation.
     /// @param data Data payload of the user operation.
     /// @param operation Operation type of the user operation.
-    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint{
+    function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
         bool success;
         bytes memory returnData;
         if (operation == 1) (success, returnData) = to.delegatecall(data);

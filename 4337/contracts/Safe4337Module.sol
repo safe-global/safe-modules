@@ -56,7 +56,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Validates a user operation provided by the entry point.
      * @inheritdoc IAccount
      */
-    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds) external onlySupportedEntryPoint returns (uint256 validationData) {
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32,
+        uint256 missingAccountFunds
+    ) external onlySupportedEntryPoint returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
         // The entry point address is appended to the calldata in `HandlerContext` contract
         // Because of this, the relayer may manipulate the entry point address, therefore we have to verify that
