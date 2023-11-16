@@ -111,7 +111,7 @@ contract Safe4337Mock is SafeMock, IAccount {
      * @notice Validates the call is initiated by the entry point.
      */
     modifier onlySupportedEntryPoint() {
-        require(msg.sender == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
+        _onlySupportedEntryPoint();
         _;
     }
 
@@ -272,5 +272,12 @@ contract Safe4337Mock is SafeMock, IAccount {
 
         // Check returned nonce against the user operation nonce
         require(safeNonce == userOp.nonce, "Invalid Nonce");
+    }
+
+    /**
+     * @notice Internal function to validates the call is initiated by the entry point.
+     */
+    function _onlySupportedEntryPoint() internal view {
+        require(msg.sender == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
     }
 }
