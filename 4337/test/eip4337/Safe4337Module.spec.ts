@@ -115,7 +115,11 @@ describe('Safe4337Module', () => {
         signature,
       })
 
-      await expect(safeModule.validateUserOp(userOp, ethers.ZeroHash, 0)).to.be.revertedWith('Unsupported execution function id')
+      const entryPointAddress = await ethers.getSigner(await entryPoint.getAddress())
+      const safeFromEntryPoint = safeModule.connect(entryPointAddress)
+      await expect(safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.be.revertedWith(
+        'Unsupported execution function id',
+      )
     })
 
     it('should revert when not called from the trusted entrypoint', async () => {

@@ -14,7 +14,7 @@ import {
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 
-describe('E2E - Reference EntryPoint', () => {
+describe('Safe4337Module - Reference EntryPoint', () => {
   const setupTests = async () => {
     await deployments.fixture()
     const [deployer, user, relayer] = await ethers.getSigners()

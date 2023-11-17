@@ -131,17 +131,25 @@ where `validUntil` and `validAfter` are two 48 bit timestamps for signature vali
 
 ## Usage
 
-### Install requirements with yarn:
+### Install Requirements With NPM:
 
 ```bash
-npm i
+npm install
 ```
 
-### Run all tests:
+### Run Tests:
 
 ```bash
-npm run build
-npm run test
+npm test
+```
+
+### Run End-to-end Tests:
+
+End-to-end tests with the reference bundler implementation are also provided. These automated tests verify that no user operation validation rules are broken by the implementation.
+
+```bash
+docker compose up -d
+npm test:e2e
 ```
 
 ### Deploy
@@ -172,7 +180,7 @@ npx hardhat --network <network> local-verify
 
 Preparation:
 
-- Set `DEPLOY_ENTRY_POINT` in `.env`. This should be the entry point supported by the 4337 bundler RPC endpoint you are connected to.
+- Set `DEPLOYMENT_ENTRY_POINT_ADDRESS` in `.env`. This should be the entry point supported by the 4337 bundler RPC endpoint you are connected to.
 - Deploy contracts (see _Deploy_ section)
 - Set `SCRIPT_*` in `.env`
 

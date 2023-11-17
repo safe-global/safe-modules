@@ -17,6 +17,7 @@
     "build": "hardhat compile",
     "build:ts": "npx rimraf dist && tsc",
     "test": "hardhat test --deploy-fixture",
+    "test:e2e": "hardhat test --deploy-fixture --network localhost --grep '^E2E - '",
     "coverage": "hardhat coverage --network hardhat",
     "benchmark": "npm run test benchmark/*.ts",
     "deploy-all": "hardhat deploy-contracts --network",
