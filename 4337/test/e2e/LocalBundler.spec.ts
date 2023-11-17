@@ -8,7 +8,7 @@ import { MultiProvider4337, Safe4337 } from '../../src/utils/safe'
 const BUNDLER_URL = process.env.TEST_BUNLDER_URL ?? 'http://localhost:3000/rpc'
 const BUNDLER_MNEMONIC = process.env.TEST_BUNDLER_MNEMONIC ?? 'test test test test test test test test test test test junk'
 
-describe('E2E - Local Bundler', () => {
+describe.only('E2E - Local Bundler', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()
@@ -16,7 +16,8 @@ describe('E2E - Local Bundler', () => {
   })
 
   const setupTests = async () => {
-    const { AddModulesLib, EntryPoint, HariWillibaldToken, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
+    const { AddModulesLib, EntryPoint, HariWillibaldToken, Safe4337Module, SafeL2, SafeProxyFactory, StakedFactoryProxy } =
+      await deployments.run()
     const [, user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -43,12 +44,23 @@ describe('E2E - Local Bundler', () => {
       },
     )
 
+    const stakedFactory = await ethers.getContractAt('StakedFactoryProxy', StakedFactoryProxy.address)
+    const stake = ethers.parseEther('1.0')
+    if ((await entryPoint.balanceOf(await stakedFactory.getAddress())) < stake) {
+      await stakedFactory
+        .stakeEntryPoint(await entryPoint.getAddress(), 0xffffffffn, {
+          value: stake,
+        })
+        .then((tx) => tx.wait())
+    }
+
     return {
       user,
       bundler,
       safe,
       validator,
       entryPoint,
+      stakedFactory,
       token,
     }
   }
@@ -89,7 +101,7 @@ describe('E2E - Local Bundler', () => {
   }
 
   it('should deploy a new Safe and execute a transaction', async () => {
-    const { user, bundler, safe, validator, entryPoint, token } = await setupTests()
+    const { user, bundler, safe, validator, entryPoint, stakedFactory, token } = await setupTests()
 
     await token.transfer(safe.address, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
     await user.sendTransaction({ to: safe.address, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
@@ -120,7 +132,7 @@ describe('E2E - Local Bundler', () => {
       safeAddress: safe.address,
       safeOp,
       signature,
-      initCode: safe.getInitCode(),
+      initCode: safe.getInitCode(await stakedFactory.getAddress()),
     })
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())

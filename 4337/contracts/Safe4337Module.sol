@@ -44,6 +44,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     address public immutable SUPPORTED_ENTRYPOINT;
 
+    mapping(address => bool) private deny;
+
     constructor(address entryPoint) {
         require(entryPoint != address(0), "Invalid entry point");
         SUPPORTED_ENTRYPOINT = entryPoint;
@@ -71,6 +73,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         // Because of this, the relayer may manipulate the entry point address, therefore we have to verify that
         // the sender is the Safe specified in the userOperation
         require(safeAddress == msg.sender, "Invalid caller");
+
+        // TODO(nlordell): Make sure to remove this! Was just using to check that factory staking was working.
+        if (deny[safeAddress]) {
+            revert("denied");
+        }
 
         // We check the execution function signature to make sure the entry point can't call any other function
         // and make sure the execution of the user operation is handled by the module

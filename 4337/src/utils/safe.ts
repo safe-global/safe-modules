@@ -278,10 +278,14 @@ export class Safe4337 {
     await deployer.sendTransaction({ to: factory, data: initCallData }).then((tx) => tx.wait())
   }
 
-  getInitCode(): string {
+  getInitCode(factoryProxy?: string): string {
     if (!this.safeConfig) throw Error('Init code not available')
-    const initParams = buildInitParamsForConfig(this.safeConfig, this.globalConfig)
-    return initParams.initCode
+    const { initCode } = buildInitParamsForConfig(this.safeConfig, this.globalConfig)
+    if (factoryProxy) {
+      return ethers.solidityPacked(['address', 'bytes'], [factoryProxy, ethers.dataSlice(initCode, 20)])
+    } else {
+      return initCode
+    }
   }
 
   async getSigners(): Promise<string[]> {
