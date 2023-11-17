@@ -7,6 +7,7 @@ import {
   calculateSafeOperationHash,
   buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
+  encodeSignatureTimestamp,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
@@ -29,11 +30,21 @@ describe('Safe4337Mock', () => {
 
   describe('getOperationHash', () => {
     it('should correctly calculate EIP-712 hash of the operation', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
+      const { validator, entryPoint } = await setupTests()
 
-      const operation = buildSafeUserOp({ safe: await safe.getAddress(), nonce: '0', entryPoint: await entryPoint.getAddress() })
+      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
+      const validAfter = Date.now() + 10000
+      const validUntil = validAfter + 10000000000
+      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
+
+      const operation = buildSafeUserOp({
+        safe: safeAddress,
+        nonce: '0',
+        entryPoint: await entryPoint.getAddress(),
+        signatureTimestamps: packedSignatureTimestamps,
+      })
       const operationHash = await validator.getOperationHash(
-        await safe.getAddress(),
+        safeAddress,
         operation.callData,
         operation.nonce,
         operation.preVerificationGas,
@@ -41,6 +52,7 @@ describe('Safe4337Mock', () => {
         operation.callGasLimit,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
+        operation.signatureTimestamps,
         operation.entryPoint,
       )
 

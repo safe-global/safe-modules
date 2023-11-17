@@ -15,21 +15,21 @@
   ],
   "scripts": {
     "build": "hardhat compile",
-    "build:ts": "yarn rimraf dist && tsc",
+    "build:ts": "npx rimraf dist && tsc",
     "test": "hardhat test --deploy-fixture",
     "test:e2e": "hardhat test --deploy-fixture --network localhost --grep '^E2E - '",
     "coverage": "hardhat coverage --network hardhat",
-    "benchmark": "yarn test benchmark/*.ts",
+    "benchmark": "npm run test benchmark/*.ts",
     "deploy-all": "hardhat deploy-contracts --network",
     "deploy": "hardhat deploy --network",
-    "lint": "yarn lint:sol && yarn lint:ts",
+    "lint": "npm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint ./src && eslint ./test",
     "fmt": "prettier --ignore-path .gitignore --write . && prettier --write 'contracts/**/*.sol'",
     "fmt:check": "prettier --ignore-path .gitignore --check . && prettier --check 'contracts/**/*.sol'",
-    "prepack": "yarn build",
+    "prepack": "npm run build",
     "prepare": "cd .. && husky install 4337/.husky",
-    "prepublish": "yarn rimraf build && yarn build && yarn build:ts"
+    "prepublish": "npx rimraf build && npm run build && npm run build:ts"
   },
   "repository": {
     "type": "git",

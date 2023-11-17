@@ -117,6 +117,18 @@ sequenceDiagram
     F->>-E: Return Account Address
 ```
 
+## Signature encoding
+
+The signatures are encoded as follows:
+
+```solidity
+function encodeSignatures(uint48 validUntil, uint48 validAfter, bytes signatures) {
+  return abi.encodePacked(validUntil, validAfter, signatures);
+}
+```
+
+where `validUntil` and `validAfter` are two 48 bit timestamps for signature validity and `signatures` is a concatenated signatures bytes following the Safe encoding, defined [here](https://github.com/safe-global/safe-contracts/blob/915045fcf7e62cc4564c1755b2676b8a2ab22b10/docs/signatures.md).
+
 ## Usage
 
 ### Install Requirements With NPM:

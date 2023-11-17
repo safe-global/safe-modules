@@ -102,7 +102,7 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint96 signatureTimestamps,address entryPoint)"
         );
 
     constructor(address entryPoint) SafeMock(entryPoint) {}
@@ -193,6 +193,7 @@ contract Safe4337Mock is SafeMock, IAccount {
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        uint96 signatureTimestamps,
         address entryPoint
     ) public view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
@@ -206,6 +207,7 @@ contract Safe4337Mock is SafeMock, IAccount {
                 callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
+                signatureTimestamps,
                 entryPoint
             )
         );
@@ -222,6 +224,7 @@ contract Safe4337Mock is SafeMock, IAccount {
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        uint96 signatureTimestamps,
         address entryPoint
     ) public view returns (bytes32) {
         return
@@ -235,6 +238,7 @@ contract Safe4337Mock is SafeMock, IAccount {
                     callGasLimit,
                     maxFeePerGas,
                     maxPriorityFeePerGas,
+                    signatureTimestamps,
                     entryPoint
                 )
             );
@@ -248,6 +252,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @param entryPoint Address of the entry point
     /// @param userOp User operation struct
     function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view {
+        uint96 signatureTimestamps = uint96(bytes12(userOp.signature[:12]));
         bytes memory operationData = encodeOperationData(
             payable(userOp.sender),
             userOp.callData,
@@ -257,11 +262,12 @@ contract Safe4337Mock is SafeMock, IAccount {
             userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
+            signatureTimestamps,
             entryPoint
         );
         bytes32 operationHash = keccak256(operationData);
 
-        checkSignatures(operationHash, operationData, userOp.signature);
+        checkSignatures(operationHash, operationData, userOp.signature[12:]);
     }
 
     function _validateReplayProtection(UserOperation calldata userOp) internal view {

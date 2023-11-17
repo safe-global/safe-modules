@@ -34,7 +34,7 @@ import './src/tasks/deploy_contracts'
 import './src/tasks/show_codesize'
 
 const solidityVersion = SOLIDITY_VERSION || '0.8.23'
-const soliditySettings = !!SOLIDITY_SETTINGS
+const soliditySettings = SOLIDITY_SETTINGS
   ? JSON.parse(SOLIDITY_SETTINGS)
   : {
       evmVersion: 'paris',
@@ -44,7 +44,7 @@ const soliditySettings = !!SOLIDITY_SETTINGS
       },
     }
 
-const customNetwork = !!NODE_URL
+const customNetwork = NODE_URL
   ? {
       custom: {
         ...sharedNetworkConfig,
@@ -113,5 +113,4 @@ const userConfig: HardhatUserConfig = {
     apiKey: ETHERSCAN_API_KEY,
   },
 }
-
 export default userConfig

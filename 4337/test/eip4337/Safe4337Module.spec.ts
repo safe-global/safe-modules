@@ -8,6 +8,8 @@ import {
   calculateSafeOperationHash,
   buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
+  encodeSignatureTimestamp,
+  packValidationData,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
@@ -32,6 +34,38 @@ describe('Safe4337Module', () => {
       safeModule,
       makeSafeModule,
     }
+  })
+
+  describe('getOperationHash', () => {
+    it('should correctly calculate EIP-712 hash of the operation', async () => {
+      const { validator, safeModule, entryPoint } = await setupTests()
+
+      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
+      const validAfter = Date.now() + 10000
+      const validUntil = validAfter + 10000000000
+      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
+
+      const operation = buildSafeUserOp({
+        safe: safeAddress,
+        nonce: '0',
+        entryPoint: await entryPoint.getAddress(),
+        signatureTimestamps: packedSignatureTimestamps,
+      })
+      const operationHash = await safeModule.getOperationHash(
+        safeAddress,
+        operation.callData,
+        operation.nonce,
+        operation.preVerificationGas,
+        operation.verificationGasLimit,
+        operation.callGasLimit,
+        operation.maxFeePerGas,
+        operation.maxPriorityFeePerGas,
+        operation.signatureTimestamps,
+        operation.entryPoint,
+      )
+
+      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), operation, await chainId()))
+    })
   })
 
   describe('constructor', () => {
@@ -100,6 +134,39 @@ describe('Safe4337Module', () => {
       })
 
       await expect(safeModule.connect(untrusted).validateUserOp(userOp, ethers.ZeroHash, 0)).to.be.revertedWith('Unsupported entry point')
+    })
+
+    it('should return correct validAfter and validUntil timestamps', async () => {
+      const { user, safeModule, validator, entryPoint } = await setupTests()
+
+      const validAfter = BigInt(ethers.hexlify(ethers.randomBytes(3)))
+      const validUntil = validAfter + BigInt(ethers.hexlify(ethers.randomBytes(3)))
+      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
+
+      const safeOp = buildSafeUserOpTransaction(
+        await safeModule.getAddress(),
+        user.address,
+        0,
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        packedSignatureTimestamps,
+      )
+
+      const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
+      const signature = buildSignatureBytes([await signHash(user, safeOpHash)], safeOp.signatureTimestamps)
+      const userOp = buildUserOperationFromSafeUserOperation({
+        safeAddress: await safeModule.getAddress(),
+        safeOp,
+        signature,
+      })
+      const packedValidationData = packValidationData(0, validUntil, validAfter)
+      const entryPointImpersonator = await ethers.getSigner(await entryPoint.getAddress())
+      const safeFromEntryPoint = safeModule.connect(entryPointImpersonator)
+
+      expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(packedValidationData)
     })
   })
 

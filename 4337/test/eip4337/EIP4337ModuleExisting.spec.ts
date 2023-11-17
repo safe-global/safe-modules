@@ -2,12 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
-import {
-  buildSafeUserOp,
-  calculateSafeOperationHash,
-  buildUserOperationFromSafeUserOperation,
-  buildSafeUserOpTransaction,
-} from '../../src/utils/userOp'
+import { calculateSafeOperationHash, buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
 describe('Safe4337Module - Existing Safe', () => {
@@ -27,28 +22,7 @@ describe('Safe4337Module - Existing Safe', () => {
     }
   })
 
-  describe('getOperationHash', () => {
-    it('should correctly calculate EIP-712 hash of the operation', async () => {
-      const { safe, validator, entryPoint } = await setupTests()
-
-      const operation = buildSafeUserOp({ safe: await safe.getAddress(), nonce: '0', entryPoint: await entryPoint.getAddress() })
-      const operationHash = await validator.getOperationHash(
-        await safe.getAddress(),
-        operation.callData,
-        operation.nonce,
-        operation.preVerificationGas,
-        operation.verificationGasLimit,
-        operation.callGasLimit,
-        operation.maxFeePerGas,
-        operation.maxPriorityFeePerGas,
-        operation.entryPoint,
-      )
-
-      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), operation, await chainId()))
-    })
-  })
-
-  describe('execTransaction - existing account', () => {
+  describe('executeUserOp - existing account', () => {
     it('should revert with invalid signature', async () => {
       const { user1, safe, entryPoint } = await setupTests()
 

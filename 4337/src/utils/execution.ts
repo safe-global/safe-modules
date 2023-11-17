@@ -41,13 +41,16 @@ export const signHash = async (signer: Signer, hash: string): Promise<SafeSignat
   }
 }
 
-export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
+export const buildSignatureBytes = (signatures: SafeSignature[], timestamps: BigNumberish = 0): string => {
   signatures.sort((left, right) => left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()))
   let signatureBytes = '0x'
   for (const sig of signatures) {
     signatureBytes += sig.data.slice(2)
   }
-  return signatureBytes
+
+  const signatureWithTimestamps = ethers.solidityPacked(['uint96', 'bytes'], [timestamps.toString(), signatureBytes])
+
+  return signatureWithTimestamps
 }
 
 export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {
