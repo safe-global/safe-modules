@@ -147,7 +147,7 @@ const runOp = async () => {
     console.log('Balance of Safe:', ethers.formatEther(await ethers.provider.getBalance(safe.address)), 'ETH')
   }
 
-  await accountAbstractionProvider.send('eth_sendUserOperation', [userOp, entryPoint])
+  await accountAbstractionProvider.sendUserOperation(userOp, entryPoint)
 
   console.log('woohoo')
 }
