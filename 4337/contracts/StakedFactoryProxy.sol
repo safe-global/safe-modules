@@ -11,13 +11,16 @@ contract StakedFactoryProxy {
         FACTORY = factory;
     }
 
+    // solhint-disable-next-line payable-fallback,no-complex-fallback
     fallback() external {
         (bool success, bytes memory result) = FACTORY.call(msg.data);
         if (success) {
+            // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
                 return(add(result, 32), mload(result))
             }
         } else {
+            // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
                 revert(add(result, 32), mload(result))
             }
