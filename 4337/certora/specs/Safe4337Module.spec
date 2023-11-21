@@ -1,12 +1,20 @@
+
 methods {
-    function validateUserOp(UserOperation,bytes32,uint256) external returns(uint256); 
+    function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
+    function _._msgSender() internal => ERC2771MessageSender() expect address;
+
+    // Optional
+    function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
+
 }
 
-rule onlyEntryPointCallable (method f) filtered {
-    f -> f.selector == sig:validateUserOp(UserOperation,bytes32,uint256).selector
-} {
-    calldataarg args;
-    f(e,args);
+ghost ERC2771MessageSender() returns address;
 
-    assert e.msg.sender != SUPPORTED_ENTRYPOINT() => lastReverted;
+rule onlyEntryPointCallable(method f) filtered {
+    f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector
+} {
+    env e;
+    calldataarg args;
+    f(e, args);
+    assert ERC2771MessageSender() == SUPPORTED_ENTRYPOINT();
 }
