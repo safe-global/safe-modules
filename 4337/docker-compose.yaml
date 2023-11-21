@@ -19,6 +19,6 @@ services:
       context: .
       dockerfile: docker/bundler/Dockerfile
     restart: always
-    command: ['--network', 'http://geth:8545']
+    command: ['--auto', '--network=http://geth:8545']
     ports:
       - 3000:3000
