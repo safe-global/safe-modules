@@ -115,7 +115,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
-                revert(add(returnData, 0x20), returnData)
+                revert(add(returnData, 0x20), mload(returnData))
             }
         }
     }
