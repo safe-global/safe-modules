@@ -278,14 +278,10 @@ export class Safe4337 {
     await deployer.sendTransaction({ to: factory, data: initCallData }).then((tx) => tx.wait())
   }
 
-  getInitCode(factoryProxy?: string): string {
+  getInitCode(): string {
     if (!this.safeConfig) throw Error('Init code not available')
-    const { initCode } = buildInitParamsForConfig(this.safeConfig, this.globalConfig)
-    if (factoryProxy) {
-      return ethers.solidityPacked(['address', 'bytes'], [factoryProxy, ethers.dataSlice(initCode, 20)])
-    } else {
-      return initCode
-    }
+    const initParams = buildInitParamsForConfig(this.safeConfig, this.globalConfig)
+    return initParams.initCode
   }
 
   async getSigners(): Promise<string[]> {
@@ -300,7 +296,7 @@ export class Safe4337 {
   async getModules(): Promise<string[]> {
     if (!this.provider || !(await this.isDeployed())) {
       if (!this.safeConfig) throw Error('Not deployed and no config available')
-      return [this.globalConfig.erc4337module, this.globalConfig.entryPoint]
+      return [this.globalConfig.erc4337module]
     }
     const result = await callInterface(this.provider, this.address, 'getModulesPaginated', [AddressOne, 10])
     return result[0]

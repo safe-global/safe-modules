@@ -3,7 +3,7 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {IEntryPoint} from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
-contract StakedFactoryProxy {
+contract TestStakedFactory {
     address public immutable FACTORY;
 
     constructor(address factory) payable {

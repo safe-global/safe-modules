@@ -17,15 +17,13 @@ describe('E2E - Local Bundler', () => {
   })
 
   const setupTests = async () => {
-    const { AddModulesLib, EntryPoint, HariWillibaldToken, MultiSend, Safe4337Module, SafeL2, SafeProxyFactory, StakedFactoryProxy } =
-      await deployments.run()
+    const { AddModulesLib, EntryPoint, HariWillibaldToken, MultiSend, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
     const [, user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
     const entryPoint = new ethers.Contract(EntryPoint.address, EntryPoint.abi, ethers.provider)
     const validator = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
     const token = await ethers.getContractAt('HariWillibaldToken', HariWillibaldToken.address)
-    const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
 
@@ -46,15 +44,9 @@ describe('E2E - Local Bundler', () => {
       },
     )
 
-    const stakedFactory = await ethers.getContractAt('StakedFactoryProxy', StakedFactoryProxy.address)
-    const stake = ethers.parseEther('1.0')
-    if ((await entryPoint.balanceOf(await stakedFactory.getAddress())) < stake) {
-      await stakedFactory
-        .stakeEntryPoint(await entryPoint.getAddress(), 0xffffffffn, {
-          value: stake,
-        })
-        .then((tx) => tx.wait())
-    }
+    const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
+    const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
+    const safeSingleton = await ethers.getContractAt('SafeL2', SafeL2.address)
 
     return {
       user,
@@ -62,9 +54,12 @@ describe('E2E - Local Bundler', () => {
       safe,
       validator,
       entryPoint,
-      multiSend,
-      stakedFactory,
       token,
+      // TODO(nlordell): only needed for special test
+      addModulesLib,
+      multiSend,
+      proxyFactory,
+      safeSingleton,
     }
   }
 
@@ -104,7 +99,7 @@ describe('E2E - Local Bundler', () => {
   }
 
   it('should deploy a new Safe and execute a transaction', async () => {
-    const { user, bundler, safe, validator, entryPoint, stakedFactory, token } = await setupTests()
+    const { user, bundler, safe, validator, entryPoint, token } = await setupTests()
 
     await token.transfer(safe.address, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
     await user.sendTransaction({ to: safe.address, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
@@ -136,7 +131,7 @@ describe('E2E - Local Bundler', () => {
       safeAddress: safe.address,
       safeOp,
       signature,
-      initCode: safe.getInitCode(await stakedFactory.getAddress()),
+      initCode: safe.getInitCode(),
     })
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
@@ -181,37 +176,109 @@ describe('E2E - Local Bundler', () => {
     expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
   })
 
+  // TODO(nlordell): This test is unrelated to the other two, and has vastly different setup, it
+  // should go into its own module...
   it('should deploy a new Safe with alternate signing scheme accessing associated storage', async () => {
-    const { user, bundler, safe, validator, entryPoint, stakedFactory, token } = await setupTests()
+    const { user, bundler, validator, entryPoint, token, addModulesLib, multiSend, proxyFactory, safeSingleton } = await setupTests()
 
-    await token.transfer(safe.address, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
-    await user.sendTransaction({ to: safe.address, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
+    const TestCustomSignerFactory = await ethers.getContractFactory('TestCustomSignerFactory')
+    const signerFactory = await TestCustomSignerFactory.deploy()
+    const signers = []
+    for (let i = 0; i < 3; i++) {
+      await signerFactory.deploySigner(i)
+      signers.push(await ethers.getContractAt('TestCustomSigner', await signerFactory.getSigner(i)))
+    }
+    const keys = signers.map((_, i) => BigInt(ethers.keccak256(ethers.toBeHex(i, 1))))
 
-    expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
-    expect(await token.balanceOf(safe.address)).to.equal(ethers.parseUnits('4.2', 18))
+    const TestStakedFactory = await ethers.getContractFactory('TestStakedFactory')
+    const stakedFactory = await TestStakedFactory.deploy(proxyFactory.target)
+    const stake = ethers.parseEther('1.0')
+    await stakedFactory
+      .stakeEntryPoint(await entryPoint.getAddress(), 0xffffffffn, {
+        value: stake,
+      })
+      .then((tx) => tx.wait())
 
-    const nonce = await entryPoint.getNonce(safe.address, 0)
+    const initData = multiSend.interface.encodeFunctionData('multiSend', [
+      ethers.concat(
+        [
+          {
+            op: 1,
+            to: addModulesLib.target,
+            data: addModulesLib.interface.encodeFunctionData('enableModules', [[validator.target]]),
+          },
+          ...signers.map((signer, i) => ({
+            op: 0,
+            to: signer.target,
+            data: signer.interface.encodeFunctionData('setKey', [keys[i]]),
+          })),
+        ].map(({ op, to, data }) =>
+          ethers.solidityPacked(['uint8', 'address', 'uint256', 'uint256', 'bytes'], [op, to, 0, ethers.dataLength(data), data]),
+        ),
+      ),
+    ])
+    const setupData = safeSingleton.interface.encodeFunctionData('setup', [
+      signers.map((signer) => signer.target),
+      signers.length,
+      multiSend.target,
+      initData,
+      validator.target,
+      ethers.ZeroAddress,
+      0,
+      ethers.ZeroAddress,
+    ])
+    const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [safeSingleton.target, setupData, 0])
+    const safeAddress = await proxyFactory.createProxyWithNonce.staticCall(safeSingleton.target, setupData, 0)
+    const initCode = ethers.solidityPacked(['address', 'bytes'], [stakedFactory.target, deployData])
+
+    await token.transfer(safeAddress, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
+    await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
+
+    expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.equal(0)
+    expect(await token.balanceOf(safeAddress)).to.equal(ethers.parseUnits('4.2', 18))
+
+    const nonce = await entryPoint.getNonce(safeAddress, 0)
     const safeOp = buildSafeUserOpTransaction(
-      safe.address,
+      safeAddress,
       await token.getAddress(),
       0,
-      token.interface.encodeFunctionData('transfer', [user.address, await token.balanceOf(safe.address)]),
+      token.interface.encodeFunctionData('transfer', [user.address, await token.balanceOf(safeAddress)]),
       nonce,
       await entryPoint.getAddress(),
     )
-    const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+    const opHash = await validator.getOperationHash(
+      safeOp.safe,
+      safeOp.callData,
+      safeOp.nonce,
+      safeOp.preVerificationGas,
+      safeOp.verificationGasLimit,
+      safeOp.callGasLimit,
+      safeOp.maxFeePerGas,
+      safeOp.maxPriorityFeePerGas,
+      safeOp.signatureTimestamps,
+      safeOp.entryPoint,
+    )
+    const signature = ethers.concat([
+      buildSignatureBytes(
+        signers.map((signer, i) => ({
+          signer: signer.target as string,
+          data: ethers.solidityPacked(['uint256', 'uint256', 'uint8'], [signer.target, 65 * signers.length + 64 * i, 0]),
+        })),
+      ),
+      ...signers.map((_, i) => ethers.solidityPacked(['uint256', 'bytes'], [32, ethers.toBeHex(BigInt(opHash) ^ keys[i])])),
+    ])
     const userOp = buildUserOperationFromSafeUserOperation({
-      safeAddress: safe.address,
+      safeAddress: safeAddress,
       safeOp,
       signature,
-      initCode: safe.getInitCode(await stakedFactory.getAddress()),
+      initCode,
     })
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
-    await waitForUserOp(entryPoint, safe.address, nonce)
-    expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
-    expect(await token.balanceOf(safe.address)).to.equal(0)
-    expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
+    await waitForUserOp(entryPoint, safeAddress, nonce)
+    expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.not.equal(0)
+    expect(await token.balanceOf(safeAddress)).to.equal(0)
+    expect(await ethers.provider.getBalance(safeAddress)).to.be.lessThan(ethers.parseEther('0.5'))
   })
 })
