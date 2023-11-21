@@ -222,7 +222,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
       const logs = receipt.logs.map((log) => entryPoint.interface.parseLog(log))
       const emittedRevert = logs.find((log) => log?.name === 'UserOpReverted')
       expect(emittedRevert?.args.reason).to.equal(
-        reverterContract.interface.encodeErrorResult("Error", ["You called a function that always reverts"])
+        reverterContract.interface.encodeErrorResult('Error', ['You called a function that always reverts']),
       )
       expect(await safe.isDeployed()).to.be.true
     })

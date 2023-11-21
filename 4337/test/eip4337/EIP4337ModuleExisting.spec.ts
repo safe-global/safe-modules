@@ -174,7 +174,7 @@ describe('Safe4337Module - Existing Safe', () => {
       const logs = transaction.logs.map((log) => entryPoint.interface.parseLog(log)) ?? []
       const emittedRevert = logs.find((l) => l?.name === 'UserOpReverted')
       expect(emittedRevert?.args.reason).to.equal(
-        reverterContract.interface.encodeErrorResult("Error", ["You called a function that always reverts"])
+        reverterContract.interface.encodeErrorResult('Error', ['You called a function that always reverts']),
       )
     })
   })
