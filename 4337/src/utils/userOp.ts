@@ -52,6 +52,10 @@ export const calculateSafeOperationHash = (eip4337ModuleAddress: string, safeOp:
   return ethers.TypedDataEncoder.hash({ chainId, verifyingContract: eip4337ModuleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp)
 }
 
+export const calculateSafeOperationData = (eip4337ModuleAddress: string, safeOp: SafeUserOperation, chainId: BigNumberish): string => {
+  return ethers.TypedDataEncoder.encode({ chainId, verifyingContract: eip4337ModuleAddress }, EIP712_SAFE_OPERATION_TYPE, safeOp)
+}
+
 export const signSafeOp = async (
   signer: Signer,
   moduleAddress: string,
