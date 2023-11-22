@@ -9,7 +9,6 @@ import {
   buildSafeUserOpTransaction,
   buildUserOperationFromSafeUserOperation,
   calculateSafeOperationData,
-  encodeSignatureTimestamp,
   signSafeOp,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
@@ -106,7 +105,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     const now = await time.latest()
     const validAfter = now + 86400 // 1 day from now
     const validUntil = validAfter + 86400 // 1 day after validAfter
-    const signatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
 
     if (!now) throw new Error("Failed to fetch the latest block's timestamp found")
 
@@ -124,11 +122,13 @@ describe('Safe4337Module - Reference EntryPoint', () => {
           await entryPoint.getAddress(),
           false,
           false,
-          signatureTimestamps,
+          validAfter,
+          validUntil,
         )
         const signature = buildSignatureBytes(
           [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
-          signatureTimestamps,
+          validAfter,
+          validUntil,
         )
         return buildUserOperationFromSafeUserOperation({
           safeAddress: safe.address,

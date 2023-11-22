@@ -3,7 +3,6 @@
 pragma solidity >=0.8.0;
 
 import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
-import {INonceManager} from "@account-abstraction/contracts/interfaces/INonceManager.sol";
 import {UserOperation, UserOperationLib} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 
 contract SafeMock {
@@ -103,7 +102,7 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint96 signatureTimestamps,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     constructor(address entryPoint) SafeMock(entryPoint) {}
@@ -123,10 +122,6 @@ contract Safe4337Mock is SafeMock, IAccount {
         bytes32,
         uint256 missingAccountFunds
     ) external onlySupportedEntryPoint returns (uint256) {
-        address entryPoint = msg.sender;
-
-        _validateReplayProtection(userOp);
-
         // We check the execution function signature to make sure the entryPoint can't call any other function
         // and make sure the execution of the user operation is handled by the module
         require(
@@ -134,10 +129,10 @@ contract Safe4337Mock is SafeMock, IAccount {
             "Unsupported execution function id"
         );
 
-        _validateSignatures(entryPoint, userOp);
+        _validateSignatures(userOp);
 
         if (missingAccountFunds != 0) {
-            (bool success, ) = entryPoint.call{value: missingAccountFunds}("");
+            (bool success, ) = SUPPORTED_ENTRYPOINT.call{value: missingAccountFunds}("");
             success;
         }
         return 0;
@@ -183,7 +178,8 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @param callGasLimit Gas available during the execution of the call
     /// @param maxFeePerGas Max fee per gas
     /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param entryPoint Address of the entry point
+    /// @param validAfter The timestamp the operation is valid from.
+    /// @param validUntil The timestamp the operation is valid until.
     /// @return Operation hash bytes
     function encodeOperationData(
         address safe,
@@ -194,8 +190,8 @@ contract Safe4337Mock is SafeMock, IAccount {
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint96 signatureTimestamps,
-        address entryPoint
+        uint48 validAfter,
+        uint48 validUntil
     ) public view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
             abi.encode(
@@ -208,8 +204,9 @@ contract Safe4337Mock is SafeMock, IAccount {
                 callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
-                signatureTimestamps,
-                entryPoint
+                validAfter,
+                validUntil,
+                SUPPORTED_ENTRYPOINT
             )
         );
 
@@ -225,8 +222,8 @@ contract Safe4337Mock is SafeMock, IAccount {
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint96 signatureTimestamps,
-        address entryPoint
+        uint48 validAfter,
+        uint48 validUntil
     ) public view returns (bytes32) {
         return
             keccak256(
@@ -239,8 +236,8 @@ contract Safe4337Mock is SafeMock, IAccount {
                     callGasLimit,
                     maxFeePerGas,
                     maxPriorityFeePerGas,
-                    signatureTimestamps,
-                    entryPoint
+                    validAfter,
+                    validUntil
                 )
             );
     }
@@ -250,10 +247,10 @@ contract Safe4337Mock is SafeMock, IAccount {
     }
 
     /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
-    /// @param entryPoint Address of the entry point
     /// @param userOp User operation struct
-    function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view {
-        uint96 signatureTimestamps = uint96(bytes12(userOp.signature[:12]));
+    function _validateSignatures(UserOperation calldata userOp) internal view {
+        uint48 validAfter = uint48(bytes6(userOp.signature[:6]));
+        uint48 validUntil = uint48(bytes6(userOp.signature[6:12]));
         bytes memory operationData = encodeOperationData(
             payable(userOp.sender),
             userOp.callData,
@@ -263,21 +260,11 @@ contract Safe4337Mock is SafeMock, IAccount {
             userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
-            signatureTimestamps,
-            entryPoint
+            validAfter,
+            validUntil
         );
         bytes32 operationHash = keccak256(operationData);
 
         checkSignatures(operationHash, operationData, userOp.signature[12:]);
-    }
-
-    function _validateReplayProtection(UserOperation calldata userOp) internal view {
-        // The entry point handles the increase of the nonce
-        // Right shifting fills up with 0s from the left
-        uint192 key = uint192(userOp.nonce >> 64);
-        uint256 safeNonce = INonceManager(SUPPORTED_ENTRYPOINT).getNonce(userOp.sender, key);
-
-        // Check returned nonce against the user operation nonce
-        require(safeNonce == userOp.nonce, "Invalid Nonce");
     }
 }

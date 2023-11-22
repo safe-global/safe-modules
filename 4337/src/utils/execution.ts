@@ -41,10 +41,10 @@ export const signHash = async (signer: Signer, hash: string): Promise<SafeSignat
   }
 }
 
-export const buildSignatureBytes = (signatures: SafeSignature[], timestamps: BigNumberish = 0): string => {
+export const buildSignatureBytes = (signatures: SafeSignature[], validAfter: BigNumberish = 0, validUntil: BigNumberish = 0): string => {
   signatures.sort((left, right) => left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()))
   const signatureBytes = ethers.concat(signatures.map((signature) => signature.data))
-  const signatureWithTimestamps = ethers.solidityPacked(['uint96', 'bytes'], [timestamps, signatureBytes])
+  const signatureWithTimestamps = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [validAfter ?? 0, validUntil ?? 0, signatureBytes])
 
   return signatureWithTimestamps
 }

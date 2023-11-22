@@ -32,13 +32,14 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *  {uint256} callGasLimit - The maximum amount of gas allowed for executing the function call.
      *  {uint256} maxFeePerGas - The maximum fee per gas that the user is willing to pay for the transaction.
      *  {uint256} maxPriorityFeePerGas - The maximum priority fee per gas that the user is willing to pay for the transaction.
-     *  {uint96} signatureTimestamps - A 96-bit value representing two 48-bit timestamps: validUntil and validAfter (in that order).
+     *  {uint48} validAfter - A timestamp representing from when the user operation is valid.
+     *  {uint48} validUntil - A timestamp representing until when the user operation is valid, or 0 to indicated "forever".
      *  {address} entryPoint - The address of the entry point that will execute the user operation.
      * @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes.
      */
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint96 signatureTimestamps,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     address public immutable SUPPORTED_ENTRYPOINT;
@@ -78,17 +79,15 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             "Unsupported execution function id"
         );
 
-        address entryPoint = _msgSender();
-
         // The userOp nonce is validated in the entry point (for 0.6.0+), therefore we will not check it again
-        validationData = _validateSignatures(entryPoint, userOp);
+        validationData = _validateSignatures(userOp);
 
         // We trust the entry point to set the correct prefund value, based on the operation params
         // We need to perform this even if the signature is not valid, else the simulation function of the entry point will not work.
         if (missingAccountFunds != 0) {
             // We intentionally ignore errors in paying the missing account funds, as the entry point is responsible for
             // verifying the prefund has been paid. This behaviour matches the reference base account implementation.
-            ISafe(safeAddress).execTransactionFromModule(entryPoint, missingAccountFunds, "", 0);
+            ISafe(safeAddress).execTransactionFromModule(SUPPORTED_ENTRYPOINT, missingAccountFunds, "", 0);
         }
     }
 
@@ -137,7 +136,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param callGasLimit Gas available during the execution of the call.
      * @param maxFeePerGas Max fee per gas.
      * @param maxPriorityFeePerGas Max priority fee per gas.
-     * @param entryPoint Address of the entry point.
+     * @param validAfter The timestamp the operation is valid from.
+     * @param validUntil The timestamp the operation is valid until.
      * @return Operation bytes.
      */
     function getOperationData(
@@ -149,8 +149,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint96 signatureTimestamps,
-        address entryPoint
+        uint48 validAfter,
+        uint48 validUntil
     ) internal view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
             abi.encode(
@@ -163,8 +163,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
-                signatureTimestamps,
-                entryPoint
+                validAfter,
+                validUntil,
+                SUPPORTED_ENTRYPOINT
             )
         );
         return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash);
@@ -180,7 +181,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param callGasLimit Gas available during the execution of the call.
      * @param maxFeePerGas Max fee per gas.
      * @param maxPriorityFeePerGas Max priority fee per gas.
-     * @param entryPoint Address of the entry point.
+     * @param validAfter The timestamp the operation is valid from.
+     * @param validUntil The timestamp the operation is valid until.
      * @return Operation hash.
      */
     function getOperationHash(
@@ -192,8 +194,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint96 signatureTimestamps,
-        address entryPoint
+        uint48 validAfter,
+        uint48 validUntil
     ) external view returns (bytes32) {
         return
             keccak256(
@@ -206,20 +208,19 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     callGasLimit,
                     maxFeePerGas,
                     maxPriorityFeePerGas,
-                    signatureTimestamps,
-                    entryPoint
+                    validAfter,
+                    validUntil
                 )
             );
     }
 
     /**
      * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
-     * @param entryPoint Address of the entry point.
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
      */
-    function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
-        uint96 signatureTimestamps = uint96(bytes12(userOp.signature[:12]));
+    function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
+        (uint48 validAfter, uint48 validUntil, bytes calldata signature) = _splitSignatureData(userOp.signature);
         bytes memory operationData = getOperationData(
             payable(userOp.sender),
             userOp.callData,
@@ -229,18 +230,31 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
-            signatureTimestamps,
-            entryPoint
+            validAfter,
+            validUntil
         );
         bytes32 operationHash = keccak256(operationData);
 
-        // The timestamps are validated by the entry point, therefore we will not check them again
-        uint48 validUntil = uint48(signatureTimestamps >> 48);
-        uint48 validAfter = uint48(signatureTimestamps);
-        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, operationData, userOp.signature[12:]) {
+        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, operationData, signature) {
+            // The timestamps are validated by the entry point, therefore we will not check them again
             validationData = _packValidationData(false, validUntil, validAfter);
         } catch {
             validationData = _packValidationData(true, validUntil, validAfter);
         }
+    }
+
+    /**
+     * @dev Splits the user operation signature bytes into its parts.
+     * @param signatureData The user operation signature.
+     * @return validAfter The timestamp the user operation is valid from.
+     * @return validUntil The timestamp the user operation is valid until.
+     * @return signature The actual signature for the Safe user operation.
+     */
+    function _splitSignatureData(
+        bytes calldata signatureData
+    ) internal pure returns (uint48 validAfter, uint48 validUntil, bytes calldata signature) {
+        validAfter = uint48(bytes6(signatureData[0:6]));
+        validUntil = uint48(bytes6(signatureData[6:12]));
+        signature = signatureData[12:];
     }
 }
