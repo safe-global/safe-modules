@@ -110,8 +110,8 @@ describe('E2E - Custom Signers', () => {
       safeOp.callGasLimit,
       safeOp.maxFeePerGas,
       safeOp.maxPriorityFeePerGas,
-      safeOp.signatureTimestamps,
-      safeOp.entryPoint,
+      safeOp.validAfter,
+      safeOp.validUntil,
     )
     const signature = ethers.concat([
       buildSignatureBytes(
