@@ -1,5 +1,4 @@
 import { expect } from 'chai'
-import { Contract } from 'ethers'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp, UserOperation } from '../../src/utils/userOp'
@@ -276,7 +275,7 @@ describe('E2E - Local Bundler', () => {
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
-    await waitForUserOp(entryPoint, safeAddress, nonce)
+    await waitForUserOp(userOp)
     expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.not.equal(0)
     expect(await token.balanceOf(safeAddress)).to.equal(0)
     expect(await ethers.provider.getBalance(safeAddress)).to.be.lessThan(ethers.parseEther('0.5'))
