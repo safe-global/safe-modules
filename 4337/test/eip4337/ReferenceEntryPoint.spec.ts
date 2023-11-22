@@ -6,10 +6,11 @@ import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPo
 import { getFactory, getAddModulesLib } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
-  buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
-  signSafeOp,
+  buildUserOperationFromSafeUserOperation,
+  calculateSafeOperationData,
   encodeSignatureTimestamp,
+  signSafeOp,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
@@ -28,7 +29,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     const singletonFactory = await ethers.getContractFactory('SafeL2', deployer)
     const singleton = await singletonFactory.deploy()
 
-    const safe = await Safe4337.withSigner(user.address, {
+    const safeGlobalConfig = {
       safeSingleton: await singleton.getAddress(),
       entryPoint: await entryPoint.getAddress(),
       erc4337module: await module.getAddress(),
@@ -36,7 +37,8 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       addModulesLib: await addModulesLib.getAddress(),
       proxyCreationCode,
       chainId: Number(await chainId()),
-    })
+    }
+    const safe = await Safe4337.withSigner(user.address, safeGlobalConfig)
 
     return {
       user,
@@ -44,6 +46,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       safe,
       validator: module,
       entryPoint,
+      safeGlobalConfig,
     }
   }
 
@@ -150,6 +153,75 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .filter((log) => log.eventName === 'Deposited')
       .reduce((acc, { args: [, deposit] }) => acc + deposit, 0n)
     expect(await ethers.provider.getBalance(safe.address)).to.be.eq(accountBalance - transfers - deposits)
+  })
+
+  it('should support a Safe signer (NOTE: would require a staked paymaster for ERC-4337)', async () => {
+    const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
+
+    await parentSafe.deploy(user)
+    const daughterSafe = await Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+
+    const accountBalance = ethers.parseEther('1.0')
+    await user.sendTransaction({ to: daughterSafe.address, value: accountBalance })
+    expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
+
+    const transfer = ethers.parseEther('0.1')
+    const safeOp = buildSafeUserOpTransaction(daughterSafe.address, user.address, transfer, '0x', '0x0', await entryPoint.getAddress())
+    const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
+    const signature = ethers.solidityPacked(
+      ['bytes', 'bytes'],
+      [
+        buildSignatureBytes([
+          {
+            signer: parentSafe.address,
+            data: ethers.solidityPacked(
+              ['bytes32', 'bytes32', 'uint8'],
+              [
+                ethers.toBeHex(parentSafe.address, 32), // `r` holds the contract signer
+                ethers.toBeHex(65, 32), // `s` holds the offset of the signature bytes
+                0, // `v` of 0 indicates a contract signer
+              ],
+            ),
+          },
+        ]),
+        ethers.solidityPacked(
+          ['uint256', 'bytes'],
+          [
+            65, // signature length
+            await user.signTypedData(
+              {
+                verifyingContract: parentSafe.address,
+                chainId: await chainId(),
+              },
+              {
+                SafeMessage: [{ type: 'bytes', name: 'message' }],
+              },
+              {
+                message: opData,
+              },
+            ),
+          ],
+        ),
+      ],
+    )
+    const userOp = buildUserOperationFromSafeUserOperation({
+      safeAddress: daughterSafe.address,
+      safeOp,
+      signature,
+      initCode: daughterSafe.getInitCode(),
+    })
+
+    const transaction = await logGas(
+      'Execute UserOps with reference EntryPoint',
+      entryPoint.handleOps([userOp], await relayer.getAddress()),
+    )
+    const receipt = await transaction.wait()
+
+    const deposits = receipt.logs
+      .filter(isEventLog)
+      .filter((log) => log.eventName === 'Deposited')
+      .reduce((acc, { args: [, deposit] }) => acc + deposit, 0n)
+    expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance - transfer - deposits)
   })
 
   function isEventLog(log: Log): log is EventLog {

@@ -1,4 +1,4 @@
-import { AddressLike, JsonRpcProvider, Provider, ethers } from 'ethers'
+import { AddressLike, JsonRpcProvider, Provider, Signer, ethers } from 'ethers'
 
 // Import from Safe contracts repo once fixed
 import { MetaTransaction, SafeSignature, buildSignatureBytes } from './execution'
@@ -269,6 +269,13 @@ export class Safe4337 {
 
     const code = await this.provider.getCode(this.address, 'latest')
     return code !== '0x'
+  }
+
+  async deploy(deployer: Signer): Promise<void> {
+    const initCode = this.getInitCode()
+    const factory = ethers.getAddress(ethers.dataSlice(initCode, 0, 20))
+    const initCallData = ethers.dataSlice(initCode, 20)
+    await deployer.sendTransaction({ to: factory, data: initCallData }).then((tx) => tx.wait())
   }
 
   getInitCode(): string {

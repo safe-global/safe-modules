@@ -124,11 +124,7 @@ describe('E2E - Local Bundler', () => {
   it('should execute a transaction for an exsiting Safe', async () => {
     const { user, bundler, safe, validator, entryPoint, token } = await setupTests()
 
-    const initCode = safe.getInitCode()
-    const factory = ethers.getAddress(ethers.dataSlice(initCode, 0, 20))
-    const initCallData = ethers.dataSlice(initCode, 20)
-    await user.sendTransaction({ to: factory, data: initCallData }).then((tx) => tx.wait())
-
+    await safe.deploy(user)
     await token.transfer(safe.address, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
     await user.sendTransaction({ to: safe.address, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
 
