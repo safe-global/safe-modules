@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
-import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
+import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp, UserOperation } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { MultiProvider4337, Safe4337 } from '../../src/utils/safe'
 
@@ -75,11 +75,14 @@ describe('E2E - Local Bundler', () => {
     return new MultiProvider4337(url, ethers.provider)
   }
 
-  const waitFor = async (name: string, predicate: () => Promise<boolean>, timeout = 10_000) => {
+  const waitForUserOp = async ({ sender, nonce }: Pick<UserOperation, 'sender' | 'nonce'>, timeout = 10_000) => {
+    const { address: entryPointAddress } = await deployments.get('EntryPoint')
+    const entryPoint = await ethers.getContractAt('INonceManager', entryPointAddress)
     const start = performance.now()
-    while (!(await predicate())) {
+    const key = BigInt(nonce) >> 64n
+    while ((await entryPoint.getNonce(sender, key)) <= BigInt(nonce)) {
       if (performance.now() - start > timeout) {
-        throw new Error(`timeout waiting for ${name}`)
+        throw new Error(`timeout waiting for user operation execution`)
       }
       await new Promise((resolve) => setTimeout(resolve, 10))
     }
@@ -112,8 +115,9 @@ describe('E2E - Local Bundler', () => {
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
-    await waitFor('user operation to execute', async () => (await token.balanceOf(safe.address)) == 0n)
+    await waitForUserOp(userOp)
     expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
+    expect(await token.balanceOf(safe.address)).to.equal(0)
     expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
   })
 
@@ -149,7 +153,8 @@ describe('E2E - Local Bundler', () => {
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
-    await waitFor('user operation to execute', async () => (await token.balanceOf(safe.address)) == 0n)
+    await waitForUserOp(userOp)
+    expect(await token.balanceOf(safe.address)).to.equal(0n)
     expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
   })
 })
