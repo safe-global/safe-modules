@@ -93,7 +93,7 @@ export const buildSafeUserOpTransaction = (
   to: string,
   value: BigNumberish,
   data: string,
-  nonce: string,
+  nonce: BigNumberish,
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
