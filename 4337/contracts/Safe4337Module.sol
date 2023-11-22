@@ -151,7 +151,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 maxPriorityFeePerGas,
         uint96 signatureTimestamps,
         address entryPoint
-    ) internal view returns (bytes memory) {
+    ) public view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
             abi.encode(
                 SAFE_OP_TYPEHASH,

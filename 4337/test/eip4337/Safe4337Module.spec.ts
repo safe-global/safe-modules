@@ -5,6 +5,7 @@ import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
+  calculateSafeOperationData,
   calculateSafeOperationHash,
   buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
@@ -34,6 +35,38 @@ describe('Safe4337Module', () => {
       safeModule,
       makeSafeModule,
     }
+  })
+
+  describe('getOperationData', () => {
+    it('should correctly calculate EIP-712 encoded data of the operation', async () => {
+      const { validator, safeModule, entryPoint } = await setupTests()
+
+      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
+      const validAfter = Date.now() + 10000
+      const validUntil = validAfter + 10000000000
+      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
+
+      const operation = buildSafeUserOp({
+        safe: safeAddress,
+        nonce: '0',
+        entryPoint: await entryPoint.getAddress(),
+        signatureTimestamps: packedSignatureTimestamps,
+      })
+      const operationData = await safeModule.getOperationData(
+        safeAddress,
+        operation.callData,
+        operation.nonce,
+        operation.preVerificationGas,
+        operation.verificationGasLimit,
+        operation.callGasLimit,
+        operation.maxFeePerGas,
+        operation.maxPriorityFeePerGas,
+        operation.signatureTimestamps,
+        operation.entryPoint,
+      )
+
+      expect(operationData).to.equal(calculateSafeOperationData(await validator.getAddress(), operation, await chainId()))
+    })
   })
 
   describe('getOperationHash', () => {
