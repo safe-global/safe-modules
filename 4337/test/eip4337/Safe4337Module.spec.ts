@@ -5,13 +5,12 @@ import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
-  calculateSafeOperationHash,
-  buildUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
-  encodeSignatureTimestamp,
+  buildUserOperationFromSafeUserOperation,
+  calculateSafeOperationHash,
   packValidationData,
 } from '../../src/utils/userOp'
-import { chainId } from '../utils/encoding'
+import { chainId, timestamp } from '../utils/encoding'
 
 describe('Safe4337Module', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -41,15 +40,15 @@ describe('Safe4337Module', () => {
       const { validator, safeModule, entryPoint } = await setupTests()
 
       const safeAddress = ethers.hexlify(ethers.randomBytes(20))
-      const validAfter = Date.now() + 10000
+      const validAfter = (await timestamp()) + 10000
       const validUntil = validAfter + 10000000000
-      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
 
       const operation = buildSafeUserOp({
         safe: safeAddress,
         nonce: '0',
         entryPoint: await entryPoint.getAddress(),
-        signatureTimestamps: packedSignatureTimestamps,
+        validAfter,
+        validUntil,
       })
       const operationHash = await safeModule.getOperationHash(
         safeAddress,
@@ -60,8 +59,8 @@ describe('Safe4337Module', () => {
         operation.callGasLimit,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
-        operation.signatureTimestamps,
-        operation.entryPoint,
+        operation.validAfter,
+        operation.validUntil,
       )
 
       expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), operation, await chainId()))
@@ -141,7 +140,6 @@ describe('Safe4337Module', () => {
 
       const validAfter = BigInt(ethers.hexlify(ethers.randomBytes(3)))
       const validUntil = validAfter + BigInt(ethers.hexlify(ethers.randomBytes(3)))
-      const packedSignatureTimestamps = encodeSignatureTimestamp(validUntil, validAfter)
 
       const safeOp = buildSafeUserOpTransaction(
         await safeModule.getAddress(),
@@ -152,11 +150,12 @@ describe('Safe4337Module', () => {
         await entryPoint.getAddress(),
         false,
         false,
-        packedSignatureTimestamps,
+        validAfter,
+        validUntil,
       )
 
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
-      const signature = buildSignatureBytes([await signHash(user, safeOpHash)], safeOp.signatureTimestamps)
+      const signature = buildSignatureBytes([await signHash(user, safeOpHash)], validAfter, validUntil)
       const userOp = buildUserOperationFromSafeUserOperation({
         safeAddress: await safeModule.getAddress(),
         safeOp,

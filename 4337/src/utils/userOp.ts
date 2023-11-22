@@ -28,12 +28,12 @@ export interface SafeUserOperation {
   callGasLimit: string
   maxFeePerGas: string
   maxPriorityFeePerGas: string
-  signatureTimestamps: BigNumberish
+  validAfter: BigNumberish
+  validUntil: BigNumberish
   entryPoint: string
 }
 
 export const EIP712_SAFE_OPERATION_TYPE = {
-  // "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint96 signatureTimestamps,address entryPoint)"
   SafeOp: [
     { type: 'address', name: 'safe' },
     { type: 'bytes', name: 'callData' },
@@ -43,7 +43,8 @@ export const EIP712_SAFE_OPERATION_TYPE = {
     { type: 'uint256', name: 'callGasLimit' },
     { type: 'uint256', name: 'maxFeePerGas' },
     { type: 'uint256', name: 'maxPriorityFeePerGas' },
-    { type: 'uint96', name: 'signatureTimestamps' },
+    { type: 'uint48', name: 'validAfter' },
+    { type: 'uint48', name: 'validUntil' },
     { type: 'address', name: 'entryPoint' },
   ],
 }
@@ -82,7 +83,8 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
     callGasLimit: template.callGasLimit || '2000000',
     maxFeePerGas: template.maxFeePerGas || '10000000000',
     maxPriorityFeePerGas: template.maxPriorityFeePerGas || '10000000000',
-    signatureTimestamps: template.signatureTimestamps || '0',
+    validAfter: template.validAfter || '0',
+    validUntil: template.validUntil || '0',
   }
 }
 
@@ -95,7 +97,8 @@ export const buildSafeUserOpTransaction = (
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
-  signatureTimestamps?: BigNumberish,
+  validAfter?: BigNumberish,
+  validUntil?: BigNumberish,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const abi = [
@@ -112,7 +115,8 @@ export const buildSafeUserOpTransaction = (
         callData,
         nonce,
         entryPoint,
-        signatureTimestamps,
+        validAfter,
+        validUntil,
       },
       overrides,
     ),
@@ -129,7 +133,8 @@ export const buildSafeUserOpContractCall = async (
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
-  signatureTimestamps?: BigNumberish,
+  validAfter?: BigNumberish,
+  validUntil?: BigNumberish,
   overrides?: Partial<SafeUserOperation>,
 ): Promise<SafeUserOperation> => {
   const data = contract.interface.encodeFunctionData(method, params)
@@ -143,7 +148,8 @@ export const buildSafeUserOpContractCall = async (
     entryPoint,
     delegateCall,
     bubbleUpRevertReason,
-    signatureTimestamps,
+    validAfter,
+    validUntil,
     overrides,
   )
 }
@@ -197,21 +203,6 @@ export const getSupportedEntryPoints = async (provider: ethers.JsonRpcProvider):
   const supportedEntryPoints = await provider.send('eth_supportedEntryPoints', [])
   console.log({ supportedEntryPoints })
   return supportedEntryPoints.map(ethers.getAddress)
-}
-
-export const encodeSignatureTimestamp = (validUntil: BigNumberish, validAfter: BigNumberish) => {
-  // Ensure that the values don't exceed 48 bits
-  if (BigInt(validAfter) > 0xffffffffffff || BigInt(validUntil) > 0xffffffffffff) {
-    throw new Error('Value exceeds 48 bits')
-  }
-
-  if (BigInt(validAfter) > BigInt(validUntil)) {
-    throw new Error('ValidAfter cannot be greater than ValidUntil')
-  }
-
-  // Combine the two uint48 values into a uint96
-  const result = (BigInt(validUntil) << 48n) | BigInt(validAfter)
-  return result
 }
 
 /**

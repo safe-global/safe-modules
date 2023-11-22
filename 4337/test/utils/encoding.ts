@@ -17,3 +17,11 @@ export const encodeTransfer = (target: string, amount: string | number): string 
 export const chainId = async () => {
   return (await ethers.provider.getNetwork()).chainId
 }
+
+export const timestamp = async () => {
+  const block = await ethers.provider.getBlock('latest')
+  if (block === null) {
+    throw new Error('missing latest block???')
+  }
+  return block.timestamp
+}

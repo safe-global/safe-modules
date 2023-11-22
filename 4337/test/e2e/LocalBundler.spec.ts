@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp, UserOperation } from '../../src/utils/userOp'
-import { chainId } from '../utils/encoding'
+import { chainId, timestamp } from '../utils/encoding'
 import { MultiProvider4337, Safe4337 } from '../../src/utils/safe'
 
 const BUNDLER_URL = process.env.TEST_BUNLDER_URL ?? 'http://localhost:3000/rpc'
@@ -97,6 +97,8 @@ describe('E2E - Local Bundler', () => {
     expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
     expect(await token.balanceOf(safe.address)).to.equal(ethers.parseUnits('4.2', 18))
 
+    const validAfter = (await timestamp()) - 60
+    const validUntil = validAfter + 300
     const safeOp = buildSafeUserOpTransaction(
       safe.address,
       await token.getAddress(),
@@ -104,8 +106,16 @@ describe('E2E - Local Bundler', () => {
       token.interface.encodeFunctionData('transfer', [user.address, await token.balanceOf(safe.address)]),
       await entryPoint.getNonce(safe.address, 0),
       await entryPoint.getAddress(),
+      false,
+      false,
+      validAfter,
+      validUntil,
     )
-    const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+    const signature = buildSignatureBytes(
+      [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
+      validAfter,
+      validUntil,
+    )
     const userOp = buildUserOperationFromSafeUserOperation({
       safeAddress: safe.address,
       safeOp,
