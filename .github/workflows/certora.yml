@@ -15,7 +15,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                rule: ["verifyManager.sh"]
+                rule: ["verify.sh"]
         defaults:
             run:
                 working-directory: ./4337
