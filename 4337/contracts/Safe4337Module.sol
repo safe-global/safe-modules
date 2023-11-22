@@ -105,8 +105,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
-            assembly {
-                revert(add(returnData, 0x20), returnData)
+            assembly ("memory-safe") {
+                revert(add(returnData, 0x20), mload(returnData))
             }
         }
     }

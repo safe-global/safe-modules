@@ -221,8 +221,9 @@ describe('Safe4337Module - Newly deployed safe', () => {
       const receipt = await transaction.wait()
       const logs = receipt.logs.map((log) => entryPoint.interface.parseLog(log))
       const emittedRevert = logs.find((log) => log?.name === 'UserOpReverted')
-      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert?.args.reason.slice(10) ?? ''}`)
-      expect(decodedError).to.equal('You called a function that always reverts')
+      expect(emittedRevert?.args.reason).to.equal(
+        reverterContract.interface.encodeErrorResult('Error', ['You called a function that always reverts']),
+      )
       expect(await safe.isDeployed()).to.be.true
     })
   })

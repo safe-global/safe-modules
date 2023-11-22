@@ -199,8 +199,9 @@ describe('Safe4337Module - Existing Safe', () => {
       const transaction = await entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')).then((tx) => tx.wait())
       const logs = transaction.logs.map((log) => entryPoint.interface.parseLog(log)) ?? []
       const emittedRevert = logs.find((l) => l?.name === 'UserOpReverted')
-      const [decodedError] = ethers.AbiCoder.defaultAbiCoder().decode(['string'], `0x${emittedRevert?.args.reason.slice(10) || ''}`)
-      expect(decodedError).to.equal('You called a function that always reverts')
+      expect(emittedRevert?.args.reason).to.equal(
+        reverterContract.interface.encodeErrorResult('Error', ['You called a function that always reverts']),
+      )
     })
   })
 })
