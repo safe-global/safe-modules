@@ -119,7 +119,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @dev Returns the bytes that are hashed to be signed by owners.
+     * @dev Returns the 32-byte Safe operation hash to be signed by owners.
      * @param safe Safe address.
      * @param callData Call data.
      * @param nonce Nonce of the operation.
@@ -129,11 +129,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param maxFeePerGas Max fee per gas.
      * @param maxPriorityFeePerGas Max priority fee per gas.
      * @param entryPoint Address of the entry point.
-     * @return Operation hash bytes.
+     * @return Operation hash.
      */
     function getOperationHash(
         address safe,
-        bytes calldata callData,
+        bytes memory callData,
         uint256 nonce,
         uint256 preVerificationGas,
         uint256 verificationGasLimit,
@@ -141,7 +141,74 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
         address entryPoint
-    ) public view returns (bytes32) {
+    ) external view returns (bytes32) {
+        return
+            keccak256(
+                _getOperationData(
+                    safe,
+                    callData,
+                    nonce,
+                    preVerificationGas,
+                    verificationGasLimit,
+                    callGasLimit,
+                    maxFeePerGas,
+                    maxPriorityFeePerGas,
+                    entryPoint
+                )
+            );
+    }
+
+    /**
+     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
+     * @param entryPoint Address of the entry point.
+     * @param userOp User operation struct.
+     * @return validationData An integer indicating the result of the validation.
+     */
+    function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
+        bytes memory operationData = _getOperationData(
+            payable(userOp.sender),
+            userOp.callData,
+            userOp.nonce,
+            userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
+            userOp.maxFeePerGas,
+            userOp.maxPriorityFeePerGas,
+            entryPoint
+        );
+        bytes32 operationHash = keccak256(operationData);
+
+        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, operationData, userOp.signature) {
+            validationData = SIG_VALIDATION_SUCCESS;
+        } catch {
+            validationData = SIG_VALIDATION_FAILED;
+        }
+    }
+
+    /**
+     * @dev Returns the bytes to be hashed and signed by owners.
+     * @param safe Safe address.
+     * @param callData Call data.
+     * @param nonce Nonce of the operation.
+     * @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification).
+     * @param verificationGasLimit Gas required for verification.
+     * @param callGasLimit Gas available during the execution of the call.
+     * @param maxFeePerGas Max fee per gas.
+     * @param maxPriorityFeePerGas Max priority fee per gas.
+     * @param entryPoint Address of the entry point.
+     * @return Operation bytes.
+     */
+    function _getOperationData(
+        address safe,
+        bytes memory callData,
+        uint256 nonce,
+        uint256 preVerificationGas,
+        uint256 verificationGasLimit,
+        uint256 callGasLimit,
+        uint256 maxFeePerGas,
+        uint256 maxPriorityFeePerGas,
+        address entryPoint
+    ) internal view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
             abi.encode(
                 SAFE_OP_TYPEHASH,
@@ -156,32 +223,6 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 entryPoint
             )
         );
-        return keccak256(abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash));
-    }
-
-    /**
-     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
-     * @param entryPoint Address of the entry point.
-     * @param userOp User operation struct.
-     * @return validationData An integer indicating the result of the validation.
-     */
-    function _validateSignatures(address entryPoint, UserOperation calldata userOp) internal view returns (uint256 validationData) {
-        bytes32 operationHash = getOperationHash(
-            payable(userOp.sender),
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            entryPoint
-        );
-
-        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, "", userOp.signature) {
-            validationData = SIG_VALIDATION_SUCCESS;
-        } catch {
-            validationData = SIG_VALIDATION_FAILED;
-        }
+        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash);
     }
 }

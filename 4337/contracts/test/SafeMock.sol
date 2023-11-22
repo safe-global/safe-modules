@@ -40,7 +40,8 @@ contract SafeMock {
         }
     }
 
-    function checkSignatures(bytes32 dataHash, bytes memory, bytes memory signature) public view {
+    function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signature) public view {
+        require(dataHash == keccak256(data), "Invalid data hash");
         uint8 v;
         bytes32 r;
         bytes32 s;
