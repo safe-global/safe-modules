@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 
 import {ISignatureValidator} from "@safe-global/safe-contracts/contracts/interfaces/ISignatureValidator.sol";
 
-contract TestCustomSigner is ISignatureValidator {
+contract TestSingletonSigner is ISignatureValidator {
     struct Key {
         uint256 _dummy;
         uint256 value;
@@ -28,15 +28,15 @@ contract TestCustomSigner is ISignatureValidator {
     }
 }
 
-contract TestCustomSignerFactory {
-    bytes32 public constant SIGNER_CODE_HASH = keccak256(type(TestCustomSigner).creationCode);
+contract TestSingletonSignerFactory {
+    bytes32 public constant SIGNER_CODE_HASH = keccak256(type(TestSingletonSigner).creationCode);
 
     function getSigner(uint256 index) public view returns (address) {
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), index, SIGNER_CODE_HASH)))));
     }
 
     function deploySigner(uint256 index) external {
-        TestCustomSigner signer = new TestCustomSigner{salt: bytes32(index)}();
+        TestSingletonSigner signer = new TestSingletonSigner{salt: bytes32(index)}();
         require(address(signer) == getSigner(index));
     }
 }

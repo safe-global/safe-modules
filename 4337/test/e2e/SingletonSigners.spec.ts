@@ -4,7 +4,7 @@ import { buildSignatureBytes } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction } from '../../src/utils/userOp'
 import { bundlerRpc, encodeMultiSendTransactions, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
-describe('E2E - Custom Signers', () => {
+describe('E2E - Singleton Signers', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()
@@ -32,13 +32,13 @@ describe('E2E - Custom Signers', () => {
       })
       .then((tx) => tx.wait())
 
-    const TestCustomSignerFactory = await ethers.getContractFactory('TestCustomSignerFactory')
-    const signerFactory = await TestCustomSignerFactory.deploy()
+    const TestSingletonSignerFactory = await ethers.getContractFactory('TestSingletonSignerFactory')
+    const signerFactory = await TestSingletonSignerFactory.deploy()
     const customSigners = []
     for (let i = 0; i < 3; i++) {
       await signerFactory.deploySigner(i).then((tx) => tx.wait())
       customSigners.push({
-        signer: await ethers.getContractAt('TestCustomSigner', await signerFactory.getSigner(i)),
+        signer: await ethers.getContractAt('TestSingletonSigner', await signerFactory.getSigner(i)),
         key: BigInt(ethers.keccak256(ethers.toBeHex(i, 1))),
       })
     }
