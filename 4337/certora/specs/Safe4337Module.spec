@@ -3,12 +3,24 @@ using ISafe as safe;
 methods {
     function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
     function _._msgSender() internal => ERC2771MessageSender() expect address;
-    function _.checkSignatures(bytes32, bytes, bytes) external => CONSTANT;
+    function _.checkSignatures(bytes32, bytes, bytes) external => DISPATCHER(true);
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
     function executeUserOp(address, uint256, bytes, uint8) external;
     function executeUserOpWithErrorString(address, uint256, bytes, uint8) external;
+    function Safe4337Module.getOperationHash(
+        address safe,
+        bytes memory callData,
+        uint256 nonce,
+        uint256 preVerificationGas,
+        uint256 verificationGasLimit,
+        uint256 callGasLimit,
+        uint256 maxFeePerGas,
+        uint256 maxPriorityFeePerGas,
+        uint96 signatureTimestamps,
+        address entryPoint
+    ) external envfree => CONSTANT;
 }
 
 ghost ERC2771MessageSender() returns address;
@@ -25,17 +37,30 @@ rule onlyEntryPointCallable(method f) filtered {
 }
 
 // checkSignatures should be always called if validateUserOp succeeds
-rule checkSignaturesIsCalledIfValidateUserOpSucceeds(method f, address sender, 
-        bytes transactionHash,
-        bytes signatures) filtered {
-    f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector
-} {
+rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
+        Safe4337Module.UserOperation userOp,
+        bytes32 dummyData,
+        uint256 missingAccountFunds,
+        bytes32 transactionHash,
+        bytes signatures) {
     env e;
-    calldataarg args;
+    uint196 x;
+    require x == uint96(bytes12(userOp.signature[:12]));
 
-    safe.checkSignatures@withrevert(e, transactionHash, signatures);
+    bytes32 transactionHash = getOperationHash(   userOp.sender,
+            userOp.callData,
+            userOp.nonce,
+            userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
+            userOp.maxFeePerGas,
+            userOp.maxPriorityFeePerGas,
+            x,
+            SUPPORTED_ENTRYPOINT());
+
+    safe.checkSignatures@withrevert(e, transactionHash, "", signatures);
     bool checkSignaturesOk = !lastReverted;
 
-    f(e, args);
+    validateUserOp(e, userOp, dummyData, missingAccountFunds);
     assert checkSignaturesOk, "transaction executed without valid signatures";
 }
