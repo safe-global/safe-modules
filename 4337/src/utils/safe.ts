@@ -296,7 +296,7 @@ export class Safe4337 {
   async getModules(): Promise<string[]> {
     if (!this.provider || !(await this.isDeployed())) {
       if (!this.safeConfig) throw Error('Not deployed and no config available')
-      return [this.globalConfig.erc4337module, this.globalConfig.entryPoint]
+      return [this.globalConfig.erc4337module]
     }
     const result = await callInterface(this.provider, this.address, 'getModulesPaginated', [AddressOne, 10])
     return result[0]
