@@ -67,3 +67,30 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
     validateUserOp(e, userOp, dummyData, missingAccountFunds);
     assert checkSignaturesOk, "transaction executed without valid signatures";
 }
+
+rule validationDataLastBitCorrespondsCheckSignatures(address sender,
+        Safe4337Module.UserOperation userOp,
+        bytes32 dummyData,
+        uint256 missingAccountFunds) {
+    env e;
+    uint96 x;
+    require x == safeContract.getSignatureTimestamps(userOp.signature);
+    bytes signatures = safeContract.getSignatures(userOp.signature);
+    bytes32 transactionHash = getOperationHash(userOp.sender,
+            userOp.callData,
+            userOp.nonce,
+            userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
+            userOp.maxFeePerGas,
+            userOp.maxPriorityFeePerGas,
+            x,
+            SUPPORTED_ENTRYPOINT());
+
+    bytes checkSignaturesBytes;
+    safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
+    bool checkSignaturesOk = !lastReverted;
+
+    uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
+    assert !checkSignaturesOk => validationData & 1 == 1 || checkSignaturesOk => validationData & 0 == 0, "validation data incorrect";
+}
