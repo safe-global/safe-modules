@@ -8,6 +8,7 @@ methods {
     //ISafe harnessed functions
     function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
+    function safeContract.getSignatureTimestampsFromValidationData(uint256 validationData) external returns (uint96) envfree;
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
@@ -93,4 +94,28 @@ rule validationDataLastBitCorrespondsCheckSignatures(address sender,
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
     assert !checkSignaturesOk => validationData & 1 == 1 || checkSignaturesOk => validationData & 0 == 0, "validation data incorrect";
+}
+
+rule signatureTimestampsPresentInValidationData(address sender,
+        Safe4337Module.UserOperation userOp,
+        bytes32 dummyData,
+        uint256 missingAccountFunds) {
+    env e;
+    uint96 signatureTimestamps;
+    require signatureTimestamps == safeContract.getSignatureTimestamps(userOp.signature);
+    bytes signatures = safeContract.getSignatures(userOp.signature);
+    bytes32 transactionHash = getOperationHash(userOp.sender,
+            userOp.callData,
+            userOp.nonce,
+            userOp.preVerificationGas,
+            userOp.verificationGasLimit,
+            userOp.callGasLimit,
+            userOp.maxFeePerGas,
+            userOp.maxPriorityFeePerGas,
+            signatureTimestamps,
+            SUPPORTED_ENTRYPOINT());
+
+    uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
+
+    assert signatureTimestamps == safeContract.getSignatureTimestampsFromValidationData(validationData);
 }
