@@ -11,12 +11,12 @@ contract ISafe {
         slice = signature[12:];
     }
 
-    function getValidAfterTimestamp(uint256 validationData) external pure returns (uint48) {
-        return uint48(validationData >> 208);
+    function getValidAfterTimestamp(bytes calldata sigs) external pure returns (uint48) {
+        return uint48(bytes6(sigs[:6]));
     }
 
-    function getValidUntilTimestamp(uint256 validationData) external pure returns (uint48) {
-        return uint48(validationData >> 160);
+    function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
+        return uint48(bytes6(sigs[6:12]));
     }
 
     function getSignatureTimestampsFromValidationData(uint256 validationData) external pure returns (uint96) {

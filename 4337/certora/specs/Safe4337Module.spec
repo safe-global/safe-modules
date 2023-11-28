@@ -7,6 +7,9 @@ methods {
 
     //ISafe harnessed functions
     function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
+    function safeContract.getValidAfterTimestamp(bytes sigs) external returns (uint48) envfree;
+    function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
+
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
     function safeContract.getSignatureTimestampsFromValidationData(uint256 validationData) external returns (uint96) envfree;
     // function safeContract.execTransactionFromModule(
@@ -14,7 +17,7 @@ methods {
     //     uint256,
     //     bytes calldata,
     //     uint8
-    // ) external returns (bool) => ;
+    // ) external returns (bool) => ; // 
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
@@ -29,15 +32,18 @@ methods {
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
-        uint96 signatureTimestamps,
-        address entryPoint
+        uint48 validAfter,
+        uint48 validUntil
     ) external returns(bytes32) envfree => CONSTANT;
 }
 
 ghost ERC2771MessageSender() returns address;
 
-// ghost bool execTransactionCalled;
+ghost bool execTransactionFromModuleCalled;
 
+function execTxCalled(){
+    execTransactionFromModuleCalled = true;
+}
 
 rule onlyEntryPointCallable(method f) filtered {
     f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector ||
@@ -56,8 +62,11 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
         bytes32 dummyData,
         uint256 missingAccountFunds) {
     env e;
-    uint96 x;
-    require x == safeContract.getSignatureTimestamps(userOp.signature);
+    uint48 validAfter;
+    uint48 validUntil;
+    require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
+    require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
+
     bytes signatures = safeContract.getSignatures(userOp.signature);
     bytes32 transactionHash = getOperationHash(userOp.sender,
             userOp.callData,
@@ -67,8 +76,9 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
             userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
-            x,
-            SUPPORTED_ENTRYPOINT());
+            validAfter,
+            validUntil
+            );
 
     bytes checkSignaturesBytes;
     safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
@@ -83,8 +93,11 @@ rule validationDataLastBitCorrespondsCheckSignatures(address sender,
         bytes32 dummyData,
         uint256 missingAccountFunds) {
     env e;
-    uint96 x;
-    require x == safeContract.getSignatureTimestamps(userOp.signature);
+    uint48 validAfter;
+    uint48 validUntil;
+    require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
+    require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
+
     bytes signatures = safeContract.getSignatures(userOp.signature);
     bytes32 transactionHash = getOperationHash(userOp.sender,
             userOp.callData,
@@ -94,8 +107,8 @@ rule validationDataLastBitCorrespondsCheckSignatures(address sender,
             userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
-            x,
-            SUPPORTED_ENTRYPOINT());
+            validAfter,
+            validUntil);
 
     bytes checkSignaturesBytes;
     safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
@@ -110,9 +123,13 @@ rule signatureTimestampsPresentInValidationData(address sender,
         bytes32 dummyData,
         uint256 missingAccountFunds) {
     env e;
-    uint96 signatureTimestamps;
-    require signatureTimestamps == safeContract.getSignatureTimestamps(userOp.signature);
-    bytes signatures = safeContract.getSignatures(userOp.signature);
+
+    uint48 validAfter;
+    uint48 validUntil;
+    require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
+    require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
+    mathint signatureTimestamps = (to_mathint(validAfter) * 2 ^ 48) + to_mathint(validUntil);
+    // bytes signatures = safeContract.getSignatures(userOp.signature);
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
     mathint SignatureTimestamps = to_mathint(signatureTimestamps);
@@ -120,6 +137,10 @@ rule signatureTimestampsPresentInValidationData(address sender,
     assert SignatureTimestamps == ValidationData;
 }
 
-// rule execTransaction() {
+// rule execTransaction(method f)  {
+//     calldataargs args;
+//     env e;
+//     f(e, args);
 
+//     // assert that if exectx is called then f should be one for the 3 funcs
 // }
