@@ -9,6 +9,12 @@ methods {
     function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
     function safeContract.getSignatureTimestampsFromValidationData(uint256 validationData) external returns (uint96) envfree;
+    // function safeContract.execTransactionFromModule(
+    //     address payable,
+    //     uint256,
+    //     bytes calldata,
+    //     uint8
+    // ) external returns (bool) => ;
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
@@ -29,6 +35,9 @@ methods {
 }
 
 ghost ERC2771MessageSender() returns address;
+
+// ghost bool execTransactionCalled;
+
 
 rule onlyEntryPointCallable(method f) filtered {
     f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector ||
@@ -93,7 +102,7 @@ rule validationDataLastBitCorrespondsCheckSignatures(address sender,
     bool checkSignaturesOk = !lastReverted;
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
-    assert !checkSignaturesOk => validationData & 1 == 1 || checkSignaturesOk => validationData & 0 == 0, "validation data incorrect";
+    assert (!checkSignaturesOk => (validationData & 1) == 1) && (checkSignaturesOk => (validationData & 0) == 0), "validation data incorrect";
 }
 
 rule signatureTimestampsPresentInValidationData(address sender,
@@ -104,18 +113,13 @@ rule signatureTimestampsPresentInValidationData(address sender,
     uint96 signatureTimestamps;
     require signatureTimestamps == safeContract.getSignatureTimestamps(userOp.signature);
     bytes signatures = safeContract.getSignatures(userOp.signature);
-    bytes32 transactionHash = getOperationHash(userOp.sender,
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            signatureTimestamps,
-            SUPPORTED_ENTRYPOINT());
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
-
-    assert signatureTimestamps == safeContract.getSignatureTimestampsFromValidationData(validationData);
+    mathint SignatureTimestamps = to_mathint(signatureTimestamps);
+    mathint ValidationData = to_mathint(validationData >> 160);
+    assert SignatureTimestamps == ValidationData;
 }
+
+// rule execTransaction() {
+
+// }
