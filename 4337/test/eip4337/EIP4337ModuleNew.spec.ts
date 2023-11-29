@@ -53,7 +53,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, user1.address, safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),
@@ -77,7 +76,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),
@@ -101,7 +99,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),
@@ -126,7 +123,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),
@@ -154,7 +150,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),
@@ -180,7 +175,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),
@@ -212,7 +206,6 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
         initCode: safe.getInitCode(),

@@ -1,4 +1,4 @@
-import { BigNumberish, Contract, Signer, ethers } from 'ethers'
+import { BigNumberish, BytesLike, Contract, Signer, ethers } from 'ethers'
 
 import { SafeSignature } from './execution'
 
@@ -21,13 +21,14 @@ export interface UserOperation {
 
 export interface SafeUserOperation {
   safe: string
-  callData: string
-  nonce: string
-  preVerificationGas: string
-  verificationGasLimit: string
-  callGasLimit: string
-  maxFeePerGas: string
-  maxPriorityFeePerGas: string
+  nonce: BigNumberish
+  callData: BytesLike
+  callGasLimit: BigNumberish
+  verificationGasLimit: BigNumberish
+  preVerificationGas: BigNumberish
+  maxFeePerGas: BigNumberish
+  maxPriorityFeePerGas: BigNumberish
+  paymasterAndData: BytesLike
   validAfter: BigNumberish
   validUntil: BigNumberish
   entryPoint: string
@@ -36,13 +37,14 @@ export interface SafeUserOperation {
 export const EIP712_SAFE_OPERATION_TYPE = {
   SafeOp: [
     { type: 'address', name: 'safe' },
-    { type: 'bytes', name: 'callData' },
     { type: 'uint256', name: 'nonce' },
-    { type: 'uint256', name: 'preVerificationGas' },
-    { type: 'uint256', name: 'verificationGasLimit' },
+    { type: 'bytes', name: 'callData' },
     { type: 'uint256', name: 'callGasLimit' },
+    { type: 'uint256', name: 'verificationGasLimit' },
+    { type: 'uint256', name: 'preVerificationGas' },
     { type: 'uint256', name: 'maxFeePerGas' },
     { type: 'uint256', name: 'maxPriorityFeePerGas' },
+    { type: 'bytes', name: 'paymasterAndData' },
     { type: 'uint48', name: 'validAfter' },
     { type: 'uint48', name: 'validUntil' },
     { type: 'address', name: 'entryPoint' },
@@ -76,15 +78,19 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
   return {
     safe: template.safe,
     nonce: template.nonce,
-    entryPoint: template.entryPoint,
     callData: template.callData || '0x',
-    verificationGasLimit: template.verificationGasLimit || '500000',
-    preVerificationGas: template.preVerificationGas || '60000',
-    callGasLimit: template.callGasLimit || '2000000',
-    maxFeePerGas: template.maxFeePerGas || '10000000000',
-    maxPriorityFeePerGas: template.maxPriorityFeePerGas || '10000000000',
-    validAfter: template.validAfter || '0',
-    validUntil: template.validUntil || '0',
+    callGasLimit: template.callGasLimit || 2000000,
+    verificationGasLimit: template.verificationGasLimit || 500000,
+    preVerificationGas: template.preVerificationGas || 60000,
+    // use same maxFeePerGas and maxPriorityFeePerGas to ease testing prefund validation
+    // otherwise it's tricky to calculate the prefund because of dynamic parameters like block.basefee
+    // check UserOperation.sol#gasPrice()
+    maxFeePerGas: template.maxFeePerGas || 10000000000,
+    maxPriorityFeePerGas: template.maxPriorityFeePerGas || 10000000000,
+    paymasterAndData: template.paymasterAndData || '0x',
+    validAfter: template.validAfter || 0,
+    validUntil: template.validUntil || 0,
+    entryPoint: template.entryPoint,
   }
 }
 
@@ -159,25 +165,21 @@ export const buildUserOperationFromSafeUserOperation = ({
   signature,
   initCode = '0x',
 }: {
-  safeAddress: string
   safeOp: SafeUserOperation
   signature: string
   initCode?: string
 }): UserOperation => {
   return {
-    nonce: ethers.toBeHex(safeOp.nonce),
-    callData: safeOp.callData || '0x',
-    verificationGasLimit: ethers.toBeHex(safeOp.verificationGasLimit || '300000'),
-    preVerificationGas: ethers.toBeHex(safeOp.preVerificationGas || '50000'),
-    callGasLimit: ethers.toBeHex(safeOp.callGasLimit || '2000000'),
-    // use same maxFeePerGas and maxPriorityFeePerGas to ease testing prefund validation
-    // otherwise it's tricky to calculate the prefund because of dynamic parameters like block.basefee
-    // check UserOperation.sol#gasPrice()
-    maxFeePerGas: ethers.toBeHex(safeOp.maxFeePerGas || '5000000000'),
-    maxPriorityFeePerGas: ethers.toBeHex(safeOp.maxPriorityFeePerGas || '1500000000'),
-    initCode,
-    paymasterAndData: '0x',
     sender: safeOp.safe,
+    initCode,
+    nonce: ethers.toBeHex(safeOp.nonce),
+    callData: ethers.hexlify(safeOp.callData),
+    callGasLimit: ethers.toBeHex(safeOp.callGasLimit),
+    verificationGasLimit: ethers.toBeHex(safeOp.verificationGasLimit),
+    preVerificationGas: ethers.toBeHex(safeOp.preVerificationGas),
+    maxFeePerGas: ethers.toBeHex(safeOp.maxFeePerGas),
+    maxPriorityFeePerGas: ethers.toBeHex(safeOp.maxPriorityFeePerGas),
+    paymasterAndData: ethers.hexlify(safeOp.paymasterAndData),
     signature,
   }
 }

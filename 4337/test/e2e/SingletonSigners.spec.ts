@@ -103,13 +103,14 @@ describe('E2E - Singleton Signers', () => {
     )
     const opHash = await validator.getOperationHash(
       safeOp.safe,
-      safeOp.callData,
       safeOp.nonce,
-      safeOp.preVerificationGas,
-      safeOp.verificationGasLimit,
+      safeOp.callData,
       safeOp.callGasLimit,
+      safeOp.verificationGasLimit,
+      safeOp.preVerificationGas,
       safeOp.maxFeePerGas,
       safeOp.maxPriorityFeePerGas,
+      safeOp.paymasterAndData,
       safeOp.validAfter,
       safeOp.validUntil,
     )
@@ -123,7 +124,6 @@ describe('E2E - Singleton Signers', () => {
       ...customSigners.map(({ key }) => ethers.solidityPacked(['uint256', 'bytes'], [32, ethers.toBeHex(BigInt(opHash) ^ key)])),
     ])
     const userOp = buildUserOperationFromSafeUserOperation({
-      safeAddress: safeAddress,
       safeOp,
       signature,
       initCode,

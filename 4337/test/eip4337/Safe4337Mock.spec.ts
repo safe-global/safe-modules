@@ -44,13 +44,14 @@ describe('Safe4337Mock', () => {
       })
       const operationHash = await validator.getOperationHash(
         safeAddress,
-        operation.callData,
         operation.nonce,
-        operation.preVerificationGas,
-        operation.verificationGasLimit,
+        operation.callData,
         operation.callGasLimit,
+        operation.verificationGasLimit,
+        operation.preVerificationGas,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
+        operation.paymasterAndData,
         operation.validAfter,
         operation.validUntil,
       )
@@ -75,7 +76,7 @@ describe('Safe4337Mock', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
+      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
     })
@@ -95,7 +96,7 @@ describe('Safe4337Mock', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeAddress: await safe.getAddress(), safeOp, signature })
+      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('Execute UserOp with fee payment', entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.499999'))
     })

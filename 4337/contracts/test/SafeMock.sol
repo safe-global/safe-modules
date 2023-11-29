@@ -102,7 +102,7 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeOp(address safe,uint256 nonce,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     constructor(address entryPoint) SafeMock(entryPoint) {}
@@ -171,31 +171,32 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     function getOperationHash(
         address safe,
-        bytes calldata callData,
         uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
+        bytes memory callData,
         uint256 callGasLimit,
+        uint256 verificationGasLimit,
+        uint256 preVerificationGas,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        bytes memory paymasterAndData,
         uint48 validAfter,
         uint48 validUntil
-    ) external view returns (bytes32) {
-        return
-            keccak256(
-                _getOperationData(
-                    safe,
-                    callData,
-                    nonce,
-                    preVerificationGas,
-                    verificationGasLimit,
-                    callGasLimit,
-                    maxFeePerGas,
-                    maxPriorityFeePerGas,
-                    validAfter,
-                    validUntil
-                )
-            );
+    ) external view returns (bytes32 operationHash) {
+        operationHash = keccak256(
+            _getOperationData(
+                safe,
+                nonce,
+                callData,
+                callGasLimit,
+                verificationGasLimit,
+                preVerificationGas,
+                maxFeePerGas,
+                maxPriorityFeePerGas,
+                paymasterAndData,
+                validAfter,
+                validUntil
+            )
+        );
     }
 
     function chainId() public view returns (uint256) {
@@ -208,14 +209,15 @@ contract Safe4337Mock is SafeMock, IAccount {
         uint48 validAfter = uint48(bytes6(userOp.signature[:6]));
         uint48 validUntil = uint48(bytes6(userOp.signature[6:12]));
         bytes memory operationData = _getOperationData(
-            payable(userOp.sender),
-            userOp.callData,
+            userOp.sender,
             userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
+            userOp.callData,
             userOp.callGasLimit,
+            userOp.verificationGasLimit,
+            userOp.preVerificationGas,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
+            userOp.paymasterAndData,
             validAfter,
             validUntil
         );
@@ -224,47 +226,40 @@ contract Safe4337Mock is SafeMock, IAccount {
         checkSignatures(operationHash, operationData, userOp.signature[12:]);
     }
 
-    /// @dev Returns the bytes that are hashed to be signed by owners.
-    /// @param safe Safe address
-    /// @param callData Call data
-    /// @param nonce Nonce of the operation
-    /// @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification)
-    /// @param verificationGasLimit Gas required for verification
-    /// @param callGasLimit Gas available during the execution of the call
-    /// @param maxFeePerGas Max fee per gas
-    /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param validAfter The timestamp the operation is valid from.
-    /// @param validUntil The timestamp the operation is valid until.
-    /// @return Operation data
     function _getOperationData(
         address safe,
-        bytes calldata callData,
         uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
+        bytes memory callData,
         uint256 callGasLimit,
+        uint256 verificationGasLimit,
+        uint256 preVerificationGas,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        bytes memory paymasterAndData,
         uint48 validAfter,
         uint48 validUntil
-    ) internal view returns (bytes memory) {
-        bytes32 safeOperationHash = keccak256(
-            abi.encode(
-                SAFE_OP_TYPEHASH,
-                safe,
-                keccak256(callData),
-                nonce,
-                preVerificationGas,
-                verificationGasLimit,
-                callGasLimit,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                validAfter,
-                validUntil,
-                SUPPORTED_ENTRYPOINT
+    ) internal view returns (bytes memory operationData) {
+        operationData = abi.encodePacked(
+            bytes1(0x19),
+            bytes1(0x01),
+            domainSeparator(),
+            keccak256(
+                abi.encode(
+                    SAFE_OP_TYPEHASH,
+                    safe,
+                    nonce,
+                    keccak256(callData),
+                    callGasLimit,
+                    verificationGasLimit,
+                    preVerificationGas,
+                    maxFeePerGas,
+                    maxPriorityFeePerGas,
+                    keccak256(paymasterAndData),
+                    validAfter,
+                    validUntil,
+                    SUPPORTED_ENTRYPOINT
+                )
             )
         );
-
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash);
     }
 }

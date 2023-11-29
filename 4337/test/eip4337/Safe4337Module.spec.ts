@@ -51,14 +51,15 @@ describe('Safe4337Module', () => {
         validUntil,
       })
       const operationHash = await safeModule.getOperationHash(
-        safeAddress,
-        operation.callData,
+        operation.safe,
         operation.nonce,
-        operation.preVerificationGas,
-        operation.verificationGasLimit,
+        operation.callData,
         operation.callGasLimit,
+        operation.verificationGasLimit,
+        operation.preVerificationGas,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
+        operation.paymasterAndData,
         operation.validAfter,
         operation.validUntil,
       )
@@ -82,7 +83,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })
@@ -109,7 +109,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })
@@ -127,7 +126,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })
@@ -157,7 +155,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)], validAfter, validUntil)
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })

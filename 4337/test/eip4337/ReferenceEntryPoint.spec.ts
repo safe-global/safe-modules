@@ -79,7 +79,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
         )
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildUserOperationFromSafeUserOperation({
-          safeAddress: safe.address,
           safeOp,
           signature,
           initCode: nonce === 0 ? safe.getInitCode() : '0x',
@@ -131,7 +130,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
           validUntil,
         )
         return buildUserOperationFromSafeUserOperation({
-          safeAddress: safe.address,
           safeOp,
           signature,
           initCode: nonce === 0 ? safe.getInitCode() : '0x',
@@ -205,7 +203,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       ],
     )
     const userOp = buildUserOperationFromSafeUserOperation({
-      safeAddress: daughterSafe.address,
       safeOp,
       signature,
       initCode: daughterSafe.getInitCode(),
