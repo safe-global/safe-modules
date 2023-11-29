@@ -194,34 +194,36 @@ contract Safe4337Mock is SafeMock, IAccount {
             signatures = sig[12:];
         }
 
-        {
-            UserOperation calldata _userOp = userOp;
-            uint256 _validAfter;
-            uint256 _validUntil;
+        operationData = abi.encodePacked(
+            bytes1(0x19),
+            bytes1(0x01),
+            domainSeparator(),
+            _getSafeOpStructHash(validAfter, validUntil, userOp)
+        );
+    }
 
-            operationData = abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
-                domainSeparator(),
-                keccak256(
-                    abi.encode(
-                        SAFE_OP_TYPEHASH,
-                        _userOp.sender,
-                        _userOp.nonce,
-                        keccak256(_userOp.initCode),
-                        keccak256(_userOp.callData),
-                        _userOp.callGasLimit,
-                        _userOp.verificationGasLimit,
-                        _userOp.preVerificationGas,
-                        _userOp.maxFeePerGas,
-                        _userOp.maxPriorityFeePerGas,
-                        keccak256(_userOp.paymasterAndData),
-                        _validAfter,
-                        _validUntil,
-                        SUPPORTED_ENTRYPOINT
-                    )
-                )
-            );
-        }
+    function _getSafeOpStructHash(
+        uint48 validAfter,
+        uint48 validUntil,
+        UserOperation calldata userOp
+    ) private view returns (bytes32 structHash) {
+        structHash = keccak256(
+            abi.encode(
+                SAFE_OP_TYPEHASH,
+                userOp.sender,
+                userOp.nonce,
+                keccak256(userOp.initCode),
+                keccak256(userOp.callData),
+                userOp.callGasLimit,
+                userOp.verificationGasLimit,
+                userOp.preVerificationGas,
+                userOp.maxFeePerGas,
+                userOp.maxPriorityFeePerGas,
+                keccak256(userOp.paymasterAndData),
+                // validAfter,
+                // validUntil,
+                SUPPORTED_ENTRYPOINT
+            )
+        );
     }
 }

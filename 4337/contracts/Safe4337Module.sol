@@ -180,33 +180,35 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         // the `signature` bytes. Note that even `initCode` needs to be represented in the operation data, otherwise
         // it can be replaced with a more expensive initialization that would charge the user additional fees.
         {
-            // User assembly to work around "stack too deep" errors.
-            UserOperation calldata _userOp = userOp;
-            uint256 _validAfter = validAfter;
-            uint256 _validUntil = validUntil;
+            bytes32 structHash;
+            bytes32 typeHash = SAFE_OP_TYPEHASH;
+            bytes32 initCodeHash = keccak256(userOp.initCode);
+            bytes32 callDataHash = keccak256(userOp.callData);
+            bytes32 paymasterAndDataHash = keccak256(userOp.paymasterAndData);
+            address entryPoint = SUPPORTED_ENTRYPOINT;
+
+            // Use assembly to work around Solidity "stack too deep" errors.
+            // solhint-disable-next-line no-inline-assembly
+            assembly ("memory-safe") {
+                let ptr := mload(0x40)
+
+                mstore(ptr, typeHash)
+                calldatacopy(add(ptr, 32), userOp, 384)
+                mstore(add(ptr, 96), initCodeHash)
+                mstore(add(ptr, 128), callDataHash)
+                mstore(add(ptr, 320), paymasterAndDataHash)
+                mstore(add(ptr, 352), validAfter)
+                mstore(add(ptr, 384), validUntil)
+                mstore(add(ptr, 416), entryPoint)
+
+                structHash:= keccak256(ptr, 448)
+            }
 
             operationData = abi.encodePacked(
                 bytes1(0x19),
                 bytes1(0x01),
                 domainSeparator(),
-                keccak256(
-                    abi.encode(
-                        SAFE_OP_TYPEHASH,
-                        _userOp.sender,
-                        _userOp.nonce,
-                        keccak256(_userOp.initCode),
-                        keccak256(_userOp.callData),
-                        _userOp.callGasLimit,
-                        _userOp.verificationGasLimit,
-                        _userOp.preVerificationGas,
-                        _userOp.maxFeePerGas,
-                        _userOp.maxPriorityFeePerGas,
-                        keccak256(_userOp.paymasterAndData),
-                        _validAfter,
-                        _validUntil,
-                        SUPPORTED_ENTRYPOINT
-                    )
-                )
+                structHash
             );
         }
     }
