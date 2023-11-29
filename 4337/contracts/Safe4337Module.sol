@@ -212,4 +212,93 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             );
         }
     }
+
+    /*
+    function _getSafeOpLessAssembly(
+        UserOperation calldata userOp
+    ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
+        {
+            bytes calldata sig = userOp.signature;
+            validAfter = uint48(bytes6(sig[0:6]));
+            validUntil = uint48(bytes6(sig[6:12]));
+            signatures = sig[12:];
+        }
+
+        // It is important that **all** user operation fields are represented in the `SafeOp` data somehow, to prevent
+        // user operations from being submitted that do not fully respect the user preferences. The only exception are
+        // the `signature` bytes. Note that even `initCode` needs to be represented in the operation data, otherwise
+        // it can be replaced with a more expensive initialization that would charge the user additional fees.
+        {
+            bytes32[14] memory structData;
+            unchecked {
+                structData[0] = SAFE_OP_TYPEHASH;
+                structData[1] = bytes32(uint256(uint160(userOp.sender)));
+                structData[2] = bytes32(userOp.nonce);
+                structData[3] = keccak256(userOp.initCode);
+                structData[4] = keccak256(userOp.callData);
+                structData[5] = bytes32(userOp.callGasLimit);
+                structData[6] = bytes32(userOp.verificationGasLimit);
+                structData[7] = bytes32(userOp.preVerificationGas);
+                structData[8] = bytes32(userOp.maxFeePerGas);
+                structData[9] = bytes32(userOp.maxPriorityFeePerGas);
+                structData[10] = keccak256(userOp.paymasterAndData);
+                structData[11] = bytes32(uint256(validAfter));
+                structData[12] = bytes32(uint256(validUntil));
+                structData[13] = bytes32(uint256(uint160(SUPPORTED_ENTRYPOINT)));
+            }
+
+            bytes32 structHash;
+            assembly ("memory-safe") {
+                structHash := keccak256(structData, 448)
+            }
+
+            operationData = abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                domainSeparator(),
+                structHash
+            );
+        }
+    }
+
+    function _getSafeOpThisShouldWork(
+        UserOperation calldata userOp
+    ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
+        {
+            bytes calldata sig = userOp.signature;
+            validAfter = uint48(bytes6(sig[0:6]));
+            validUntil = uint48(bytes6(sig[6:12]));
+            signatures = sig[12:];
+        }
+
+        {
+            UserOperation calldata _userOp = userOp;
+            uint48 _validAfter = validAfter;
+            uint48 _validUntil = validUntil;
+            operationData = abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                domainSeparator(),
+                keccak256(
+                    abi.encode(
+                        SAFE_OP_TYPEHASH,
+                        _userOp.sender,
+                        _userOp.nonce,
+                        keccak256(_userOp.initCode),
+                        keccak256(_userOp.callData),
+                        _userOp.callGasLimit,
+                        _userOp.verificationGasLimit,
+                        _userOp.preVerificationGas,
+                        _userOp.maxFeePerGas,
+                        _userOp.maxPriorityFeePerGas,
+                        keccak256(_userOp.paymasterAndData),
+                        _validAfter,
+                        _validUntil,
+                        SUPPORTED_ENTRYPOINT
+                    )
+                )
+            );
+        }
+    }
+    */
 }

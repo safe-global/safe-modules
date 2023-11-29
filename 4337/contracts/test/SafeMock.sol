@@ -194,36 +194,37 @@ contract Safe4337Mock is SafeMock, IAccount {
             signatures = sig[12:];
         }
 
-        operationData = abi.encodePacked(
-            bytes1(0x19),
-            bytes1(0x01),
-            domainSeparator(),
-            _getSafeOpStructHash(validAfter, validUntil, userOp)
-        );
-    }
+        {
+            bytes32 structHash;
+            bytes32 typeHash = SAFE_OP_TYPEHASH;
+            bytes32 initCodeHash = keccak256(userOp.initCode);
+            bytes32 callDataHash = keccak256(userOp.callData);
+            bytes32 paymasterAndDataHash = keccak256(userOp.paymasterAndData);
+            address entryPoint = SUPPORTED_ENTRYPOINT;
 
-    function _getSafeOpStructHash(
-        uint48 validAfter,
-        uint48 validUntil,
-        UserOperation calldata userOp
-    ) private view returns (bytes32 structHash) {
-        structHash = keccak256(
-            abi.encode(
-                SAFE_OP_TYPEHASH,
-                userOp.sender,
-                userOp.nonce,
-                keccak256(userOp.initCode),
-                keccak256(userOp.callData),
-                userOp.callGasLimit,
-                userOp.verificationGasLimit,
-                userOp.preVerificationGas,
-                userOp.maxFeePerGas,
-                userOp.maxPriorityFeePerGas,
-                keccak256(userOp.paymasterAndData),
-                // validAfter,
-                // validUntil,
-                SUPPORTED_ENTRYPOINT
-            )
-        );
+            // Use assembly to work around Solidity "stack too deep" errors.
+            // solhint-disable-next-line no-inline-assembly
+            assembly ("memory-safe") {
+                let ptr := mload(0x40)
+
+                mstore(ptr, typeHash)
+                calldatacopy(add(ptr, 32), userOp, 384)
+                mstore(add(ptr, 96), initCodeHash)
+                mstore(add(ptr, 128), callDataHash)
+                mstore(add(ptr, 320), paymasterAndDataHash)
+                mstore(add(ptr, 352), validAfter)
+                mstore(add(ptr, 384), validUntil)
+                mstore(add(ptr, 416), entryPoint)
+
+                structHash:= keccak256(ptr, 448)
+            }
+
+            operationData = abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                domainSeparator(),
+                structHash
+            );
+        }
     }
 }
