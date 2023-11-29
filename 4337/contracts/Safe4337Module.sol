@@ -26,6 +26,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice The keccak256 hash of the EIP-712 SafeOp struct, representing the structure of a User Operation for Safe.
      *  {address} safe - The address of the safe on which the operation is performed.
      *  {uint256} nonce - A unique number associated with the user operation, preventing replay attacks by ensuring each operation is unique.
+     *  {bytes} initCode - The packed encoding of a factory address and its factory-specific data for creating a new Safe account.
      *  {bytes} callData - The bytes representing the data of the function call to be executed.
      *  {uint256} callGasLimit - The maximum amount of gas allowed for executing the function call.
      *  {uint256} verificationGasLimit - The maximum amount of gas allowed for the verification process.
@@ -40,7 +41,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      */
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,uint256 nonce,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     address public immutable SUPPORTED_ENTRYPOINT;
@@ -130,48 +131,13 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     // TODO(nlodell): @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes.
 
     /**
-     * @dev Returns the 32-byte Safe operation hash to be signed by owners.
-     * @param safe Safe address.
-     * @param nonce Nonce of the operation.
-     * @param callData Call data.
-     * @param callGasLimit Gas available during the execution of the call.
-     * @param verificationGasLimit Gas required for verification.
-     * @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification).
-     * @param maxFeePerGas Max fee per gas.
-     * @param maxPriorityFeePerGas Max priority fee per gas.
-     * @param paymasterAndData The paymaster address and data that will sponsor the user operation.
-     * @param validAfter The timestamp the operation is valid from.
-     * @param validUntil The timestamp the operation is valid until.
+     * @dev Returns the 32-byte Safe operation hash to be signed by owners for the specified ERC-4337 user operation.
+     * @param userOp The ERC-4337 user operation.
      * @return operationHash Operation hash.
      */
-    function getOperationHash(
-        address safe,
-        uint256 nonce,
-        bytes memory callData,
-        uint256 callGasLimit,
-        uint256 verificationGasLimit,
-        uint256 preVerificationGas,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        bytes memory paymasterAndData,
-        uint48 validAfter,
-        uint48 validUntil
-    ) external view returns (bytes32 operationHash) {
-        operationHash = keccak256(
-            _getOperationData(
-                safe,
-                nonce,
-                callData,
-                callGasLimit,
-                verificationGasLimit,
-                preVerificationGas,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                paymasterAndData,
-                validAfter,
-                validUntil
-            )
-        );
+    function getOperationHash(UserOperation calldata userOp) external view returns (bytes32 operationHash) {
+        (bytes memory operationData, , , ) = _getSafeOp(userOp);
+        operationHash = keccak256(operationData);
     }
 
     /**
@@ -180,23 +146,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @return validationData An integer indicating the result of the validation.
      */
     function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
-        (uint48 validAfter, uint48 validUntil, bytes calldata signature) = _splitSignatureData(userOp.signature);
-        bytes memory operationData = _getOperationData(
-            userOp.sender,
-            userOp.nonce,
-            userOp.callData,
-            userOp.callGasLimit,
-            userOp.verificationGasLimit,
-            userOp.preVerificationGas,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            userOp.paymasterAndData,
-            validAfter,
-            validUntil
-        );
+        (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
         bytes32 operationHash = keccak256(operationData);
 
-        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, operationData, signature) {
+        try ISafe(payable(userOp.sender)).checkSignatures(operationHash, operationData, signatures) {
             // The timestamps are validated by the entry point, therefore we will not check them again
             validationData = _packValidationData(false, validUntil, validAfter);
         } catch {
@@ -205,73 +158,56 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @dev Returns the bytes to be hashed and signed by owners.
-     * @param safe Safe address.
-     * @param nonce Nonce of the operation.
-     * @param callData Call data.
-     * @param callGasLimit Gas available during the execution of the call.
-     * @param verificationGasLimit Gas required for verification.
-     * @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification).
-     * @param maxFeePerGas Max fee per gas.
-     * @param maxPriorityFeePerGas Max priority fee per gas.
-     * @param paymasterAndData The paymaster address and data that will sponsor the user operation.
-     * @param validAfter The timestamp the operation is valid from.
-     * @param validUntil The timestamp the operation is valid until.
-     * @return operationData Operation data bytes.
+     * @dev Decodes an ERC-4337 user operation and returns ERC-712 Safe operation bytes.
+     * @param userOp The ERC-4337 user operation.
+     * @return operationData Encoded operation data bytes.
+     * @return validAfter The timestamp the user operation is valid from.
+     * @return validUntil The timestamp the user operation is valid until.
+     * @return signatures The Safe signatures extracted from the user operation.
      */
-    function _getOperationData(
-        address safe,
-        uint256 nonce,
-        bytes memory callData,
-        uint256 callGasLimit,
-        uint256 verificationGasLimit,
-        uint256 preVerificationGas,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        bytes memory paymasterAndData,
-        uint48 validAfter,
-        uint48 validUntil
-    ) internal view returns (bytes memory operationData) {
+    function _getSafeOp(
+        UserOperation calldata userOp
+    ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
+        {
+            bytes calldata sig = userOp.signature;
+            validAfter = uint48(bytes6(sig[0:6]));
+            validUntil = uint48(bytes6(sig[6:12]));
+            signatures = sig[12:];
+        }
+
         // It is important that **all** user operation fields are represented in the `SafeOp` data somehow, to prevent
         // user operations from being submitted that do not fully respect the user preferences. The only exception are
         // the `signature` bytes. Note that even `initCode` needs to be represented in the operation data, otherwise
         // it can be replaced with a more expensive initialization that would charge the user additional fees.
-        operationData = abi.encodePacked(
-            bytes1(0x19),
-            bytes1(0x01),
-            domainSeparator(),
-            keccak256(
-                abi.encode(
-                    SAFE_OP_TYPEHASH,
-                    safe,
-                    nonce,
-                    keccak256(callData),
-                    callGasLimit,
-                    verificationGasLimit,
-                    preVerificationGas,
-                    maxFeePerGas,
-                    maxPriorityFeePerGas,
-                    keccak256(paymasterAndData),
-                    validAfter,
-                    validUntil,
-                    SUPPORTED_ENTRYPOINT
-                )
-            )
-        );
-    }
+        {
+            // Work around "stack too deep" errors.
+            UserOperation calldata _userOp = userOp;
+            uint256 _validAfter;
+            uint256 _validUntil;
 
-    /**
-     * @dev Splits the user operation signature bytes into its parts.
-     * @param signatureData The user operation signature.
-     * @return validAfter The timestamp the user operation is valid from.
-     * @return validUntil The timestamp the user operation is valid until.
-     * @return signature The actual signature for the Safe user operation.
-     */
-    function _splitSignatureData(
-        bytes calldata signatureData
-    ) internal pure returns (uint48 validAfter, uint48 validUntil, bytes calldata signature) {
-        validAfter = uint48(bytes6(signatureData[0:6]));
-        validUntil = uint48(bytes6(signatureData[6:12]));
-        signature = signatureData[12:];
+            operationData = abi.encodePacked(
+                bytes1(0x19),
+                bytes1(0x01),
+                domainSeparator(),
+                keccak256(
+                    abi.encode(
+                        SAFE_OP_TYPEHASH,
+                        _userOp.sender,
+                        _userOp.nonce,
+                        keccak256(_userOp.initCode),
+                        keccak256(_userOp.callData),
+                        _userOp.callGasLimit,
+                        _userOp.verificationGasLimit,
+                        _userOp.preVerificationGas,
+                        _userOp.maxFeePerGas,
+                        _userOp.maxPriorityFeePerGas,
+                        keccak256(_userOp.paymasterAndData),
+                        _validAfter,
+                        _validUntil,
+                        SUPPORTED_ENTRYPOINT
+                    )
+                )
+            );
+        }
     }
 }

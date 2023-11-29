@@ -22,6 +22,7 @@ export interface UserOperation {
 export interface SafeUserOperation {
   safe: string
   nonce: BigNumberish
+  initCode: BytesLike
   callData: BytesLike
   callGasLimit: BigNumberish
   verificationGasLimit: BigNumberish
@@ -38,6 +39,7 @@ export const EIP712_SAFE_OPERATION_TYPE = {
   SafeOp: [
     { type: 'address', name: 'safe' },
     { type: 'uint256', name: 'nonce' },
+    { type: 'bytes', name: 'initCode' },
     { type: 'bytes', name: 'callData' },
     { type: 'uint256', name: 'callGasLimit' },
     { type: 'uint256', name: 'verificationGasLimit' },
@@ -78,6 +80,7 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
   return {
     safe: template.safe,
     nonce: template.nonce,
+    initCode: template.initCode || '0x',
     callData: template.callData || '0x',
     callGasLimit: template.callGasLimit || 2000000,
     verificationGasLimit: template.verificationGasLimit || 500000,
@@ -103,8 +106,6 @@ export const buildSafeUserOpTransaction = (
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
-  validAfter?: BigNumberish,
-  validUntil?: BigNumberish,
   overrides?: Partial<SafeUserOperation>,
 ): SafeUserOperation => {
   const abi = [
@@ -121,8 +122,6 @@ export const buildSafeUserOpTransaction = (
         callData,
         nonce,
         entryPoint,
-        validAfter,
-        validUntil,
       },
       overrides,
     ),
@@ -139,8 +138,6 @@ export const buildSafeUserOpContractCall = async (
   entryPoint: string,
   delegateCall?: boolean,
   bubbleUpRevertReason?: boolean,
-  validAfter?: BigNumberish,
-  validUntil?: BigNumberish,
   overrides?: Partial<SafeUserOperation>,
 ): Promise<SafeUserOperation> => {
   const data = contract.interface.encodeFunctionData(method, params)
@@ -154,8 +151,6 @@ export const buildSafeUserOpContractCall = async (
     entryPoint,
     delegateCall,
     bubbleUpRevertReason,
-    validAfter,
-    validUntil,
     overrides,
   )
 }
@@ -163,16 +158,14 @@ export const buildSafeUserOpContractCall = async (
 export const buildUserOperationFromSafeUserOperation = ({
   safeOp,
   signature,
-  initCode = '0x',
 }: {
   safeOp: SafeUserOperation
   signature: string
-  initCode?: string
 }): UserOperation => {
   return {
     sender: safeOp.safe,
-    initCode,
     nonce: ethers.toBeHex(safeOp.nonce),
+    initCode: ethers.hexlify(safeOp.initCode),
     callData: ethers.hexlify(safeOp.callData),
     callGasLimit: ethers.toBeHex(safeOp.callGasLimit),
     verificationGasLimit: ethers.toBeHex(safeOp.verificationGasLimit),

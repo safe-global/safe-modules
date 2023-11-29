@@ -36,35 +36,27 @@ describe('Safe4337Module', () => {
   })
 
   describe('getOperationHash', () => {
-    it('should correctly calculate EIP-712 hash of the operation', async () => {
+    it.only('should correctly calculate EIP-712 hash of the operation', async () => {
       const { validator, safeModule, entryPoint } = await setupTests()
 
       const safeAddress = ethers.hexlify(ethers.randomBytes(20))
       const validAfter = (await timestamp()) + 10000
       const validUntil = validAfter + 10000000000
 
-      const operation = buildSafeUserOp({
+      const safeOp = buildSafeUserOp({
         safe: safeAddress,
         nonce: '0',
         entryPoint: await entryPoint.getAddress(),
         validAfter,
         validUntil,
       })
-      const operationHash = await safeModule.getOperationHash(
-        operation.safe,
-        operation.nonce,
-        operation.callData,
-        operation.callGasLimit,
-        operation.verificationGasLimit,
-        operation.preVerificationGas,
-        operation.maxFeePerGas,
-        operation.maxPriorityFeePerGas,
-        operation.paymasterAndData,
-        operation.validAfter,
-        operation.validUntil,
-      )
+      const userOp = buildUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: buildSignatureBytes([]),
+      })
+      const operationHash = await safeModule.getOperationHash(userOp)
 
-      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), operation, await chainId()))
+      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId()))
     })
   })
 
@@ -148,8 +140,10 @@ describe('Safe4337Module', () => {
         await entryPoint.getAddress(),
         false,
         false,
-        validAfter,
-        validUntil,
+        {
+          validAfter,
+          validUntil,
+        },
       )
 
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())

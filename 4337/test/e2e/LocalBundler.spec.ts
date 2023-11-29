@@ -64,8 +64,11 @@ describe('E2E - Local Bundler', () => {
       await entryPoint.getAddress(),
       false,
       false,
-      validAfter,
-      validUntil,
+      {
+        initCode: safe.getInitCode(),
+        validAfter,
+        validUntil,
+      },
     )
     const signature = buildSignatureBytes(
       [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
@@ -75,7 +78,6 @@ describe('E2E - Local Bundler', () => {
     const userOp = buildUserOperationFromSafeUserOperation({
       safeOp,
       signature,
-      initCode: safe.getInitCode(),
     })
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
@@ -108,7 +110,6 @@ describe('E2E - Local Bundler', () => {
     const userOp = buildUserOperationFromSafeUserOperation({
       safeOp,
       signature,
-      initCode: '0x',
     })
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
