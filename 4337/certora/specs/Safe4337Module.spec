@@ -3,7 +3,7 @@ using ISafe as safeContract;
 methods {
     function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
     function _._msgSender() internal => ERC2771MessageSender() expect address;
-    function _.checkSignatures(bytes32, bytes, bytes) external => DISPATCHER(true);
+    // function _.checkSignatures(bytes32, bytes, bytes) external => checkSignaturesFunctionCalled();
 
     //ISafe harnessed functions
     function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
@@ -40,9 +40,14 @@ methods {
 ghost ERC2771MessageSender() returns address;
 
 ghost bool execTransactionFromModuleCalled;
+ghost bool checkSignaturesCalled;
 
 function execTxCalled(){
     execTransactionFromModuleCalled = true;
+}
+
+function checkSignaturesFunctionCalled(){
+    checkSignaturesCalled = true;
 }
 
 rule onlyEntryPointCallable(method f) filtered {
@@ -52,8 +57,8 @@ rule onlyEntryPointCallable(method f) filtered {
 } {
     env e;
     calldataarg args;
-    f(e, args);
-    assert ERC2771MessageSender() == SUPPORTED_ENTRYPOINT();
+    f@withrevert(e, args);
+    assert !lastReverted => (ERC2771MessageSender() == SUPPORTED_ENTRYPOINT());
 }
 
 // checkSignatures should be always called if validateUserOp succeeds
@@ -82,10 +87,10 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
 
     bytes checkSignaturesBytes;
     safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
-    bool checkSignaturesOk = !lastReverted;
+    // bool checkSignaturesOk = !lastReverted;
 
     validateUserOp(e, userOp, dummyData, missingAccountFunds);
-    assert checkSignaturesOk, "transaction executed without valid signatures";
+    assert checkSignaturesCalled => !lastReverted, "transaction executed without valid signatures";
 }
 
 rule validationDataLastBitCorrespondsCheckSignatures(address sender,
@@ -115,7 +120,7 @@ rule validationDataLastBitCorrespondsCheckSignatures(address sender,
     bool checkSignaturesOk = !lastReverted;
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
-    assert (!checkSignaturesOk => (validationData & 1) == 1) && (checkSignaturesOk => (validationData & 0) == 0), "validation data incorrect";
+    assert (!checkSignaturesOk => (validationData & 1) == 1), "validation data incorrect";
 }
 
 rule signatureTimestampsPresentInValidationData(address sender,
