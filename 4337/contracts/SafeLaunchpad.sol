@@ -12,6 +12,8 @@ import {ISafe} from "./interfaces/Safe.sol";
  * @dev The is intended to be set as a Safe proxy's implementation for ERC-4337 user operation that deploys the account.
  */
 contract SafeLaunchpad is IAccount, SafeStorage {
+    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
+
     // keccak256("SafeLaunchpad.initHash") - 1
     uint256 private constant INIT_HASH_SLOT = 0xfe39743d5545ae15debabf80f9f105bde089b80c1c186c0fa4eb78349b870a8b;
 
@@ -37,11 +39,12 @@ contract SafeLaunchpad is IAccount, SafeStorage {
     /**
      * @notice The keccak256 hash of the EIP-712 SafeInitOp struct, representing an ERC-4337 user operation with initialization.
      *  {SafeInit} init - The initialization parameters.
+     *  {address} safe - The address of the safe on which the operation is performed.
      *  {bytes} callData - The post-initialization call data to self.
      */
     bytes32 private constant SAFE_INIT_OP_TYPEHASH =
         keccak256(
-            "SafeInitOp(SafeInit init,bytes callData)SafeInit(address singleton,bytes initializer,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeInitOp(SafeInit init,address safe,bytes callData)SafeInit(address singleton,bytes initializer,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     address private immutable SELF;
@@ -120,10 +123,10 @@ contract SafeLaunchpad is IAccount, SafeStorage {
             require(success);
         }
 
-        ISafe safe = ISafe(payable(address(this)));
-        bytes memory operationData = _computeInitOpData(safe, callData);
+        bytes memory operationData = _computeInitOpData(callData);
         bytes32 operationHash = keccak256(operationData);
 
+        ISafe safe = ISafe(payable(address(this)));
         try safe.checkSignatures(operationHash, operationData, signature) {
             (bool success, bytes memory returnData) = address(this).delegatecall(callData);
             if (!success) {
@@ -134,6 +137,10 @@ contract SafeLaunchpad is IAccount, SafeStorage {
         } catch {
             // do not revert, maybe emit an event?
         }
+    }
+
+    function _domainSeparator() internal view returns (bytes32) {
+        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, SELF));
     }
 
     function _computeInitHash(
@@ -167,10 +174,9 @@ contract SafeLaunchpad is IAccount, SafeStorage {
             );
     }
 
-    function _computeInitOpData(ISafe safe, bytes memory callData) public view returns (bytes memory) {
-        bytes32 safeOperationHash = keccak256(abi.encode(SAFE_INIT_OP_TYPEHASH, _initHash(), keccak256(callData)));
-        bytes32 domainSeparator = safe.domainSeparator();
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator, safeOperationHash);
+    function _computeInitOpData(bytes memory callData) public view returns (bytes memory) {
+        bytes32 safeOperationHash = keccak256(abi.encode(SAFE_INIT_OP_TYPEHASH, _initHash(), this, keccak256(callData)));
+        return abi.encodePacked(bytes1(0x19), bytes1(0x01), _domainSeparator(), safeOperationHash);
     }
 
     function _splitUserOpSignatureData(bytes calldata signatureData) internal pure returns (uint48 validAfter, uint48 validUntil) {
