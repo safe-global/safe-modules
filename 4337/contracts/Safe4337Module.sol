@@ -155,10 +155,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
     }
 
-    // TODO(nlodell): @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes.
-
     /**
      * @notice Returns the 32-byte Safe operation hash to be signed by owners for the specified ERC-4337 user operation.
+     * @dev The Safe operation timestamps are pre-pended to the signature bytes as `abi.encodePacked(validAfter, validUntil, signatures)`.
      * @param userOp The ERC-4337 user operation.
      * @return operationHash Operation hash.
      */
@@ -193,6 +192,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     function _getSafeOp(
         UserOperation calldata userOp
     ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
+        // Extract additional Safe operation fields from the user operation signature which is encoded as:
+        // `abi.encodePacked(validAfter, validUntil, signatures)`
         {
             bytes calldata sig = userOp.signature;
             validAfter = uint48(bytes6(sig[0:6]));
