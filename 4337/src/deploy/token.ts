@@ -14,6 +14,13 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
     log: true,
     deterministicDeployment: true,
   })
+
+  await deploy('TestERC721Token', {
+    from: deployer,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
 }
 
 export default deploy
