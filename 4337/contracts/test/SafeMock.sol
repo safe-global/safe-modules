@@ -7,16 +7,13 @@ import {UserOperation, UserOperationLib} from "@account-abstraction/contracts/in
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 
 contract SafeMock {
-    address public immutable SUPPORTED_ENTRYPOINT;
-
     address public singleton;
     address public owner;
     address public fallbackHandler;
     mapping(address => bool) public modules;
 
-    constructor(address entryPoint) {
+    constructor() {
         owner = msg.sender;
-        SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
     function setup(address _fallbackHandler, address _module) public virtual {
@@ -24,7 +21,6 @@ contract SafeMock {
         owner = msg.sender;
         fallbackHandler = _fallbackHandler;
         modules[_module] = true;
-        modules[SUPPORTED_ENTRYPOINT] = true;
     }
 
     function _signatureSplit(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
@@ -99,6 +95,24 @@ contract SafeMock {
 
 contract Safe4337Mock is SafeMock, IAccount {
     using UserOperationLib for UserOperation;
+
+    struct SafeOpFields {
+        bytes32 typeHash;
+        address safe;
+        uint256 nonce;
+        bytes32 initCodeHash;
+        bytes32 callDataHash;
+        uint256 callGasLimit;
+        uint256 verificationGasLimit;
+        uint256 preVerificationGas;
+        uint256 maxFeePerGas;
+        uint256 maxPriorityFeePerGas;
+        bytes32 paymasterAndDataHash;
+        uint48 validAfter;
+        uint48 validUntil;
+        address entryPoint;
+    }
+
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     bytes32 private constant SAFE_OP_TYPEHASH =
@@ -106,7 +120,11 @@ contract Safe4337Mock is SafeMock, IAccount {
             "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
-    constructor(address entryPoint) SafeMock(entryPoint) {}
+    address public immutable SUPPORTED_ENTRYPOINT;
+
+    constructor(address entryPoint) {
+        SUPPORTED_ENTRYPOINT = entryPoint;
+    }
 
     /**
      * @notice Validates the call is initiated by the entry point.
@@ -174,16 +192,25 @@ contract Safe4337Mock is SafeMock, IAccount {
         return block.chainid;
     }
 
-    /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
-    /// @param userOp User operation struct
+    /**
+     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
+     * @param userOp User operation struct.
+     * @return validationData An integer indicating the result of the validation.
+     */
     function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
-        bytes32 operationHash = keccak256(operationData);
-
-        checkSignatures(operationHash, operationData, signatures);
+        checkSignatures(keccak256(operationData), operationData, signatures);
         validationData = _packValidationData(false, validUntil, validAfter);
     }
 
+    /**
+     * @dev Decodes an ERC-4337 user operation and returns ERC-712 Safe operation bytes.
+     * @param userOp The ERC-4337 user operation.
+     * @return operationData Encoded operation data bytes.
+     * @return validAfter The timestamp the user operation is valid from.
+     * @return validUntil The timestamp the user operation is valid until.
+     * @return signatures The Safe signatures extracted from the user operation.
+     */
     function _getSafeOp(
         UserOperation calldata userOp
     ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
@@ -194,37 +221,37 @@ contract Safe4337Mock is SafeMock, IAccount {
             signatures = sig[12:];
         }
 
+        // It is important that **all** user operation fields are represented in the `SafeOp` data somehow, to prevent
+        // user operations from being submitted that do not fully respect the user preferences. The only exception are
+        // the `signature` bytes. Note that even `initCode` needs to be represented in the operation data, otherwise
+        // it can be replaced with a more expensive initialization that would charge the user additional fees.
         {
-            bytes32 structHash;
-            bytes32 typeHash = SAFE_OP_TYPEHASH;
-            bytes32 initCodeHash = keccak256(userOp.initCode);
-            bytes32 callDataHash = keccak256(userOp.callData);
-            bytes32 paymasterAndDataHash = keccak256(userOp.paymasterAndData);
-            address entryPoint = SUPPORTED_ENTRYPOINT;
+            // In order to work around Solidity "stack too deep" errors related to too many stack variables, manually
+            // encode the `SafeOp` fields into a memory `struct`.
+            SafeOpFields memory fields = SafeOpFields({
+                typeHash: SAFE_OP_TYPEHASH,
+                safe: userOp.sender,
+                nonce: userOp.nonce,
+                initCodeHash: keccak256(userOp.initCode),
+                callDataHash: keccak256(userOp.callData),
+                callGasLimit: userOp.callGasLimit,
+                verificationGasLimit: userOp.verificationGasLimit,
+                preVerificationGas: userOp.preVerificationGas,
+                maxFeePerGas: userOp.maxFeePerGas,
+                maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+                paymasterAndDataHash: keccak256(userOp.paymasterAndData),
+                validAfter: validAfter,
+                validUntil: validUntil,
+                entryPoint: SUPPORTED_ENTRYPOINT
+            });
 
-            // Use assembly to work around Solidity "stack too deep" errors.
+            bytes32 structHash;
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
-                let ptr := mload(0x40)
-
-                mstore(ptr, typeHash)
-                calldatacopy(add(ptr, 32), userOp, 384)
-                mstore(add(ptr, 96), initCodeHash)
-                mstore(add(ptr, 128), callDataHash)
-                mstore(add(ptr, 320), paymasterAndDataHash)
-                mstore(add(ptr, 352), validAfter)
-                mstore(add(ptr, 384), validUntil)
-                mstore(add(ptr, 416), entryPoint)
-
-                structHash:= keccak256(ptr, 448)
+                structHash := keccak256(fields, 448)
             }
 
-            operationData = abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
-                domainSeparator(),
-                structHash
-            );
+            operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), structHash);
         }
     }
 }
