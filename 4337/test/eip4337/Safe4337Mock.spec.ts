@@ -2,13 +2,8 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getEntryPoint, get4337TestSafe } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
-import {
-  buildSafeUserOp,
-  buildSafeUserOpTransaction,
-  buildUserOperationFromSafeUserOperation,
-  calculateSafeOperationHash,
-} from '../../src/utils/userOp'
-import { chainId, timestamp } from '../utils/encoding'
+import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
+import { chainId } from '../utils/encoding'
 
 describe('Safe4337Mock', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {

@@ -70,11 +70,7 @@ describe('E2E - Local Bundler', () => {
         validUntil,
       },
     )
-    const signature = buildSignatureBytes(
-      [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
-      validAfter,
-      validUntil,
-    )
+    const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
     const userOp = buildUserOperationFromSafeUserOperation({
       safeOp,
       signature,

@@ -173,7 +173,7 @@ export const buildUserOperationFromSafeUserOperation = ({
     maxFeePerGas: ethers.toBeHex(safeOp.maxFeePerGas),
     maxPriorityFeePerGas: ethers.toBeHex(safeOp.maxPriorityFeePerGas),
     paymasterAndData: ethers.hexlify(safeOp.paymasterAndData),
-    signature,
+    signature: ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]),
   }
 }
 

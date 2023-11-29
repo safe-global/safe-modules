@@ -131,11 +131,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
             validUntil,
           },
         )
-        const signature = buildSignatureBytes(
-          [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
-          validAfter,
-          validUntil,
-        )
+        const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildUserOperationFromSafeUserOperation({
           safeOp,
           signature,

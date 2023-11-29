@@ -36,7 +36,7 @@ describe('Safe4337Module', () => {
   })
 
   describe('getOperationHash', () => {
-    it.only('should correctly calculate EIP-712 hash of the operation', async () => {
+    it('should correctly calculate EIP-712 hash of the operation', async () => {
       const { validator, safeModule, entryPoint } = await setupTests()
 
       const safeAddress = ethers.hexlify(ethers.randomBytes(20))
@@ -52,7 +52,7 @@ describe('Safe4337Module', () => {
       })
       const userOp = buildUserOperationFromSafeUserOperation({
         safeOp,
-        signature: buildSignatureBytes([]),
+        signature: '0x',
       })
       const operationHash = await safeModule.getOperationHash(userOp)
 
@@ -147,7 +147,7 @@ describe('Safe4337Module', () => {
       )
 
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
-      const signature = buildSignatureBytes([await signHash(user, safeOpHash)], validAfter, validUntil)
+      const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
         safeOp,
         signature,

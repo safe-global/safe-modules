@@ -180,10 +180,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         // the `signature` bytes. Note that even `initCode` needs to be represented in the operation data, otherwise
         // it can be replaced with a more expensive initialization that would charge the user additional fees.
         {
-            // Work around "stack too deep" errors.
+            // User assembly to work around "stack too deep" errors.
             UserOperation calldata _userOp = userOp;
-            uint256 _validAfter;
-            uint256 _validUntil;
+            uint256 _validAfter = validAfter;
+            uint256 _validUntil = validUntil;
 
             operationData = abi.encodePacked(
                 bytes1(0x19),
