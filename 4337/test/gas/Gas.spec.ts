@@ -3,7 +3,7 @@ import { deployments, ethers } from 'hardhat'
 import { getSafe4337Module, getEntryPoint, getFactory, getAddModulesLib, getSafeL2Singleton } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
-import { chainId, timestamp } from '../utils/encoding'
+import { chainId } from '../utils/encoding'
 import { SafeConfig, Safe4337, GlobalConfig, buildInitParamsForConfig } from '../../src/utils/safe'
 
 describe('Gas Metering', () => {
@@ -165,7 +165,7 @@ describe('Gas Metering', () => {
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
-      let safeOp = buildSafeUserOpTransaction(
+      const safeOp = buildSafeUserOpTransaction(
         safe.address,
         await erc721Token.getAddress(),
         0,
@@ -173,8 +173,8 @@ describe('Gas Metering', () => {
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
       )
-      let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      let userOp = buildUserOperationFromSafeUserOperation({
+      const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+      const userOp = buildUserOperationFromSafeUserOperation({
         safeAddress: safe.address,
         safeOp,
         signature,
