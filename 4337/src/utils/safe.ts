@@ -180,7 +180,6 @@ export class Safe4337Operation {
     const signerAddress = await signer.getAddress()
     if (validSigners.indexOf(signerAddress) < 0) throw Error('Invalid Signer')
     if (this.signatures.findIndex((signature) => signature.signer === signerAddress) >= 0) throw Error('Already signed')
-    const initCode = (await this.safe.isDeployed()) ? '0x' : this.safe.getInitCode()
     this.signatures.push({
       signer: signerAddress,
       data: await signer.signTypedData(
