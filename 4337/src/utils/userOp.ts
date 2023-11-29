@@ -28,11 +28,11 @@ export interface SafeUserOperation {
   callGasLimit: string
   maxFeePerGas: string
   maxPriorityFeePerGas: string
+  paymasterAndData: string
   entryPoint: string
 }
 
 export const EIP712_SAFE_OPERATION_TYPE = {
-  // "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
   SafeOp: [
     { type: 'address', name: 'safe' },
     { type: 'bytes', name: 'callData' },
@@ -42,6 +42,7 @@ export const EIP712_SAFE_OPERATION_TYPE = {
     { type: 'uint256', name: 'callGasLimit' },
     { type: 'uint256', name: 'maxFeePerGas' },
     { type: 'uint256', name: 'maxPriorityFeePerGas' },
+    { type: 'bytes', name: 'paymasterAndData' },
     { type: 'address', name: 'entryPoint' },
   ],
 }
@@ -80,6 +81,7 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
     callGasLimit: template.callGasLimit || '2000000',
     maxFeePerGas: template.maxFeePerGas || '10000000000',
     maxPriorityFeePerGas: template.maxPriorityFeePerGas || '10000000000',
+    paymasterAndData: template.paymasterAndData || '0x',
   }
 }
 

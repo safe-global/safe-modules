@@ -34,7 +34,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,address entryPoint)"
+            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,address entryPoint)"
         );
 
     address public immutable SUPPORTED_ENTRYPOINT;
@@ -128,6 +128,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param callGasLimit Gas available during the execution of the call.
      * @param maxFeePerGas Max fee per gas.
      * @param maxPriorityFeePerGas Max priority fee per gas.
+     * @param paymasterAndData Paymaster address and data.
      * @param entryPoint Address of the entry point.
      * @return Operation hash.
      */
@@ -140,6 +141,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        bytes memory paymasterAndData,
         address entryPoint
     ) external view returns (bytes32) {
         return
@@ -153,6 +155,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     callGasLimit,
                     maxFeePerGas,
                     maxPriorityFeePerGas,
+                    paymasterAndData,
                     entryPoint
                 )
             );
@@ -174,6 +177,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             userOp.callGasLimit,
             userOp.maxFeePerGas,
             userOp.maxPriorityFeePerGas,
+            userOp.paymasterAndData,
             entryPoint
         );
         bytes32 operationHash = keccak256(operationData);
@@ -195,6 +199,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param callGasLimit Gas available during the execution of the call.
      * @param maxFeePerGas Max fee per gas.
      * @param maxPriorityFeePerGas Max priority fee per gas.
+     * @param paymasterAndData Paymaster address and data.
      * @param entryPoint Address of the entry point.
      * @return Operation bytes.
      */
@@ -207,6 +212,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 callGasLimit,
         uint256 maxFeePerGas,
         uint256 maxPriorityFeePerGas,
+        bytes memory paymasterAndData,
         address entryPoint
     ) internal view returns (bytes memory) {
         bytes32 safeOperationHash = keccak256(
@@ -220,6 +226,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 callGasLimit,
                 maxFeePerGas,
                 maxPriorityFeePerGas,
+                keccak256(paymasterAndData),
                 entryPoint
             )
         );

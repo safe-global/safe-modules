@@ -41,6 +41,7 @@ describe('Safe4337Module - Existing Safe', () => {
         operation.callGasLimit,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
+        operation.paymasterAndData,
         operation.entryPoint,
       )
 

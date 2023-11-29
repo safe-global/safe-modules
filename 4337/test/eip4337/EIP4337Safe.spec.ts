@@ -41,6 +41,7 @@ describe('Safe4337Mock', () => {
         operation.callGasLimit,
         operation.maxFeePerGas,
         operation.maxPriorityFeePerGas,
+        operation.paymasterAndData,
         operation.entryPoint,
       )
 
