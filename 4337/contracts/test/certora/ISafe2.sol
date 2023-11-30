@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 import "@safe-global/safe-contracts/contracts/Safe.sol";
-contract ISafe2 {
+contract ISafe2 is Safe {
    
     function getSignatureTimestamps(bytes calldata signature) external returns (uint96 slice) {
         slice = uint96(bytes12(signature[:12]));
@@ -21,9 +21,5 @@ contract ISafe2 {
 
     function getSignatureTimestampsFromValidationData(uint256 validationData) external pure returns (uint96) {
         return uint96(validationData >> 160);
-    }
-
-    function checkSignatures(bytes32, bytes memory, bytes memory) public view {
-        revert();
     }
 }

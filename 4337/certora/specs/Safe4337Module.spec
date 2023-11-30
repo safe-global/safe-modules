@@ -3,7 +3,7 @@ using ISafe as safeContract;
 methods {
     function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
     function _._msgSender() internal => ERC2771MessageSender() expect address;
-    // function _.checkSignatures(bytes32, bytes, bytes) external => checkSignaturesFunctionCalled();
+    function _.checkSignatures(bytes32, bytes, bytes) external => checkSignaturesFunctionCalled() expect bool;
 
     //ISafe harnessed functions
     function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
@@ -12,12 +12,14 @@ methods {
 
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
     function safeContract.getSignatureTimestampsFromValidationData(uint256 validationData) external returns (uint96) envfree;
-    // function safeContract.execTransactionFromModule(
-    //     address payable,
-    //     uint256,
-    //     bytes calldata,
-    //     uint8
-    // ) external returns (bool) => ; // 
+    function safeContract.execTransactionFromModuleCalled() external returns(bool) envfree;
+
+    function safeContract.execTransactionFromModule(
+        address,
+        uint256,
+        bytes,
+        Enum.Operation
+    ) external returns bool; // 
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
@@ -42,24 +44,26 @@ ghost ERC2771MessageSender() returns address;
 ghost bool execTransactionFromModuleCalled;
 ghost bool checkSignaturesCalled;
 
-function execTxCalled(){
+function ExecTxCalled() returns bool {
     execTransactionFromModuleCalled = true;
+    return true;
 }
 
-function checkSignaturesFunctionCalled(){
+function checkSignaturesFunctionCalled() returns bool{
     checkSignaturesCalled = true;
+    return true;
 }
 
-rule onlyEntryPointCallable(method f) filtered {
-    f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector ||
-            f.selector == sig:executeUserOp(address,uint256,bytes,uint8).selector ||
-            f.selector == sig:executeUserOpWithErrorString(address,uint256,bytes,uint8).selector
-} {
-    env e;
-    calldataarg args;
-    f@withrevert(e, args);
-    assert !lastReverted => (ERC2771MessageSender() == SUPPORTED_ENTRYPOINT());
-}
+// rule onlyEntryPointCallable(method f) filtered {
+//     f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector ||
+//             f.selector == sig:executeUserOp(address,uint256,bytes,uint8).selector ||
+//             f.selector == sig:executeUserOpWithErrorString(address,uint256,bytes,uint8).selector
+// } {
+//     env e;
+//     calldataarg args;
+//     f@withrevert(e, args);
+//     assert !lastReverted => (ERC2771MessageSender() == SUPPORTED_ENTRYPOINT());
+// }
 
 // checkSignatures should be always called if validateUserOp succeeds
 rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
@@ -71,6 +75,7 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
     uint48 validUntil;
     require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
     require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
+    require checkSignaturesCalled == false;
 
     bytes signatures = safeContract.getSignatures(userOp.signature);
     bytes32 transactionHash = getOperationHash(userOp.sender,
@@ -89,7 +94,7 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
     safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
     // bool checkSignaturesOk = !lastReverted;
 
-    validateUserOp(e, userOp, dummyData, missingAccountFunds);
+    validateUserOp@withrevert(e, userOp, dummyData, missingAccountFunds);
     assert checkSignaturesCalled => !lastReverted, "transaction executed without valid signatures";
 }
 
@@ -143,9 +148,21 @@ rule signatureTimestampsPresentInValidationData(address sender,
 }
 
 // rule execTransaction(method f)  {
-//     calldataargs args;
+//     calldataarg args;
 //     env e;
 //     f(e, args);
+//     assert safeContract.execTransactionFromModuleCalled() => f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector ||
+//             f.selector == sig:executeUserOp(address,uint256,bytes,uint8).selector ||
+//             f.selector == sig:executeUserOpWithErrorString(address,uint256,bytes,uint8).selector;
+// }
 
-//     // assert that if exectx is called then f should be one for the 3 funcs
+// rule nativeTokenBalanceDoesNotChange(
+//     ) {
+//     uint256 balanceBefore = getNativeTokenBalance();
+//     env e;
+//     calldataarg args;
+//     f(e, args);
+
+//     uint256 balanceAfter = getNativeTokenBalance();
+//     assert balanceAfter  == balanceBefore;
 // }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 import "@safe-global/safe-contracts/contracts/Safe.sol";
-contract ISafe is Safe {
+contract ISafe3 is Safe {
     bool public execTransactionFromModuleCalled = false;
     constructor(
         address[] memory _owners,
@@ -63,4 +63,13 @@ contract ISafe is Safe {
         return uint96(validationData >> 160);
     }
 
+    function execTransactionFromModule(
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public override returns (bool success) {
+        execTransactionFromModuleCalled = true;
+        super.execTransactionFromModule(to, value, data, operation);
+    }
 }
