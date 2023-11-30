@@ -15,7 +15,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
     deterministicDeployment: true,
   })
 
-  await deploy('TestERC721Token', {
+  await deploy('XanderBlazeNFT', {
     from: deployer,
     args: [],
     log: true,

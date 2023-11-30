@@ -9,7 +9,7 @@ import { Safe4337 } from '../../src/utils/safe'
 describe('Gas Metering', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
-    const { HariWillibaldToken, TestERC721Token } = await deployments.run()
+    const { HariWillibaldToken, XanderBlazeNFT } = await deployments.run()
 
     const [user] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
@@ -28,7 +28,7 @@ describe('Gas Metering', () => {
       chainId: Number(await chainId()),
     })
     const erc20Token = await ethers.getContractAt('HariWillibaldToken', HariWillibaldToken.address)
-    const erc721Token = await ethers.getContractAt('TestERC721Token', TestERC721Token.address)
+    const erc721Token = await ethers.getContractAt('XanderBlazeNFT', XanderBlazeNFT.address)
 
     return {
       user,
