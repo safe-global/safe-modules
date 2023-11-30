@@ -63,11 +63,14 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
      */
     bytes32 private constant SAFE_INIT_OP_TYPEHASH =
         keccak256(
-            "SafeInitOp(SafeInit init,address safe,bytes callData)SafeInit(address singleton,bytes initializer,uint256 nonce,bytes24 initCodeFunction,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeInitOp(SafeInit init,address safe,bytes callData)SafeInit(address singleton,bytes initializer,uint256 nonce,bytes initCodeTemplate,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     address private immutable SELF;
     address public immutable SUPPORTED_ENTRYPOINT;
+
+    event LaunchpadExecutionFailed();
+    event LaunchpadInvalidSignature();
 
     constructor(address entryPoint) {
         require(entryPoint != address(0), "Invalid entry point");
@@ -132,24 +135,24 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
             require(success);
         }
 
+        // DO NOT REVERT HERE. This is a known limitation of this setup, where it is possible to spend gas money on the
+        // initial deployment of the Safe launchpad in case a malicious bundler or mempool would replace the user
+        // interaction with one whose signatures are not valid. There are two mitigations to this:
+        // 1. Introduce a tiered signing scheme (extra hard...)
+        // 2. Tie the Safe creation address to an on-chain interaction (easy, but it means that your Safe address
+        //    depends on your first action)
+        //
+        // Note that we explicitely do not revert so that the user can only be fooled once, and also to not pay for the
+        // deferred Safe setup more than once.
+
         bytes memory operationData = _getSafeInitOpData(callData);
         try ISafe(payable(address(this))).checkSignatures(keccak256(operationData), operationData, signature) {
-            (bool success, bytes memory returnData) = address(this).delegatecall(callData);
+            (bool success, ) = address(this).delegatecall(callData);
             if (!success) {
-                // solhint-disable-next-line no-inline-assembly
-                assembly ("memory-safe") {
-                    revert(add(returnData, 0x20), mload(returnData))
-                }
+                emit LaunchpadExecutionFailed();
             }
         } catch {
-            // DO NOT REVERT HERE. This is a known limitation of this setup, where it is possible to spend gas money
-            // on the initial deployment of the Safe launchpad in case a malicious bundler or mempool would replace
-            // the user interaction with one whose signatures are not valid. There are two mitigations to this:
-            // 1. Introduce a tiered signing scheme (extra hard...)
-            // 2. Tie the Safe creation address to an on-chain interaction (easy, but it means that your Safe address
-            //    depends on your first action)
-            //
-            // Note that we explicitely do not revert so that the user can only be fooled once.
+            emit LaunchpadInvalidSignature();
         }
 
         _setInitHash(0);

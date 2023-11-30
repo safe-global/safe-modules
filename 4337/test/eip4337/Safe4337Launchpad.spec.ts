@@ -43,7 +43,7 @@ describe('Safe4337Launchpad', () => {
   }
 
   describe('executeUserOp', () => {
-    it.only('should execute the user op with deferred initialization', async () => {
+    it('should execute the user op with deferred initialization', async () => {
       const { user, proxyFactory, addModulesLib, module, entryPoint, launchpad, singleton, multiSend, signerFactory } = await setupTests()
 
       const key = BigInt(ethers.id('1'))
@@ -150,10 +150,7 @@ describe('Safe4337Launchpad', () => {
           safeInit.singleton,
           safeInit.initializer,
           safeInitOp.callData,
-          ethers.solidityPacked(
-            ['uint256', 'uint256', 'uint8', 'uint256', 'uint256'],
-            [signer, 65, 0, 32, key ^ BigInt(safeInitOpHash)],
-          ),
+          ethers.solidityPacked(['uint256', 'uint256', 'uint8', 'uint256', 'uint256'], [signer, 65, 0, 32, key ^ BigInt(safeInitOpHash)]),
         ]),
         callGasLimit: safeInit.callGasLimit,
         verificationGasLimit: safeInit.verificationGasLimit,
@@ -175,6 +172,9 @@ describe('Safe4337Launchpad', () => {
       await entryPoint.executeUserOp(userOp, 0)
       expect(await ethers.provider.getBalance(safe)).to.equal(ethers.parseEther('0.5'))
       expect(await ethers.provider.getCode(safe)).to.not.equal('0x')
+
+      const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))
+      expect(implementation).to.equal(singleton.target)
     })
   })
 })
