@@ -49,8 +49,6 @@ describe('Safe4337Launchpad', () => {
       const key = BigInt(ethers.id('1'))
       const signer = await signerFactory.getSigner(key)
 
-      const domain = { verifyingContract: await launchpad.getAddress(), chainId: await chainId() }
-
       const safeInit = {
         singleton: singleton.target,
         initializer: singleton.interface.encodeFunctionData('setup', [
@@ -140,7 +138,11 @@ describe('Safe4337Launchpad', () => {
           { type: 'bytes', name: 'callData' },
         ],
       }
-      const safeInitOpHash = ethers.TypedDataEncoder.hash(domain, safeInitOpTypes, safeInitOp)
+      const safeInitOpHash = ethers.TypedDataEncoder.hash(
+        { verifyingContract: await launchpad.getAddress(), chainId: await chainId() },
+        safeInitOpTypes,
+        safeInitOp,
+      )
 
       const userOp = {
         sender: safe,
