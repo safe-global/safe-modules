@@ -21,26 +21,6 @@ import {ISafe} from "./interfaces/Safe.sol";
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     /**
-     * @dev A structure used internally for computing the EIP-712 signing message for a Safe operation.
-     */
-    struct SafeOpFields {
-        bytes32 typeHash;
-        address safe;
-        uint256 nonce;
-        bytes32 initCodeHash;
-        bytes32 callDataHash;
-        uint256 callGasLimit;
-        uint256 verificationGasLimit;
-        uint256 preVerificationGas;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
-        bytes32 paymasterAndDataHash;
-        uint48 validAfter;
-        uint48 validUntil;
-        address entryPoint;
-    }
-
-    /**
      * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
      */
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
@@ -66,6 +46,26 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         keccak256(
             "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
+
+    /**
+     * @dev A structure used internally for manually encoding a Safe operation for when computing the EIP-712 struct hash.
+     */
+    struct EncodedSafeOpStruct {
+        bytes32 typeHash;
+        address safe;
+        uint256 nonce;
+        bytes32 initCodeHash;
+        bytes32 callDataHash;
+        uint256 callGasLimit;
+        uint256 verificationGasLimit;
+        uint256 preVerificationGas;
+        uint256 maxFeePerGas;
+        uint256 maxPriorityFeePerGas;
+        bytes32 paymasterAndDataHash;
+        uint48 validAfter;
+        uint48 validUntil;
+        address entryPoint;
+    }
 
     /**
      * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
@@ -207,8 +207,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         // it can be replaced with a more expensive initialization that would charge the user additional fees.
         {
             // In order to work around Solidity "stack too deep" errors related to too many stack variables, manually
-            // encode the `SafeOp` fields into a memory `struct` for computing the EIP-712 struct-hash.
-            SafeOpFields memory structFields = SafeOpFields({
+            // encode the `SafeOp` fields into a memory `struct` for computing the EIP-712 struct-hash. This works
+            // because the `EncodedSafeOpStruct` struct has no "dynamic" fields so its memory layout is identical to the
+            // result of `abi.encode`-ing the individual fields.
+            EncodedSafeOpStruct memory encodedSafeOp = EncodedSafeOpStruct({
                 typeHash: SAFE_OP_TYPEHASH,
                 safe: userOp.sender,
                 nonce: userOp.nonce,
@@ -224,13 +226,17 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 validUntil: validUntil,
                 entryPoint: SUPPORTED_ENTRYPOINT
             });
-            bytes32 structHash;
+
+            bytes32 safeOpStructHash;
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
-                structHash := keccak256(structFields, 448)
+                // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
+                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 14
+                // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
+                safeOpStructHash := keccak256(encodedSafeOp, 448)
             }
 
-            operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), structHash);
+            operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);
         }
     }
 }
