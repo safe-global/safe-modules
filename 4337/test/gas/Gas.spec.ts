@@ -4,7 +4,7 @@ import { getSafe4337Module, getEntryPoint, getFactory, getAddModulesLib, getSafe
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
-import { SafeConfig, Safe4337, GlobalConfig, buildInitParamsForConfig } from '../../src/utils/safe'
+import { Safe4337 } from '../../src/utils/safe'
 
 describe('Gas Metering', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {

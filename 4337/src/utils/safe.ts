@@ -53,7 +53,7 @@ const calculateProxyAddress = (globalConfig: GlobalConfig, inititalizer: string,
   return ethers.getCreate2Address(globalConfig.proxyFactory, salt, ethers.keccak256(deploymentCode))
 }
 
-export const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalConfig): { safeAddress: string; initCode: string } => {
+const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalConfig): { safeAddress: string; initCode: string } => {
   const initData = INTERFACES.encodeFunctionData('enableModules', [[globalConfig.erc4337module]])
   const setupData = INTERFACES.encodeFunctionData('setup', [
     safeConfig.signers,
