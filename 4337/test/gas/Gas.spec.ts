@@ -18,18 +18,23 @@ describe('Gas Metering', () => {
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
     const addModulesLib = await getAddModulesLib()
     const singleton = await getSafeL2Singleton()
+    const safe = await Safe4337.withSigner(user.address, {
+      safeSingleton: await singleton.getAddress(),
+      entryPoint: await entryPoint.getAddress(),
+      erc4337module: await module.getAddress(),
+      proxyFactory: await proxyFactory.getAddress(),
+      addModulesLib: await addModulesLib.getAddress(),
+      proxyCreationCode,
+      chainId: Number(await chainId()),
+    })
     const erc20Token = await ethers.getContractAt('HariWillibaldToken', HariWillibaldToken.address)
     const erc721Token = await ethers.getContractAt('TestERC721Token', TestERC721Token.address)
 
     return {
       user,
       entryPoint,
-      module,
       validator: module,
-      proxyFactory,
-      proxyCreationCode,
-      addModulesLib,
-      singleton,
+      safe,
       erc20Token,
       erc721Token,
     }
@@ -37,27 +42,8 @@ describe('Gas Metering', () => {
 
   describe('Safe Deployment + Enabling 4337 Module', () => {
     it('Safe with 4337 Module Deployment', async () => {
-      const { user, entryPoint, module, validator, proxyFactory, proxyCreationCode, addModulesLib, singleton } = await setupTests()
+      const { user, entryPoint, validator, safe } = await setupTests()
 
-      const safeConfig: SafeConfig = {
-        signers: [user.address],
-        threshold: 1,
-        nonce: 0,
-      }
-
-      const globalConfig: GlobalConfig = {
-        safeSingleton: await singleton.getAddress(),
-        entryPoint: await entryPoint.getAddress(),
-        erc4337module: await module.getAddress(),
-        proxyFactory: await proxyFactory.getAddress(),
-        proxyCreationCode,
-        addModulesLib: await addModulesLib.getAddress(),
-        chainId: Number(await chainId()),
-      }
-
-      const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
-
-      const safe = new Safe4337(initParams.safeAddress, globalConfig, safeConfig)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
       const safeOp = buildSafeUserOpTransaction(
@@ -86,28 +72,8 @@ describe('Gas Metering', () => {
 
   describe('Safe Deployment + Enabling 4337 Module + Token Operations', () => {
     it('Safe with 4337 Module Deployment + ERC20 Token Transfer', async () => {
-      const { user, entryPoint, module, validator, proxyFactory, proxyCreationCode, addModulesLib, singleton, erc20Token } =
-        await setupTests()
+      const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
 
-      const safeConfig: SafeConfig = {
-        signers: [user.address],
-        threshold: 1,
-        nonce: 0,
-      }
-
-      const globalConfig: GlobalConfig = {
-        safeSingleton: await singleton.getAddress(),
-        entryPoint: await entryPoint.getAddress(),
-        erc4337module: await module.getAddress(),
-        proxyFactory: await proxyFactory.getAddress(),
-        proxyCreationCode,
-        addModulesLib: await addModulesLib.getAddress(),
-        chainId: Number(await chainId()),
-      }
-
-      const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
-
-      const safe = new Safe4337(initParams.safeAddress, globalConfig, safeConfig)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
       expect(await erc20Token.balanceOf(safe.address)).to.equal(0)
@@ -138,30 +104,8 @@ describe('Gas Metering', () => {
     })
 
     it('Safe with 4337 Module Deployment + ERC721 Token Minting', async () => {
-      const { user, entryPoint, module, validator, proxyFactory, proxyCreationCode, addModulesLib, singleton, erc721Token } =
-        await setupTests()
-
-      const safeConfig: SafeConfig = {
-        signers: [user.address],
-        threshold: 1,
-        nonce: 0,
-      }
-
-      const globalConfig: GlobalConfig = {
-        safeSingleton: await singleton.getAddress(),
-        entryPoint: await entryPoint.getAddress(),
-        erc4337module: await module.getAddress(),
-        proxyFactory: await proxyFactory.getAddress(),
-        proxyCreationCode,
-        addModulesLib: await addModulesLib.getAddress(),
-        chainId: Number(await chainId()),
-      }
-
-      const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
-
+      const { user, entryPoint, validator, safe, erc721Token } = await setupTests()
       const tokenID = 1
-
-      const safe = new Safe4337(initParams.safeAddress, globalConfig, safeConfig)
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
@@ -191,28 +135,7 @@ describe('Gas Metering', () => {
 
   describe('Token Operations Only', () => {
     it('Safe with 4337 Module ERC20 Token Transfer', async () => {
-      const { user, entryPoint, module, validator, proxyFactory, proxyCreationCode, addModulesLib, singleton, erc20Token } =
-        await setupTests()
-
-      const safeConfig: SafeConfig = {
-        signers: [user.address],
-        threshold: 1,
-        nonce: 0,
-      }
-
-      const globalConfig: GlobalConfig = {
-        safeSingleton: await singleton.getAddress(),
-        entryPoint: await entryPoint.getAddress(),
-        erc4337module: await module.getAddress(),
-        proxyFactory: await proxyFactory.getAddress(),
-        proxyCreationCode,
-        addModulesLib: await addModulesLib.getAddress(),
-        chainId: Number(await chainId()),
-      }
-
-      const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
-
-      const safe = new Safe4337(initParams.safeAddress, globalConfig, safeConfig)
+      const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
@@ -262,28 +185,7 @@ describe('Gas Metering', () => {
     })
 
     it('Safe with 4337 Module ERC721 Token Minting', async () => {
-      const { user, entryPoint, module, validator, proxyFactory, proxyCreationCode, addModulesLib, singleton, erc721Token } =
-        await setupTests()
-
-      const safeConfig: SafeConfig = {
-        signers: [user.address],
-        threshold: 1,
-        nonce: 0,
-      }
-
-      const globalConfig: GlobalConfig = {
-        safeSingleton: await singleton.getAddress(),
-        entryPoint: await entryPoint.getAddress(),
-        erc4337module: await module.getAddress(),
-        proxyFactory: await proxyFactory.getAddress(),
-        proxyCreationCode,
-        addModulesLib: await addModulesLib.getAddress(),
-        chainId: Number(await chainId()),
-      }
-
-      const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
-
-      const safe = new Safe4337(initParams.safeAddress, globalConfig, safeConfig)
+      const { user, entryPoint, validator, safe, erc721Token } = await setupTests()
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
