@@ -22,7 +22,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
      *  {address} singleton - The singleton to evolve into during the setup.
      *  {bytes} initializer - The setup initializer bytes.
      *  {uint256} nonce - A unique number associated with the user operation, preventing replay attacks by ensuring each operation is unique.
-     *  {bytes24} initCodeFunction - The function pointer (i.e. factory address and 4-byte selector) used to create this Safe account.
+     *  {bytes} initCodeTemplate - The packed encoding of a factory address and its factory-specific data for creating the Safe launchpad with the `initHash` parameter set to 0.
      *  {bytes} callData - The bytes representing the data of the function call to be executed.
      *  {uint256} callGasLimit - The maximum amount of gas allowed for executing the function call.
      *  {uint256} verificationGasLimit - The maximum amount of gas allowed for the verification process.
@@ -36,7 +36,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
      */
     bytes32 private constant SAFE_INIT_TYPEHASH =
         keccak256(
-            "SafeInit(address singleton,bytes initializer,uint256 nonce,bytes24 initCodeFunction,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeInit(address singleton,bytes initializer,uint256 nonce,bytes initCodeTemplate,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     struct EncodedSafeInitStruct {
@@ -44,7 +44,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
         address singleton;
         bytes32 initializerHash;
         uint256 nonce;
-        bytes24 initCodeFunction;
+        bytes32 initCodeTemplateHash;
         bytes32 callDataHash;
         uint256 callGasLimit;
         uint256 verificationGasLimit;
@@ -149,11 +149,26 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
     }
 
     function _getSafeInit(UserOperation calldata userOp) public view returns (bytes32 initHash, uint48 validAfter, uint48 validUntil) {
+        bytes memory initCodeTemplate = userOp.initCode;
         {
             bytes calldata sig = userOp.signature;
-            require(sig.length == 12, "Invalid user op signature");
+            require(sig.length == 16, "Invalid user op signature");
+
             validAfter = uint48(bytes6(sig[:6]));
-            validUntil = uint48(bytes6(sig[6:]));
+            validUntil = uint48(bytes6(sig[6:12]));
+
+            uint256 initHashOffset;
+            unchecked {
+                initHashOffset = uint256(uint32(bytes4(sig[12:]))) + 32;
+            }
+            require(initCodeTemplate.length >= initHashOffset, "Invalid user op init hash offset");
+
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                let initHashPtr := add(initCodeTemplate, initHashOffset)
+                initHash := mload(initHashPtr)
+                mstore(initHashPtr, 0)
+            }
         }
 
         address singleton;
@@ -173,7 +188,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
             singleton: singleton,
             initializerHash: initializerHash,
             nonce: userOp.nonce,
-            initCodeFunction: bytes24(userOp.initCode[:24]),
+            initCodeTemplateHash: keccak256(initCodeTemplate),
             callDataHash: keccak256(userOp.callData),
             callGasLimit: userOp.callGasLimit,
             verificationGasLimit: userOp.verificationGasLimit,
@@ -186,10 +201,12 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
             entryPoint: SUPPORTED_ENTRYPOINT
         });
 
+        bool initHashMatch;
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            initHash := keccak256(encodedSafeInit, 480)
+            initHashMatch := eq(initHash, keccak256(encodedSafeInit, 480))
         }
+        require(initHashMatch);
     }
 
     function _getSafeInitOpData(bytes memory callData) public view returns (bytes memory) {
