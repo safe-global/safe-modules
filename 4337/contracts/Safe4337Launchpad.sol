@@ -23,7 +23,6 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
      *  {bytes} initializer - The setup initializer bytes.
      *  {uint256} nonce - A unique number associated with the user operation, preventing replay attacks by ensuring each operation is unique.
      *  {bytes} initCodeTemplate - The packed encoding of a factory address and its factory-specific data for creating the Safe launchpad with the `initHash` parameter set to 0.
-     *  {bytes} callData - The bytes representing the data of the function call to be executed.
      *  {uint256} callGasLimit - The maximum amount of gas allowed for executing the function call.
      *  {uint256} verificationGasLimit - The maximum amount of gas allowed for the verification process.
      *  {uint256} preVerificationGas - The amount of gas allocated for pre-verification steps before executing the main operation.
@@ -36,7 +35,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
      */
     bytes32 private constant SAFE_INIT_TYPEHASH =
         keccak256(
-            "SafeInit(address singleton,bytes initializer,uint256 nonce,bytes initCodeTemplate,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeInit(address singleton,bytes initializer,uint256 nonce,bytes initCodeTemplate,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     struct EncodedSafeInitStruct {
@@ -45,7 +44,6 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
         bytes32 initializerHash;
         uint256 nonce;
         bytes32 initCodeTemplateHash;
-        bytes32 callDataHash;
         uint256 callGasLimit;
         uint256 verificationGasLimit;
         uint256 preVerificationGas;
@@ -65,7 +63,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
      */
     bytes32 private constant SAFE_INIT_OP_TYPEHASH =
         keccak256(
-            "SafeInitOp(SafeInit init,address safe,bytes callData)SafeInit(address singleton,bytes initializer,uint256 nonce,bytes24 initCodeFunction,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeInitOp(SafeInit init,address safe,bytes callData)SafeInit(address singleton,bytes initializer,uint256 nonce,bytes24 initCodeFunction,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
     address private immutable SELF;
@@ -88,12 +86,18 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
         _;
     }
 
+    receive() external payable {}
+
     function setup(bytes32 initHash, address to, bytes calldata preInit) external onlyProxy {
         _setInitHash(initHash);
         if (to != address(0)) {
             (bool success, ) = to.delegatecall(preInit);
             require(success, "Pre-initialization failed");
         }
+    }
+
+    function getInitHash(UserOperation calldata userOp) external view returns (bytes32 initHash) {
+        (initHash, , ) = _getSafeInit(userOp);
     }
 
     function validateUserOp(
@@ -138,7 +142,14 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
                 }
             }
         } catch {
-            // do not revert, maybe emit an event?
+            // DO NOT REVERT HERE. This is a known limitation of this setup, where it is possible to spend gas money
+            // on the initial deployment of the Safe launchpad in case a malicious bundler or mempool would replace
+            // the user interaction with one whose signatures are not valid. There are two mitigations to this:
+            // 1. Introduce a tiered signing scheme (extra hard...)
+            // 2. Tie the Safe creation address to an on-chain interaction (easy, but it means that your Safe address
+            //    depends on your first action)
+            //
+            // Note that we explicitely do not revert so that the user can only be fooled once.
         }
 
         _setInitHash(0);
@@ -159,7 +170,7 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
 
             uint256 initHashOffset;
             unchecked {
-                initHashOffset = uint256(uint32(bytes4(sig[12:]))) + 32;
+                initHashOffset = uint256(uint32(bytes4(sig[12:]))) + 52;
             }
             require(initCodeTemplate.length >= initHashOffset, "Invalid user op init hash offset");
 
@@ -189,7 +200,6 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
             initializerHash: initializerHash,
             nonce: userOp.nonce,
             initCodeTemplateHash: keccak256(initCodeTemplate),
-            callDataHash: keccak256(userOp.callData),
             callGasLimit: userOp.callGasLimit,
             verificationGasLimit: userOp.verificationGasLimit,
             preVerificationGas: userOp.preVerificationGas,
@@ -204,9 +214,9 @@ contract Safe4337Launchpad is IAccount, SafeStorage {
         bool initHashMatch;
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            initHashMatch := eq(initHash, keccak256(encodedSafeInit, 480))
+            initHashMatch := eq(initHash, keccak256(encodedSafeInit, 448))
         }
-        require(initHashMatch);
+        require(initHashMatch, "Invalid user op init hash");
     }
 
     function _getSafeInitOpData(bytes memory callData) public view returns (bytes memory) {
