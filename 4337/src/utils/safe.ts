@@ -24,11 +24,15 @@ const INTERFACES = new ethers.Interface([
 
 export interface OperationParams {
   nonce: bigint
+  initCode: string
   preVerificationGas: bigint
   verificationGasLimit: bigint
   callGasLimit: bigint
   maxFeePerGas: bigint
   maxPriorityFeePerGas: bigint
+  paymasterAndData: string
+  validAfter: bigint
+  validUntil: bigint
 }
 
 export interface GlobalConfig {
@@ -153,7 +157,6 @@ export class Safe4337Operation {
   }
 
   async userOperation(paymasterAndData = '0x'): Promise<UserOperation> {
-    const initCode = (await this.safe.isDeployed()) ? '0x' : this.safe.getInitCode()
     return {
       nonce: ethers.toBeHex(this.params.nonce),
       callData: actionCalldata(this.action),
@@ -162,10 +165,13 @@ export class Safe4337Operation {
       callGasLimit: ethers.toBeHex(this.params.callGasLimit),
       maxFeePerGas: ethers.toBeHex(this.params.maxFeePerGas),
       maxPriorityFeePerGas: ethers.toBeHex(this.params.maxPriorityFeePerGas),
-      initCode,
+      initCode: this.params.initCode,
       paymasterAndData,
       sender: this.safe.address,
-      signature: await this.encodedSignatures(),
+      signature: ethers.solidityPacked(
+        ['uint48', 'uint48', 'bytes'],
+        [this.params.validAfter, this.params.validUntil, await this.encodedSignatures()],
+      ),
     }
   }
 
@@ -227,6 +233,7 @@ export class Safe4337Operation {
 
     const params: OperationParams = {
       nonce,
+      initCode,
       maxFeePerGas: feeData.maxFeePerGas,
       maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
       // Add a small margin as some dataoverhead calculation is not always accurate
@@ -234,6 +241,9 @@ export class Safe4337Operation {
       // Add 20% to the gas limits to account for inaccurate estimations
       verificationGasLimit: (BigInt(estimates.verificationGasLimit) * 12n) / 10n,
       callGasLimit: (BigInt(estimates.callGasLimit) * 12n) / 10n,
+      validAfter: 0n,
+      validUntil: 0n,
+      paymasterAndData: '0x',
     }
     return new Safe4337Operation(safe, action, params, globalConfig)
   }

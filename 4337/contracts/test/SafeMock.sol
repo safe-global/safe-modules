@@ -4,18 +4,16 @@ pragma solidity >=0.8.0;
 
 import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {UserOperation, UserOperationLib} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 
 contract SafeMock {
-    address public immutable SUPPORTED_ENTRYPOINT;
-
     address public singleton;
     address public owner;
     address public fallbackHandler;
     mapping(address => bool) public modules;
 
-    constructor(address entryPoint) {
+    constructor() {
         owner = msg.sender;
-        SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
     function setup(address _fallbackHandler, address _module) public virtual {
@@ -23,7 +21,6 @@ contract SafeMock {
         owner = msg.sender;
         fallbackHandler = _fallbackHandler;
         modules[_module] = true;
-        modules[SUPPORTED_ENTRYPOINT] = true;
     }
 
     function _signatureSplit(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
@@ -98,14 +95,36 @@ contract SafeMock {
 
 contract Safe4337Mock is SafeMock, IAccount {
     using UserOperationLib for UserOperation;
+
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     bytes32 private constant SAFE_OP_TYPEHASH =
         keccak256(
-            "SafeOp(address safe,bytes callData,uint256 nonce,uint256 preVerificationGas,uint256 verificationGasLimit,uint256 callGasLimit,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,uint48 validAfter,uint48 validUntil,address entryPoint)"
+            "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
         );
 
-    constructor(address entryPoint) SafeMock(entryPoint) {}
+    struct EncodedSafeOpStruct {
+        bytes32 typeHash;
+        address safe;
+        uint256 nonce;
+        bytes32 initCodeHash;
+        bytes32 callDataHash;
+        uint256 callGasLimit;
+        uint256 verificationGasLimit;
+        uint256 preVerificationGas;
+        uint256 maxFeePerGas;
+        uint256 maxPriorityFeePerGas;
+        bytes32 paymasterAndDataHash;
+        uint48 validAfter;
+        uint48 validUntil;
+        address entryPoint;
+    }
+
+    address public immutable SUPPORTED_ENTRYPOINT;
+
+    constructor(address entryPoint) {
+        SUPPORTED_ENTRYPOINT = entryPoint;
+    }
 
     /**
      * @notice Validates the call is initiated by the entry point.
@@ -121,7 +140,7 @@ contract Safe4337Mock is SafeMock, IAccount {
         UserOperation calldata userOp,
         bytes32,
         uint256 missingAccountFunds
-    ) external onlySupportedEntryPoint returns (uint256) {
+    ) external onlySupportedEntryPoint returns (uint256 validationData) {
         // We check the execution function signature to make sure the entryPoint can't call any other function
         // and make sure the execution of the user operation is handled by the module
         require(
@@ -129,7 +148,7 @@ contract Safe4337Mock is SafeMock, IAccount {
             "Unsupported execution function id"
         );
 
-        _validateSignatures(userOp);
+        validationData = _validateSignatures(userOp);
 
         if (missingAccountFunds != 0) {
             (bool success, ) = SUPPORTED_ENTRYPOINT.call{value: missingAccountFunds}("");
@@ -169,102 +188,77 @@ contract Safe4337Mock is SafeMock, IAccount {
         return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
     }
 
-    function getOperationHash(
-        address safe,
-        bytes calldata callData,
-        uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
-        uint256 callGasLimit,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        uint48 validAfter,
-        uint48 validUntil
-    ) external view returns (bytes32) {
-        return
-            keccak256(
-                _getOperationData(
-                    safe,
-                    callData,
-                    nonce,
-                    preVerificationGas,
-                    verificationGasLimit,
-                    callGasLimit,
-                    maxFeePerGas,
-                    maxPriorityFeePerGas,
-                    validAfter,
-                    validUntil
-                )
-            );
-    }
-
     function chainId() public view returns (uint256) {
         return block.chainid;
     }
 
-    /// @dev Validates that the user operation is correctly signed. Users methods from Safe contract, reverts if signatures are invalid
-    /// @param userOp User operation struct
-    function _validateSignatures(UserOperation calldata userOp) internal view {
-        uint48 validAfter = uint48(bytes6(userOp.signature[:6]));
-        uint48 validUntil = uint48(bytes6(userOp.signature[6:12]));
-        bytes memory operationData = _getOperationData(
-            payable(userOp.sender),
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            validAfter,
-            validUntil
-        );
-        bytes32 operationHash = keccak256(operationData);
-
-        checkSignatures(operationHash, operationData, userOp.signature[12:]);
+    /**
+     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
+     * @param userOp User operation struct.
+     * @return validationData An integer indicating the result of the validation.
+     */
+    function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
+        (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
+        checkSignatures(keccak256(operationData), operationData, signatures);
+        validationData = _packValidationData(false, validUntil, validAfter);
     }
 
-    /// @dev Returns the bytes that are hashed to be signed by owners.
-    /// @param safe Safe address
-    /// @param callData Call data
-    /// @param nonce Nonce of the operation
-    /// @param preVerificationGas Gas required for pre-verification (e.g. for EOA signature verification)
-    /// @param verificationGasLimit Gas required for verification
-    /// @param callGasLimit Gas available during the execution of the call
-    /// @param maxFeePerGas Max fee per gas
-    /// @param maxPriorityFeePerGas Max priority fee per gas
-    /// @param validAfter The timestamp the operation is valid from.
-    /// @param validUntil The timestamp the operation is valid until.
-    /// @return Operation data
-    function _getOperationData(
-        address safe,
-        bytes calldata callData,
-        uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
-        uint256 callGasLimit,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        uint48 validAfter,
-        uint48 validUntil
-    ) internal view returns (bytes memory) {
-        bytes32 safeOperationHash = keccak256(
-            abi.encode(
-                SAFE_OP_TYPEHASH,
-                safe,
-                keccak256(callData),
-                nonce,
-                preVerificationGas,
-                verificationGasLimit,
-                callGasLimit,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                validAfter,
-                validUntil,
-                SUPPORTED_ENTRYPOINT
-            )
-        );
+    /**
+     * @dev Decodes an ERC-4337 user operation into a Safe operation.
+     * @param userOp The ERC-4337 user operation.
+     * @return operationData Encoded EIP-712 Safe operation data bytes used for signature verification.
+     * @return validAfter The timestamp the user operation is valid from.
+     * @return validUntil The timestamp the user operation is valid until.
+     * @return signatures The Safe owner signatures extracted from the user operation.
+     */
+    function _getSafeOp(
+        UserOperation calldata userOp
+    ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
+        // Extract additional Safe operation fields from the user operation signature which is encoded as:
+        // `abi.encodePacked(validAfter, validUntil, signatures)`
+        {
+            bytes calldata sig = userOp.signature;
+            validAfter = uint48(bytes6(sig[0:6]));
+            validUntil = uint48(bytes6(sig[6:12]));
+            signatures = sig[12:];
+        }
 
-        return abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOperationHash);
+        // It is important that **all** user operation fields are represented in the `SafeOp` data somehow, to prevent
+        // user operations from being submitted that do not fully respect the user preferences. The only exception is
+        // the `signature` bytes. Note that even `initCode` needs to be represented in the operation data, otherwise
+        // it can be replaced with a more expensive initialization that would charge the user additional fees.
+        {
+            // In order to work around Solidity "stack too deep" errors related to too many stack variables, manually
+            // encode the `SafeOp` fields into a memory `struct` for computing the EIP-712 struct-hash. This works
+            // because the `EncodedSafeOpStruct` struct has no "dynamic" fields so its memory layout is identical to the
+            // result of `abi.encode`-ing the individual fields.
+            EncodedSafeOpStruct memory encodedSafeOp = EncodedSafeOpStruct({
+                typeHash: SAFE_OP_TYPEHASH,
+                safe: userOp.sender,
+                nonce: userOp.nonce,
+                initCodeHash: keccak256(userOp.initCode),
+                callDataHash: keccak256(userOp.callData),
+                callGasLimit: userOp.callGasLimit,
+                verificationGasLimit: userOp.verificationGasLimit,
+                preVerificationGas: userOp.preVerificationGas,
+                maxFeePerGas: userOp.maxFeePerGas,
+                maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+                paymasterAndDataHash: keccak256(userOp.paymasterAndData),
+                validAfter: validAfter,
+                validUntil: validUntil,
+                entryPoint: SUPPORTED_ENTRYPOINT
+            });
+
+            bytes32 safeOpStructHash;
+            // solhint-disable-next-line no-inline-assembly
+            assembly ("memory-safe") {
+                // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
+                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 14
+                // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
+                safeOpStructHash := keccak256(encodedSafeOp, 448)
+            }
+
+            operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);
+        }
     }
 }

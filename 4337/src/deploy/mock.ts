@@ -14,7 +14,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
 
   await deploy('SafeMock', {
     from: deployer,
-    args: [entryPoint],
+    args: [],
     log: true,
     deterministicDeployment: true,
   })
