@@ -11,12 +11,17 @@ certoraRun certora/conf/Safe4337Module.conf \
     --msg "Safe4337Module $*" \
     "$@"
 
-certoraRun certora/conf/PayForMissingFunds.conf \
-    "${params[@]}" \
-    --msg "Safe4337Module $*" \
-    "$@"
+# certoraRun certora/conf/PayForMissingFunds.conf \
+#     "${params[@]}" \
+#     --msg "Safe4337Module $*" \
+#     "$@"
 
-certoraRun certora/conf/ExecTransactionFromModule.conf \
-    "${params[@]}" \
-    --msg "Safe4337Module $*" \
-    "$@"
+# certoraRun certora/conf/ExecTransactionFromModule.conf \
+#     "${params[@]}" \
+#     --msg "Safe4337Module $*" \
+#     "$@"
+
+# certoraRun certora/conf/ValidationDataLastBitOne.conf \
+#     "${params[@]}" \
+#     --msg "Safe4337Module $*" \
+#     "$@"

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 import {Safe} from "@safe-global/safe-contracts/contracts/Safe.sol";
+import {Enum} from "@safe-global/safe-contracts/contracts/common/Enum.sol";
+
 contract Account is Safe {
     constructor(
         address[] memory _owners,
@@ -57,7 +59,94 @@ contract Account is Safe {
         return uint48(bytes6(sigs[6:12]));
     }
 
-    function getSignatureTimestampsFromValidationData(uint256 validationData) external pure returns (uint96) {
-        return uint96(validationData >> 160);
+}
+
+contract Account2 is Account {
+    bool public execTransactionFromModuleCalled = false;
+
+    constructor(
+        address[] memory _owners,
+        uint256 _threshold,
+        address to,
+        bytes memory data,
+        address fallbackHandler,
+        address paymentToken,
+        uint256 payment,
+        address payable paymentReceiver
+    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
     }
+
+    function execTransactionFromModule(
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public override returns (bool success) {
+        execTransactionFromModuleCalled = true;
+        super.execTransactionFromModule(to, value, data, operation);
+    }
+}
+
+
+contract Account4 {
+    function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) public view {
+        revert();
+    }
+
+    function getSignatureTimestamps(bytes calldata signature) external returns (uint96 slice) {
+        slice = uint96(bytes12(signature[:12]));
+    }
+
+    function getSignatures(bytes calldata signature) external returns (bytes memory slice) {
+        slice = signature[12:];
+    }
+
+    function getValidAfterTimestamp(bytes calldata sigs) external pure returns (uint48) {
+        return uint48(bytes6(sigs[:6]));
+    }
+
+    function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
+        return uint48(bytes6(sigs[6:12]));
+    }
+
+}
+
+contract Account3 is Account {
+    bool public execTransactionFromModuleCalled = false;
+
+    constructor(
+        address[] memory _owners,
+        uint256 _threshold,
+        address to,
+        bytes memory data,
+        address fallbackHandler,
+        address paymentToken,
+        uint256 payment,
+        address payable paymentReceiver
+    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
+    }
+
+    function execTransactionFromModule(
+        address to,
+        uint256 value,
+        bytes memory,
+        Enum.Operation
+    ) public override returns (bool success)  {
+        execTransactionFromModuleCalled = true;
+        // Required here to avoid DEFAULT HAVOC
+        transferEth(to, value);
+    }
+
+    function transferEth(address to, uint256 value) public {
+        payable(to).transfer(value);
+    }
+
+    function getNativeTokenBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getNativeTokenBalanceFor(address addr) public view returns (uint256) {
+        return addr.balance;
+    }
+
 }

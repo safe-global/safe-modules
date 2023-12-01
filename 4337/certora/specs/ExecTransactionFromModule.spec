@@ -9,7 +9,6 @@ methods {
     function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
 
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
-    function safeContract.getSignatureTimestampsFromValidationData(uint256 validationData) external returns (uint96) envfree;
     function safeContract.execTransactionFromModuleCalled() external returns(bool) envfree;
 
     function safeContract.execTransactionFromModule(

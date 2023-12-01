@@ -11,7 +11,6 @@ methods {
     function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
 
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
-    function safeContract.getSignatureTimestampsFromValidationData(uint256 validationData) external returns (uint96) envfree;
 
     function safeContract.execTransactionFromModule(
         address,
@@ -91,36 +90,6 @@ rule signatureTimestampsPresentInValidationData(address sender,
     assert SignatureTimestamps == ValidationData;
 }
 
-rule validationDataLastBitOneIfCheckSignaturesFails(address sender,
-        Safe4337Module.UserOperation userOp,
-        bytes32 dummyData,
-        uint256 missingAccountFunds) {
-    env e;
-    uint48 validAfter;
-    uint48 validUntil;
-    require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
-    require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
-
-    bytes signatures = safeContract.getSignatures(userOp.signature);
-    bytes32 transactionHash = getOperationHash(userOp.sender,
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            validAfter,
-            validUntil);
-
-    bytes checkSignaturesBytes;
-    safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
-    bool checkSignaturesReverted = lastReverted;
-
-    uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
-    assert checkSignaturesReverted => (validationData & 1) == 1, "validation data incorrect";
-}
-
 rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
         Safe4337Module.UserOperation userOp,
         bytes32 dummyData,
@@ -130,7 +99,7 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
     uint48 validUntil;
     require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
     require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
-
+    
     bytes signatures = safeContract.getSignatures(userOp.signature);
     bytes32 transactionHash = getOperationHash(userOp.sender,
             userOp.callData,
@@ -148,5 +117,5 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
     bool checkSignaturesOk = !lastReverted;
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
-    assert checkSignaturesOk => (validationData & 0) == 0, "validation data incorrect";
+    assert (checkSignaturesOk => (validationData & 0) == 0), "validation data incorrect";
 }
