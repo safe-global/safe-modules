@@ -1,25 +1,28 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
-import "@safe-global/safe-contracts/contracts/Safe.sol";
-contract ISafe2 is Safe {
-   
-    function getSignatureTimestamps(bytes calldata signature) external returns (uint96 slice) {
-        slice = uint96(bytes12(signature[:12]));
+import "./ISafe.sol";
+contract ISafe2 is ISafe {
+    bool public execTransactionFromModuleCalled = false;
+
+    constructor(
+        address[] memory _owners,
+        uint256 _threshold,
+        address to,
+        bytes memory data,
+        address fallbackHandler,
+        address paymentToken,
+        uint256 payment,
+        address payable paymentReceiver
+    ) ISafe(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
     }
 
-    function getSignatures(bytes calldata signature) external returns (bytes memory slice) {
-        slice = signature[12:];
-    }
-
-    function getValidAfterTimestamp(bytes calldata sigs) external pure returns (uint48) {
-        return uint48(bytes6(sigs[:6]));
-    }
-
-    function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
-        return uint48(bytes6(sigs[6:12]));
-    }
-
-    function getSignatureTimestampsFromValidationData(uint256 validationData) external pure returns (uint96) {
-        return uint96(validationData >> 160);
+    function execTransactionFromModule(
+        address to,
+        uint256 value,
+        bytes memory data,
+        Enum.Operation operation
+    ) public override returns (bool success) {
+        execTransactionFromModuleCalled = true;
+        super.execTransactionFromModule(to, value, data, operation);
     }
 }

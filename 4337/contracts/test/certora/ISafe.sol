@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 import "@safe-global/safe-contracts/contracts/Safe.sol";
 contract ISafe is Safe {
-    bool public execTransactionFromModuleCalled = false;
     constructor(
         address[] memory _owners,
         uint256 _threshold,
@@ -42,7 +41,6 @@ contract ISafe is Safe {
         emit SafeSetup(msg.sender, _owners, _threshold, to, fallbackHandler);
     }
 
-
     function getSignatureTimestamps(bytes calldata signature) external returns (uint96 slice) {
         slice = uint96(bytes12(signature[:12]));
     }
@@ -62,5 +60,4 @@ contract ISafe is Safe {
     function getSignatureTimestampsFromValidationData(uint256 validationData) external pure returns (uint96) {
         return uint96(validationData >> 160);
     }
-
 }
