@@ -23,7 +23,8 @@ contract ISafe3 is ISafe {
         Enum.Operation operation
     ) public override returns (bool success) {
         execTransactionFromModuleCalled = true;
-        super.execTransactionFromModule(to, value, data, operation);
+        // Required here to avoid DEFAULT HAVOC
+        transferEth(to, value);
     }
 
     function transferEth(address to, uint256 value) public {

@@ -84,13 +84,13 @@ rule payForMissingFunds(method f,
 } {
     require safeContract.isModuleEnabled(currentContract) == true;
     require fallbackHandlerAddress == currentContract;
-    require missingAccountFunds > 0;
 
     calldataarg args;
     env e;
 
     uint256 balanceBefore = safeContract.getNativeTokenBalance();
-    
+    require balanceBefore > missingAccountFunds ;
+
     SUPPORTED_ENTRYPOINT();
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
