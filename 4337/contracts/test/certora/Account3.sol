@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
-import "./ISafe.sol";
-contract ISafe3 is ISafe {
+import {Account} from "./Account.sol";
+contract Account3 is Account {
     bool public execTransactionFromModuleCalled = false;
 
     constructor(
@@ -19,8 +19,8 @@ contract ISafe3 is ISafe {
     function execTransactionFromModule(
         address to,
         uint256 value,
-        bytes memory data,
-        Enum.Operation operation
+        bytes memory,
+        Enum.Operation
     ) public override returns (bool success) {
         execTransactionFromModuleCalled = true;
         // Required here to avoid DEFAULT HAVOC

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
-import "@safe-global/safe-contracts/contracts/Safe.sol";
-contract ISafe is Safe {
+import {Safe} from "@safe-global/safe-contracts/contracts/Safe.sol";
+contract Account is Safe {
     constructor(
         address[] memory _owners,
         uint256 _threshold,
@@ -21,9 +21,9 @@ contract ISafe is Safe {
         address to,
         bytes memory data,
         address fallbackHandler,
-        address paymentToken,
-        uint256 payment,
-        address payable paymentReceiver
+        address,
+        uint256,
+        address payable
     ) public  {
 
         // setupOwners checks if the Threshold is already set, therefore preventing that this method is called twice

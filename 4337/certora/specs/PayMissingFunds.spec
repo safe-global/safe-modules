@@ -1,4 +1,4 @@
-using ISafe3 as safeContract;
+using Account3 as safeContract;
 
 methods {
     function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
