@@ -26,8 +26,7 @@ contract Account is Safe {
         address,
         uint256,
         address payable
-    ) public  {
-
+    ) public {
         // setupOwners checks if the Threshold is already set, therefore preventing that this method is called twice
         setupOwners(_owners, _threshold);
         if (fallbackHandler != address(0)) internalSetFallbackHandler(fallbackHandler);
@@ -58,7 +57,6 @@ contract Account is Safe {
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
     }
-
 }
 
 contract Account2 is Account {
@@ -73,8 +71,7 @@ contract Account2 is Account {
         address paymentToken,
         uint256 payment,
         address payable paymentReceiver
-    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
-    }
+    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {}
 
     function execTransactionFromModule(
         address to,
@@ -86,7 +83,6 @@ contract Account2 is Account {
         super.execTransactionFromModule(to, value, data, operation);
     }
 }
-
 
 contract Account4 {
     function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) public view {
@@ -108,7 +104,6 @@ contract Account4 {
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
     }
-
 }
 
 contract Account3 is Account {
@@ -123,15 +118,9 @@ contract Account3 is Account {
         address paymentToken,
         uint256 payment,
         address payable paymentReceiver
-    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
-    }
+    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {}
 
-    function execTransactionFromModule(
-        address to,
-        uint256 value,
-        bytes memory,
-        Enum.Operation
-    ) public override returns (bool success)  {
+    function execTransactionFromModule(address to, uint256 value, bytes memory, Enum.Operation) public override returns (bool success) {
         execTransactionFromModuleCalled = true;
         // Required here to avoid DEFAULT HAVOC
         transferEth(to, value);
@@ -148,5 +137,4 @@ contract Account3 is Account {
     function getNativeTokenBalanceFor(address addr) public view returns (uint256) {
         return addr.balance;
     }
-
 }
