@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 import {Account} from "./Account.sol";
+import {Enum} from "@safe-global/safe-contracts/contracts/common/Enum.sol";
+
 contract Account3 is Account {
     bool public execTransactionFromModuleCalled = false;
 
@@ -13,7 +15,7 @@ contract Account3 is Account {
         address paymentToken,
         uint256 payment,
         address payable paymentReceiver
-    ) ISafe(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
+    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {
     }
 
     function execTransactionFromModule(
