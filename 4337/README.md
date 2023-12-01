@@ -147,9 +147,11 @@ npm test
 
 End-to-end tests with the reference bundler implementation are also provided. These automated tests verify that no user operation validation rules are broken by the implementation.
 
+Note: Geth is used as the RPC because the reference bundler implementation relies on Geth-specific tracing APIs.
+
 ```bash
 docker compose up -d
-npm test:e2e
+npm run test:e2e
 ```
 
 ### Deploy
