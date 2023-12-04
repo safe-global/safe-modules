@@ -6,6 +6,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import { goerli, sepolia } from "viem/chains";
 import { SAFE_ADDRESSES_MAP, encodeCallData, getAccountAddress, getAccountInitCode } from "./utils/safe";
 import { generateMintingCallData } from "../utils/erc721";
+import { setTimeout } from "timers/promises";
 
 dotenv.config()
 const privateKey = process.env.PRIVATE_KEY;
