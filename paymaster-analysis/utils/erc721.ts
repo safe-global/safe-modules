@@ -4,9 +4,7 @@ export const generateMintingCallData = (to: Address) => {
   const transferData = encodeFunctionData({
     abi: [
       {
-        inputs: [
-          { name: "_to", type: "address" },
-        ],
+        inputs: [{ name: "_to", type: "address" }],
         name: "safeMint",
         outputs: [],
         payable: false,

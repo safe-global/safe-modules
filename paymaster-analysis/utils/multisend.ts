@@ -16,7 +16,7 @@ const encodeInternalTransaction = (tx: InternalTx): string => {
       tx.value,
       BigInt(tx.data.slice(2).length / 2),
       tx.data,
-    ]
+    ],
   );
   return encoded.slice(2);
 };

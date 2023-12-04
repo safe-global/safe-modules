@@ -3,8 +3,9 @@
 ## Safe Deployment with Alchemy Paymaster
 
 NPM Command to run:
+
 ```
-npm run alchemy:account        
+npm run alchemy:account
 
 > @safe-global/aa-analysis@1.0.0 alchemy:account
 > tsx ./alchemy/alchemy-account.ts
@@ -35,6 +36,7 @@ Gas Usage: 408370
 ## Safe Deployment + ERC20 Transaction with Alchemy Paymaster
 
 NPM Command to run:
+
 ```
 npm run alchemy:erc20
 
@@ -72,6 +74,7 @@ Gas Usage: 419691
 ## ERC20 Transaction with Alchemy Paymaster
 
 NPM Command to run:
+
 ```
 npm run alchemy:erc20
 
@@ -106,6 +109,7 @@ Gas Usage: 131418
 ## Safe Deployment + ERC721 Transaction with Alchemy Paymaster
 
 NPM Command to run:
+
 ```
 npm run alchemy:erc721
 
@@ -138,6 +142,7 @@ Gas Usage: 448953
 ## ERC721 Transaction with Alchemy Paymaster
 
 NPM Command to run:
+
 ```
 npm run alchemy:erc721
 

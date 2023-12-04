@@ -1,17 +1,39 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
-import { UserOperation, bundlerActions, getSenderAddress } from "permissionless";
+import {
+  UserOperation,
+  bundlerActions,
+  getSenderAddress,
+} from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
-import { Address, Hash, createClient, createPublicClient, http, toHex } from "viem";
+import {
+  Address,
+  Hash,
+  createClient,
+  createPublicClient,
+  http,
+  toHex,
+} from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
-import { EIP712_SAFE_OPERATION_TYPE, SAFE_ADDRESSES_MAP, encodeCallData, getAccountAddress, getAccountInitCode } from "./utils/safe";
+import {
+  EIP712_SAFE_OPERATION_TYPE,
+  SAFE_ADDRESSES_MAP,
+  encodeCallData,
+  getAccountAddress,
+  getAccountInitCode,
+} from "./utils/safe";
 import { submitUserOperation, signUserOperation } from "./utils/userOps";
 import { setTimeout } from "timers/promises";
-import { generateTransferCallData, getERC20Decimals, getERC20Balance, mintERC20Token } from "./utils/erc20";
+import {
+  generateTransferCallData,
+  getERC20Decimals,
+  getERC20Balance,
+  mintERC20Token,
+} from "./utils/erc20";
 import { generateMintingCallData } from "../utils/erc721";
 
-dotenv.config()
+dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY;
 const ENTRY_POINT_ADDRESS = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
@@ -28,13 +50,13 @@ const erc721TokenAddress = process.env.PIMLICO_ERC721_TOKEN_CONTRACT;
 
 if (apiKey === undefined) {
   throw new Error(
-    "Please replace the `apiKey` env variable with your Pimlico API key"
+    "Please replace the `apiKey` env variable with your Pimlico API key",
   );
 }
 
-if(!privateKey){
+if (!privateKey) {
   throw new Error(
-    "Please populate .env file with demo Private Key. Recommended to not use your personal private key."
+    "Please populate .env file with demo Private Key. Recommended to not use your personal private key.",
   );
 }
 
@@ -43,7 +65,7 @@ console.log("Signer Extracted from Private Key.");
 
 let bundlerClient;
 let publicClient;
-if(chain == "goerli"){
+if (chain == "goerli") {
   bundlerClient = createClient({
     transport: http(`https://api.pimlico.io/v1/${chain}/rpc?apikey=${apiKey}`),
     chain: goerli,
@@ -55,19 +77,22 @@ if(chain == "goerli"){
     transport: http(rpcURL),
     chain: goerli,
   });
-}
-else {
+} else {
   throw new Error(
-    "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network."
-  )
+    "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
+  );
 }
 
 const initCode = await getAccountInitCode({
   owner: signer.address,
-  addModuleLibAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].ADD_MODULES_LIB_ADDRESS,
-  safe4337ModuleAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
-  safeProxyFactoryAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_PROXY_FACTORY_ADDRESS,
-  safeSingletonAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
+  addModuleLibAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].ADD_MODULES_LIB_ADDRESS,
+  safe4337ModuleAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
+  safeProxyFactoryAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_PROXY_FACTORY_ADDRESS,
+  safeSingletonAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   erc20TokenAddress: usdcTokenAddress,
   multiSendAddress,
@@ -78,10 +103,14 @@ console.log("\nInit Code Created.");
 const senderAddress = await getAccountAddress({
   client: publicClient,
   owner: signer.address,
-  addModuleLibAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].ADD_MODULES_LIB_ADDRESS,
-  safe4337ModuleAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
-  safeProxyFactoryAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_PROXY_FACTORY_ADDRESS,
-  safeSingletonAddress: SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
+  addModuleLibAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].ADD_MODULES_LIB_ADDRESS,
+  safe4337ModuleAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
+  safeProxyFactoryAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_PROXY_FACTORY_ADDRESS,
+  safeSingletonAddress:
+    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   erc20TokenAddress: usdcTokenAddress,
   multiSendAddress,
@@ -89,28 +118,45 @@ const senderAddress = await getAccountAddress({
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
 
-if(chain == "goerli"){
-  console.log("Address Link: https://goerli.etherscan.io/address/"+senderAddress);
-}
-else {
+if (chain == "goerli") {
+  console.log(
+    "Address Link: https://goerli.etherscan.io/address/" + senderAddress,
+  );
+} else {
   throw new Error(
-    "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network."
-  )
+    "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
+  );
 }
 
 // Fetch USDC balance of sender
 const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);
 const usdcAmount = BigInt(10 ** usdcDecimals);
-let senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress);
-console.log("\nSafe Wallet USDC Balance:", Number(senderUSDCBalance / usdcAmount));
+let senderUSDCBalance = await getERC20Balance(
+  usdcTokenAddress,
+  publicClient,
+  senderAddress,
+);
+console.log(
+  "\nSafe Wallet USDC Balance:",
+  Number(senderUSDCBalance / usdcAmount),
+);
 
-if(senderUSDCBalance < BigInt(2) * usdcAmount) {
-  console.log("\nPlease deposit atleast 2 USDC Token for paying the Paymaster.");
+if (senderUSDCBalance < BigInt(2) * usdcAmount) {
+  console.log(
+    "\nPlease deposit atleast 2 USDC Token for paying the Paymaster.",
+  );
   while (senderUSDCBalance < BigInt(2) * usdcAmount) {
     await setTimeout(30000);
-    senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress);
+    senderUSDCBalance = await getERC20Balance(
+      usdcTokenAddress,
+      publicClient,
+      senderAddress,
+    );
   }
-  console.log("\nUpdated Safe Wallet USDC Balance:", Number(senderUSDCBalance / usdcAmount));    
+  console.log(
+    "\nUpdated Safe Wallet USDC Balance:",
+    Number(senderUSDCBalance / usdcAmount),
+  );
 }
 
 const gasPriceResult = await bundlerClient.getUserOperationGasPrice();
@@ -119,17 +165,17 @@ const newNonce = await getAccountNonce(publicClient, {
   entryPoint: ENTRY_POINT_ADDRESS,
   sender: senderAddress,
 });
-console.log("\nNonce for the sender received from EntryPoint.")
+console.log("\nNonce for the sender received from EntryPoint.");
 
 const contractCode = await publicClient.getBytecode({ address: senderAddress });
 
 if (contractCode) {
   console.log(
-    "The Safe is already deployed. Minting 1 ERC721 Token to the Safe."
+    "The Safe is already deployed. Minting 1 ERC721 Token to the Safe.",
   );
 } else {
   console.log(
-    "Deploying a new Safe and Minting 1 ERC721 Token to the Safe in one tx"
+    "Deploying a new Safe and Minting 1 ERC721 Token to the Safe in one tx",
   );
 }
 
@@ -152,6 +198,9 @@ const sponsoredUserOperation: UserOperation = {
   signature: "0x",
 };
 
-sponsoredUserOperation.signature = await signUserOperation(sponsoredUserOperation, signer);
-  
+sponsoredUserOperation.signature = await signUserOperation(
+  sponsoredUserOperation,
+  signer,
+);
+
 await submitUserOperation(sponsoredUserOperation, bundlerClient);

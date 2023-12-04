@@ -175,13 +175,13 @@ export const getAccountInitCode = async ({
 }): Promise<Hex> => {
   if (!owner) throw new Error("Owner account not found");
   const initializer = await getInitializerCode({
-      owner,
-      addModuleLibAddress,
-      safe4337ModuleAddress,
-      erc20TokenAddress,
-      multiSendAddress,
-      paymasterAddress,
-    });
+    owner,
+    addModuleLibAddress,
+    safe4337ModuleAddress,
+    erc20TokenAddress,
+    multiSendAddress,
+    paymasterAddress,
+  });
 
   const initCodeCallData = encodeFunctionData({
     abi: [
@@ -279,7 +279,7 @@ export const encodeCallData = (params: {
 
 export const getAccountAddress = async <
   TTransport extends Transport = Transport,
-  TChain extends Chain | undefined = Chain | undefined
+  TChain extends Chain | undefined = Chain | undefined,
 >({
   client,
   owner,
@@ -325,23 +325,23 @@ export const getAccountAddress = async <
 
   const deploymentCode = encodePacked(
     ["bytes", "uint256"],
-    [proxyCreationCode, hexToBigInt(safeSingletonAddress)]
+    [proxyCreationCode, hexToBigInt(safeSingletonAddress)],
   );
 
   const initializer = await getInitializerCode({
-      owner,
-      addModuleLibAddress,
-      safe4337ModuleAddress,
-      erc20TokenAddress,
-      multiSendAddress,
-      paymasterAddress,
-    });
+    owner,
+    addModuleLibAddress,
+    safe4337ModuleAddress,
+    erc20TokenAddress,
+    multiSendAddress,
+    paymasterAddress,
+  });
 
   const salt = keccak256(
     encodePacked(
       ["bytes32", "uint256"],
-      [keccak256(encodePacked(["bytes"], [initializer])), saltNonce]
-    )
+      [keccak256(encodePacked(["bytes"], [initializer])), saltNonce],
+    ),
   );
 
   return getContractAddress({

@@ -1,8 +1,14 @@
 import dotenv from "dotenv";
-import { http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount } from "viem";
+import {
+  http,
+  Address,
+  encodeFunctionData,
+  createWalletClient,
+  PrivateKeyAccount,
+} from "viem";
 import { goerli, sepolia } from "viem/chains";
 
-dotenv.config()
+dotenv.config();
 const rpcURL = process.env.PIMLICO_RPC_URL;
 const chain = process.env.PIMLICO_CHAIN;
 
@@ -51,7 +57,10 @@ export const generateTransferCallData = (to: Address, value: bigint) => {
   return transferData;
 };
 
-export const getERC20Decimals = async (erc20TokenAddress: string, publicClient: any) => {
+export const getERC20Decimals = async (
+  erc20TokenAddress: string,
+  publicClient: any,
+) => {
   const erc20Decimals = await publicClient.readContract({
     abi: [
       {
@@ -67,9 +76,13 @@ export const getERC20Decimals = async (erc20TokenAddress: string, publicClient: 
   });
 
   return erc20Decimals;
-}
+};
 
-export const getERC20Balance = async (erc20TokenAddress: string, publicClient: any, owner: string) => {
+export const getERC20Balance = async (
+  erc20TokenAddress: string,
+  publicClient: any,
+  owner: string,
+) => {
   const senderERC20Balance = await publicClient.readContract({
     abi: [
       {
@@ -86,43 +99,50 @@ export const getERC20Balance = async (erc20TokenAddress: string, publicClient: a
   });
 
   return senderERC20Balance;
-}
+};
 
-export const mintERC20Token = async (erc20TokenAddress: string, publicClient: any, signer: PrivateKeyAccount, to: string, amount: number) => {
+export const mintERC20Token = async (
+  erc20TokenAddress: string,
+  publicClient: any,
+  signer: PrivateKeyAccount,
+  to: string,
+  amount: number,
+) => {
   let walletClient;
-  if(chain == "sepolia"){
+  if (chain == "sepolia") {
     walletClient = createWalletClient({
       account: signer,
       chain: sepolia,
-      transport: http(rpcURL)
-    })
-  }
-  else if(chain == "goerli"){
+      transport: http(rpcURL),
+    });
+  } else if (chain == "goerli") {
     walletClient = createWalletClient({
       account: signer,
       chain: goerli,
-      transport: http(rpcURL)
-    })
-  }
-  else {
+      transport: http(rpcURL),
+    });
+  } else {
     throw new Error(
-      "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network."
-    )
+      "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
+    );
   }
   const { request } = await publicClient.simulateContract({
     address: erc20TokenAddress,
     abi: [
       {
-        inputs: [{ name: "to", type: "address" }, { name: "amount", type: "uint256"}],
+        inputs: [
+          { name: "to", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
         name: "mint",
         outputs: [],
         type: "function",
         stateMutability: "public",
       },
     ],
-    functionName: 'mint',
+    functionName: "mint",
     args: [to, amount],
-    signer
-  })
-  await walletClient.writeContract(request)
-}
+    signer,
+  });
+  await walletClient.writeContract(request);
+};
