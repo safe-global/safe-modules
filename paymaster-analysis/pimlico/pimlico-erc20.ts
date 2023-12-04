@@ -1,16 +1,8 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
-import {
-  UserOperation,
-  bundlerActions,
-} from "permissionless";
+import { UserOperation, bundlerActions } from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
-import {
-  Hash,
-  createClient,
-  createPublicClient,
-  http,
-} from "viem";
+import { Hash, createClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
 import {

@@ -2,9 +2,7 @@ import dotenv from "dotenv";
 import type { Address } from "abitype";
 import type { PrivateKeyAccount } from "viem";
 import { EIP712_SAFE_OPERATION_TYPE, SAFE_ADDRESSES_MAP } from "./safe";
-import {
-  UserOperation,
-} from "permissionless";
+import { UserOperation } from "permissionless";
 
 dotenv.config();
 const ENTRY_POINT_ADDRESS = process.env.PIMLICO_ENTRYPOINT_ADDRESS;

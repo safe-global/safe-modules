@@ -1,16 +1,8 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
-import {
-  UserOperation,
-  bundlerActions,
-} from "permissionless";
+import { UserOperation, bundlerActions } from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
-import {
-  Hash,
-  createClient,
-  createPublicClient,
-  http,
-} from "viem";
+import { Hash, createClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
 import {
@@ -21,10 +13,7 @@ import {
 } from "./utils/safe";
 import { submitUserOperation, signUserOperation } from "./utils/userOps";
 import { setTimeout } from "timers/promises";
-import {
-  getERC20Decimals,
-  getERC20Balance,
-} from "./utils/erc20";
+import { getERC20Decimals, getERC20Balance } from "./utils/erc20";
 import { generateMintingCallData } from "../utils/erc721";
 
 dotenv.config();
