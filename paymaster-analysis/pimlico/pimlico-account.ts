@@ -3,21 +3,17 @@ import { getAccountNonce } from "permissionless";
 import {
   UserOperation,
   bundlerActions,
-  getSenderAddress,
 } from "permissionless";
 import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
 import {
-  Address,
   Hash,
   createClient,
   createPublicClient,
   http,
-  toHex,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli } from "viem/chains";
 import {
-  EIP712_SAFE_OPERATION_TYPE,
   SAFE_ADDRESSES_MAP,
   encodeCallData,
   getAccountAddress,
@@ -26,10 +22,8 @@ import {
 import { submitUserOperation, signUserOperation } from "./utils/userOps";
 import { setTimeout } from "timers/promises";
 import {
-  generateTransferCallData,
   getERC20Decimals,
   getERC20Balance,
-  mintERC20Token,
 } from "./utils/erc20";
 
 dotenv.config();

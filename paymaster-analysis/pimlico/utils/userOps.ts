@@ -4,8 +4,6 @@ import type { PrivateKeyAccount } from "viem";
 import { EIP712_SAFE_OPERATION_TYPE, SAFE_ADDRESSES_MAP } from "./safe";
 import {
   UserOperation,
-  bundlerActions,
-  getSenderAddress,
 } from "permissionless";
 
 dotenv.config();

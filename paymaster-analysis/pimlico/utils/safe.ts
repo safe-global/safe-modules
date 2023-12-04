@@ -1,7 +1,6 @@
 import {
   Address,
   Chain,
-  Client,
   Hex,
   PublicClient,
   Transport,

@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
 import { UserOperation, signUserOperation } from "./utils/userOp";
-import { Address, Hash, createPublicClient, http } from "viem";
+import { Hash, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli, sepolia } from "viem/chains";
 import {

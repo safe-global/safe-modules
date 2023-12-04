@@ -1,7 +1,6 @@
 import {
   Address,
   Chain,
-  Client,
   Hex,
   PublicClient,
   Transport,
@@ -14,7 +13,6 @@ import {
   zeroAddress,
 } from "viem";
 import { InternalTx, encodeMultiSend } from "../../utils/multisend";
-import { generateApproveCallData } from "./erc20";
 
 export const SAFE_ADDRESSES_MAP = {
   "1.4.1": {
