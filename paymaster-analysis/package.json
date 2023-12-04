@@ -1,0 +1,43 @@
+{
+  "name": "@safe-global/paymaster-analysis",
+  "version": "1.0.0",
+  "description": "Account Abstraction Paymaster Analysis for Safe with 4337 Module",
+  "homepage": "https://github.com/safe-global/safe-modules/paymaster-analysis",
+  "license": "GPL-3.0",
+  "type": "module",
+  "scripts": {
+    "alchemy": "tsx ./alchemy/alchemy.ts",
+    "pimlico:account": "tsx ./pimlico/pimlico-account.ts",
+    "pimlico:erc20": "tsx ./pimlico/pimlico-erc20.ts",
+    "pimlico:erc721": "tsx ./pimlico/pimlico-erc721.ts",
+    "alchemy:account:bundler": "tsx ./alchemy/alchemy-account-bundler.ts",
+    "alchemy:account": "tsx ./alchemy/alchemy-account.ts",
+    "alchemy:erc20": "tsx ./alchemy/alchemy-erc20.ts",
+    "alchemy:erc721": "tsx ./alchemy/alchemy-erc721.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/safe-global/safe-modules.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe"
+  ],
+  "author": "@safe-global",
+  "bugs": {
+    "url": "https://github.com/safe-global/safe-modules/issues"
+  },
+  "dependencies": {
+    "@alchemy/aa-accounts": "^1.2.0",
+    "@alchemy/aa-alchemy": "^1.2.0",
+    "@alchemy/aa-core": "^1.2.0",
+    "dotenv": "^16.3.1",
+    "permissionless": "^0.0.11",
+    "viem": "^1.19.11"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.2",
+    "tsx": "^3.13.0"
+  }
+}
