@@ -11,7 +11,7 @@ describe('E2E - Unique Signers', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, Safe4337Launchpad, SafeProxyFactory, AddModulesLib, SafeL2, MultiSend } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeOpLaunchpad, SafeProxyFactory, AddModulesLib, SafeL2, MultiSend } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -19,7 +19,7 @@ describe('E2E - Unique Signers', () => {
     const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
-    const launchpad = await ethers.getContractAt('Safe4337Launchpad', Safe4337Launchpad.address)
+    const launchpad = await ethers.getContractAt('SafeOpLaunchpad', SafeOpLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
     const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
 

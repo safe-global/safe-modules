@@ -14,12 +14,6 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
     log: true,
     deterministicDeployment: true,
   })
-  await deploy('Safe4337Launchpad', {
-    from: deployer,
-    args: [entryPoint],
-    log: true,
-    deterministicDeployment: true,
-  })
 }
 
 deploy.dependencies = ['entrypoint']

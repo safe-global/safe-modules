@@ -5,17 +5,17 @@ import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
-import {ISafe} from "./interfaces/Safe.sol";
+import {ISafe} from "../interfaces/Safe.sol";
 
 /**
  * @title SafeLaunchpad - A contract for complex Safe initialization to enable setups that would violate ERC-4337 factory rules.
  * @dev The is intended to be set as a Safe proxy's implementation for ERC-4337 user operation that deploys the account.
  */
-contract Safe4337Launchpad is IAccount, SafeStorage {
+contract SafeOpLaunchpad is IAccount, SafeStorage {
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     // keccak256("SafeLaunchpad.initHash") - 1
-    uint256 private constant INIT_HASH_SLOT = 0xfe39743d5545ae15debabf80f9f105bde089b80c1c186c0fa4eb78349b870a8b;
+    uint256 private constant INIT_HASH_SLOT = 0x4a3a8f5e0dfbd344bf6d2dd6f6a92c9eced673b801d875e8645fd823df12f9aa;
 
     /**
      * @notice The keccak256 hash of the EIP-712 SafeInit struct, representing the structure of a ERC-4337 compatible Safe initialization.
