@@ -167,7 +167,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @dev Validates that the user operation is correctly signed. Reverts if signatures are invalid.
+     * @dev Validates that the user operation is correctly signed and returns an ERC-4337 packed validation data.
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
      */
