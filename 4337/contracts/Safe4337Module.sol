@@ -170,7 +170,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @dev Validates that the user operation is correctly signed and returns an ERC-4337 packed validation data
      * of `validAfter || validUntil || authorizer`:
      *  - `authorizer`: 20-byte address, 0 for valid signature or 1 to mark signature failure (this module does not make use of signature aggregators).
-     *  - `validUntil`: 6-byte timestamp value, or zero for “infinite”. The user operation is valid only up to this time.
+     *  - `validUntil`: 6-byte timestamp value, or zero for "infinite". The user operation is valid only up to this time.
      *  - `validAfter`: 6-byte timestamp. The user operation is valid only after this time.
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
