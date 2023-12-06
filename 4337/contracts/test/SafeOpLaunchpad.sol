@@ -7,13 +7,13 @@ import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.s
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
 
 /**
- * @title SafeLaunchpad - A contract for complex Safe initialization to enable setups that would violate ERC-4337 factory rules.
+ * @title SafeOpLaunchpad - A contract for complex Safe initialization to enable setups that would violate ERC-4337 factory rules.
  * @dev The is intended to be set as a Safe proxy's implementation for ERC-4337 user operation that deploys the account.
  */
 contract SafeOpLaunchpad is IAccount, SafeStorage {
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
-    // keccak256("SafeLaunchpad.initHash") - 1
+    // keccak256("SafeOpLaunchpad.initHash") - 1
     uint256 private constant INIT_HASH_SLOT = 0x4a3a8f5e0dfbd344bf6d2dd6f6a92c9eced673b801d875e8645fd823df12f9aa;
 
     /**
