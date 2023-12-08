@@ -12,8 +12,8 @@ Solidity optimizer: enabled with 10.000.000 runs
 
 ## Expected addresses
 
--   `AddModulesLib` at `0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb`
--   `Safe4337Module` at `0xa581c4A4DB7175302464fF3C06380BC3270b4037`
+- `AddModulesLib` at `0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb`
+- `Safe4337Module` at `0xa581c4A4DB7175302464fF3C06380BC3270b4037`
 
 ## Changes
 
