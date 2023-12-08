@@ -154,6 +154,12 @@ docker compose up -d
 npm run test:e2e
 ```
 
+### Deployments
+
+A collection of the different Safe 4337 modules deployments and their addresses can be found in the [Safe module deployments](https://github.com/safe-global/safe-modules-deployments) repository.
+
+To add support for a new network follow the steps of the Deploy section and create a PR in the [Safe module deployments](https://github.com/safe-global/safe-modules-deployments) repository.
+
 ### Deploy
 
 > :warning: **Make sure to use the correct commit when deploying the contracts.** Any change (even comments) within the contract files will result in different addresses. The tagged versions used by the Safe team can be found in the [releases](https://github.com/safe-modules/releases).
