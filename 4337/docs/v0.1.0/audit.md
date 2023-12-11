@@ -1,3 +1,5 @@
+**:warning: This version contains known issues and should not be used. :warning:**
+
 # Audit Results
 
 ## Auditor
@@ -21,3 +23,7 @@ There are two acknowledged findings from the audit report:
 ## Files
 
 - [Final audit report](audit-report-v1.1.pdf)
+
+## Known Issues
+
+The contract does not include all the User Operation parameters in its signature mechanism. Notably, the two missing parameters are `initCode` and `paymasterAndData`. This allows a malicious actor to execute a Safe operation with different `initCode` (causing potentially additional gas fees to the user) or `paymasterAndData` (causing the user to pay for gas fees in Ether despite not expecting it) than what the user originally intended. See section _M1_ from the [v0.2.0 audit report](../v0.2.0/audit-report-v2.0.pdf).
