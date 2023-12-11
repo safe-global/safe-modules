@@ -1,4 +1,4 @@
-**:warning: This version contains known issues and should not be used. :warning:**
+**⚠️ This version contains known issues and should not be used. ⚠️**
 
 # Audit Results
 
