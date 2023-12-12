@@ -4,9 +4,6 @@ methods {
     function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
 
     //ISafe harnessed functions
-    function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
-    function safeContract.getValidAfterTimestamp(bytes sigs) external returns (uint48) envfree;
-    function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
     function safeContract.isModuleEnabled(address) external returns (bool) envfree;
     function safeContract.getNativeTokenBalance() external returns (uint256) envfree;
     function Executor.execute(
@@ -30,20 +27,6 @@ methods {
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
-    function executeUserOp(address, uint256, bytes, uint8) external;
-    function executeUserOpWithErrorString(address, uint256, bytes, uint8) external;
-    function Safe4337Module.getOperationHash(
-        address safe,
-        bytes callData,
-        uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
-        uint256 callGasLimit,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        uint48 validAfter,
-        uint48 validUntil
-    ) external returns(bytes32) envfree => CONSTANT;
 }
 
 ghost bool execTransactionFromModuleCalled;
@@ -80,14 +63,14 @@ rule payForMissingFunds(method f,
         uint256 missingAccountFunds) filtered {
     f -> reachableOnly(f)
 } {
-    require safeContract.isModuleEnabled(currentContract) == true;
+    require safeContract.isModuleEnabled(currentContract);
     require fallbackHandlerAddress == currentContract;
 
     calldataarg args;
     env e;
 
     uint256 balanceBefore = safeContract.getNativeTokenBalance();
-    require balanceBefore > missingAccountFunds ;
+    require balanceBefore >= missingAccountFunds ;
 
     SUPPORTED_ENTRYPOINT();
 
