@@ -1,9 +1,9 @@
 #!/bin/bash
 
-params=("--send_only")
+params=()
 
 if [[ -n "$CI" ]]; then
-    params=()
+    params=("--wait_for_results")
 fi
 
 certoraRun certora/conf/Safe4337Module.conf \

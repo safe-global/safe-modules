@@ -6,18 +6,10 @@ methods {
     function _.checkSignatures(bytes32, bytes, bytes) external => checkSignaturesFunctionCalled() expect bool;
 
     //ISafe harnessed functions
-    function safeContract.getSignatureTimestamps(bytes signature) external returns (uint96) envfree;
     function safeContract.getValidAfterTimestamp(bytes sigs) external returns (uint48) envfree;
     function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
 
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
-
-    function safeContract.execTransactionFromModule(
-        address,
-        uint256,
-        bytes,
-        Enum.Operation
-    ) external returns bool; // 
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
@@ -34,13 +26,13 @@ methods {
         uint256 maxPriorityFeePerGas,
         uint48 validAfter,
         uint48 validUntil
-    ) external returns(bytes32) envfree => CONSTANT;
+    ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
 }
 ghost ERC2771MessageSender() returns address;
 
 ghost bool checkSignaturesCalled;
 
-function checkSignaturesFunctionCalled() returns bool{
+function checkSignaturesFunctionCalled() returns bool {
     checkSignaturesCalled = true;
     return true;
 }
@@ -59,7 +51,7 @@ rule onlyEntryPointCallable(method f) filtered {
 // checkSignatures should be always called if validateUserOp succeeds
 rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
         Safe4337Module.UserOperation userOp,
-        bytes32 dummyData,
+        bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
     uint48 validAfter;
@@ -68,23 +60,22 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
     require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
     checkSignaturesCalled = false;
 
-    uint256 validationData = validateUserOp@withrevert(e, userOp, dummyData, missingAccountFunds);
+    uint256 validationData = validateUserOp@withrevert(e, userOp, userOpHash, missingAccountFunds);
     assert !lastReverted => checkSignaturesCalled, "transaction executed without valid signatures";
 }
 
 rule signatureTimestampsPresentInValidationData(address sender,
         Safe4337Module.UserOperation userOp,
-        bytes32 dummyData,
+        bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
-
     uint48 validAfter;
     uint48 validUntil;
     require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
     require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
     mathint signatureTimestamps = (to_mathint(validAfter) * 2 ^ 48) + to_mathint(validUntil);
 
-    uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
+    uint256 validationData = validateUserOp(e, userOp, userOpHash, missingAccountFunds);
     mathint SignatureTimestamps = to_mathint(signatureTimestamps);
     mathint ValidationData = to_mathint(validationData >> 160);
     assert SignatureTimestamps == ValidationData;
@@ -92,7 +83,7 @@ rule signatureTimestampsPresentInValidationData(address sender,
 
 rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
         Safe4337Module.UserOperation userOp,
-        bytes32 dummyData,
+        bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
     uint48 validAfter;
@@ -116,6 +107,6 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
     safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
     bool checkSignaturesOk = !lastReverted;
 
-    uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
+    uint256 validationData = validateUserOp(e, userOp, userOpHash, missingAccountFunds);
     assert (checkSignaturesOk => (validationData & 0) == 0), "validation data incorrect";
 }
