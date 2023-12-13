@@ -10,12 +10,6 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
 
   const entryPoint = await deployments.get('EntryPoint')
 
-  await deploy('SafeOpLaunchpad', {
-    from: deployer,
-    args: [entryPoint.address],
-    log: true,
-    deterministicDeployment: true,
-  })
   await deploy('SafeSignerLaunchpad', {
     from: deployer,
     args: [entryPoint.address],
