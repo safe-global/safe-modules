@@ -81,7 +81,11 @@ describe('E2E - Unique Signers', () => {
       ),
     ).to.equal(safeInitHash)
 
-    const launchpadInitializer = signerLaunchpad.interface.encodeFunctionData('setup', [safeInitHash, ethers.ZeroAddress, '0x'])
+    const launchpadInitializer = signerLaunchpad.interface.encodeFunctionData('preValidationSetup', [
+      safeInitHash,
+      ethers.ZeroAddress,
+      '0x',
+    ])
     const safeSalt = Date.now()
     const safe = await proxyFactory.createProxyWithNonce.staticCall(signerLaunchpad.target, launchpadInitializer, safeSalt)
 
