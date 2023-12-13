@@ -7,9 +7,8 @@ if [[ -n "$CI" ]]; then
 fi
 
 certoraRun certora/conf/Safe4337Module.conf \
-    "${params[@]}" \
-    --msg "Safe4337Module $*" \
-    "$@"
+"${params[@]}" \
+"$@"
 
 # certoraRun certora/conf/PayForMissingFunds.conf \
 #     "${params[@]}" \

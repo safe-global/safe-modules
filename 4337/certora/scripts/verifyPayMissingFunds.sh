@@ -8,6 +8,5 @@ fi
 
 certoraRun certora/conf/PayMissingFunds.conf \
     "${params[@]}" \
-    --msg "Safe4337Module: PayMissingFunds $*" \
     "$@"
 

@@ -1,8 +1,6 @@
 using Account3 as safeContract;
 
 methods {
-    function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
-
     //ISafe harnessed functions
     function safeContract.isModuleEnabled(address) external returns (bool) envfree;
     function safeContract.getNativeTokenBalance() external returns (uint256) envfree;
@@ -52,19 +50,14 @@ hook Sstore safeContract.(slot 4912262948462952924401424093734671177092584799464
     fallbackHandlerAddress = newFallbackHandlerAddress;
 }
 
-definition reachableOnly(method f) returns bool =
-    f.selector != sig:safeContract.setup(address[],uint256,address,bytes,address,address,uint256,address).selector
-    && f.selector != sig:safeContract.simulateAndRevert(address,bytes).selector;
-
-rule payForMissingFunds(method f,
+rule payForMissingFunds(
         address sender,
         Safe4337Module.UserOperation userOp,
         bytes32 dummyData,
-        uint256 missingAccountFunds) filtered {
-    f -> reachableOnly(f)
-} {
+        uint256 missingAccountFunds)  {
     require safeContract.isModuleEnabled(currentContract);
     require fallbackHandlerAddress == currentContract;
+    require userOp.sender == safeContract;
 
     calldataarg args;
     env e;
@@ -72,9 +65,8 @@ rule payForMissingFunds(method f,
     uint256 balanceBefore = safeContract.getNativeTokenBalance();
     require balanceBefore >= missingAccountFunds ;
 
-    SUPPORTED_ENTRYPOINT();
-
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
+    require validationData & 0 == 0;
 
     uint256 balanceAfter = safeContract.getNativeTokenBalance();
 
