@@ -57,6 +57,10 @@ contract Account is Safe {
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
     }
+
+    function getNativeTokenBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
 }
 
 contract Account2 is Account {
@@ -128,10 +132,6 @@ contract Account3 is Account {
 
     function transferEth(address to, uint256 value) public {
         payable(to).transfer(value);
-    }
-
-    function getNativeTokenBalance() public view returns (uint256) {
-        return address(this).balance;
     }
 
     function getNativeTokenBalanceFor(address addr) public view returns (uint256) {
