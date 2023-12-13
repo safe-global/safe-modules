@@ -25,8 +25,8 @@
     "lint": "npm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint ./src && eslint ./test",
-    "fmt": "prettier --ignore-path .gitignore --write . && prettier --write 'contracts/**/*.sol'",
-    "fmt:check": "prettier --ignore-path .gitignore --check . && prettier --check 'contracts/**/*.sol'",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
     "prepack": "npm run build",
     "prepare": "cd .. && husky install 4337/.husky",
     "prepublish": "npx rimraf build && npm run build && npm run build:ts"
