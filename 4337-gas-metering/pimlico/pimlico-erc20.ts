@@ -18,10 +18,10 @@ import {
   getERC20Decimals,
   getERC20Balance,
   mintERC20Token,
-} from "./utils/erc20";
+} from "../utils/erc20";
 
 dotenv.config();
-
+const paymaster = "pimlico";
 const privateKey = process.env.PRIVATE_KEY;
 const ENTRY_POINT_ADDRESS = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
 const multiSendAddress = process.env.PIMLICO_MULTISEND_ADDRESS;
@@ -168,6 +168,8 @@ if (senderERC20Balance < erc20Amount) {
     signer,
     senderAddress,
     erc20Amount,
+    chain,
+    paymaster,
   );
 
   while (senderERC20Balance < erc20Amount) {

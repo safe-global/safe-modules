@@ -15,10 +15,11 @@ import {
   getERC20Decimals,
   getERC20Balance,
   mintERC20Token,
-} from "./utils/erc20";
+} from "../utils/erc20";
 import { setTimeout } from "timers/promises";
 
 dotenv.config();
+const paymaster = "alchemy";
 const privateKey = process.env.PRIVATE_KEY;
 const ENTRY_POINT_ADDRESS = process.env.ALCHEMY_ENTRYPOINT_ADDRESS;
 const multiSendAddress = process.env.ALCHEMY_MULTISEND_ADDRESS;
@@ -132,6 +133,8 @@ if (senderERC20Balance < erc20Amount) {
     signer,
     senderAddress,
     erc20Amount,
+    chain,
+    paymaster,
   );
 
   while (senderERC20Balance < erc20Amount) {

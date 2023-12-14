@@ -13,11 +13,11 @@ import {
 } from "./utils/safe";
 import { submitUserOperation, signUserOperation } from "./utils/userOps";
 import { setTimeout } from "timers/promises";
-import { getERC20Decimals, getERC20Balance } from "./utils/erc20";
+import { getERC20Decimals, getERC20Balance } from "../utils/erc20";
 import { generateMintingCallData } from "../utils/erc721";
 
 dotenv.config();
-
+const paymaster = "pimlico";
 const privateKey = process.env.PRIVATE_KEY;
 const ENTRY_POINT_ADDRESS = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
 const multiSendAddress = process.env.PIMLICO_MULTISEND_ADDRESS;
