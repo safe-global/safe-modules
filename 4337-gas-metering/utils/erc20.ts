@@ -106,7 +106,7 @@ export const mintERC20Token = async (
   publicClient: any,
   signer: PrivateKeyAccount,
   to: string,
-  amount: number,
+  amount: BigInt,
   chain: string,
   paymaster: string,
 ) => {
@@ -138,7 +138,7 @@ export const mintERC20Token = async (
       });
     } else {
       throw new Error(
-        "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
+        "Current code only support limited networks. Please make required changes if you want to use custom network.",
       );
     }
   } else {

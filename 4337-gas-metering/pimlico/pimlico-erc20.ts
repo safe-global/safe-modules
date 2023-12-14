@@ -23,17 +23,28 @@ import {
 dotenv.config();
 const paymaster = "pimlico";
 const privateKey = process.env.PRIVATE_KEY;
-const entryPointAddress = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
-const multiSendAddress = process.env.PIMLICO_MULTISEND_ADDRESS;
-const saltNonce = BigInt(process.env.PIMLICO_ERC20_NONCE);
+const entryPointAddress = process.env
+  .PIMLICO_ENTRYPOINT_ADDRESS as `0x${string}`;
+const multiSendAddress = process.env.PIMLICO_MULTISEND_ADDRESS as `0x${string}`;
+const saltNonce = BigInt(process.env.PIMLICO_ERC20_NONCE as string);
 const chain = process.env.PIMLICO_CHAIN;
 const chainID = Number(process.env.PIMLICO_CHAIN_ID);
-const safeVersion = process.env.SAFE_VERSION;
+const safeVersion = process.env.SAFE_VERSION as string;
 const rpcURL = process.env.PIMLICO_RPC_URL;
 const apiKey = process.env.PIMLICO_API_KEY;
-const erc20PaymasterAddress = process.env.PIMLICO_ERC20_PAYMASTER_ADDRESS;
-const usdcTokenAddress = process.env.PIMLICO_USDC_TOKEN_ADDRESS;
-const erc20TokenAddress = process.env.PIMLICO_ERC20_TOKEN_CONTRACT;
+const erc20PaymasterAddress = process.env
+  .PIMLICO_ERC20_PAYMASTER_ADDRESS as `0x${string}`;
+const usdcTokenAddress = process.env
+  .PIMLICO_USDC_TOKEN_ADDRESS as `0x${string}`;
+const erc20TokenAddress = process.env
+  .PIMLICO_ERC20_TOKEN_CONTRACT as `0x${string}`;
+const safeAddresses = (
+  SAFE_ADDRESSES_MAP as Record<string, Record<string, any>>
+)[safeVersion];
+let chainAddresses;
+if (safeAddresses) {
+  chainAddresses = safeAddresses[chainID];
+}
 
 if (apiKey === undefined) {
   throw new Error(
@@ -66,22 +77,18 @@ if (chain == "goerli") {
   });
 } else {
   throw new Error(
-    "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
+    "Current code only support limited networks. Please make required changes if you want to use custom network.",
   );
 }
 
 const initCode = await getAccountInitCode({
   owner: signer.address,
-  addModuleLibAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].ADD_MODULES_LIB_ADDRESS,
-  safe4337ModuleAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
-  safeProxyFactoryAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_PROXY_FACTORY_ADDRESS,
-  safeSingletonAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
+  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
+  safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
+  safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
-  multiSendAddress,
+  multiSendAddress: multiSendAddress,
   erc20TokenAddress: usdcTokenAddress,
   paymasterAddress: erc20PaymasterAddress,
 });
@@ -90,30 +97,17 @@ console.log("\nInit Code Created.");
 const senderAddress = await getAccountAddress({
   client: publicClient,
   owner: signer.address,
-  addModuleLibAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].ADD_MODULES_LIB_ADDRESS,
-  safe4337ModuleAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
-  safeProxyFactoryAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_PROXY_FACTORY_ADDRESS,
-  safeSingletonAddress:
-    SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
+  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
+  safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
+  safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
-  multiSendAddress,
+  multiSendAddress: multiSendAddress,
   erc20TokenAddress: usdcTokenAddress,
   paymasterAddress: erc20PaymasterAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
-
-if (chain == "goerli") {
-  console.log(
-    "Address Link: https://goerli.etherscan.io/address/" + senderAddress,
-  );
-} else {
-  throw new Error(
-    "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
-  );
-}
+console.log("Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress);
 
 // Fetch USDC balance of sender
 const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);
@@ -216,9 +210,9 @@ const sponsoredUserOperation: UserOperation = {
     data: generateTransferCallData(signer.address, erc20Amount),
     value: 0n,
   }),
-  callGasLimit: 100_000n, // hardcode it for now at a high value
-  verificationGasLimit: 500_000n, // hardcode it for now at a high value
-  preVerificationGas: 50_000n, // hardcode it for now at a high value
+  callGasLimit: 100_000n, // Gas Values Hardcoded for now at a high value
+  verificationGasLimit: 500_000n,
+  preVerificationGas: 50_000n,
   maxFeePerGas: gasPriceResult.fast.maxFeePerGas,
   maxPriorityFeePerGas: gasPriceResult.fast.maxPriorityFeePerGas,
   paymasterAndData: erc20PaymasterAddress, // to use the erc20 paymaster, put its address in the paymasterAndData field

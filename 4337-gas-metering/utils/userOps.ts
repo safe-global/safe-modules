@@ -1,11 +1,33 @@
 import dotenv from "dotenv";
 import type { Address } from "abitype";
-import type { PrivateKeyAccount } from "viem";
+import type { Hex, PrivateKeyAccount } from "viem";
 import { EIP712_SAFE_OPERATION_TYPE, SAFE_ADDRESSES_MAP } from "./safe";
-import { UserOperation } from "permissionless";
 
 dotenv.config();
 const safeVersion = process.env.SAFE_VERSION;
+
+export type UserOperation = {
+  sender: Address;
+  nonce: bigint;
+  initCode: Hex;
+  callData: Hex;
+  callGasLimit: bigint;
+  verificationGasLimit: bigint;
+  preVerificationGas: bigint;
+  maxFeePerGas: bigint;
+  maxPriorityFeePerGas: bigint;
+  paymasterAndData: Hex;
+  signature: Hex;
+};
+
+export type suoData = {
+  preVerificationGas: any;
+  callGasLimit: any;
+  verificationGasLimit: any;
+  paymasterAndData: any;
+  maxFeePerGas: any;
+  maxPriorityFeePerGas: any;
+};
 
 export const submitUserOperation = async (
   userOperation: UserOperation,
