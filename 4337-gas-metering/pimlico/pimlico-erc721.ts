@@ -11,7 +11,7 @@ import {
   getAccountAddress,
   getAccountInitCode,
 } from "./utils/safe";
-import { submitUserOperation, signUserOperation } from "./utils/userOps";
+import { submitUserOperation, signUserOperation } from "../utils/userOps";
 import { setTimeout } from "timers/promises";
 import { getERC20Decimals, getERC20Balance } from "../utils/erc20";
 import { generateMintingCallData } from "../utils/erc721";
@@ -19,7 +19,7 @@ import { generateMintingCallData } from "../utils/erc721";
 dotenv.config();
 const paymaster = "pimlico";
 const privateKey = process.env.PRIVATE_KEY;
-const ENTRY_POINT_ADDRESS = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
+const entryPointAddress = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
 const multiSendAddress = process.env.PIMLICO_MULTISEND_ADDRESS;
 const saltNonce = BigInt(process.env.PIMLICO_ERC721_NONCE);
 const chain = process.env.PIMLICO_CHAIN;
@@ -145,7 +145,7 @@ if (senderUSDCBalance < BigInt(2) * usdcAmount) {
 const gasPriceResult = await bundlerClient.getUserOperationGasPrice();
 
 const newNonce = await getAccountNonce(publicClient, {
-  entryPoint: ENTRY_POINT_ADDRESS,
+  entryPoint: entryPointAddress,
   sender: senderAddress,
 });
 console.log("\nNonce for the sender received from EntryPoint.");
@@ -184,6 +184,8 @@ const sponsoredUserOperation: UserOperation = {
 sponsoredUserOperation.signature = await signUserOperation(
   sponsoredUserOperation,
   signer,
+  chainID,
+  entryPointAddress,
 );
 
-await submitUserOperation(sponsoredUserOperation, bundlerClient);
+await submitUserOperation(sponsoredUserOperation, bundlerClient, entryPointAddress, chain);

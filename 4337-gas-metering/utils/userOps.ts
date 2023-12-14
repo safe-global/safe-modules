@@ -5,18 +5,17 @@ import { EIP712_SAFE_OPERATION_TYPE, SAFE_ADDRESSES_MAP } from "./safe";
 import { UserOperation } from "permissionless";
 
 dotenv.config();
-const ENTRY_POINT_ADDRESS = process.env.PIMLICO_ENTRYPOINT_ADDRESS;
-const chain = process.env.PIMLICO_CHAIN;
-const chainID = Number(process.env.PIMLICO_CHAIN_ID);
 const safeVersion = process.env.SAFE_VERSION;
 
 export const submitUserOperation = async (
   userOperation: UserOperation,
   bundlerClient: any,
+  entryPointAddress: any,
+  chain: string,
 ) => {
   const userOperationHash = await bundlerClient.sendUserOperation({
     userOperation,
-    entryPoint: ENTRY_POINT_ADDRESS,
+    entryPoint: entryPointAddress,
   });
   console.log(`UserOperation submitted. Hash: ${userOperationHash}`);
   console.log(
@@ -42,6 +41,8 @@ export const submitUserOperation = async (
 export const signUserOperation = async (
   userOperation: UserOperation,
   signer: PrivateKeyAccount,
+  chainID: any,
+  entryPointAddress: any,
 ) => {
   const signatures = [
     {
@@ -63,7 +64,7 @@ export const signUserOperation = async (
           callGasLimit: userOperation.callGasLimit,
           maxFeePerGas: userOperation.maxFeePerGas,
           maxPriorityFeePerGas: userOperation.maxPriorityFeePerGas,
-          entryPoint: ENTRY_POINT_ADDRESS,
+          entryPoint: entryPointAddress,
         },
       }),
     },

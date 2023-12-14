@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
-import { UserOperation, signUserOperation } from "./utils/userOp";
+import { UserOperation, signUserOperation } from "../utils/userOp";
 import { Hash, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli, sepolia } from "viem/chains";
@@ -14,7 +14,7 @@ import { setTimeout } from "timers/promises";
 
 dotenv.config();
 const privateKey = process.env.PRIVATE_KEY;
-const ENTRY_POINT_ADDRESS = process.env.ALCHEMY_ENTRYPOINT_ADDRESS;
+const entryPointAddress = process.env.ALCHEMY_ENTRYPOINT_ADDRESS;
 const multiSendAddress = process.env.ALCHEMY_MULTISEND_ADDRESS;
 const saltNonce = BigInt(process.env.ALCHEMY_ACCOUNT_PAYMASTER_NONCE);
 const chain = process.env.ALCHEMY_CHAIN;
@@ -104,7 +104,7 @@ if (chain == "sepolia") {
 }
 
 const newNonce = await getAccountNonce(publicClient, {
-  entryPoint: ENTRY_POINT_ADDRESS,
+  entryPoint: entryPointAddress,
   sender: senderAddress,
 });
 console.log("\nNonce for the sender received from EntryPoint.");
@@ -132,6 +132,8 @@ const sponsoredUserOperation: UserOperation = {
 sponsoredUserOperation.signature = await signUserOperation(
   sponsoredUserOperation,
   signer,
+  chainID,
+  entryPointAddress,
 );
 console.log("\nSigned Dummy Data for Paymaster Data Creation from Alchemy.");
 
@@ -145,7 +147,7 @@ const gasOptions = {
     params: [
       {
         policyId: policyID,
-        entryPoint: ENTRY_POINT_ADDRESS,
+        entryPoint: entryPointAddress,
         dummySignature: sponsoredUserOperation.signature,
         userOperation: {
           sender: sponsoredUserOperation.sender,
@@ -193,6 +195,8 @@ sponsoredUserOperation.maxPriorityFeePerGas =
 sponsoredUserOperation.signature = await signUserOperation(
   sponsoredUserOperation,
   signer,
+  chainID,
+  entryPointAddress,
 );
 console.log("\nSigned Real Data including Paymaster Data Created by Alchemy.");
 
@@ -219,7 +223,7 @@ const options = {
         signature: sponsoredUserOperation.signature,
         paymasterAndData: sponsoredUserOperation.paymasterAndData,
       },
-      ENTRY_POINT_ADDRESS,
+      entryPointAddress,
     ],
   }),
 };
@@ -257,7 +261,7 @@ if (responseValues.result) {
       jsonrpc: "2.0",
       method: "eth_getUserOperationReceipt",
       params: [responseValues.result],
-      entryPoint: ENTRY_POINT_ADDRESS,
+      entryPoint: entryPointAddress,
     }),
   };
   let runOnce = true;
