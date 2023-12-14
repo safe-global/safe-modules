@@ -6,6 +6,6 @@ if [[ -n "$CI" ]]; then
     params=("--wait_for_results")
 fi
 
-certoraRun certora/conf/ExecTransactionFromModule.conf \
+certoraRun certora/conf/TransactionExecutionMethods.conf \
     "${params[@]}" \
     "$@"

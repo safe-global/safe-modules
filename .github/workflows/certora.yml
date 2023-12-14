@@ -15,7 +15,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             matrix:
-                rule: ["verify.sh", "verifyPayMissingFunds.sh"]
+                rule: ["verify.sh", "verifyPayMissingFunds.sh", "verifyTransactionExecutionMethods.sh"]
         defaults:
             run:
                 working-directory: ./4337
