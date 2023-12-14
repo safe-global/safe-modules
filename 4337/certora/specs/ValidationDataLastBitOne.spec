@@ -1,21 +1,14 @@
-using Account4 as safeContract;
+using AlwaysRevertingAccount as safeContract;
 
 methods {
-    function _.checkSignatures(bytes32, bytes, bytes) external;
+    // Use dispatcher(true) here to only consider known contracts
+    function _.checkSignatures(bytes32, bytes, bytes) external => DISPATCHER(true);
 
     //ISafe harnessed functions
     function safeContract.getValidAfterTimestamp(bytes sigs) external returns (uint48) envfree;
     function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
 
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
-    function safeContract.checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) external;
-
-    function safeContract.execTransactionFromModule(
-        address,
-        uint256,
-        bytes,
-        Enum.Operation
-    ) external returns bool; // 
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);

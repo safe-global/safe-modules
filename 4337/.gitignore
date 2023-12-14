@@ -13,3 +13,4 @@ coverage/
 coverage.json
 yarn-error.log
 typechain-types/
+.certora_internal

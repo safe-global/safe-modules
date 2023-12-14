@@ -63,32 +63,9 @@ contract Account is Safe {
     }
 }
 
-contract Account2 is Account {
-    bool public execTransactionFromModuleCalled = false;
-
-    constructor(
-        address[] memory _owners,
-        uint256 _threshold,
-        address to,
-        bytes memory data,
-        address fallbackHandler,
-        address paymentToken,
-        uint256 payment,
-        address payable paymentReceiver
-    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {}
-
-    function execTransactionFromModule(
-        address to,
-        uint256 value,
-        bytes memory data,
-        Enum.Operation operation
-    ) public override returns (bool success) {
-        execTransactionFromModuleCalled = true;
-        super.execTransactionFromModule(to, value, data, operation);
-    }
-}
-
-contract Account4 {
+// @notice This is a harness contract for the rule that verfies the validation data
+//         in case the checkSignature functions reverts.
+contract AlwaysRevertingAccount {
     function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) public view {
         revert();
     }
@@ -107,34 +84,5 @@ contract Account4 {
 
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
-    }
-}
-
-contract Account3 is Account {
-    bool public execTransactionFromModuleCalled = false;
-
-    constructor(
-        address[] memory _owners,
-        uint256 _threshold,
-        address to,
-        bytes memory data,
-        address fallbackHandler,
-        address paymentToken,
-        uint256 payment,
-        address payable paymentReceiver
-    ) Account(_owners, _threshold, to, data, fallbackHandler, paymentToken, payment, paymentReceiver) {}
-
-    function execTransactionFromModule(address to, uint256 value, bytes memory, Enum.Operation) public override returns (bool success) {
-        execTransactionFromModuleCalled = true;
-        // Required here to avoid DEFAULT HAVOC
-        transferEth(to, value);
-    }
-
-    function transferEth(address to, uint256 value) public {
-        payable(to).transfer(value);
-    }
-
-    function getNativeTokenBalanceFor(address addr) public view returns (uint256) {
-        return addr.balance;
     }
 }

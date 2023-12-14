@@ -8,8 +8,16 @@ methods {
     //ISafe harnessed functions
     function safeContract.getValidAfterTimestamp(bytes sigs) external returns (uint48) envfree;
     function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
-
+    function safeContract.getNativeTokenBalance() external returns (uint256) envfree;
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
+    
+    // Use a DISPATCHER(true) here to only consider known contracts
+    function _.execTransactionFromModule(
+        address,
+        uint256,
+        bytes,
+        Enum.Operation
+    ) external => DISPATCHER(true); 
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
@@ -61,7 +69,7 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
     checkSignaturesCalled = false;
 
     uint256 validationData = validateUserOp@withrevert(e, userOp, userOpHash, missingAccountFunds);
-    assert !lastReverted => checkSignaturesCalled, "transaction executed without valid signatures";
+    assert !lastReverted => checkSignaturesCalled, "validation passed without checking signatures";
 }
 
 rule signatureTimestampsPresentInValidationData(address sender,
@@ -109,4 +117,21 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
 
     uint256 validationData = validateUserOp(e, userOp, userOpHash, missingAccountFunds);
     assert (checkSignaturesOk => (validationData & 0) == 0), "validation data incorrect";
+}
+
+rule balanceChangeAfterValidateUserOp(
+        Safe4337Module.UserOperation userOp,
+        bytes32 dummyData,
+        uint256 missingAccountFunds)  {
+
+    calldataarg args;
+    env e;
+
+    uint256 balanceBefore = safeContract.getNativeTokenBalance();
+    require balanceBefore >= missingAccountFunds ;
+    
+    validateUserOp(e, userOp, dummyData, missingAccountFunds);
+
+    uint256 balanceAfter = safeContract.getNativeTokenBalance();
+    assert balanceAfter >= assert_uint256(balanceBefore - missingAccountFunds);
 }
