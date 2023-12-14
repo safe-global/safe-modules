@@ -12,7 +12,8 @@ import {
   keccak256,
   zeroAddress,
 } from "viem";
-import { InternalTx, encodeMultiSend } from "../../utils/multisend";
+import { InternalTx, encodeMultiSend } from "./multisend";
+import { generateApproveCallData } from "./erc20";
 
 export const SAFE_ADDRESSES_MAP = {
   "1.4.1": {
@@ -36,20 +37,33 @@ const getInitializerCode = async ({
   addModuleLibAddress,
   safe4337ModuleAddress,
   multiSendAddress,
+  erc20TokenAddress,
+  paymasterAddress,
 }: {
   owner: Address;
   addModuleLibAddress: Address;
   safe4337ModuleAddress: Address;
   multiSendAddress: Address;
+  erc20TokenAddress: Address;
+  paymasterAddress: Address;
 }) => {
-  const setupTxs: InternalTx[] = [
+  let setupTxs: InternalTx[] = [
     {
       to: addModuleLibAddress,
       data: enableModuleCallData(safe4337ModuleAddress),
       value: 0n,
       operation: 1, // 1 = DelegateCall required for enabling the module
-    },
+    }
   ];
+
+  if(erc20TokenAddress != zeroAddress && paymasterAddress != zeroAddress){
+    setupTxs.push({
+      to: erc20TokenAddress,
+      data: generateApproveCallData(paymasterAddress),
+      value: 0n,
+      operation: 0, // 0 = Call
+    })
+  }
 
   const multiSendCallData = encodeMultiSend(setupTxs);
 
@@ -148,6 +162,8 @@ export const getAccountInitCode = async ({
   safeSingletonAddress,
   saltNonce = 0n,
   multiSendAddress,
+  erc20TokenAddress,
+  paymasterAddress,
 }: {
   owner: Address;
   addModuleLibAddress: Address;
@@ -156,6 +172,8 @@ export const getAccountInitCode = async ({
   safeSingletonAddress: Address;
   saltNonce?: bigint;
   multiSendAddress: Address;
+  erc20TokenAddress: Address;
+  paymasterAddress: Address;
 }): Promise<Hex> => {
   if (!owner) throw new Error("Owner account not found");
   const initializer = await getInitializerCode({
@@ -163,6 +181,8 @@ export const getAccountInitCode = async ({
     addModuleLibAddress,
     safe4337ModuleAddress,
     multiSendAddress,
+    erc20TokenAddress,
+    paymasterAddress,
   });
 
   const initCodeCallData = encodeFunctionData({
@@ -271,6 +291,8 @@ export const getAccountAddress = async <
   safeSingletonAddress,
   saltNonce = 0n,
   multiSendAddress,
+  erc20TokenAddress,
+  paymasterAddress,
 }: {
   client: PublicClient;
   owner: Address;
@@ -280,6 +302,8 @@ export const getAccountAddress = async <
   safeSingletonAddress: Address;
   saltNonce?: bigint;
   multiSendAddress: Address;
+  erc20TokenAddress: Address;
+  paymasterAddress: Address;
 }): Promise<Address> => {
   const proxyCreationCode = await client.readContract({
     abi: [
@@ -311,6 +335,8 @@ export const getAccountAddress = async <
     addModuleLibAddress,
     safe4337ModuleAddress,
     multiSendAddress,
+    erc20TokenAddress,
+    paymasterAddress,
   });
 
   const salt = keccak256(

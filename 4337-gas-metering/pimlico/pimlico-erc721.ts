@@ -10,7 +10,7 @@ import {
   encodeCallData,
   getAccountAddress,
   getAccountInitCode,
-} from "./utils/safe";
+} from "../utils/safe";
 import { submitUserOperation, signUserOperation } from "../utils/userOps";
 import { setTimeout } from "timers/promises";
 import { getERC20Decimals, getERC20Balance } from "../utils/erc20";
@@ -77,8 +77,8 @@ const initCode = await getAccountInitCode({
   safeSingletonAddress:
     SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
-  erc20TokenAddress: usdcTokenAddress,
   multiSendAddress,
+  erc20TokenAddress: usdcTokenAddress,
   paymasterAddress: erc20PaymasterAddress,
 });
 console.log("\nInit Code Created.");
@@ -95,8 +95,8 @@ const senderAddress = await getAccountAddress({
   safeSingletonAddress:
     SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
-  erc20TokenAddress: usdcTokenAddress,
   multiSendAddress,
+  erc20TokenAddress: usdcTokenAddress,
   paymasterAddress: erc20PaymasterAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);

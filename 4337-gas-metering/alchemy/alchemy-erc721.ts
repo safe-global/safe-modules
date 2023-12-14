@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
 import { UserOperation, signUserOperation } from "../utils/userOp";
-import { Hash, createPublicClient, http } from "viem";
+import { Hash, createPublicClient, http, zeroAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { goerli, sepolia } from "viem/chains";
 import {
@@ -9,7 +9,7 @@ import {
   encodeCallData,
   getAccountAddress,
   getAccountInitCode,
-} from "./utils/safe";
+} from "../utils/safe";
 import { generateMintingCallData } from "../utils/erc721";
 import { setTimeout } from "timers/promises";
 
@@ -71,6 +71,8 @@ const initCode = await getAccountInitCode({
     SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress,
+  zeroAddress,
+  zeroAddress,
 });
 console.log("\nInit Code Created.");
 
@@ -87,6 +89,8 @@ const senderAddress = await getAccountAddress({
     SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress,
+  zeroAddress,
+  zeroAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
 if (chain == "sepolia") {
