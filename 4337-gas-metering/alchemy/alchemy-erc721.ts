@@ -93,7 +93,9 @@ const senderAddress = await getAccountAddress({
   paymasterAddress: zeroAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
-console.log("Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress);
+console.log(
+  "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
+);
 
 const newNonce = await getAccountNonce(publicClient, {
   entryPoint: entryPointAddress,

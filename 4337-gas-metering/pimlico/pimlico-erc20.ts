@@ -107,7 +107,9 @@ const senderAddress = await getAccountAddress({
   paymasterAddress: erc20PaymasterAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
-console.log("Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress);
+console.log(
+  "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
+);
 
 // Fetch USDC balance of sender
 const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);

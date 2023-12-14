@@ -101,7 +101,9 @@ const senderAddress = await getAccountAddress({
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
 
-console.log("Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress);
+console.log(
+  "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
+);
 
 const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);
 const usdcAmount = BigInt(10 ** usdcDecimals);

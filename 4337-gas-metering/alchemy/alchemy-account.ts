@@ -90,7 +90,9 @@ const senderAddress = await getAccountAddress({
   paymasterAddress: zeroAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
-console.log("Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress);
+console.log(
+  "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
+);
 
 const newNonce = await getAccountNonce(publicClient, {
   entryPoint: entryPointAddress,
@@ -155,7 +157,10 @@ if (contractCode) {
 
   let responseValues;
 
-  await fetch("https://eth-" + chain + ".g.alchemy.com/v2/" + apiKey, gasOptions)
+  await fetch(
+    "https://eth-" + chain + ".g.alchemy.com/v2/" + apiKey,
+    gasOptions,
+  )
     .then((response) => response.json())
     .then((response) => (responseValues = response))
     .catch((err) => console.error(err));
