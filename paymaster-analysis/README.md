@@ -4,7 +4,7 @@
 
 1. Rename the `.env.example` to `.env`.
 2. Fill the required values of `.env`.
-3. Based on which paymaster to run, check the `package.json` file to see the script. Further, you can check the `README.md` files in the corresponding paymaster folders to see the individual command.
+3. Based on which paymaster to run, check the `package.json` file to see the script. Furthermore, you can check the `README.md` files in the corresponding paymaster folders to see the individual command.
 
 NOTE: If you run a paymaster analysis twice or more without changing the salt for Safe Creation, then only the operation will execute through paymaster, rather than Safe Creation and Operation.
 
