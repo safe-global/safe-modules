@@ -53,16 +53,16 @@ const getInitializerCode = async ({
       data: enableModuleCallData(safe4337ModuleAddress),
       value: 0n,
       operation: 1, // 1 = DelegateCall required for enabling the module
-    }
+    },
   ];
 
-  if(erc20TokenAddress != zeroAddress && paymasterAddress != zeroAddress){
+  if (erc20TokenAddress != zeroAddress && paymasterAddress != zeroAddress) {
     setupTxs.push({
       to: erc20TokenAddress,
       data: generateApproveCallData(paymasterAddress),
       value: 0n,
       operation: 0, // 0 = Call
-    })
+    });
   }
 
   const multiSendCallData = encodeMultiSend(setupTxs);

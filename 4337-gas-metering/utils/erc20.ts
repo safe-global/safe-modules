@@ -111,7 +111,7 @@ export const mintERC20Token = async (
   paymaster: string,
 ) => {
   let walletClient;
-  if(paymaster == "pimlico"){
+  if (paymaster == "pimlico") {
     if (chain == "goerli") {
       walletClient = createWalletClient({
         account: signer,
@@ -123,8 +123,7 @@ export const mintERC20Token = async (
         "For Pimlico, current code only support using Goerli. Please make required changes if you want to use custom network.",
       );
     }
-  }
-  else if(paymaster == "alchemy") {
+  } else if (paymaster == "alchemy") {
     if (chain == "sepolia") {
       walletClient = createWalletClient({
         account: signer,
@@ -142,8 +141,7 @@ export const mintERC20Token = async (
         "Current code only support Sepolia and Goerli. Please make required changes if you want to use custom network.",
       );
     }
-  }
-  else {
+  } else {
     throw new Error(
       "Current code only support Pimlico and Alchemy. Please make required changes if you want to use a different Paymaster.",
     );

@@ -232,4 +232,9 @@ sponsoredUserOperation.signature = await signUserOperation(
   entryPointAddress,
 );
 
-await submitUserOperation(sponsoredUserOperation, bundlerClient, entryPointAddress, chain);
+await submitUserOperation(
+  sponsoredUserOperation,
+  bundlerClient,
+  entryPointAddress,
+  chain,
+);
