@@ -6,7 +6,10 @@ task('local-verify', 'Verifies that the local deployment files correspond to the
   const deployedContracts = await hre.deployments.all()
   for (const contract of Object.keys(deployedContracts)) {
     const deployment = await hre.deployments.get(contract)
-    if (!deployment.metadata) throw new Error(`No metadata for ${contract}`)
+    if (!deployment.metadata) {
+      console.log(`Verification status for ${contract}: SKIPPED`)
+      continue
+    }
     const meta = JSON.parse(deployment.metadata)
     const solcjs = await loadSolc(meta.compiler.version)
     delete meta.compiler

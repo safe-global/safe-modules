@@ -147,16 +147,24 @@ npm test
 
 End-to-end tests with the reference bundler implementation are also provided. These automated tests verify that no user operation validation rules are broken by the implementation.
 
+Note: Geth is used as the RPC because the reference bundler implementation relies on Geth-specific tracing APIs.
+
 ```bash
 docker compose up -d
-npm test:e2e
+npm run test:e2e
 ```
+
+### Deployments
+
+A collection of the different Safe 4337 modules deployments and their addresses can be found in the [Safe module deployments](https://github.com/safe-global/safe-modules-deployments) repository.
+
+To add support for a new network follow the steps of the Deploy section and create a PR in the [Safe module deployments](https://github.com/safe-global/safe-modules-deployments) repository.
 
 ### Deploy
 
-> :warning: **Make sure to use the correct commit when deploying the contracts.** Any change (even comments) within the contract files will result in different addresses. The tagged versions used by the Safe team can be found in the [releases](https://github.com/safe-modules/releases).
+> :warning: **Make sure to use the correct commit when deploying the contracts.** Any change (even comments) within the contract files will result in different addresses. The tagged versions used by the Safe team can be found in the [releases](https://github.com/safe-global/safe-modules/releases).
 
-This will deploy the contracts deterministically and verify the contracts on etherscan using [Solidity 0.7.6](https://github.com/ethereum/solidity/releases/tag/v0.7.6) by default.
+This will deploy the contracts deterministically and verify the contracts on etherscan and sourcify.
 
 Preparation:
 

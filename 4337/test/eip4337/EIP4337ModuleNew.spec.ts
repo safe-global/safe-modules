@@ -50,13 +50,16 @@ describe('Safe4337Module - Newly deployed safe', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, user1.address, safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       await expect(entryPoint.executeUserOp(userOp, 0)).to.be.revertedWith('Signature validation failed')
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('1.0'))
@@ -74,13 +77,16 @@ describe('Safe4337Module - Newly deployed safe', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.5'))
@@ -98,13 +104,16 @@ describe('Safe4337Module - Newly deployed safe', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       await entryPoint.executeUserOp(userOp, 0)
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.5'))
@@ -123,13 +132,16 @@ describe('Safe4337Module - Newly deployed safe', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       const transaction = await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
       const receipt = await transaction.wait()
@@ -151,13 +163,16 @@ describe('Safe4337Module - Newly deployed safe', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       await logGas('Execute UserOp with fee payment', entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')))
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.499999'))
@@ -177,13 +192,14 @@ describe('Safe4337Module - Newly deployed safe', () => {
         await entryPoint.getAddress(),
         false,
         true,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       await logGas(
         'Execute UserOp with fee payment and bubble up error string',
@@ -209,13 +225,14 @@ describe('Safe4337Module - Newly deployed safe', () => {
         await entryPoint.getAddress(),
         false,
         true,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
       const transaction = await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
       const receipt = await transaction.wait()
