@@ -10,23 +10,50 @@ import {
   getAccountAddress,
   getAccountInitCode,
 } from "../utils/safe";
+import {
+  generateTransferCallData,
+  getERC20Decimals,
+  getERC20Balance,
+  mintERC20Token,
+} from "../utils/erc20";
 import { generateMintingCallData } from "../utils/erc721";
 import { setTimeout } from "timers/promises";
 
 dotenv.config();
+const paymaster = "alchemy";
+
 const privateKey = process.env.PRIVATE_KEY;
+
 const entryPointAddress = process.env
   .ALCHEMY_ENTRYPOINT_ADDRESS as `0x${string}`;
 const multiSendAddress = process.env.ALCHEMY_MULTISEND_ADDRESS as `0x${string}`;
-const saltNonce = BigInt(process.env.ALCHEMY_ERC721_PAYMASTER_NONCE as string);
+
+const saltNonce = BigInt(process.env.ALCHEMY_NONCE as string);
+
 const chain = process.env.ALCHEMY_CHAIN;
 const chainID = Number(process.env.ALCHEMY_CHAIN_ID);
+
 const safeVersion = process.env.SAFE_VERSION as string;
+
 const rpcURL = process.env.ALCHEMY_RPC_URL;
 const policyID = process.env.ALCHEMY_GAS_POLICY;
 const apiKey = process.env.ALCHEMY_API_KEY;
+
+const erc20TokenAddress = process.env
+  .ALCHEMY_ERC20_TOKEN_CONTRACT as `0x${string}`;
 const erc721TokenAddress = process.env
   .ALCHEMY_ERC721_TOKEN_CONTRACT as `0x${string}`;
+
+const argv = process.argv.slice(2);
+if (argv.length != 1) {
+  throw new Error("TX Type Argument not passed."); // account || erc20 || erc721
+}
+
+const txType: string = argv[0];
+if (txType != "account" && txType != "erc20" && txType != "erc721") {
+  throw new Error("TX Type Argument Invalid");
+}
+
 const safeAddresses = (
   SAFE_ADDRESSES_MAP as Record<string, Record<string, any>>
 )[safeVersion];
@@ -97,23 +124,93 @@ console.log(
   "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
 );
 
+const contractCode = await publicClient.getBytecode({ address: senderAddress });
+
+if (contractCode) {
+  console.log("\nThe Safe is already deployed.");
+  if (txType == "account") {
+    console.log("\n");
+    process.exit(0);
+  }
+} else {
+  console.log(
+    "\nDeploying a new Safe and executing calldata passed with it (if any).",
+  );
+}
+
 const newNonce = await getAccountNonce(publicClient, {
   entryPoint: entryPointAddress,
   sender: senderAddress,
 });
 console.log("\nNonce for the sender received from EntryPoint.");
 
-const contractCode = await publicClient.getBytecode({ address: senderAddress });
+let txCallData!: `0x${string}`;
+
+if (txType == "account") {
+  txCallData = encodeCallData({
+    to: senderAddress,
+    data: "0x",
+    value: 0n,
+  });
+} else if (txType == "erc20") {
+  // Token Configurations
+  const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient);
+  const erc20Amount = BigInt(10 ** erc20Decimals);
+  let senderERC20Balance = await getERC20Balance(
+    erc20TokenAddress,
+    publicClient,
+    senderAddress,
+  );
+  console.log(
+    "\nSafe Wallet ERC20 Balance:",
+    Number(senderERC20Balance / erc20Amount),
+  );
+
+  // Trying to mint tokens (Make sure ERC20 Token Contract is mintable by anyone).
+  if (senderERC20Balance < erc20Amount) {
+    console.log("\nMinting ERC20 Tokens to Safe Wallet.");
+    await mintERC20Token(
+      erc20TokenAddress,
+      publicClient,
+      signer,
+      senderAddress,
+      erc20Amount,
+      chain,
+      paymaster,
+    );
+
+    while (senderERC20Balance < erc20Amount) {
+      await setTimeout(15000);
+      senderERC20Balance = await getERC20Balance(
+        erc20TokenAddress,
+        publicClient,
+        senderAddress,
+      );
+    }
+    console.log(
+      "\nUpdated Safe Wallet ERC20 Balance:",
+      Number(senderERC20Balance / erc20Amount),
+    );
+  }
+
+  txCallData = encodeCallData({
+    to: erc20TokenAddress,
+    data: generateTransferCallData(signer.address, erc20Amount), // transfer() function call with corresponding data.
+    value: 0n,
+  });
+} else if (txType == "erc721") {
+  txCallData = encodeCallData({
+    to: erc721TokenAddress,
+    data: generateMintingCallData(signer.address), // safeMint() function call with corresponding data.
+    value: 0n,
+  });
+}
 
 const sponsoredUserOperation: UserOperation = {
   sender: senderAddress,
   nonce: newNonce,
   initCode: contractCode ? "0x" : initCode,
-  callData: encodeCallData({
-    to: erc721TokenAddress,
-    data: generateMintingCallData(signer.address), // safeMint() function call with corresponding data.
-    value: 0n,
-  }),
+  callData: txCallData,
   callGasLimit: 0n, // All Gas Values will be filled by Paymaster Response Data
   verificationGasLimit: 0n,
   preVerificationGas: 0n,
@@ -180,7 +277,7 @@ sponsoredUserOperation.signature = await signUserOperation(
   chainID,
   entryPointAddress,
 );
-console.log("\nSigned Real Data including Paymaster Data Created by Alchemy.");
+console.log("\nSigned Real Data including Paymaster Data Created by Alchemy.\n");
 
 const options = {
   method: "POST",

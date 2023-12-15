@@ -10,9 +10,10 @@
     "pimlico:account": "tsx ./pimlico/pimlico-account.ts",
     "pimlico:erc20": "tsx ./pimlico/pimlico-erc20.ts",
     "pimlico:erc721": "tsx ./pimlico/pimlico-erc721.ts",
-    "alchemy:account": "tsx ./alchemy/alchemy-account.ts",
-    "alchemy:erc20": "tsx ./alchemy/alchemy-erc20.ts",
-    "alchemy:erc721": "tsx ./alchemy/alchemy-erc721.ts",
+    "alchemy:account": "tsx ./alchemy/alchemy.ts account",
+    "alchemy:erc20": "tsx ./alchemy/alchemy.ts erc20",
+    "alchemy:erc721": "tsx ./alchemy/alchemy.ts erc721",
+    "alchemy": "tsx ./alchemy/alchemy.ts",
     "fmt": "prettier --ignore-path .gitignore --write ."
   },
   "repository": {
