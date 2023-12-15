@@ -225,6 +225,7 @@ sponsoredUserOperation.signature = await signUserOperation(
   signer,
   chainID,
   entryPointAddress,
+  chainAddresses.SAFE_4337_MODULE_ADDRESS,
 );
 console.log("\nSigned Dummy Data for Paymaster Data Creation from Alchemy.");
 
@@ -276,6 +277,7 @@ sponsoredUserOperation.signature = await signUserOperation(
   signer,
   chainID,
   entryPointAddress,
+  chainAddresses.SAFE_4337_MODULE_ADDRESS,
 );
 console.log(
   "\nSigned Real Data including Paymaster Data Created by Alchemy.\n",

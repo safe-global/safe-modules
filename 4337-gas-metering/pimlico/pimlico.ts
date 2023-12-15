@@ -265,6 +265,7 @@ sponsoredUserOperation.signature = await signUserOperation(
   signer,
   chainID,
   entryPointAddress,
+  chainAddresses.SAFE_4337_MODULE_ADDRESS,
 );
 
 await submitUserOperation(

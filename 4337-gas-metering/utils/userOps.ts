@@ -65,6 +65,7 @@ export const signUserOperation = async (
   signer: PrivateKeyAccount,
   chainID: any,
   entryPointAddress: any,
+  safe4337ModuleAddress: any,
 ) => {
   const signatures = [
     {
@@ -72,8 +73,7 @@ export const signUserOperation = async (
       data: await signer.signTypedData({
         domain: {
           chainId: chainID,
-          verifyingContract:
-            SAFE_ADDRESSES_MAP[safeVersion][chainID].SAFE_4337_MODULE_ADDRESS,
+          verifyingContract: safe4337ModuleAddress,
         },
         types: EIP712_SAFE_OPERATION_TYPE,
         primaryType: "SafeOp",
