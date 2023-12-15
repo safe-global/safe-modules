@@ -7,9 +7,10 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "pimlico:account": "tsx ./pimlico/pimlico-account.ts",
-    "pimlico:erc20": "tsx ./pimlico/pimlico-erc20.ts",
-    "pimlico:erc721": "tsx ./pimlico/pimlico-erc721.ts",
+    "pimlico:account": "tsx ./pimlico/pimlico.ts account",
+    "pimlico:erc20": "tsx ./pimlico/pimlico.ts erc20",
+    "pimlico:erc721": "tsx ./pimlico/pimlico.ts erc721",
+    "pimlico": "tsx ./pimlico/pimlico.ts",
     "alchemy:account": "tsx ./alchemy/alchemy.ts account",
     "alchemy:erc20": "tsx ./alchemy/alchemy.ts erc20",
     "alchemy:erc721": "tsx ./alchemy/alchemy.ts erc721",

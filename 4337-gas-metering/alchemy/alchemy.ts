@@ -277,7 +277,9 @@ sponsoredUserOperation.signature = await signUserOperation(
   chainID,
   entryPointAddress,
 );
-console.log("\nSigned Real Data including Paymaster Data Created by Alchemy.\n");
+console.log(
+  "\nSigned Real Data including Paymaster Data Created by Alchemy.\n",
+);
 
 const options = {
   method: "POST",
