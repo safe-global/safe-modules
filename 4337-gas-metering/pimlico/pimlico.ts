@@ -1,25 +1,29 @@
 import dotenv from "dotenv";
-import { getAccountNonce } from "permissionless";
-import { UserOperation, bundlerActions } from "permissionless";
-import { pimlicoBundlerActions } from "permissionless/actions/pimlico";
-import { Hash, createClient, createPublicClient, http } from "viem";
+import { getAccountNonce, UserOperation, bundlerActions } from "permissionless";
+import {
+  pimlicoBundlerActions,
+  pimlicoPaymasterActions,
+} from "permissionless/actions/pimlico";
+import { setTimeout } from "timers/promises";
+import { Client, Hash, createClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { goerli } from "viem/chains";
+import { goerli, polygonMumbai } from "viem/chains";
 import {
   SAFE_ADDRESSES_MAP,
-  encodeCallData,
   getAccountAddress,
   getAccountInitCode,
 } from "../utils/safe";
-import { submitUserOperation, signUserOperation } from "../utils/userOps";
-import { setTimeout } from "timers/promises";
 import {
-  generateTransferCallData,
+  submitUserOperationPimlico,
+  signUserOperation,
+  txTypes,
+  createCallData,
+} from "../utils/userOps";
+import {
   getERC20Decimals,
   getERC20Balance,
-  mintERC20Token,
+  transferERC20Token,
 } from "../utils/erc20";
-import { generateMintingCallData } from "../utils/erc721";
 
 dotenv.config();
 const paymaster = "pimlico";
@@ -38,6 +42,7 @@ const chainID = Number(process.env.PIMLICO_CHAIN_ID);
 const safeVersion = process.env.SAFE_VERSION as string;
 
 const rpcURL = process.env.PIMLICO_RPC_URL;
+const policyID = process.env.PIMLICO_GAS_POLICY;
 const apiKey = process.env.PIMLICO_API_KEY;
 
 const erc20PaymasterAddress = process.env
@@ -50,12 +55,19 @@ const erc721TokenAddress = process.env
   .PIMLICO_ERC721_TOKEN_CONTRACT as `0x${string}`;
 
 const argv = process.argv.slice(2);
-if (argv.length != 1) {
-  throw new Error("TX Type Argument not passed."); // account || erc20 || erc721
+let usePaymaster!: boolean;
+if (argv.length < 1 || argv.length > 2) {
+  throw new Error("TX Type Argument not passed.");
+} else if (argv.length == 2 && argv[1] == "paymaster=true") {
+  if (policyID) {
+    usePaymaster = true;
+  } else {
+    throw new Error("Paymaster requires policyID to be set.");
+  }
 }
 
 const txType: string = argv[0];
-if (txType != "account" && txType != "erc20" && txType != "erc721") {
+if (!txTypes.includes(txType)) {
   throw new Error("TX Type Argument Invalid");
 }
 
@@ -84,6 +96,7 @@ console.log("Signer Extracted from Private Key.");
 
 let bundlerClient;
 let publicClient;
+let pimlicoPaymasterClient;
 if (chain == "goerli") {
   bundlerClient = createClient({
     transport: http(`https://api.pimlico.io/v1/${chain}/rpc?apikey=${apiKey}`),
@@ -96,6 +109,28 @@ if (chain == "goerli") {
     transport: http(rpcURL),
     chain: goerli,
   });
+
+  pimlicoPaymasterClient = createClient({
+    transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
+    chain: goerli,
+  }).extend(pimlicoPaymasterActions);
+} else if (chain == "mumbai") {
+  bundlerClient = createClient({
+    transport: http(`https://api.pimlico.io/v1/${chain}/rpc?apikey=${apiKey}`),
+    chain: polygonMumbai,
+  })
+    .extend(bundlerActions)
+    .extend(pimlicoBundlerActions);
+
+  publicClient = createPublicClient({
+    transport: http(rpcURL),
+    chain: polygonMumbai,
+  });
+
+  pimlicoPaymasterClient = createClient({
+    transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
+    chain: polygonMumbai,
+  }).extend(pimlicoPaymasterActions);
 } else {
   throw new Error(
     "Current code only support limited networks. Please make required changes if you want to use custom network.",
@@ -128,137 +163,128 @@ const senderAddress = await getAccountAddress({
   paymasterAddress: erc20PaymasterAddress,
 });
 console.log("\nCounterfactual Sender Address Created:", senderAddress);
-console.log(
-  "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
-);
+if (chain == "mumbai") {
+  console.log(
+    "Address Link: https://mumbai.polygonscan.com/address/" + senderAddress,
+  );
+} else {
+  console.log(
+    "Address Link: https://" + chain + ".etherscan.io/address/" + senderAddress,
+  );
+}
 
 const contractCode = await publicClient.getBytecode({ address: senderAddress });
 
 if (contractCode) {
   console.log("\nThe Safe is already deployed.");
   if (txType == "account") {
-    console.log("");
     process.exit(0);
   }
 } else {
   console.log(
-    "\nDeploying a new Safe and executing calldata passed with it (if any).\n",
+    "\nDeploying a new Safe and executing calldata passed with it (if any).",
   );
 }
 
-const newNonce = await getAccountNonce(publicClient, {
+const newNonce = await getAccountNonce(publicClient as Client, {
   entryPoint: entryPointAddress,
   sender: senderAddress,
 });
 console.log("\nNonce for the sender received from EntryPoint.");
 
-// Fetch USDC balance of sender
-const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);
-const usdcAmount = BigInt(10 ** usdcDecimals);
-let senderUSDCBalance = await getERC20Balance(
-  usdcTokenAddress,
+let txCallData: `0x${string}` = await createCallData(
+  chain,
   publicClient,
+  signer,
+  txType,
   senderAddress,
+  erc20TokenAddress,
+  erc721TokenAddress,
+  paymaster,
 );
-console.log(
-  "\nSafe Wallet USDC Balance:",
-  Number(senderUSDCBalance / usdcAmount),
-);
-
-if (senderUSDCBalance < BigInt(1) * usdcAmount) {
-  console.log(
-    "\nPlease deposit atleast 2 USDC Token for paying the Paymaster.",
-  );
-  while (senderUSDCBalance < BigInt(1) * usdcAmount) {
-    await setTimeout(30000);
-    senderUSDCBalance = await getERC20Balance(
-      usdcTokenAddress,
-      publicClient,
-      senderAddress,
-    );
-  }
-  console.log(
-    "\nUpdated Safe Wallet USDC Balance:",
-    Number(senderUSDCBalance / usdcAmount),
-  );
-}
-
-let txCallData!: `0x${string}`;
-
-if (txType == "account") {
-  txCallData = encodeCallData({
-    to: senderAddress,
-    data: "0x",
-    value: 0n,
-  });
-} else if (txType == "erc20") {
-  // Token Configurations
-  const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient);
-  const erc20Amount = BigInt(10 ** erc20Decimals);
-  let senderERC20Balance = await getERC20Balance(
-    erc20TokenAddress,
-    publicClient,
-    senderAddress,
-  );
-  console.log(
-    "\nSafe Wallet ERC20 Balance:",
-    Number(senderERC20Balance / erc20Amount),
-  );
-
-  // Trying to mint tokens (Make sure ERC20 Token Contract is mintable by anyone).
-  if (senderERC20Balance < erc20Amount) {
-    console.log("\nMinting ERC20 Tokens to Safe Wallet.");
-    await mintERC20Token(
-      erc20TokenAddress,
-      publicClient,
-      signer,
-      senderAddress,
-      erc20Amount,
-      chain,
-      paymaster,
-    );
-
-    while (senderERC20Balance < erc20Amount) {
-      await setTimeout(15000);
-      senderERC20Balance = await getERC20Balance(
-        erc20TokenAddress,
-        publicClient,
-        senderAddress,
-      );
-    }
-    console.log(
-      "\nUpdated Safe Wallet ERC20 Balance:",
-      Number(senderERC20Balance / erc20Amount),
-    );
-  }
-  txCallData = encodeCallData({
-    to: erc20TokenAddress,
-    data: generateTransferCallData(signer.address, erc20Amount), // transfer() function call with corresponding data.
-    value: 0n,
-  });
-} else if (txType == "erc721") {
-  txCallData = encodeCallData({
-    to: erc721TokenAddress,
-    data: generateMintingCallData(signer.address), // safeMint() function call with corresponding data.
-    value: 0n,
-  });
-}
-
-const gasPriceResult = await bundlerClient.getUserOperationGasPrice();
 
 const sponsoredUserOperation: UserOperation = {
   sender: senderAddress,
   nonce: newNonce,
   initCode: contractCode ? "0x" : initCode,
   callData: txCallData,
-  callGasLimit: 100_000n, // Gas Values Hardcoded for now at a high value
-  verificationGasLimit: 500_000n,
-  preVerificationGas: 50_000n,
-  maxFeePerGas: gasPriceResult.fast.maxFeePerGas,
-  maxPriorityFeePerGas: gasPriceResult.fast.maxPriorityFeePerGas,
+  callGasLimit: 1n, // All Gas Values will be filled by Estimation Response Data.
+  verificationGasLimit: 1n,
+  preVerificationGas: 1n,
+  maxFeePerGas: 1n,
+  maxPriorityFeePerGas: 1n,
   paymasterAndData: erc20PaymasterAddress,
   signature: "0x",
 };
+
+const gasEstimate = await bundlerClient.estimateUserOperationGas({
+  userOperation: sponsoredUserOperation,
+  entryPoint: entryPointAddress,
+});
+const maxGasPriceResult = await bundlerClient.getUserOperationGasPrice();
+
+sponsoredUserOperation.callGasLimit = gasEstimate.callGasLimit;
+sponsoredUserOperation.verificationGasLimit = gasEstimate.verificationGasLimit;
+sponsoredUserOperation.preVerificationGas = gasEstimate.preVerificationGas;
+sponsoredUserOperation.maxFeePerGas = maxGasPriceResult.fast.maxFeePerGas;
+sponsoredUserOperation.maxPriorityFeePerGas =
+  maxGasPriceResult.fast.maxPriorityFeePerGas;
+
+if (usePaymaster) {
+  const sponsorResult = await pimlicoPaymasterClient.sponsorUserOperation({
+    userOperation: sponsoredUserOperation,
+    entryPoint: entryPointAddress,
+    sponsorshipPolicyId: policyID,
+  });
+
+  sponsoredUserOperation.callGasLimit = sponsorResult.callGasLimit;
+  sponsoredUserOperation.verificationGasLimit =
+    sponsorResult.verificationGasLimit;
+  sponsoredUserOperation.preVerificationGas = sponsorResult.preVerificationGas;
+  sponsoredUserOperation.paymasterAndData = sponsorResult.paymasterAndData;
+
+} else {
+
+  // Fetch USDC balance of sender
+  const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);
+  const usdcAmount = BigInt(10 ** usdcDecimals);
+  let senderUSDCBalance = await getERC20Balance(
+    usdcTokenAddress,
+    publicClient,
+    senderAddress,
+  );
+  console.log(
+    "\nSafe Wallet USDC Balance:",
+    Number(senderUSDCBalance / usdcAmount),
+  );
+
+  if (senderUSDCBalance < BigInt(1) * usdcAmount) {
+    console.log(
+      "\nTransferring 1 USDC Token for paying the Paymaster from Sender to Safe.",
+    );
+    await transferERC20Token(
+      usdcTokenAddress,
+      publicClient,
+      signer,
+      senderAddress,
+      BigInt(1) * usdcAmount,
+      chain,
+      paymaster,
+    );
+    while (senderUSDCBalance < BigInt(1) * usdcAmount) {
+      await setTimeout(15000);
+      senderUSDCBalance = await getERC20Balance(
+        usdcTokenAddress,
+        publicClient,
+        senderAddress,
+      );
+    }
+    console.log(
+      "\nUpdated Safe Wallet USDC Balance:",
+      Number(senderUSDCBalance / usdcAmount),
+    );
+  }
+}
 
 sponsoredUserOperation.signature = await signUserOperation(
   sponsoredUserOperation,
@@ -268,7 +294,7 @@ sponsoredUserOperation.signature = await signUserOperation(
   chainAddresses.SAFE_4337_MODULE_ADDRESS,
 );
 
-await submitUserOperation(
+await submitUserOperationPimlico(
   sponsoredUserOperation,
   bundlerClient,
   entryPointAddress,
