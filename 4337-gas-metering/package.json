@@ -41,16 +41,17 @@
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
   "dependencies": {
-    "@alchemy/aa-accounts": "^1.2.0",
-    "@alchemy/aa-alchemy": "^1.2.0",
-    "@alchemy/aa-core": "^1.2.0",
-    "dotenv": "^16.3.1",
-    "permissionless": "^0.0.11",
-    "viem": "^1.19.11"
+    "@alchemy/aa-accounts": "1.2.0",
+    "@alchemy/aa-alchemy": "1.2.0",
+    "@alchemy/aa-core": "1.2.0",
+    "alchemy-sdk": "3.1.0",
+    "dotenv": "16.3.1",
+    "permissionless": "0.0.16",
+    "viem": "1.19.11"
   },
   "devDependencies": {
-    "@types/node": "^20.10.2",
-    "prettier": "^3.1.0",
-    "tsx": "^3.13.0"
+    "@types/node": "20.10.2",
+    "prettier": "3.1.0",
+    "tsx": "3.13.0"
   }
 }
