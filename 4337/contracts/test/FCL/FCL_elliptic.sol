@@ -359,7 +359,12 @@ function SqrtMod(uint256 self) internal view returns (uint256 result){
             if (scalar_u == 0 && scalar_v == 0) return 0;
 
             (H0, H1) = ecAff_add(gx, gy, Q0, Q1); 
+            if((H0==0)&&(H1==0))//handling Q=-G
+            {
+                scalar_u=addmod(scalar_u, n-scalar_v, n);
+                scalar_v=0;
 
+            }
             assembly {
                 for { let T4 := add(shl(1, and(shr(index, scalar_v), 1)), and(shr(index, scalar_u), 1)) } eq(T4, 0) {
                     index := sub(index, 1)
@@ -442,12 +447,10 @@ function SqrtMod(uint256 self) internal view returns (uint256 result){
                                 T3 := mulmod(X, T2, p) // S = X1*V
 
                                 T1 := mulmod(T1, T2, p) // W=UV
-                                y2 := addmod(X, zz, p)  //X+ZZ
-                                let TT1 := addmod(X, sub(p, zz), p) //X-ZZ
-                                y2 := mulmod(y2, TT1, p) //(X-ZZ)(X+ZZ)
-                                T4 := mulmod(3, y2, p) //M
+                                y2 := mulmod(addmod(X, zz, p), addmod(X, sub(p, zz), p), p) //(X-ZZ)(X+ZZ)
+                                T4 := mulmod(3, y2, p) //M=3*(X-ZZ)(X+ZZ)
 
-                                zzz := mulmod(TT1, zzz, p) //zzz3=W*zzz1
+                                zzz := mulmod(T1, zzz, p) //zzz3=W*zzz1
                                 zz := mulmod(T2, zz, p) //zz3=V*ZZ1, V free
 
                                 X := addmod(mulmod(T4, T4, p), mulmod(minus_2, T3, p), p) //X3=M^2-2S

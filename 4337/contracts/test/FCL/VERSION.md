@@ -1,1 +1,1 @@
-The sources in this directory were vendored from the [`FreshCryptoLib` repository at commit `e2830cb`](https://github.com/rdubois-crypto/FreshCryptoLib/tree/e2830cb5d7b0f6ae35b5800287c0f5c92388070b).
+The sources in this directory were vendored from the [`FreshCryptoLib` repository at commit `ee7bd6f`](https://github.com/rdubois-crypto/FreshCryptoLib/tree/ee7bd6f2ebf72aebe0b2eda6caf7b8d2573f31c9).

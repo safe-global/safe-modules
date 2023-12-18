@@ -93,13 +93,26 @@ library FCL_WebAuthn {
         uint256[2] calldata rs,
         uint256[2] calldata Q
     ) internal view returns (bool) {
+        return checkSignature(authenticatorData, authenticatorDataFlagMask, clientData, clientChallenge, clientChallengeDataOffset, rs, Q[0], Q[1]);
+    }
+
+    function  checkSignature (
+        bytes calldata authenticatorData,
+        bytes1 authenticatorDataFlagMask,
+        bytes calldata clientData,
+        bytes32 clientChallenge,
+        uint256 clientChallengeDataOffset,
+        uint256[2] calldata rs,
+        uint256 Qx,
+        uint256 Qy
+    ) internal view returns (bool) {
         // Let the caller check if User Presence (0x01) or User Verification (0x04) are set
 
         bytes32 message = FCL_WebAuthn.WebAuthn_format(
             authenticatorData, authenticatorDataFlagMask, clientData, clientChallenge, clientChallengeDataOffset, rs
         );
 
-        bool result = FCL_ecdsa_utils.ecdsa_verify(message, rs, Q);
+        bool result = FCL_ecdsa_utils.ecdsa_verify(message, rs, Qx, Qy);
 
         return result;
     }

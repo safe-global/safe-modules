@@ -35,14 +35,12 @@ library FCL_ecdsa_utils {
      * @dev ECDSA verification, given , signature, and public key.
      */
 
-    function ecdsa_verify(bytes32 message, uint256[2] calldata rs, uint256[2] calldata Q) internal view returns (bool) {
+    function ecdsa_verify(bytes32 message, uint256[2] calldata rs, uint256 Qx, uint256 Qy) internal view returns (bool) {
         uint256 r = rs[0];
         uint256 s = rs[1];
         if (r == 0 || r >= FCL_Elliptic_ZZ.n || s == 0 || s >= FCL_Elliptic_ZZ.n) {
             return false;
         }
-        uint256 Qx = Q[0];
-        uint256 Qy = Q[1];
         if (!FCL_Elliptic_ZZ.ecAff_isOnCurve(Qx, Qy)) {
             return false;
         }
@@ -58,6 +56,10 @@ library FCL_ecdsa_utils {
         
        
         return x1 == 0;
+    }
+
+    function ecdsa_verify(bytes32 message, uint256[2] calldata rs, uint256[2] calldata Q) internal view returns (bool) {
+        return ecdsa_verify(message, rs, Q[0], Q[1]);
     }
 
     function ec_recover_r1(uint256 h, uint256 v, uint256 r, uint256 s) internal view returns (address)
