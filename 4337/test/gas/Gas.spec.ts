@@ -70,6 +70,99 @@ describe('Gas Metering', () => {
     })
   })
 
+  describe('Safe Deployment + Enabling 4337 Module + Native Transfers', () => {
+    it('Safe with 4337 Module Deployment + Native Transfer', async () => {
+      const { user, entryPoint, validator, safe } = await setupTests()
+      const amount = ethers.parseEther('0.00001')
+
+      expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
+      await user.sendTransaction({
+        to: safe.address,
+        value: amount,
+      })
+      let safeBalBefore = await ethers.provider.getBalance(safe.address)
+      expect(safeBalBefore).to.equal(amount)
+
+      const safeOp = buildSafeUserOpTransaction(
+        safe.address,
+        user.address,
+        amount,
+        '0x',
+        await entryPoint.getNonce(safe.address, 0),
+        await entryPoint.getAddress(),
+      )
+
+      const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+
+      const userOp = buildUserOperationFromSafeUserOperation({
+        safeAddress: safe.address,
+        safeOp,
+        signature,
+        initCode: safe.getInitCode(),
+      })
+
+      await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.executeUserOp(userOp, 0))
+
+      let safeBalAfter = await ethers.provider.getBalance(safe.address)
+      expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
+      expect(safeBalAfter).to.equal(0)
+    })
+
+    it('Safe with 4337 Module Native Transfer', async () => {
+      const { user, entryPoint, validator, safe } = await setupTests()
+
+      expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
+
+      let safeOp = buildSafeUserOpTransaction(
+        safe.address,
+        safe.address,
+        0,
+        '0x',
+        await entryPoint.getNonce(safe.address, 0),
+        await entryPoint.getAddress(),
+      )
+      let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+      let userOp = buildUserOperationFromSafeUserOperation({
+        safeAddress: safe.address,
+        safeOp,
+        signature,
+        initCode: safe.getInitCode(),
+      })
+
+      await entryPoint.executeUserOp(userOp, 0)
+      expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
+
+      // Now Native Transfer
+      const amount = ethers.parseEther('0.00001')
+      expect(await ethers.provider.getBalance(safe.address)).to.equal(0)
+      await user.sendTransaction({
+        to: safe.address,
+        value: amount,
+      })
+      expect(await ethers.provider.getBalance(safe.address)).to.equal(amount)
+
+      safeOp = buildSafeUserOpTransaction(
+        safe.address,
+        user.address,
+        amount,
+        '0x',
+        await entryPoint.getNonce(safe.address, 0),
+        await entryPoint.getAddress(),
+      )
+      signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+      userOp = buildUserOperationFromSafeUserOperation({
+        safeAddress: safe.address,
+        safeOp,
+        signature,
+        initCode: safe.getInitCode(),
+      })
+
+      await logGas('Safe with 4337 Module Native Transfer', entryPoint.executeUserOp(userOp, 0))
+
+      expect(await ethers.provider.getBalance(safe.address)).to.equal(0)
+    })
+  })
+
   describe('Safe Deployment + Enabling 4337 Module + Token Operations', () => {
     it('Safe with 4337 Module Deployment + ERC20 Token Transfer', async () => {
       const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
