@@ -23,17 +23,8 @@ methods {
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
     function executeUserOp(address, uint256, bytes, uint8) external;
     function executeUserOpWithErrorString(address, uint256, bytes, uint8) external;
-    function Safe4337Module.getOperationHash(
-        address safe,
-        bytes callData,
-        uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
-        uint256 callGasLimit,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        uint48 validAfter,
-        uint48 validUntil
+    function getOperationHash(
+        Safe4337Module.UserOperation userOp
     ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
 }
 ghost ERC2771MessageSender() returns address;
@@ -100,23 +91,14 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
     require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
     
     bytes signatures = safeContract.getSignatures(userOp.signature);
-    bytes32 transactionHash = getOperationHash(userOp.sender,
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            validAfter,
-            validUntil);
+    bytes32 safeOpHash = getOperationHash(userOp);
 
     bytes checkSignaturesBytes;
-    safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
+    safeContract.checkSignatures@withrevert(e, safeOpHash, checkSignaturesBytes, signatures);
     bool checkSignaturesOk = !lastReverted;
 
     uint256 validationData = validateUserOp(e, userOp, userOpHash, missingAccountFunds);
-    assert (checkSignaturesOk => (validationData & 0) == 0), "validation data incorrect";
+    assert (checkSignaturesOk => (validationData & 1) == 0), "validation data incorrect";
 }
 
 rule balanceChangeAfterValidateUserOp(

@@ -12,18 +12,9 @@ methods {
 
     // Optional
     function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
-    function Safe4337Module.getOperationHash(
-        address safe,
-        bytes callData,
-        uint256 nonce,
-        uint256 preVerificationGas,
-        uint256 verificationGasLimit,
-        uint256 callGasLimit,
-        uint256 maxFeePerGas,
-        uint256 maxPriorityFeePerGas,
-        uint48 validAfter,
-        uint48 validUntil
-    ) external returns(bytes32) envfree => CONSTANT;
+    function getOperationHash(
+        Safe4337Module.UserOperation userOp
+    ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
 }
 
 rule validationDataLastBitOneIfCheckSignaturesFails(address sender,
@@ -38,19 +29,10 @@ rule validationDataLastBitOneIfCheckSignaturesFails(address sender,
     require userOp.sender == safeContract;
 
     bytes signatures = safeContract.getSignatures(userOp.signature);
-    bytes32 transactionHash = getOperationHash(userOp.sender,
-            userOp.callData,
-            userOp.nonce,
-            userOp.preVerificationGas,
-            userOp.verificationGasLimit,
-            userOp.callGasLimit,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
-            validAfter,
-            validUntil);
+    bytes32 safeOpHash = getOperationHash(userOp);
 
     bytes checkSignaturesBytes;
-    safeContract.checkSignatures@withrevert(e, transactionHash, checkSignaturesBytes, signatures);
+    safeContract.checkSignatures@withrevert(e, safeOpHash, checkSignaturesBytes, signatures);
     bool checkSignaturesReverted = lastReverted;
 
     uint256 validationData = validateUserOp(e, userOp, dummyData, missingAccountFunds);
