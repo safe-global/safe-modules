@@ -244,7 +244,7 @@ if (usePaymaster) {
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit;
 
   const weiToSend = parseEther("0.02");
-  const safeETHBalance = await publicClient.getBalance({
+  let safeETHBalance = await publicClient.getBalance({
     address: senderAddress,
   });
   if (safeETHBalance < weiToSend) {
@@ -261,7 +261,12 @@ if (usePaymaster) {
       chain,
       paymaster,
     );
-    await setTimeout(30000); // Sometimes it takes time to index.
+    while(safeETHBalance < weiToSend){
+      await setTimeout(30000); // Sometimes it takes time to index.
+      safeETHBalance = await publicClient.getBalance({
+        address: senderAddress,
+      });
+    }
     console.log("\nTransferred required ETH for the transaction.");
   }
 }
