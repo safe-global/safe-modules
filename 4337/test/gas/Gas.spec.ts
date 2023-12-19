@@ -80,7 +80,7 @@ describe('Gas Metering', () => {
         to: safe.address,
         value: amount,
       })
-      let safeBalBefore = await ethers.provider.getBalance(safe.address)
+      const safeBalBefore = await ethers.provider.getBalance(safe.address)
       expect(safeBalBefore).to.equal(amount)
 
       const safeOp = buildSafeUserOpTransaction(
@@ -103,7 +103,7 @@ describe('Gas Metering', () => {
 
       await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.executeUserOp(userOp, 0))
 
-      let safeBalAfter = await ethers.provider.getBalance(safe.address)
+      const safeBalAfter = await ethers.provider.getBalance(safe.address)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
       expect(safeBalAfter).to.equal(0)
     })
