@@ -117,7 +117,7 @@ Gas Used (Transaction): 199262
 ## Safe Deployment + ERC20 Transaction with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:erc20          
+npm run pimlico:erc20
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc20
 > tsx ./pimlico/pimlico.ts erc20
@@ -281,7 +281,7 @@ Gas Used (Transaction): 231619
 ## Safe Deployment with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:account:paymaster 
+npm run pimlico:account:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:account:paymaster
 > tsx ./pimlico/pimlico.ts account paymaster=true
@@ -313,7 +313,7 @@ Gas Used (Transaction): 448172
 ## Safe Deployment + Native Transfer with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:native-transfer:paymaster 
+npm run pimlico:native-transfer:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer:paymaster
 > tsx ./pimlico/pimlico.ts native-transfer paymaster=true
@@ -377,7 +377,7 @@ Gas Used (Transaction): 123064
 ## Safe Deployment + ERC20 Transaction with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:erc20:paymaster          
+npm run pimlico:erc20:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc20:paymaster
 > tsx ./pimlico/pimlico.ts erc20 paymaster=true
@@ -453,7 +453,7 @@ Gas Used (Transaction): 126461
 ## Safe Deployment + ERC721 Transaction with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:erc721:paymaster 
+npm run pimlico:erc721:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc721:paymaster
 > tsx ./pimlico/pimlico.ts erc721 paymaster=true

@@ -243,9 +243,7 @@ if (usePaymaster) {
     sponsorResult.verificationGasLimit;
   sponsoredUserOperation.preVerificationGas = sponsorResult.preVerificationGas;
   sponsoredUserOperation.paymasterAndData = sponsorResult.paymasterAndData;
-
 } else {
-
   // Fetch USDC balance of sender
   const usdcDecimals = await getERC20Decimals(usdcTokenAddress, publicClient);
   const usdcAmount = BigInt(10 ** usdcDecimals);

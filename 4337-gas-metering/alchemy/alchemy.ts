@@ -261,7 +261,7 @@ if (usePaymaster) {
       chain,
       paymaster,
     );
-    while(safeETHBalance < weiToSend){
+    while (safeETHBalance < weiToSend) {
       await setTimeout(30000); // Sometimes it takes time to index.
       safeETHBalance = await publicClient.getBalance({
         address: senderAddress,

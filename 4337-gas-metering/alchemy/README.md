@@ -129,7 +129,7 @@ Gas Used (Transaction): 107057
 ## Safe Deployment + ERC20 Transaction with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:erc20          
+npm run alchemy:erc20
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc20
 > tsx ./alchemy/alchemy.ts erc20
@@ -309,7 +309,7 @@ Gas Used (Transaction): 139420
 ## Safe Deployment with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:account:paymaster 
+npm run alchemy:account:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:account:paymaster
 > tsx ./alchemy/alchemy.ts account paymaster=true
@@ -417,7 +417,7 @@ Gas Used (Transaction): 130202
 ## Safe Deployment + ERC20 Transaction with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:erc20:paymaster          
+npm run alchemy:erc20:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc20:paymaster
 > tsx ./alchemy/alchemy.ts erc20 paymaster=true
