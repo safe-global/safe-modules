@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
 import type { Address } from "abitype";
-import type { Hex, PrivateKeyAccount } from "viem";
-import {
-  EIP712_SAFE_OPERATION_TYPE,
-  encodeCallData,
-} from "./safe";
+import { fromHex, type Hex, type PrivateKeyAccount } from "viem";
+import { EIP712_SAFE_OPERATION_TYPE, encodeCallData } from "./safe";
 import { Alchemy } from "alchemy-sdk";
 import { setTimeout } from "timers/promises";
 import {
@@ -86,6 +83,8 @@ export const submitUserOperationPimlico = async (
         `.etherscan.io/tx/${receipt.receipt.transactionHash}`,
     );
   }
+  console.log(`\nGas Used (Account or Paymaster): ${receipt.actualGasUsed}`);
+  console.log(`Gas Used (Transaction): ${receipt.receipt.gasUsed}\n`);
 };
 
 export const signUserOperation = async (
@@ -373,9 +372,18 @@ export const submitUserOperationAlchemy = async (
         "\nTransaction Link: https://" +
           chain +
           ".etherscan.io/tx/" +
-          responseValues["result"]["receipt"]["transactionHash"] +
-          "\n",
+          responseValues["result"]["receipt"]["transactionHash"],
       );
+      let actualGasUsed = fromHex(
+        responseValues["result"]["actualGasUsed"],
+        "number",
+      );
+      let gasUsed = fromHex(
+        responseValues["result"]["receipt"]["gasUsed"],
+        "number",
+      );
+      console.log(`\nGas Used (Account or Paymaster): ${actualGasUsed}`);
+      console.log(`Gas Used (Transaction): ${gasUsed}\n`);
     } else {
       console.log("\n" + responseValues["error"]);
     }
