@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { getAccountNonce, UserOperation, bundlerActions } from "permissionless";
+import { getAccountNonce, bundlerActions } from "permissionless";
 import {
   pimlicoBundlerActions,
   pimlicoPaymasterActions,
@@ -14,6 +14,7 @@ import {
   getAccountInitCode,
 } from "../utils/safe";
 import {
+  UserOperation,
   submitUserOperationPimlico,
   signUserOperation,
   txTypes,

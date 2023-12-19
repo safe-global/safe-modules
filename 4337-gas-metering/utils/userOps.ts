@@ -3,7 +3,6 @@ import type { Address } from "abitype";
 import type { Hex, PrivateKeyAccount } from "viem";
 import {
   EIP712_SAFE_OPERATION_TYPE,
-  SAFE_ADDRESSES_MAP,
   encodeCallData,
 } from "./safe";
 import { Alchemy } from "alchemy-sdk";
@@ -108,13 +107,17 @@ export const signUserOperation = async (
         primaryType: "SafeOp",
         message: {
           safe: userOperation.sender,
-          callData: userOperation.callData,
           nonce: userOperation.nonce,
-          preVerificationGas: userOperation.preVerificationGas,
-          verificationGasLimit: userOperation.verificationGasLimit,
+          initCode: userOperation.initCode,
+          callData: userOperation.callData,
           callGasLimit: userOperation.callGasLimit,
+          verificationGasLimit: userOperation.verificationGasLimit,
+          preVerificationGas: userOperation.preVerificationGas,
           maxFeePerGas: userOperation.maxFeePerGas,
           maxPriorityFeePerGas: userOperation.maxPriorityFeePerGas,
+          paymasterAndData: userOperation.paymasterAndData,
+          validAfter: "0x000000000000",
+          validUntil: "0x000000000000",
           entryPoint: entryPointAddress,
         },
       }),
@@ -125,7 +128,7 @@ export const signUserOperation = async (
     left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()),
   );
 
-  let signatureBytes: Address = "0x";
+  let signatureBytes: Address = "0x000000000000000000000000";
   for (const sig of signatures) {
     signatureBytes += sig.data.slice(2);
   }
