@@ -6,6 +6,7 @@ import { setTimeout } from "timers/promises";
 dotenv.config();
 const pimlicoRPCURL = process.env.PIMLICO_RPC_URL;
 const alchemyRPCURL = process.env.ALCHEMY_RPC_URL;
+const gelatoRPCURL = process.env.GELATO_RPC_URL;
 
 export const transferETH = async (
   publicClient: any,
@@ -52,9 +53,21 @@ export const transferETH = async (
         "Current code only support limited networks. Please make required changes if you want to use custom network.",
       );
     }
+  } else if (paymaster == "gelato") {
+    if (chain == "sepolia") {
+      walletClient = createWalletClient({
+        account: signer,
+        chain: sepolia,
+        transport: http(gelatoRPCURL),
+      });
+    } else {
+      throw new Error(
+        "Current code only support limited networks. Please make required changes if you want to use custom network.",
+      );
+    }
   } else {
     throw new Error(
-      "Current code only support Pimlico and Alchemy. Please make required changes if you want to use a different Paymaster.",
+      "Current code only support Pimlico, Alchemy and Gelato. Please make required changes if you want to use a different Paymaster.",
     );
   }
 
