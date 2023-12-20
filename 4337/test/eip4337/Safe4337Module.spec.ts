@@ -43,27 +43,61 @@ describe('Safe4337Module', () => {
       const validAfter = (await timestamp()) + 10000
       const validUntil = validAfter + 10000000000
 
-      const operation = buildSafeUserOp({
+      const safeOp = buildSafeUserOp({
         safe: safeAddress,
         nonce: '0',
         entryPoint: await entryPoint.getAddress(),
         validAfter,
         validUntil,
       })
-      const operationHash = await safeModule.getOperationHash(
-        safeAddress,
-        operation.callData,
-        operation.nonce,
-        operation.preVerificationGas,
-        operation.verificationGasLimit,
-        operation.callGasLimit,
-        operation.maxFeePerGas,
-        operation.maxPriorityFeePerGas,
-        operation.validAfter,
-        operation.validUntil,
-      )
+      const userOp = buildUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: '0x',
+      })
+      const operationHash = await safeModule.getOperationHash(userOp)
 
-      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), operation, await chainId()))
+      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId()))
+    })
+
+    it('should change if any UserOperation fields change', async () => {
+      const { validator } = await setupTests()
+
+      const signature = ({ validAfter, validUntil }: { validAfter: number; validUntil: number }) =>
+        ethers.solidityPacked(['uint48', 'uint48'], [validAfter, validUntil])
+      const userOp = {
+        sender: '0x0000000000000000000000000000000000000011',
+        nonce: 0x12,
+        initCode: '0x13',
+        callData: '0x14',
+        callGasLimit: 0x15,
+        verificationGasLimit: 0x16,
+        preVerificationGas: 0x17,
+        maxFeePerGas: 0x18,
+        maxPriorityFeePerGas: 0x19,
+        paymasterAndData: '0x1a',
+        signature: signature({
+          validAfter: 0x1b,
+          validUntil: 0x1c,
+        }),
+      }
+      const operationHash = await validator.getOperationHash(userOp)
+
+      for (const [name, value] of [
+        ['sender', '0x0000000000000000000000000000000000000021'],
+        ['nonce', 0x22],
+        ['initCode', '0x23'],
+        ['callData', '0x24'],
+        ['callGasLimit', 0x25],
+        ['verificationGasLimit', 0x26],
+        ['preVerificationGas', 0x27],
+        ['maxFeePerGas', 0x28],
+        ['maxPriorityFeePerGas', 0x29],
+        ['paymasterAndData', '0x2a'],
+        ['signature', signature({ validAfter: 0x2b, validUntil: 0x1c })],
+        ['signature', signature({ validAfter: 0x1b, validUntil: 0x2c })],
+      ]) {
+        expect(await validator.getOperationHash({ ...userOp, [name]: value })).to.not.equal(operationHash)
+      }
     })
   })
 
@@ -82,7 +116,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })
@@ -109,7 +142,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })
@@ -127,7 +159,6 @@ describe('Safe4337Module', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })
@@ -150,14 +181,15 @@ describe('Safe4337Module', () => {
         await entryPoint.getAddress(),
         false,
         false,
-        validAfter,
-        validUntil,
+        {
+          validAfter,
+          validUntil,
+        },
       )
 
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
-      const signature = buildSignatureBytes([await signHash(user, safeOpHash)], validAfter, validUntil)
+      const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: await safeModule.getAddress(),
         safeOp,
         signature,
       })

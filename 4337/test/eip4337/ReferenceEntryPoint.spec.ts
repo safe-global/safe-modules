@@ -76,13 +76,16 @@ describe('Safe4337Module - Reference EntryPoint', () => {
           '0x',
           `${nonce}`,
           await entryPoint.getAddress(),
+          false,
+          false,
+          {
+            initCode: nonce === 0 ? safe.getInitCode() : '0x',
+          },
         )
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildUserOperationFromSafeUserOperation({
-          safeAddress: safe.address,
           safeOp,
           signature,
-          initCode: nonce === 0 ? safe.getInitCode() : '0x',
         })
       }),
     )
@@ -122,19 +125,16 @@ describe('Safe4337Module - Reference EntryPoint', () => {
           await entryPoint.getAddress(),
           false,
           false,
-          validAfter,
-          validUntil,
+          {
+            initCode: nonce === 0 ? safe.getInitCode() : '0x',
+            validAfter,
+            validUntil,
+          },
         )
-        const signature = buildSignatureBytes(
-          [await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())],
-          validAfter,
-          validUntil,
-        )
+        const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildUserOperationFromSafeUserOperation({
-          safeAddress: safe.address,
           safeOp,
           signature,
-          initCode: nonce === 0 ? safe.getInitCode() : '0x',
         })
       }),
     )
@@ -166,7 +166,19 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
 
     const transfer = ethers.parseEther('0.1')
-    const safeOp = buildSafeUserOpTransaction(daughterSafe.address, user.address, transfer, '0x', '0x0', await entryPoint.getAddress())
+    const safeOp = buildSafeUserOpTransaction(
+      daughterSafe.address,
+      user.address,
+      transfer,
+      '0x',
+      '0x0',
+      await entryPoint.getAddress(),
+      false,
+      false,
+      {
+        initCode: daughterSafe.getInitCode(),
+      },
+    )
     const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
     const signature = ethers.solidityPacked(
       ['bytes', 'bytes'],
@@ -205,10 +217,8 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       ],
     )
     const userOp = buildUserOperationFromSafeUserOperation({
-      safeAddress: daughterSafe.address,
       safeOp,
       signature,
-      initCode: daughterSafe.getInitCode(),
     })
 
     const transaction = await logGas(

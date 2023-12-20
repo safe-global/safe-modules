@@ -78,7 +78,7 @@ const runOp = async () => {
 
   let toAddress = '0x02270bd144e70cE6963bA02F575776A16184E1E6'
   let callData = '0x'
-  let value: BigNumberish = ethers.parseEther('0.0001')
+  let value = ethers.parseEther('0.0001')
   if (ERC20_TOKEN_ADDRESS) {
     toAddress = ERC20_TOKEN_ADDRESS
     callData = buildData('transfer(address,uint256)', [user1.address, ethers.parseEther('1')])

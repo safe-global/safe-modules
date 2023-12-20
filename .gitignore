@@ -14,3 +14,4 @@ env/
 .env
 .history
 coverage*
+.certora_internal

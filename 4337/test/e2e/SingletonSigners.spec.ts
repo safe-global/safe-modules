@@ -100,18 +100,15 @@ describe('E2E - Singleton Signers', () => {
       '0x',
       await entryPoint.getNonce(safeAddress, 0),
       await entryPoint.getAddress(),
+      false,
+      false,
+      { initCode },
     )
     const opHash = await validator.getOperationHash(
-      safeOp.safe,
-      safeOp.callData,
-      safeOp.nonce,
-      safeOp.preVerificationGas,
-      safeOp.verificationGasLimit,
-      safeOp.callGasLimit,
-      safeOp.maxFeePerGas,
-      safeOp.maxPriorityFeePerGas,
-      safeOp.validAfter,
-      safeOp.validUntil,
+      buildUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: buildSignatureBytes([]),
+      }),
     )
     const signature = ethers.concat([
       buildSignatureBytes(
@@ -123,10 +120,8 @@ describe('E2E - Singleton Signers', () => {
       ...customSigners.map(({ key }) => ethers.solidityPacked(['uint256', 'bytes'], [32, ethers.toBeHex(BigInt(opHash) ^ key)])),
     ])
     const userOp = buildUserOperationFromSafeUserOperation({
-      safeAddress: safeAddress,
       safeOp,
       signature,
-      initCode,
     })
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
