@@ -42,10 +42,6 @@ contract Account is Safe {
         emit SafeSetup(msg.sender, _owners, _threshold, to, fallbackHandler);
     }
 
-    function getSignatureTimestamps(bytes calldata signature) external returns (uint96 slice) {
-        slice = uint96(bytes12(signature[:12]));
-    }
-
     function getSignatures(bytes calldata signature) external returns (bytes memory slice) {
         slice = signature[12:];
     }
@@ -56,10 +52,6 @@ contract Account is Safe {
 
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
-    }
-
-    function getNativeTokenBalance() public view returns (uint256) {
-        return address(this).balance;
     }
 }
 
@@ -70,19 +62,7 @@ contract AlwaysRevertingAccount {
         revert();
     }
 
-    function getSignatureTimestamps(bytes calldata signature) external returns (uint96 slice) {
-        slice = uint96(bytes12(signature[:12]));
-    }
-
     function getSignatures(bytes calldata signature) external returns (bytes memory slice) {
         slice = signature[12:];
-    }
-
-    function getValidAfterTimestamp(bytes calldata sigs) external pure returns (uint48) {
-        return uint48(bytes6(sigs[:6]));
-    }
-
-    function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
-        return uint48(bytes6(sigs[6:12]));
     }
 }

@@ -8,7 +8,6 @@ methods {
     //ISafe harnessed functions
     function safeContract.getValidAfterTimestamp(bytes sigs) external returns (uint48) envfree;
     function safeContract.getValidUntilTimestamp(bytes sigs) external returns (uint48) envfree;
-    function safeContract.getNativeTokenBalance() external returns (uint256) envfree;
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
     
     // Use a DISPATCHER(true) here to only consider known contracts
@@ -53,10 +52,6 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
         bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
-    uint48 validAfter;
-    uint48 validUntil;
-    require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
-    require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
     checkSignaturesCalled = false;
 
     uint256 validationData = validateUserOp@withrevert(e, userOp, userOpHash, missingAccountFunds);
@@ -85,11 +80,7 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
         bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
-    uint48 validAfter;
-    uint48 validUntil;
-    require validAfter == safeContract.getValidAfterTimestamp(userOp.signature);
-    require validUntil == safeContract.getValidUntilTimestamp(userOp.signature);
-    
+
     bytes signatures = safeContract.getSignatures(userOp.signature);
     bytes32 safeOpHash = getOperationHash(userOp);
 
@@ -109,11 +100,11 @@ rule balanceChangeAfterValidateUserOp(
     calldataarg args;
     env e;
 
-    uint256 balanceBefore = safeContract.getNativeTokenBalance();
-    require balanceBefore >= missingAccountFunds ;
+    uint256 balanceBefore = nativeBalances[safeContract];
+    require balanceBefore >= missingAccountFunds;
     
     validateUserOp(e, userOp, dummyData, missingAccountFunds);
 
-    uint256 balanceAfter = safeContract.getNativeTokenBalance();
+    uint256 balanceAfter = nativeBalances[safeContract];
     assert balanceAfter >= assert_uint256(balanceBefore - missingAccountFunds);
 }
