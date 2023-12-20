@@ -53,15 +53,18 @@ describe('Gas Metering', () => {
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
 
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await logGas('Safe with 4337 Module Deployment', entryPoint.executeUserOp(userOp, 0))
@@ -90,15 +93,18 @@ describe('Gas Metering', () => {
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
 
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.executeUserOp(userOp, 0))
@@ -120,13 +126,16 @@ describe('Gas Metering', () => {
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       let userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await entryPoint.executeUserOp(userOp, 0)
@@ -148,13 +157,16 @@ describe('Gas Metering', () => {
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await logGas('Safe with 4337 Module Native Transfer', entryPoint.executeUserOp(userOp, 0))
@@ -180,15 +192,18 @@ describe('Gas Metering', () => {
         erc20Token.interface.encodeFunctionData('transfer', [user.address, await erc20Token.balanceOf(safe.address)]),
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
 
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await logGas('Safe with 4337 Module Deployment + ERC20 Transfer', entryPoint.executeUserOp(userOp, 0))
@@ -209,13 +224,16 @@ describe('Gas Metering', () => {
         erc721Token.interface.encodeFunctionData('safeMint', [safe.address, tokenID]),
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
@@ -239,13 +257,16 @@ describe('Gas Metering', () => {
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       let userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await entryPoint.executeUserOp(userOp, 0)
@@ -263,13 +284,16 @@ describe('Gas Metering', () => {
         erc20Token.interface.encodeFunctionData('transfer', [user.address, await erc20Token.balanceOf(safe.address)]),
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await logGas('Safe with 4337 Module ERC20 Transfer', entryPoint.executeUserOp(userOp, 0))
@@ -289,13 +313,16 @@ describe('Gas Metering', () => {
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       let userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       await entryPoint.executeUserOp(userOp, 0)
@@ -311,13 +338,16 @@ describe('Gas Metering', () => {
         erc721Token.interface.encodeFunctionData('safeMint', [safe.address, tokenID]),
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
       )
       signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       userOp = buildUserOperationFromSafeUserOperation({
-        safeAddress: safe.address,
         safeOp,
         signature,
-        initCode: safe.getInitCode(),
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
