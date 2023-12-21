@@ -10,7 +10,6 @@
 import { p256 } from '@noble/curves/p256'
 import { ethers, BytesLike } from 'ethers'
 import CBOR from 'cbor'
-import { isArrayBuffer } from 'util/types'
 
 export interface CredentialCreationOptions {
   publicKey: PublicKeyCredentialCreationOptions
@@ -91,17 +90,23 @@ class Credential {
     this.id = ethers.dataSlice(ethers.keccak256(ethers.dataSlice(p256.getPublicKey(this.pk, false), 1)), 12)
   }
 
+  /**
+   * Computes the COSE encoded public key for this credential.
+   * See <https://datatracker.ietf.org/doc/html/rfc8152>.
+   *
+   * @returns Hex-encoded COSE-encoded public key
+   */
   public cosePublicKey(): string {
     const pubk = p256.getPublicKey(this.pk, false)
-    const x = pubk.slice(1, 33)
-    const y = pubk.slice(33, 65)
+    const x = pubk.subarray(1, 33)
+    const y = pubk.subarray(33, 65)
 
     // <https://webauthn.guide/#registration>
     const key = new Map()
     // <https://datatracker.ietf.org/doc/html/rfc8152#section-13.1.1>
     key.set(-1, 1) // crv = P-256
-    key.set(-2, x.buffer)
-    key.set(-3, y.buffer)
+    key.set(-2, b2ab(x))
+    key.set(-3, b2ab(y))
     // <https://datatracker.ietf.org/doc/html/rfc8152#section-7>
     key.set(1, 2) // kty = EC2
     key.set(3, -7) // alg = ES256 (Elliptic curve signature with SHA-256)
@@ -159,7 +164,7 @@ export class WebAuthnCredentials {
       id: base64UrlEncode(credential.id),
       rawId: ethers.getBytes(credential.id),
       response: {
-        clientDataJSON: ethers.toUtf8Bytes(JSON.stringify(clientData)).buffer,
+        clientDataJSON: b2ab(ethers.toUtf8Bytes(JSON.stringify(clientData))),
         attestationObject: b2ab(CBOR.encode(attestationObject)),
       },
       type: 'public-key',
@@ -216,9 +221,9 @@ export class WebAuthnCredentials {
       id: base64UrlEncode(credential.id),
       rawId: ethers.getBytes(credential.id),
       response: {
-        clientDataJSON: ethers.toUtf8Bytes(JSON.stringify(clientData)).buffer,
-        authenticatorData: ethers.getBytes(authenticatorData).buffer,
-        signature: signature.toDERRawBytes(false).buffer,
+        clientDataJSON: b2ab(ethers.toUtf8Bytes(JSON.stringify(clientData))),
+        authenticatorData: b2ab(ethers.getBytes(authenticatorData)),
+        signature: b2ab(signature.toDERRawBytes(false)),
         userHandle: credential.user,
       },
       type: 'public-key',
@@ -235,10 +240,10 @@ export class WebAuthnCredentials {
  * @returns the `base64url` encoded data as a string.
  */
 export function base64UrlEncode(data: BytesLike | ArrayBufferLike): string {
-  const bytes = isArrayBuffer(data) ? new Uint8Array(data) : ethers.getBytes(data)
-  return Buffer.from(bytes).toString('base64url')
+  const bytes = ethers.isBytesLike(data) ? data : new Uint8Array(data)
+  return ethers.encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
 }
 
-function b2ab(buf: Buffer): ArrayBuffer {
+function b2ab(buf: Uint8Array): ArrayBuffer {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }

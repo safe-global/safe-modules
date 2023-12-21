@@ -31,7 +31,7 @@ describe('WebAuthn Shim', () => {
   }
 
   describe('navigator.credentials.create()', () => {
-    it('Safe with 4337 Module Deployment', async () => {
+    it('creates and verifies a new credential', async () => {
       const options = await generateRegistrationOptions({
         rpName: rp.name,
         rpID: rp.id,
@@ -79,7 +79,7 @@ describe('WebAuthn Shim', () => {
   })
 
   describe('navigator.credentials.get()', () => {
-    it('Safe with 4337 Module Deployment', async () => {
+    it('authorises and verifies an existing credential', async () => {
       const credential = navigator.credentials.create({
         publicKey: {
           rp,
