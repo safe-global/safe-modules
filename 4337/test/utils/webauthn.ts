@@ -8,8 +8,9 @@
  */
 
 import { p256 } from '@noble/curves/p256'
-import { ethers } from 'hardhat'
+import { ethers, BytesLike } from 'ethers'
 import CBOR from 'cbor'
+import { isArrayBuffer } from 'util/types'
 
 export interface CredentialCreationOptions {
   publicKey: PublicKeyCredentialCreationOptions
@@ -24,13 +25,13 @@ export interface PublicKeyCredentialCreationOptions {
   user: { id: Uint8Array; displayName: string; name: string }
   challenge: Uint8Array
   pubKeyCredParams: [{ type: 'public-key'; alg: -7 }]
-  timeout: undefined
-  excludeCredentials: undefined
-  authenticatorSelection: undefined
-  hints: undefined
+  timeout?: undefined
+  excludeCredentials?: undefined
+  authenticatorSelection?: undefined
+  hints?: undefined
   attestation?: 'none'
-  attestationFormats: undefined
-  extensions: undefined
+  attestationFormats?: undefined
+  extensions?: undefined
 }
 
 export interface CredentialRequestOptions {
@@ -43,20 +44,18 @@ export interface CredentialRequestOptions {
  */
 export interface PublicKeyCredentialRequestOptions {
   challenge: Uint8Array
-  timeout: undefined
+  timeout?: undefined
   rpId: string
-  allowCredentials: [
-    {
-      type: 'public-key'
-      id: Uint8Array
-      transports: undefined
-    },
-  ]
-  userVerification: undefined
-  hints: undefined
+  allowCredentials: {
+    type: 'public-key'
+    id: Uint8Array
+    transports?: undefined
+  }[]
+  userVerification?: undefined
+  hints?: undefined
   attestation?: 'none'
-  attestationFormats: undefined
-  extensions: undefined
+  attestationFormats?: undefined
+  extensions?: undefined
 }
 
 /**
@@ -87,6 +86,7 @@ export interface AuthenticatorAssertionResponse {
   authenticatorData: ArrayBuffer
   signature: ArrayBuffer
   userHandle: ArrayBuffer
+  attestationObject?: undefined
 }
 
 class Credential {
@@ -108,15 +108,15 @@ class Credential {
 
     // <https://webauthn.guide/#registration>
     const key = new Map()
+    // <https://datatracker.ietf.org/doc/html/rfc8152#section-13.1.1>
+    key.set(-1, 1) // crv = P-256
+    key.set(-2, x.buffer)
+    key.set(-3, y.buffer)
     // <https://datatracker.ietf.org/doc/html/rfc8152#section-7>
     key.set(1, 2) // kty = EC2
     key.set(3, -7) // alg = ES256 (Elliptic curve signature with SHA-256)
-    // <https://datatracker.ietf.org/doc/html/rfc8152#section-13.1.1>
-    key.set(-1, 1) // crv = P-256
-    key.set(-2, x)
-    key.set(-3, y)
 
-    return ethers.hexlify(new Uint8Array(CBOR.encode(key).buffer))
+    return ethers.hexlify(CBOR.encode(key))
   }
 }
 
@@ -137,7 +137,7 @@ export class WebAuthnCredentials {
     // <https://w3c.github.io/webauthn/#dictionary-client-data>
     const clientData = {
       type: 'webauthn.create',
-      challenge: ethers.encodeBase64(publicKey.challenge).replace(/=*$/, ''),
+      challenge: base64UrlEncode(publicKey.challenge).replace(/=*$/, ''),
       origin: `https://${publicKey.rp.id}`,
     }
 
@@ -151,7 +151,7 @@ export class WebAuthnCredentials {
             0x41, // flags = attested_data + user_present
             0, // signCount
             `0x${'42'.repeat(16)}`, // aaguid
-            credential.id.length,
+            ethers.dataLength(credential.id),
             credential.id,
             credential.cosePublicKey(),
           ],
@@ -162,11 +162,11 @@ export class WebAuthnCredentials {
     }
 
     return {
-      id: ethers.encodeBase64(credential.id),
+      id: base64UrlEncode(credential.id),
       rawId: ethers.getBytes(credential.id),
       response: {
         clientDataJSON: ethers.toUtf8Bytes(JSON.stringify(clientData)).buffer,
-        attestationObject: CBOR.encode(attestationObject).buffer,
+        attestationObject: b2ab(CBOR.encode(attestationObject)),
       },
       type: 'public-key',
     }
@@ -180,7 +180,9 @@ export class WebAuthnCredentials {
    * @returns A public key credential with an assertion response.
    */
   get({ publicKey }: CredentialRequestOptions): PublicKeyCredential<AuthenticatorAssertionResponse> {
-    const credential = this.#credentials.find((c) => c.rp === publicKey.rpId)
+    const credential = publicKey.allowCredentials
+      .flatMap(({ id }) => this.#credentials.filter((c) => c.rp === publicKey.rpId && c.id === ethers.hexlify(id)))
+      .at(0)
     if (credential === undefined) {
       throw new Error('credential not found')
     }
@@ -188,7 +190,7 @@ export class WebAuthnCredentials {
     // <https://w3c.github.io/webauthn/#dictionary-client-data>
     const clientData = {
       type: 'webauthn.get',
-      challenge: ethers.encodeBase64(publicKey.challenge).replace(/=*$/, ''),
+      challenge: base64UrlEncode(publicKey.challenge).replace(/=*$/, ''),
       origin: `https://${publicKey.rpId}`,
     }
 
@@ -208,7 +210,7 @@ export class WebAuthnCredentials {
     // <https://w3c.github.io/webauthn/#sctn-op-get-assertion>
     // <https://w3c.github.io/webauthn/#fig-signature>
     const signature = p256.sign(
-      ethers.concat([authenticatorData, ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))]),
+      ethers.getBytes(ethers.concat([authenticatorData, ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))])),
       credential.pk,
       {
         lowS: false,
@@ -217,7 +219,7 @@ export class WebAuthnCredentials {
     )
 
     return {
-      id: ethers.encodeBase64(credential.id),
+      id: base64UrlEncode(credential.id),
       rawId: ethers.getBytes(credential.id),
       response: {
         clientDataJSON: ethers.toUtf8Bytes(JSON.stringify(clientData)).buffer,
@@ -228,4 +230,21 @@ export class WebAuthnCredentials {
       type: 'public-key',
     }
   }
+}
+
+/**
+ * Encode bytes using the Base64 URL encoding.
+ *
+ * See <https://www.rfc-editor.org/rfc/rfc4648#section-5>
+ *
+ * @param data data to encode to `base64url`
+ * @returns the `base64url` encoded data as a string.
+ */
+export function base64UrlEncode(data: BytesLike | ArrayBufferLike): string {
+  const bytes = isArrayBuffer(data) ? new Uint8Array(data) : ethers.getBytes(data)
+  return Buffer.from(bytes).toString('base64url')
+}
+
+function b2ab(buf: Buffer): ArrayBuffer {
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }
