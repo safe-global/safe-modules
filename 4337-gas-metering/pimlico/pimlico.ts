@@ -193,7 +193,7 @@ const newNonce = await getAccountNonce(publicClient as Client, {
 });
 console.log("\nNonce for the sender received from EntryPoint.");
 
-let txCallData: `0x${string}` = await createCallData(
+const txCallData: `0x${string}` = await createCallData(
   chain,
   publicClient,
   signer,

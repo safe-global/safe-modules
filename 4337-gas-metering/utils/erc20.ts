@@ -107,7 +107,7 @@ export const mintERC20Token = async (
   publicClient: any,
   signer: PrivateKeyAccount,
   to: string,
-  amount: BigInt,
+  amount: bigint,
   chain: string,
   paymaster: string,
 ) => {
@@ -191,7 +191,7 @@ export const transferERC20Token = async (
   publicClient: any,
   signer: PrivateKeyAccount,
   to: string,
-  amount: BigInt,
+  amount: bigint,
   chain: string,
   paymaster: string,
 ) => {

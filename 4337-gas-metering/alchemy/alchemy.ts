@@ -173,7 +173,7 @@ const newNonce = await getAccountNonce(publicClient as Client, {
 });
 console.log("\nNonce for the sender received from EntryPoint.");
 
-let txCallData: `0x${string}` = await createCallData(
+const txCallData: `0x${string}` = await createCallData(
   chain,
   publicClient,
   signer,
@@ -208,7 +208,7 @@ sponsoredUserOperation.signature = await signUserOperation(
 console.log("\nSigned Dummy Data for Paymaster Data Creation from Alchemy.");
 
 if (usePaymaster) {
-  let rvGas = await getGasValuesFromAlchemyPaymaster(
+  const rvGas = await getGasValuesFromAlchemyPaymaster(
     policyID,
     entryPointAddress,
     sponsoredUserOperation,
@@ -232,7 +232,7 @@ if (usePaymaster) {
     sponsoredUserOperation.maxPriorityFeePerGas,
   );
 
-  let rvGas = await getGasValuesFromAlchemy(
+  const rvGas = await getGasValuesFromAlchemy(
     entryPointAddress,
     sponsoredUserOperation,
     chain,

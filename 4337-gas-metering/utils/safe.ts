@@ -1,9 +1,7 @@
 import {
   Address,
-  Chain,
   Hex,
   PublicClient,
-  Transport,
   concatHex,
   encodeFunctionData,
   encodePacked,
@@ -53,7 +51,7 @@ const getInitializerCode = async ({
   erc20TokenAddress: Address;
   paymasterAddress: Address;
 }) => {
-  let setupTxs: InternalTx[] = [
+  const setupTxs: InternalTx[] = [
     {
       to: addModuleLibAddress,
       data: enableModuleCallData(safe4337ModuleAddress),
@@ -289,10 +287,7 @@ export const encodeCallData = (params: {
   });
 };
 
-export const getAccountAddress = async <
-  TTransport extends Transport = Transport,
-  TChain extends Chain | undefined = Chain | undefined,
->({
+export const getAccountAddress = async ({
   client,
   owner,
   addModuleLibAddress,

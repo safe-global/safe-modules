@@ -1,15 +1,6 @@
 import dotenv from "dotenv";
 import { getAccountNonce } from "permissionless";
-import { setTimeout } from "timers/promises";
-import {
-  Client,
-  Hash,
-  createPublicClient,
-  formatEther,
-  http,
-  parseEther,
-  zeroAddress,
-} from "viem";
+import { Client, Hash, createPublicClient, http, zeroAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 import {
@@ -25,8 +16,6 @@ import {
   submitUserOperationGelato,
   createCallData,
 } from "../utils/userOps";
-import { transferETH } from "../utils/nativeTransfer";
-import { error } from "console";
 
 dotenv.config();
 const paymaster = "gelato";
@@ -154,7 +143,7 @@ const newNonce = await getAccountNonce(publicClient as Client, {
 });
 console.log("\nNonce for the sender received from EntryPoint.");
 
-let txCallData: `0x${string}` = await createCallData(
+const txCallData: `0x${string}` = await createCallData(
   chain,
   publicClient,
   signer,
@@ -194,7 +183,7 @@ if (usePaymaster) {
   sponsoredUserOperation.maxPriorityFeePerGas = 0n; // Gelato prefers to keep it to zero.
   sponsoredUserOperation.maxFeePerGas = 0n;
 
-  let rvGas = await getGasValuesFromGelato(
+  const rvGas = await getGasValuesFromGelato(
     entryPointAddress,
     sponsoredUserOperation,
     chainID,

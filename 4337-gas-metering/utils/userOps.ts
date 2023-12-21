@@ -20,7 +20,6 @@ import { generateMintingCallData } from "./erc721";
 import { transferETH } from "./nativeTransfer";
 
 dotenv.config();
-const safeVersion = process.env.SAFE_VERSION;
 
 export const txTypes = ["account", "erc20", "erc721", "native-transfer"];
 
@@ -226,10 +225,10 @@ export const getMaxFeePerGas = async (
   let maxFeePerGas;
 
   // Get the latest Block Number
-  let latestBlockNum = await alchemy.core.getBlockNumber();
+  const latestBlockNum = await alchemy.core.getBlockNumber();
 
   // Get latest Block Details
-  let rvBlock = await alchemy.core.getBlock(latestBlockNum);
+  const rvBlock = await alchemy.core.getBlock(latestBlockNum);
   if (rvBlock && rvBlock.baseFeePerGas) {
     maxFeePerGas =
       ((BigInt(rvBlock.baseFeePerGas._hex) + BigInt(maxPriorityFeePerGas)) *
@@ -380,11 +379,11 @@ export const submitUserOperationAlchemy = async (
           ".etherscan.io/tx/" +
           responseValues["result"]["receipt"]["transactionHash"],
       );
-      let actualGasUsed = fromHex(
+      const actualGasUsed = fromHex(
         responseValues["result"]["actualGasUsed"],
         "number",
       );
-      let gasUsed = fromHex(
+      const gasUsed = fromHex(
         responseValues["result"]["receipt"]["gasUsed"],
         "number",
       );
@@ -646,7 +645,7 @@ export const submitUserOperationGelato = async (
         ]["address"];
 
       if (rvEntryPoint == entryPointAddress) {
-        let userOpHash =
+        const userOpHash =
           responseValues["result"]["logs"][
             responseValues["result"]["logs"].length - 2
           ]["topics"][1];
@@ -665,11 +664,11 @@ export const submitUserOperationGelato = async (
           ".etherscan.io/tx/" +
           responseValues["result"]["receipt"]["transactionHash"],
       );
-      let actualGasUsed = fromHex(
+      const actualGasUsed = fromHex(
         responseValues["result"]["actualGasUsed"],
         "number",
       );
-      let gasUsed = fromHex(
+      const gasUsed = fromHex(
         responseValues["result"]["receipt"]["gasUsed"],
         "number",
       );
