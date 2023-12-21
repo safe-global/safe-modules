@@ -24,14 +24,11 @@ export interface PublicKeyCredentialCreationOptions {
   rp: { id: string; name: string }
   user: { id: Uint8Array; displayName: string; name: string }
   challenge: Uint8Array
-  pubKeyCredParams: [{ type: 'public-key'; alg: -7 }]
-  timeout?: undefined
-  excludeCredentials?: undefined
-  authenticatorSelection?: undefined
-  hints?: undefined
+  pubKeyCredParams: {
+    type: 'public-key'
+    alg: number
+  }[]
   attestation?: 'none'
-  attestationFormats?: undefined
-  extensions?: undefined
 }
 
 export interface CredentialRequestOptions {
@@ -44,18 +41,12 @@ export interface CredentialRequestOptions {
  */
 export interface PublicKeyCredentialRequestOptions {
   challenge: Uint8Array
-  timeout?: undefined
   rpId: string
   allowCredentials: {
     type: 'public-key'
     id: Uint8Array
-    transports?: undefined
   }[]
-  userVerification?: undefined
-  hints?: undefined
   attestation?: 'none'
-  attestationFormats?: undefined
-  extensions?: undefined
 }
 
 /**
@@ -86,7 +77,6 @@ export interface AuthenticatorAssertionResponse {
   authenticatorData: ArrayBuffer
   signature: ArrayBuffer
   userHandle: ArrayBuffer
-  attestationObject?: undefined
 }
 
 class Credential {
@@ -131,6 +121,10 @@ export class WebAuthnCredentials {
    * @returns A public key credential with an attestation response.
    */
   public create({ publicKey }: CredentialCreationOptions): PublicKeyCredential<AuthenticatorAttestationResponse> {
+    if (!publicKey.pubKeyCredParams.some(({ alg }) => alg === -7)) {
+      throw new Error('unsupported signature algorithm(s)')
+    }
+
     const credential = new Credential(publicKey.rp.id, publicKey.user.id)
     this.#credentials.push(credential)
 
