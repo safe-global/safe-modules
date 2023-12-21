@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - master
+    paths:
+      - 4337/**
   pull_request:
     branches:
       - master
+    paths:
+      - 4337/**
 
   workflow_dispatch:
 
@@ -15,7 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rule: ["verify.sh", "verifyTransactionExecutionMethods.sh", "verifyValidationData.sh"]
+        rule:
+          ["verify4337Module.sh", "verifyTransactionExecutionMethods.sh", "verifyValidationData.sh"]
     defaults:
       run:
         working-directory: ./4337
