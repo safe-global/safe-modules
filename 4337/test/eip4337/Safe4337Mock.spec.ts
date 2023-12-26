@@ -2,8 +2,13 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getEntryPoint, get4337TestSafe } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
-import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
-import { chainId } from '../utils/encoding'
+import {
+  buildSafeUserOp,
+  buildSafeUserOpTransaction,
+  buildUserOperationFromSafeUserOperation,
+  calculateSafeOperationHash,
+} from '../../src/utils/userOp'
+import { chainId, timestamp } from '../utils/encoding'
 
 describe('Safe4337Mock', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -61,6 +66,47 @@ describe('Safe4337Mock', () => {
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('Execute UserOp with fee payment', entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.499999'))
+    })
+  })
+
+  describe('constants', () => {
+    it('should correctly calculate keccak of DOMAIN_SEPARATOR_TYPEHASH', async () => {
+      const { validator } = await setupTests()
+
+      const domainSeparator = await validator.domainSeparator()
+      const calculatedDomainSeparatorTypehash = ethers.keccak256(
+        ethers.toUtf8Bytes('EIP712Domain(uint256 chainId,address verifyingContract)'),
+      )
+      const calculatedDomainSeparator = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['bytes32', 'uint256', 'address'],
+          [calculatedDomainSeparatorTypehash, await chainId(), await validator.getAddress()],
+        ),
+      )
+      expect(domainSeparator).to.eq(calculatedDomainSeparator)
+    })
+
+    it('should correctly calculate keccak of SAFE_OP_TYPEHASH', async () => {
+      const { entryPoint, validator } = await setupTests()
+
+      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
+      const validAfter = (await timestamp()) + 10000
+      const validUntil = validAfter + 10000000000
+      const safeOp = buildSafeUserOp({
+        safe: safeAddress,
+        nonce: '0',
+        entryPoint: await entryPoint.getAddress(),
+        validAfter,
+        validUntil,
+      })
+      const userOp = buildUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: '0x',
+      })
+
+      const operationHash = await validator.getOperationHash(userOp)
+      const calculatedOperationHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
+      expect(operationHash).to.eq(calculatedOperationHash)
     })
   })
 })
