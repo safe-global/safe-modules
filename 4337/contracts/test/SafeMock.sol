@@ -96,12 +96,13 @@ contract SafeMock {
 contract Safe4337Mock is SafeMock, IAccount {
     using UserOperationLib for UserOperation;
 
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
+    /// keccak256("EIP712Domain(uint256 chainId,address verifyingContract)") = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218
+    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
-    bytes32 private constant SAFE_OP_TYPEHASH =
-        keccak256(
-            "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-        );
+    /// keccak256(
+    ///    "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+    /// ) = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd
+    bytes32 private constant SAFE_OP_TYPEHASH = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd;
 
     struct EncodedSafeOpStruct {
         bytes32 typeHash;
@@ -190,6 +191,17 @@ contract Safe4337Mock is SafeMock, IAccount {
 
     function chainId() public view returns (uint256) {
         return block.chainid;
+    }
+
+    /**
+     * @notice Returns the 32-byte Safe operation hash to be signed by owners for the specified ERC-4337 user operation.
+     * @dev The Safe operation timestamps are pre-pended to the signature bytes as `abi.encodePacked(validAfter, validUntil, signatures)`.
+     * @param userOp The ERC-4337 user operation.
+     * @return operationHash Operation hash.
+     */
+    function getOperationHash(UserOperation calldata userOp) external view returns (bytes32 operationHash) {
+        (bytes memory operationData, , , ) = _getSafeOp(userOp);
+        operationHash = keccak256(operationData);
     }
 
     /**
