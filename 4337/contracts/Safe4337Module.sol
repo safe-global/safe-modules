@@ -22,8 +22,9 @@ import {ISafe} from "./interfaces/Safe.sol";
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     /**
      * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
+     * @dev keccak256("EIP712Domain(uint256 chainId,address verifyingContract)") = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218
      */
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
+    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     /**
      * @notice The EIP-712 type-hash for a SafeOp, representing the structure of a User Operation for the Safe.
@@ -41,11 +42,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *  {uint48} validUntil - A timestamp representing until when the user operation is valid, or 0 to indicated "forever".
      *  {address} entryPoint - The address of the entry point that will execute the user operation.
      * @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes.
-     */
-    bytes32 private constant SAFE_OP_TYPEHASH =
-        keccak256(
+     * keccak256(
             "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-        );
+        ) = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd
+     */
+    bytes32 private constant SAFE_OP_TYPEHASH = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd;
 
     /**
      * @dev A structure used internally for manually encoding a Safe operation for when computing the EIP-712 struct hash.

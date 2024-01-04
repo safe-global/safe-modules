@@ -108,6 +108,47 @@ describe('Safe4337Module', () => {
     })
   })
 
+  describe('constants', () => {
+    it('should correctly calculate keccak of DOMAIN_SEPARATOR_TYPEHASH', async () => {
+      const { validator, safeModule } = await setupTests()
+
+      const domainSeparator = await safeModule.domainSeparator()
+      const calculatedDomainSeparatorTypehash = ethers.keccak256(
+        ethers.toUtf8Bytes('EIP712Domain(uint256 chainId,address verifyingContract)'),
+      )
+      const calculatedDomainSeparator = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['bytes32', 'uint256', 'address'],
+          [calculatedDomainSeparatorTypehash, await chainId(), await validator.getAddress()],
+        ),
+      )
+      expect(domainSeparator).to.eq(calculatedDomainSeparator)
+    })
+
+    it('should correctly calculate keccak of SAFE_OP_TYPEHASH', async () => {
+      const { entryPoint, validator, safeModule } = await setupTests()
+
+      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
+      const validAfter = (await timestamp()) + 10000
+      const validUntil = validAfter + 10000000000
+      const safeOp = buildSafeUserOp({
+        safe: safeAddress,
+        nonce: '0',
+        entryPoint: await entryPoint.getAddress(),
+        validAfter,
+        validUntil,
+      })
+      const userOp = buildUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: '0x',
+      })
+
+      const operationHash = await safeModule.getOperationHash(userOp)
+      const calculatedOperationHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
+      expect(operationHash).to.eq(calculatedOperationHash)
+    })
+  })
+
   describe('validateUserOp', () => {
     it('should revert when validating user ops for a different Safe', async () => {
       const { user, entryPoint, validator, safeModule, makeSafeModule } = await setupTests()
