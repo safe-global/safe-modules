@@ -5,12 +5,12 @@ on:
     branches:
       - master
     paths:
-      - 4337/**
+      - modules/4337/**
   pull_request:
     branches:
       - master
     paths:
-      - 4337/**
+      - modules/4337/**
 
   workflow_dispatch:
 

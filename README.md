@@ -9,7 +9,7 @@ Modules
 - [4337 Module](./modules/4337)
 - [Allowance Module](./modules/allowances)
 - [DutchX Seller Module](./modules//dutchx_seller)
-- [Recurring Transfers Module](./modules//recurring_transfers)
+- [Recurring Transfers Module](./modules/recurring_transfers)
 
 
 Security and Liability

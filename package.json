@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "A monorepo for Safe modules",
   "main": "dist/index.js",
-  "workspaces":["modules/*"],
+  "workspaces":[
+    "modules/*"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,5 +18,10 @@
   "bugs": {
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
-  "homepage": "https://github.com/safe-global/safe-modules#readme"
+  "homepage": "https://github.com/safe-global/safe-modules#readme",
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe"
+  ]
 }
