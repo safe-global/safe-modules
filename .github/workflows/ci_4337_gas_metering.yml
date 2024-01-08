@@ -4,17 +4,14 @@ on: [push]
 jobs:
   checks:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./4337-gas-metering
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: 20.x
           cache: npm
-          cache-dependency-path: 4337-gas-metering/package-lock.json
+          cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run fmt:check
-      - run: npm run lint
-      - run: npm run build
+      - run: npm run fmt:check -w modules/4337-gas-metering
+      - run: npm run lint -w modules/4337-gas-metering
+      - run: npm run build -w modules/4337-gas-metering
