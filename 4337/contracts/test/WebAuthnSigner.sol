@@ -14,6 +14,7 @@ struct SignatureData {
 
 function checkSignature(bytes memory data, bytes calldata signature, uint256 x, uint256 y) view returns (bytes4 magicValue) {
     SignatureData calldata signaturePointer;
+    // solhint-disable-next-line no-inline-assembly
     assembly {
         signaturePointer := signature.offset
     }
