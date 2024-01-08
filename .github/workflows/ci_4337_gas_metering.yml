@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./moudles/4337-gas-metering
+        working-directory: ./modules/4337-gas-metering
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
