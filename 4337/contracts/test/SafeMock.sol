@@ -71,22 +71,24 @@ contract SafeMock {
     // solhint-disable-next-line payable-fallback,no-complex-fallback
     fallback() external payable {
         // solhint-disable-next-line no-inline-assembly
-        assembly {
+        assembly ("memory-safe") {
             let handler := sload(fallbackHandler.slot)
             if iszero(handler) {
                 return(0, 0)
             }
-            calldatacopy(0, 0, calldatasize())
+
+            let ptr := mload(0x40)
+            calldatacopy(ptr, 0, calldatasize())
             // The msg.sender address is shifted to the left by 12 bytes to remove the padding
             // Then the address without padding is stored right after the calldata
-            mstore(calldatasize(), shl(96, caller()))
+            mstore(add(ptr, calldatasize()), shl(96, caller()))
             // Add 20 bytes for the address appended add the end
-            let success := call(gas(), handler, 0, 0, add(calldatasize(), 20), 0, 0)
-            returndatacopy(0, 0, returndatasize())
+            let success := call(gas(), handler, 0, ptr, add(calldatasize(), 20), 0, 0)
+            returndatacopy(ptr, 0, returndatasize())
             if iszero(success) {
-                revert(0, returndatasize())
+                revert(ptr, returndatasize())
             }
-            return(0, returndatasize())
+            return(ptr, returndatasize())
         }
     }
 
