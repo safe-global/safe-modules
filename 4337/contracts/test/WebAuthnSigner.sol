@@ -15,7 +15,7 @@ struct SignatureData {
 function checkSignature(bytes memory data, bytes calldata signature, uint256 x, uint256 y) view returns (bytes4 magicValue) {
     SignatureData calldata signaturePointer;
     // solhint-disable-next-line no-inline-assembly
-    assembly {
+    assembly ("memory-safe") {
         signaturePointer := signature.offset
     }
 
@@ -80,12 +80,10 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory {
 
     function _hasNoCode(address account) internal view returns (bool) {
         uint256 size;
-        /* solhint-disable no-inline-assembly */
-        /// @solidity memory-safe-assembly
-        assembly {
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
             size := extcodesize(account)
         }
-        /* solhint-enable no-inline-assembly */
         return size == 0;
     }
 }
