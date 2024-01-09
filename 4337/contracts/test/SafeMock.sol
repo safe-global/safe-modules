@@ -25,7 +25,7 @@ contract SafeMock {
 
     function _signatureSplit(bytes memory signature) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         // solhint-disable-next-line no-inline-assembly
-        assembly {
+        assembly ("memory-safe") {
             r := mload(add(signature, 0x20))
             s := mload(add(signature, 0x40))
             v := byte(0, mload(add(signature, 0x60)))
