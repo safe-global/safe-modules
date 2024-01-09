@@ -242,12 +242,10 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
 
     function _isContract(address account) internal view returns (bool) {
         uint256 size;
-        /* solhint-disable no-inline-assembly */
-        /// @solidity memory-safe-assembly
-        assembly {
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
             size := extcodesize(account)
         }
-        /* solhint-enable no-inline-assembly */
         return size > 0;
     }
 }
