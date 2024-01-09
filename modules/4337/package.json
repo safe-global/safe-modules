@@ -28,7 +28,7 @@
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "prepack": "npm run build",
-    "prepare": "cd .. && husky install 4337/.husky",
+    "prepare": "cd ../.. && husky install modules/4337/.husky",
     "prepublish": "npx rimraf build && npm run build && npm run build:ts"
   },
   "repository": {
