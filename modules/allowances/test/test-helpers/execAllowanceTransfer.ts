@@ -17,23 +17,14 @@ export default async function execAllowanceTransfer(
     to: string
     amount: number | bigint
     spender: SignerWithAddress
-  }
+  },
 ) {
   const address = await module.getAddress()
   const chainId = await module.getChainId()
 
-  const [, , , , nonce] = await module.getTokenAllowance(
-    safe,
-    spender.address,
-    token
-  )
+  const [, , , , nonce] = await module.getTokenAllowance(safe, spender.address, token)
 
-  const { domain, types, message } = paramsToSign(
-    address,
-    chainId,
-    { safe, token, to, amount },
-    nonce
-  )
+  const { domain, types, message } = paramsToSign(address, chainId, { safe, token, to, amount }, nonce)
 
   const signature = await spender.signTypedData(domain, types, message)
 
@@ -45,7 +36,7 @@ export default async function execAllowanceTransfer(
     ZeroAddress, // paymentToken
     0, // payment
     spender.address,
-    signature
+    signature,
   )
 }
 
@@ -63,7 +54,7 @@ function paramsToSign(
     to: string
     amount: number | bigint
   },
-  nonce: bigint
+  nonce: bigint,
 ) {
   const domain = { chainId, verifyingContract: address }
   const primaryType = 'AllowanceTransfer'

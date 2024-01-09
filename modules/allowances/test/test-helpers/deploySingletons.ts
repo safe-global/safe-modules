@@ -1,36 +1,17 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
-import {
-  getSingletonFactoryInfo,
-  SingletonFactoryInfo,
-} from '@safe-global/safe-singleton-factory'
+import { getSingletonFactoryInfo, SingletonFactoryInfo } from '@safe-global/safe-singleton-factory'
 import { getCreate2Address, keccak256, parseUnits, ZeroHash } from 'ethers'
 
-import {
-  ArtifactAllowanceModule,
-  ArtifactGnosisSafe,
-  ArtifactGnosisSafeProxyFactory,
-} from './artifacts'
+import { ArtifactAllowanceModule, ArtifactGnosisSafe, ArtifactGnosisSafeProxyFactory } from './artifacts'
 
 export default async function deploySingletons(deployer: SignerWithAddress) {
   const factoryAddress = await deploySingletonFactory(deployer)
 
-  const safeMastercopyAddress = await deploySingleton(
-    factoryAddress,
-    ArtifactGnosisSafe.bytecode,
-    deployer
-  )
+  const safeMastercopyAddress = await deploySingleton(factoryAddress, ArtifactGnosisSafe.bytecode, deployer)
 
-  const safeProxyFactoryAddress = await deploySingleton(
-    factoryAddress,
-    ArtifactGnosisSafeProxyFactory.bytecode,
-    deployer
-  )
+  const safeProxyFactoryAddress = await deploySingleton(factoryAddress, ArtifactGnosisSafeProxyFactory.bytecode, deployer)
 
-  const allowanceModuleAddress = await deploySingleton(
-    factoryAddress,
-    ArtifactAllowanceModule.bytecode,
-    deployer
-  )
+  const allowanceModuleAddress = await deploySingleton(factoryAddress, ArtifactAllowanceModule.bytecode, deployer)
 
   return {
     safeMastercopyAddress,
@@ -41,9 +22,7 @@ export default async function deploySingletons(deployer: SignerWithAddress) {
 
 async function deploySingletonFactory(signer: SignerWithAddress) {
   const { chainId } = await signer.provider.getNetwork()
-  const { address, signerAddress, transaction } = getSingletonFactoryInfo(
-    Number(chainId)
-  ) as SingletonFactoryInfo
+  const { address, signerAddress, transaction } = getSingletonFactoryInfo(Number(chainId)) as SingletonFactoryInfo
 
   // fund the presined transaction signer
   await signer.sendTransaction({
@@ -57,11 +36,7 @@ async function deploySingletonFactory(signer: SignerWithAddress) {
   return address
 }
 
-async function deploySingleton(
-  factory: string,
-  bytecode: string,
-  signer: SignerWithAddress
-) {
+async function deploySingleton(factory: string, bytecode: string, signer: SignerWithAddress) {
   const salt = ZeroHash
 
   await signer.sendTransaction({

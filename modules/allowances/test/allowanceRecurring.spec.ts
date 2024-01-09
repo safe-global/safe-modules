@@ -10,27 +10,18 @@ describe('AllowanceModule allowanceRecurring', () => {
     return Math.floor(Date.now() / (1000 * 60))
   }
 
-  function calculateResetLast(
-    base: number,
-    period: number,
-    now: number = nowInMinutes()
-  ) {
+  function calculateResetLast(base: number, period: number, now: number = nowInMinutes()) {
     return now - ((now - base) % period)
   }
 
   it('Execute allowance without refund', async () => {
-    const { safe, allowanceModule, token, owner, alice, bob } =
-      await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice, bob } = await loadFixture(setup)
 
     const safeAddress = await safe.getAddress()
     const tokenAddress = await token.getAddress()
 
     // add alice as delegate
-    await execSafeTransaction(
-      safe,
-      await allowanceModule.addDelegate.populateTransaction(alice.address),
-      owner
-    )
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
 
     // create an allowance for alice
     const configResetPeriod = 60 * 24
@@ -39,30 +30,16 @@ describe('AllowanceModule allowanceRecurring', () => {
     // the very first resetLast produced by the contract
     // i.e., before the first period is elapsed, and
     // the contract updates/resets allowance
-    const firstResetLast = calculateResetLast(
-      configResetBase,
-      configResetPeriod
-    )
+    const firstResetLast = calculateResetLast(configResetBase, configResetPeriod)
 
     await execSafeTransaction(
       safe,
-      await allowanceModule.setAllowance.populateTransaction(
-        alice.address,
-        tokenAddress,
-        100,
-        configResetPeriod,
-        configResetBase
-      ),
-      owner
+      await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, configResetPeriod, configResetBase),
+      owner,
     )
 
     // load an existing allowance
-    let [amount, spent, resetPeriod, resetLast, nonce] =
-      await allowanceModule.getTokenAllowance(
-        safeAddress,
-        alice.address,
-        tokenAddress
-      )
+    let [amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
 
     expect(100).to.equal(amount)
     expect(0).to.equal(spent)
@@ -86,12 +63,7 @@ describe('AllowanceModule allowanceRecurring', () => {
     expect(60).to.equal(await token.balanceOf(bob.address))
 
     // load alice's allowance
-    ;[amount, spent, resetPeriod, resetLast, nonce] =
-      await allowanceModule.getTokenAllowance(
-        safeAddress,
-        alice.address,
-        tokenAddress
-      )
+    ;[amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
     expect(100).to.equal(amount)
     expect(60).to.equal(spent)
     expect(configResetPeriod).to.equal(resetPeriod)
@@ -106,7 +78,7 @@ describe('AllowanceModule allowanceRecurring', () => {
         to: bob.address,
         amount: 45,
         spender: alice,
-      })
+      }),
     ).to.be.reverted
 
     await execAllowanceTransfer(allowanceModule, {
@@ -123,12 +95,7 @@ describe('AllowanceModule allowanceRecurring', () => {
     await mine(13, { interval: 60 * 60 })
 
     // load alice's allowance, with less than resetPeriod elapsed: des not impact spend
-    ;[amount, spent, resetPeriod, resetLast, nonce] =
-      await allowanceModule.getTokenAllowance(
-        safeAddress,
-        alice.address,
-        tokenAddress
-      )
+    ;[amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
     expect(100).to.equal(amount)
     expect(100).to.equal(spent)
     expect(configResetPeriod).to.equal(resetPeriod)
@@ -137,19 +104,10 @@ describe('AllowanceModule allowanceRecurring', () => {
 
     // however going forward 12 hours more (24 in total) should replenish
     await mine(13, { interval: 60 * 60 })
-    ;[amount, spent, resetPeriod, resetLast, nonce] =
-      await allowanceModule.getTokenAllowance(
-        safeAddress,
-        alice.address,
-        tokenAddress
-      )
+    ;[amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
 
     // let's predict the next value calculated by the contract for lastReset
-    const expectedLastReset = calculateResetLast(
-      configResetBase,
-      configResetPeriod,
-      nowInMinutes() + 60 * 24
-    )
+    const expectedLastReset = calculateResetLast(configResetBase, configResetPeriod, nowInMinutes() + 60 * 24)
 
     expect(100).to.equal(amount)
     expect(0).to.equal(spent)
@@ -167,12 +125,7 @@ describe('AllowanceModule allowanceRecurring', () => {
     })
     expect(855).to.equal(await token.balanceOf(safeAddress))
     expect(145).to.equal(await token.balanceOf(bob.address))
-    ;[amount, spent, resetPeriod, resetLast, nonce] =
-      await allowanceModule.getTokenAllowance(
-        safeAddress,
-        alice.address,
-        tokenAddress
-      )
+    ;[amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
 
     expect(100).to.equal(amount)
     expect(45).to.equal(spent)

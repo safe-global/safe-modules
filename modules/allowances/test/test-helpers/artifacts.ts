@@ -4,9 +4,4 @@ import ArtifactGnosisSafeProxyFactory from '@gnosis.pm/safe-contracts/build/arti
 
 import ArtifactAllowanceModule from '../../build/artifacts/contracts/AllowanceModule.sol/AllowanceModule.json'
 
-export {
-  ArtifactGnosisSafe,
-  ArtifactGnosisSafeProxy,
-  ArtifactGnosisSafeProxyFactory,
-  ArtifactAllowanceModule,
-}
+export { ArtifactGnosisSafe, ArtifactGnosisSafeProxy, ArtifactGnosisSafeProxyFactory, ArtifactAllowanceModule }

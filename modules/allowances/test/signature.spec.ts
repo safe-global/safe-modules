@@ -20,11 +20,7 @@ describe('signature', () => {
       nonce: 0,
     }
 
-    const hash = calculateTransferHash(
-      allowanceAddress,
-      (await alice.provider.getNetwork()).chainId,
-      transfer
-    )
+    const hash = calculateTransferHash(allowanceAddress, (await alice.provider.getNetwork()).chainId, transfer)
 
     expect(
       await allowanceModule.generateTransferHash(
@@ -34,8 +30,8 @@ describe('signature', () => {
         transfer.amount,
         transfer.paymentToken,
         transfer.payment,
-        transfer.nonce
-      )
+        transfer.nonce,
+      ),
     ).to.equal(hash)
   })
 })
@@ -59,7 +55,7 @@ function calculateTransferHash(
     paymentToken: string
     payment: BigNumberish
     nonce: BigNumberish
-  }
+  },
 ) {
   const types = {
     AllowanceTransfer: [
@@ -104,11 +100,7 @@ function calculateTransferHash(
     nonce,
   }
 
-  const hash = TypedDataEncoder.hash(
-    { verifyingContract, chainId },
-    types,
-    values
-  )
+  const hash = TypedDataEncoder.hash({ verifyingContract, chainId }, types, values)
 
   return hash
 }
