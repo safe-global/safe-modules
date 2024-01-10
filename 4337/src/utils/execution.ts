@@ -41,12 +41,17 @@ export const signHash = async (signer: Signer, hash: string): Promise<SafeSignat
   }
 }
 
-export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
+const sortSignatures = (signatures: SafeSignature[]) => {
   signatures.sort((left, right) => left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()))
+}
+
+export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
+  sortSignatures(signatures)
   return ethers.concat(signatures.map((signature) => signature.data))
 }
 
 export const buildContractSignatureBytes = (signatures: SafeSignature[]): string => {
+  sortSignatures(signatures)
   const start = 65 * signatures.length
   const { segments } = signatures.reduce(
     ({ segments, offset }, { signer, data }) => {
