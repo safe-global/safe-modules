@@ -23,7 +23,7 @@ jobs:
           ["verify4337Module.sh", "verifyTransactionExecutionMethods.sh", "verifyValidationData.sh"]
     defaults:
       run:
-        working-directory: ./modules/4337
+        working-directory: .
     steps:
       - uses: actions/checkout@v3
 
@@ -45,7 +45,7 @@ jobs:
           sudo mv solc-static-linux /usr/local/bin/solc8.23
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci -w modules/4337
 
       - name: Verify rule ${{ matrix.rule }}
         run: |
