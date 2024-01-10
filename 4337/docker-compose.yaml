@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   geth:
-    image: docker.io/ethereum/client-go:latest
+    image: docker.io/ethereum/client-go:stable
     restart: always
     environment:
       GETH_DEV: 'true'
@@ -11,6 +11,7 @@ services:
       GETH_HTTP_API: 'personal,eth,net,web3,debug'
       GETH_HTTP_VHOSTS: '*'
       GETH_RPC_ALLOW_UNPROTECTED_TXS: 'true'
+      GETH_RPC_EVMTIMEOUT: '0'
     ports:
       - 8545:8545
 
