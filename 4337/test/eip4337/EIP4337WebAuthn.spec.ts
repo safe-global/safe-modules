@@ -126,7 +126,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           safeInit.fallbackHandler,
           module.interface.encodeFunctionData('executeUserOp', [user.address, ethers.parseEther('0.5'), '0x', 0]),
         ]),
-        callGasLimit: ethers.toBeHex(2000000),
+        callGasLimit: ethers.toBeHex(2500000),
         verificationGasLimit: ethers.toBeHex(500000),
         preVerificationGas: ethers.toBeHex(60000),
         maxFeePerGas: ethers.toBeHex(10000000000),
