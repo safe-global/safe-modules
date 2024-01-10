@@ -2,14 +2,14 @@ import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { getSingletonFactoryInfo, SingletonFactoryInfo } from '@safe-global/safe-singleton-factory'
 import { getCreate2Address, keccak256, parseUnits, ZeroHash } from 'ethers'
 
-import { ArtifactAllowanceModule, ArtifactGnosisSafe, ArtifactGnosisSafeProxyFactory } from './artifacts'
+import { ArtifactAllowanceModule, ArtifactSafe, ArtifactSafeProxyFactory } from './artifacts'
 
 export default async function deploySingletons(deployer: SignerWithAddress) {
   const factoryAddress = await deploySingletonFactory(deployer)
 
-  const safeMastercopyAddress = await deploySingleton(factoryAddress, ArtifactGnosisSafe.bytecode, deployer)
+  const safeMastercopyAddress = await deploySingleton(factoryAddress, ArtifactSafe.bytecode, deployer)
 
-  const safeProxyFactoryAddress = await deploySingleton(factoryAddress, ArtifactGnosisSafeProxyFactory.bytecode, deployer)
+  const safeProxyFactoryAddress = await deploySingleton(factoryAddress, ArtifactSafeProxyFactory.bytecode, deployer)
 
   const allowanceModuleAddress = await deploySingleton(factoryAddress, ArtifactAllowanceModule.bytecode, deployer)
 
