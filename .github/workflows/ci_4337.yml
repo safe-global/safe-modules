@@ -36,7 +36,7 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm ci -w modules/4337
       - run: |
-          docker compose up -d
+          docker compose -f modules/4337/docker-compose.yaml up -d
           # wait for containers to start up
           SECONDS=0
           until curl -fs http://localhost:8545 >/dev/null && curl -fs http://localhost:3000 >/dev/null; do

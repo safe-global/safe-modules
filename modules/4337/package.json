@@ -81,7 +81,5 @@
       "ethers": "^6.8.0"
     }
   },
-  "dependencies": {
-    "@safe-global/safe-contracts": "^1.4.1"
-  }
+  "dependencies": { "@safe-global/safe-contracts": "^1.4.1"}
 }
