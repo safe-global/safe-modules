@@ -1,0 +1,273 @@
+import { expect } from 'chai'
+import { deployments, ethers } from 'hardhat'
+import { deployReferenceEntryPoint } from '../utils/setup'
+import { buildContractSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
+import { chainId } from '../utils/encoding'
+import { WebAuthnCredentials, extractChallengeOffset, extractPublicKey, extractSignature } from '../utils/webauthn'
+import { Safe4337 } from '../../src/utils/safe'
+
+describe('Safe4337Module - WebAuthn Owner', () => {
+  const setupTests = deployments.createFixture(async ({ deployments }) => {
+    const { AddModulesLib, SafeL2, SafeProxyFactory } = await deployments.fixture()
+
+    const [deployer, relayer, user] = await ethers.getSigners()
+    const entryPoint = await deployReferenceEntryPoint(deployer, relayer)
+    const moduleFactory = await ethers.getContractFactory('Safe4337Module')
+    const module = await moduleFactory.deploy(entryPoint.target)
+    const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
+    const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
+    const signerLaunchpadFactory = await ethers.getContractFactory('SafeSignerLaunchpad')
+    const signerLaunchpad = await signerLaunchpadFactory.deploy(entryPoint.target)
+    const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
+
+    const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
+    const signerFactory = await WebAuthnSignerFactory.deploy()
+
+    const navigator = {
+      credentials: new WebAuthnCredentials(),
+    }
+
+    return {
+      user,
+      proxyFactory,
+      addModulesLib,
+      module,
+      entryPoint,
+      signerLaunchpad,
+      singleton,
+      signerFactory,
+      navigator,
+    }
+  })
+
+  describe('executeUserOp - new account', () => {
+    it('should execute user operation', async () => {
+      const { user, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator } =
+        await setupTests()
+
+      const credential = navigator.credentials.create({
+        publicKey: {
+          rp: {
+            name: 'Safe',
+            id: 'safe.global',
+          },
+          user: {
+            id: ethers.getBytes(ethers.id('chucknorris')),
+            name: 'chucknorris',
+            displayName: 'Chuck Norris',
+          },
+          challenge: ethers.toBeArray(Date.now()),
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        },
+      })
+      const publicKey = extractPublicKey(credential.response)
+      const signerData = ethers.solidityPacked(['uint256', 'uint256'], [publicKey.x, publicKey.y])
+      const signerAddress = await signerFactory.getSigner(signerData)
+
+      const safeInit = {
+        singleton: singleton.target,
+        signerFactory: signerFactory.target,
+        signerData,
+        setupTo: addModulesLib.target,
+        setupData: addModulesLib.interface.encodeFunctionData('enableModules', [[module.target]]),
+        fallbackHandler: module.target,
+      }
+      const safeInitHash = ethers.TypedDataEncoder.hash(
+        { verifyingContract: await signerLaunchpad.getAddress(), chainId: await chainId() },
+        {
+          SafeInit: [
+            { type: 'address', name: 'singleton' },
+            { type: 'address', name: 'signerFactory' },
+            { type: 'bytes', name: 'signerData' },
+            { type: 'address', name: 'setupTo' },
+            { type: 'bytes', name: 'setupData' },
+            { type: 'address', name: 'fallbackHandler' },
+          ],
+        },
+        safeInit,
+      )
+
+      expect(
+        await signerLaunchpad.getInitHash(
+          safeInit.singleton,
+          safeInit.signerFactory,
+          safeInit.signerData,
+          safeInit.setupTo,
+          safeInit.setupData,
+          safeInit.fallbackHandler,
+        ),
+      ).to.equal(safeInitHash)
+
+      const launchpadInitializer = signerLaunchpad.interface.encodeFunctionData('preValidationSetup', [
+        safeInitHash,
+        ethers.ZeroAddress,
+        '0x',
+      ])
+      const safeSalt = Date.now()
+      const safe = await proxyFactory.createProxyWithNonce.staticCall(signerLaunchpad.target, launchpadInitializer, safeSalt)
+
+      const userOp = {
+        sender: safe,
+        nonce: ethers.toBeHex(await entryPoint.getNonce(safe, 0)),
+        initCode: ethers.solidityPacked(
+          ['address', 'bytes'],
+          [
+            proxyFactory.target,
+            proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [signerLaunchpad.target, launchpadInitializer, safeSalt]),
+          ],
+        ),
+        callData: signerLaunchpad.interface.encodeFunctionData('initializeThenUserOp', [
+          safeInit.singleton,
+          safeInit.signerFactory,
+          safeInit.signerData,
+          safeInit.setupTo,
+          safeInit.setupData,
+          safeInit.fallbackHandler,
+          module.interface.encodeFunctionData('executeUserOp', [user.address, ethers.parseEther('0.5'), '0x', 0]),
+        ]),
+        callGasLimit: ethers.toBeHex(2000000),
+        verificationGasLimit: ethers.toBeHex(500000),
+        preVerificationGas: ethers.toBeHex(60000),
+        maxFeePerGas: ethers.toBeHex(10000000000),
+        maxPriorityFeePerGas: ethers.toBeHex(10000000000),
+        paymasterAndData: '0x',
+      }
+
+      const safeInitOp = {
+        userOpHash: await entryPoint.getUserOpHash({ ...userOp, signature: '0x' }),
+        validAfter: 0,
+        validUntil: 0,
+        entryPoint: entryPoint.target,
+      }
+      const safeInitOpHash = ethers.TypedDataEncoder.hash(
+        { verifyingContract: await signerLaunchpad.getAddress(), chainId: await chainId() },
+        {
+          SafeInitOp: [
+            { type: 'bytes32', name: 'userOpHash' },
+            { type: 'uint48', name: 'validAfter' },
+            { type: 'uint48', name: 'validUntil' },
+            { type: 'address', name: 'entryPoint' },
+          ],
+        },
+        safeInitOp,
+      )
+
+      const assertion = navigator.credentials.get({
+        publicKey: {
+          challenge: ethers.getBytes(safeInitOpHash),
+          rpId: 'safe.global',
+          allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+        },
+      })
+      const signature = ethers.solidityPacked(
+        ['uint48', 'uint48', 'bytes'],
+        [
+          safeInitOp.validAfter,
+          safeInitOp.validUntil,
+          ethers.AbiCoder.defaultAbiCoder().encode(
+            ['bytes', 'bytes', 'uint256', 'uint256[2]'],
+            [
+              new Uint8Array(assertion.response.authenticatorData),
+              new Uint8Array(assertion.response.clientDataJSON),
+              extractChallengeOffset(assertion.response, safeInitOpHash),
+              extractSignature(assertion.response),
+            ],
+          ),
+        ],
+      )
+
+      await user.sendTransaction({ to: safe, value: ethers.parseEther('1') }).then((tx) => tx.wait())
+      expect(await ethers.provider.getBalance(safe)).to.equal(ethers.parseEther('1'))
+      expect(await ethers.provider.getCode(safe)).to.equal('0x')
+      expect(await ethers.provider.getCode(signerAddress)).to.equal('0x')
+
+      await logGas('WebAuthn signer Safe deployment', entryPoint.handleOps([{ ...userOp, signature }], user.address))
+
+      expect(await ethers.provider.getBalance(safe)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
+      expect(await ethers.provider.getCode(safe)).to.not.equal('0x')
+      expect(await ethers.provider.getCode(signerAddress)).to.not.equal('0x')
+
+      const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))
+      expect(implementation).to.equal(singleton.target)
+
+      const safeInstance = await ethers.getContractAt('SafeL2', safe)
+      expect(await safeInstance.getOwners()).to.deep.equal([signerAddress])
+    })
+  })
+
+  describe('executeUserOp - existing account', () => {
+    it('should execute user operation', async () => {
+      const { user, proxyFactory, addModulesLib, module, entryPoint, singleton, signerFactory, navigator } = await setupTests()
+      const credential = navigator.credentials.create({
+        publicKey: {
+          rp: {
+            name: 'Safe',
+            id: 'safe.global',
+          },
+          user: {
+            id: ethers.getBytes(ethers.id('chucknorris')),
+            name: 'chucknorris',
+            displayName: 'Chuck Norris',
+          },
+          challenge: ethers.toBeArray(Date.now()),
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        },
+      })
+      const publicKey = extractPublicKey(credential.response)
+      const signerData = ethers.solidityPacked(['uint256', 'uint256'], [publicKey.x, publicKey.y])
+      await signerFactory.createSigner(signerData)
+      const signer = await ethers.getContractAt('WebAuthnSigner', await signerFactory.getSigner(signerData))
+
+      const safe = await Safe4337.withSigner(await signer.getAddress(), {
+        safeSingleton: await singleton.getAddress(),
+        entryPoint: await entryPoint.getAddress(),
+        erc4337module: await module.getAddress(),
+        proxyFactory: await proxyFactory.getAddress(),
+        addModulesLib: await addModulesLib.getAddress(),
+        proxyCreationCode: await proxyFactory.proxyCreationCode(),
+        chainId: Number(await chainId()),
+      })
+      await safe.deploy(user)
+
+      const safeOp = buildSafeUserOpTransaction(
+        safe.address,
+        user.address,
+        ethers.parseEther('0.5'),
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+      )
+      const safeOpHash = calculateSafeOperationHash(await module.getAddress(), safeOp, await chainId())
+      const assertion = navigator.credentials.get({
+        publicKey: {
+          challenge: ethers.getBytes(safeOpHash),
+          rpId: 'safe.global',
+          allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+        },
+      })
+      const signature = buildContractSignatureBytes([
+        {
+          signer: signer.target as string,
+          data: ethers.AbiCoder.defaultAbiCoder().encode(
+            ['bytes', 'bytes', 'uint256', 'uint256[2]'],
+            [
+              new Uint8Array(assertion.response.authenticatorData),
+              new Uint8Array(assertion.response.clientDataJSON),
+              extractChallengeOffset(assertion.response, safeOpHash),
+              extractSignature(assertion.response),
+            ],
+          ),
+        },
+      ])
+
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1') }).then((tx) => tx.wait())
+      expect(await ethers.provider.getBalance(safe.address)).to.equal(ethers.parseEther('1'))
+
+      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      await logGas('WebAuthn signer Safe operation', entryPoint.handleOps([userOp], user.address))
+
+      expect(await ethers.provider.getBalance(safe.address)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
+    })
+  })
+})
