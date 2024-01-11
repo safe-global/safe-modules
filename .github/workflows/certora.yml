@@ -45,7 +45,7 @@ jobs:
           sudo mv solc-static-linux /usr/local/bin/solc8.23
 
       - name: Install dependencies
-        run: npm ci -w modules/4337
+        run: npm ci -ws
 
       - name: Verify rule ${{ matrix.rule }}
         run: |
