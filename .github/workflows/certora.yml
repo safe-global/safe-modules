@@ -23,7 +23,7 @@ jobs:
           ["verify4337Module.sh", "verifyTransactionExecutionMethods.sh", "verifyValidationData.sh"]
     defaults:
       run:
-        working-directory: .
+        working-directory: ./modules/4337
     steps:
       - uses: actions/checkout@v3
 

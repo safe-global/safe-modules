@@ -4,9 +4,6 @@ on: [push]
 jobs:
   tests:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
@@ -24,9 +21,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
   e2e:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
@@ -51,9 +45,6 @@ jobs:
           npm run test:e2e -w modules/4337
   lint:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
