@@ -2,6 +2,12 @@
   "name": "@safe-global/safe-allowance-module",
   "version": "1.0.0",
   "description": "Allowance module for the gnosis safe",
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe",
+    "Safe module"
+  ],
   "scripts": {
     "clean": "rimraf build typechain-types coverage",
     "build": "hardhat compile",

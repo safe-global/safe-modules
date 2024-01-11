@@ -38,7 +38,8 @@
   "keywords": [
     "Ethereum",
     "Wallet",
-    "Safe"
+    "Safe",
+    "Safe module"
   ],
   "author": "@safe-global",
   "bugs": {
