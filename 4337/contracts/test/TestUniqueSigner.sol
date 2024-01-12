@@ -3,7 +3,7 @@
 pragma solidity >=0.8.0;
 
 import {ISignatureValidator} from "@safe-global/safe-contracts/contracts/interfaces/ISignatureValidator.sol";
-import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import {IUniqueSignerFactory} from "../experimental/SafeSignerLaunchpad.sol";
 
 function checkSignature(bytes memory data, uint256 signature, uint256 key) pure returns (bytes4 magicValue) {
     uint256 message = uint256(keccak256(data));
