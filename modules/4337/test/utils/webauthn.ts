@@ -247,3 +247,75 @@ export function base64UrlEncode(data: BytesLike | ArrayBufferLike): string {
 function b2ab(buf: Uint8Array): ArrayBuffer {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }
+
+/**
+ * Extract the x and y coordinates of the public key from a created public key credential.
+ * Inspired from <https://webauthn.guide/#registration>.
+ */
+export function extractPublicKey(response: AuthenticatorAttestationResponse): { x: bigint; y: bigint } {
+  const attestationObject = CBOR.decode(response.attestationObject)
+  const authDataView = new DataView(attestationObject.authData.buffer)
+  const credentialIdLength = authDataView.getUint16(53)
+  const cosePublicKey = attestationObject.authData.slice(55 + credentialIdLength)
+  const key: Map<number, unknown> = CBOR.decode(cosePublicKey)
+  const bn = (bytes: Uint8Array) => BigInt(ethers.hexlify(bytes))
+  return {
+    x: bn(key.get(-2) as Uint8Array),
+    y: bn(key.get(-3) as Uint8Array),
+  }
+}
+
+/**
+ * Compute the challenge offset in the client data JSON. This is the offset, in bytes, of the
+ * value associated with the `challenge` key in the JSON blob.
+ */
+export function extractChallengeOffset(response: AuthenticatorAssertionResponse, challenge: string): number {
+  const clientDataJSON = new TextDecoder('utf-8').decode(response.clientDataJSON)
+
+  const encodedChallenge = base64UrlEncode(challenge)
+  const offset = clientDataJSON.indexOf(encodedChallenge)
+  if (offset < 0) {
+    throw new Error('challenge not found in client data JSON')
+  }
+
+  return offset
+}
+
+/**
+ * Extracts the signature into R and S values from the authenticator response.
+ *
+ * See:
+ * - <https://datatracker.ietf.org/doc/html/rfc3279#section-2.2.3>
+ * - <https://en.wikipedia.org/wiki/X.690#BER_encoding>
+ */
+export function extractSignature(response: AuthenticatorAssertionResponse): [bigint, bigint] {
+  const check = (x: boolean) => {
+    if (!x) {
+      throw new Error('invalid signature encoding')
+    }
+  }
+
+  // Decode the DER signature. Note that we assume that all lengths fit into 8-bit integers,
+  // which is true for the kinds of signatures we are decoding but generally false. I.e. this
+  // code should not be used in any serious application.
+  const view = new DataView(response.signature)
+
+  // check that the sequence header is valid
+  check(view.getUint8(0) === 0x30)
+  check(view.getUint8(1) === view.byteLength - 2)
+
+  // read r and s
+  const readInt = (offset: number) => {
+    check(view.getUint8(offset) === 0x02)
+    const len = view.getUint8(offset + 1)
+    const start = offset + 2
+    const end = start + len
+    const n = BigInt(ethers.hexlify(new Uint8Array(view.buffer.slice(start, end))))
+    check(n < ethers.MaxUint256)
+    return [n, end] as const
+  }
+  const [r, sOffset] = readInt(2)
+  const [s] = readInt(sOffset)
+
+  return [r, s]
+}

@@ -1,10 +1,9 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
-import { EventLog, Log, Signer } from 'ethers'
-import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPoint.json'
-import { getFactory, getAddModulesLib } from '../utils/setup'
-import { buildSignatureBytes, logGas } from '../../src/utils/execution'
+import { EventLog, Log } from 'ethers'
+import { deployReferenceEntryPoint, getFactory, getAddModulesLib } from '../utils/setup'
+import { buildContractSignatureBytes, buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
   buildUserOperationFromSafeUserOperation,
@@ -19,7 +18,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     await deployments.fixture()
     const [deployer, user, relayer] = await ethers.getSigners()
 
-    const entryPoint = await deployEntryPoint(deployer, relayer)
+    const entryPoint = await deployReferenceEntryPoint(deployer, relayer)
     const moduleFactory = await ethers.getContractFactory('Safe4337Module')
     const module = await moduleFactory.deploy(await entryPoint.getAddress())
     const proxyFactory = await getFactory()
@@ -47,17 +46,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       entryPoint,
       safeGlobalConfig,
     }
-  }
-
-  const deployEntryPoint = async (deployer: Signer, relayer: Signer) => {
-    const { abi, bytecode } = EntryPointArtifact
-    const transaction = await deployer.sendTransaction({ data: bytecode })
-    const receipt = await transaction.wait()
-    const contractAddress = receipt.contractAddress
-    if (contractAddress === null) {
-      throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
-    }
-    return new ethers.Contract(contractAddress, abi, relayer)
   }
 
   it('should deploy a Safe and execute transactions', async () => {
@@ -180,42 +168,23 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       },
     )
     const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
-    const signature = ethers.solidityPacked(
-      ['bytes', 'bytes'],
-      [
-        buildSignatureBytes([
+    const signature = buildContractSignatureBytes([
+      {
+        signer: parentSafe.address,
+        data: await user.signTypedData(
           {
-            signer: parentSafe.address,
-            data: ethers.solidityPacked(
-              ['bytes32', 'bytes32', 'uint8'],
-              [
-                ethers.toBeHex(parentSafe.address, 32), // `r` holds the contract signer
-                ethers.toBeHex(65, 32), // `s` holds the offset of the signature bytes
-                0, // `v` of 0 indicates a contract signer
-              ],
-            ),
+            verifyingContract: parentSafe.address,
+            chainId: await chainId(),
           },
-        ]),
-        ethers.solidityPacked(
-          ['uint256', 'bytes'],
-          [
-            65, // signature length
-            await user.signTypedData(
-              {
-                verifyingContract: parentSafe.address,
-                chainId: await chainId(),
-              },
-              {
-                SafeMessage: [{ type: 'bytes', name: 'message' }],
-              },
-              {
-                message: opData,
-              },
-            ),
-          ],
+          {
+            SafeMessage: [{ type: 'bytes', name: 'message' }],
+          },
+          {
+            message: opData,
+          },
         ),
-      ],
-    )
+      },
+    ])
     const userOp = buildUserOperationFromSafeUserOperation({
       safeOp,
       signature,
