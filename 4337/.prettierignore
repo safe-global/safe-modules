@@ -1,1 +1,1 @@
-contracts/test/FCL/**/*.sol
+contracts/vendor/FCL/**/*.sol
