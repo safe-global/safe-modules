@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
-import { buildSignatureBytes } from '../../src/utils/execution'
+import { buildContractSignatureBytes } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction } from '../../src/utils/userOp'
 import { bundlerRpc, encodeMultiSendTransactions, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
@@ -107,18 +107,15 @@ describe('E2E - Singleton Signers', () => {
     const opHash = await validator.getOperationHash(
       buildUserOperationFromSafeUserOperation({
         safeOp,
-        signature: buildSignatureBytes([]),
+        signature: '0x',
       }),
     )
-    const signature = ethers.concat([
-      buildSignatureBytes(
-        customSigners.map(({ signer }, i) => ({
-          signer: signer.target as string,
-          data: ethers.solidityPacked(['uint256', 'uint256', 'uint8'], [signer.target, 65 * customSigners.length + 64 * i, 0]),
-        })),
-      ),
-      ...customSigners.map(({ key }) => ethers.solidityPacked(['uint256', 'bytes'], [32, ethers.toBeHex(BigInt(opHash) ^ key)])),
-    ])
+    const signature = buildContractSignatureBytes(
+      customSigners.map(({ signer, key }) => ({
+        signer: signer.target as string,
+        data: ethers.toBeHex(BigInt(opHash) ^ key),
+      })),
+    )
     const userOp = buildUserOperationFromSafeUserOperation({
       safeOp,
       signature,
