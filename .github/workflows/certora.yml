@@ -3,12 +3,12 @@ name: certora
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - modules/4337/**
   pull_request:
     branches:
-      - master
+      - main
     paths:
       - modules/4337/**
 
