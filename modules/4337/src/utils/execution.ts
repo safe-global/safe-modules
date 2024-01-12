@@ -41,9 +41,31 @@ export const signHash = async (signer: Signer, hash: string): Promise<SafeSignat
   }
 }
 
-export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
+const sortSignatures = (signatures: SafeSignature[]) => {
   signatures.sort((left, right) => left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()))
+}
+
+export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
+  sortSignatures(signatures)
   return ethers.concat(signatures.map((signature) => signature.data))
+}
+
+export const buildContractSignatureBytes = (signatures: SafeSignature[]): string => {
+  sortSignatures(signatures)
+  const start = 65 * signatures.length
+  const { segments } = signatures.reduce(
+    ({ segments, offset }, { signer, data }) => {
+      return {
+        segments: [...segments, ethers.solidityPacked(['uint256', 'uint256', 'uint8'], [signer, start + offset, 0])],
+        offset: offset + 32 + ethers.dataLength(data),
+      }
+    },
+    { segments: [] as string[], offset: 0 },
+  )
+  return ethers.concat([
+    ...segments,
+    ...signatures.map(({ data }) => ethers.solidityPacked(['uint256', 'bytes'], [ethers.dataLength(data), data])),
+  ])
 }
 
 export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {
