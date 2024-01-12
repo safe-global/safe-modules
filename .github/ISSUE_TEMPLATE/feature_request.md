@@ -1,7 +1,6 @@
 ---
 name: Feature request
 about: Suggest an idea or feature request for the Safe smart contracts project
-
 ---
 
 ## Prerequisites
@@ -10,7 +9,7 @@ about: Suggest an idea or feature request for the Safe smart contracts project
 - Support questions are better asked on our Discord: https://chat.safe.global
 - Please ensure the issue isn't already reported.
 
-*Please delete the above section and the instructions in the sections below before submitting*
+_Please delete the above section and the instructions in the sections below before submitting_
 
 ## Context / issue
 
