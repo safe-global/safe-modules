@@ -1,30 +1,29 @@
-import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/react"
-import { ethers } from "ethers"
-import { numberToUnpaddedHex } from "../utils"
+import { createWeb3Modal, defaultConfig } from '@web3modal/ethers/react'
+import { ethers } from 'ethers'
+import { numberToUnpaddedHex } from '../utils'
 
 // 1. Get projectId at https://cloud.walletconnect.com
 const projectId = import.meta.env.VITE_WC_CLOUD_PROJECT_ID
 
 if (!projectId) {
-  throw new Error("Walletconnect Project ID is missing")
+  throw new Error('Walletconnect Project ID is missing')
 }
 
 // 2. Set chains
 const mumbai = {
   chainId: 80001,
-  name: "Polygon Mumbai",
-  currency: "MATIC",
-  explorerUrl: "https://mumbai.polygonscan.com",
-  rpcUrl: "https://rpc-mumbai.maticvigil.com",
+  name: 'Polygon Mumbai',
+  currency: 'MATIC',
+  explorerUrl: 'https://mumbai.polygonscan.com',
+  rpcUrl: 'https://rpc-mumbai.maticvigil.com',
 }
 
 // 3. Create modal
 const metadata = {
-  name: "Safe 4337 Passkeys Example",
-  description:
-    "An example application to deploy a 4337-compatible Safe Account with Passkeys signer",
-  url: "https://safe.global",
-  icons: ["https://app.safe.global/favicons/favicon.ico"],
+  name: 'Safe 4337 Passkeys Example',
+  description: 'An example application to deploy a 4337-compatible Safe Account with Passkeys signer',
+  url: 'https://safe.global',
+  icons: ['https://app.safe.global/favicons/favicon.ico'],
 }
 
 createWeb3Modal({
@@ -37,7 +36,7 @@ createWeb3Modal({
 async function switchToMumbai(provider: ethers.Eip1193Provider) {
   return provider
     .request({
-      method: "wallet_addEthereumChain",
+      method: 'wallet_addEthereumChain',
       params: [
         {
           chainId: numberToUnpaddedHex(mumbai.chainId),
@@ -54,9 +53,9 @@ async function switchToMumbai(provider: ethers.Eip1193Provider) {
     })
     .catch(() =>
       provider.request({
-        method: "wallet_switchEthereumChain",
+        method: 'wallet_switchEthereumChain',
         params: [{ chainId: numberToUnpaddedHex(mumbai.chainId) }],
-      })
+      }),
     )
 }
 

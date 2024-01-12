@@ -1,19 +1,16 @@
-import safeLogo from "/safe-logo.svg"
-import { PasskeyLocalStorageFormat, createPasskey, toLocalStorageFormat } from "./logic/passkeys.ts"
-import "./App.css"
-import { useLocalStorageState } from "./hooks/useLocalStorageState.ts"
-import ConnectButton from "./components/ConnectButton.tsx"
-import { useState } from "react"
-import { useWeb3ModalProvider, useWeb3ModalAccount } from "@web3modal/ethers/react"
-import { APP_CHAIN_ID } from "./config.ts"
-import { switchToMumbai } from "./logic/wallets.ts"
-const PASSKEY_LOCALSTORAGE_KEY = "passkeyId"
+import safeLogo from '/safe-logo.svg'
+import { PasskeyLocalStorageFormat, createPasskey, toLocalStorageFormat } from './logic/passkeys.ts'
+import './App.css'
+import { useLocalStorageState } from './hooks/useLocalStorageState.ts'
+import ConnectButton from './components/ConnectButton.tsx'
+import { useState } from 'react'
+import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react'
+import { APP_CHAIN_ID } from './config.ts'
+import { switchToMumbai } from './logic/wallets.ts'
+const PASSKEY_LOCALSTORAGE_KEY = 'passkeyId'
 
 function App() {
-  const [passkey, setPasskey] = useLocalStorageState<PasskeyLocalStorageFormat | null>(
-    PASSKEY_LOCALSTORAGE_KEY,
-    null
-  )
+  const [passkey, setPasskey] = useLocalStorageState<PasskeyLocalStorageFormat | null>(PASSKEY_LOCALSTORAGE_KEY, null)
   const [error, setError] = useState<string>()
   const { chainId } = useWeb3ModalAccount()
   const { walletProvider } = useWeb3ModalProvider()
@@ -28,7 +25,7 @@ function App() {
       if (error instanceof Error) {
         setError(error.message)
       } else {
-        setError("Unknown error")
+        setError('Unknown error')
       }
     }
   }
@@ -43,7 +40,7 @@ function App() {
       if (error instanceof Error) {
         setError(error.message)
       } else {
-        setError("Unknown error when switching to Mumbai network")
+        setError('Unknown error when switching to Mumbai network')
       }
     }
   }

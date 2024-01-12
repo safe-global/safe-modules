@@ -8,7 +8,7 @@
  */
 function numberToUnpaddedHex(n: number, withPrefix = true): string {
   const hex = n.toString(16)
-  return `${withPrefix ? "0x" : ""}${hex}`
+  return `${withPrefix ? '0x' : ''}${hex}`
 }
 
 export { numberToUnpaddedHex }
