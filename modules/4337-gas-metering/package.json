@@ -1,0 +1,67 @@
+{
+  "name": "@safe-global/4337-gas-metering",
+  "version": "1.0.0",
+  "description": "Gas Metering Analysis for Safe with 4337 Module",
+  "homepage": "https://github.com/safe-global/safe-modules/4337-gas-metering",
+  "license": "GPL-3.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "alchemy:account": "tsx ./alchemy/alchemy.ts account",
+    "alchemy:account:paymaster": "tsx ./alchemy/alchemy.ts account paymaster=true",
+    "alchemy:native-transfer": "tsx ./alchemy/alchemy.ts native-transfer",
+    "alchemy:native-transfer:paymaster": "tsx ./alchemy/alchemy.ts native-transfer paymaster=true",
+    "alchemy:erc20": "tsx ./alchemy/alchemy.ts erc20",
+    "alchemy:erc20:paymaster": "tsx ./alchemy/alchemy.ts erc20 paymaster=true",
+    "alchemy:erc721": "tsx ./alchemy/alchemy.ts erc721",
+    "alchemy:erc721:paymaster": "tsx ./alchemy/alchemy.ts erc721 paymaster=true",
+    "alchemy": "tsx ./alchemy/alchemy.ts",
+    "build": "npx rimraf dist && tsc",
+    "fmt": "prettier --ignore-path .gitignore --write .",
+    "fmt:check": "prettier --check .",
+    "lint": "eslint ./alchemy && eslint ./gelato && eslint ./pimlico && eslint ./utils",
+    "gelato:account:1balance": "tsx ./gelato/gelato.ts account",
+    "gelato:native-transfer:1balance": "tsx ./gelato/gelato.ts native-transfer",
+    "gelato:erc20:1balance": "tsx ./gelato/gelato.ts erc20",
+    "gelato:erc721:1balance": "tsx ./gelato/gelato.ts erc721",
+    "gelato": "tsx ./gelato/gelato.ts",
+    "pimlico:account": "tsx ./pimlico/pimlico.ts account",
+    "pimlico:account:paymaster": "tsx ./pimlico/pimlico.ts account paymaster=true",
+    "pimlico:native-transfer": "tsx ./pimlico/pimlico.ts native-transfer",
+    "pimlico:native-transfer:paymaster": "tsx ./pimlico/pimlico.ts native-transfer paymaster=true",
+    "pimlico:erc20": "tsx ./pimlico/pimlico.ts erc20",
+    "pimlico:erc20:paymaster": "tsx ./pimlico/pimlico.ts erc20 paymaster=true",
+    "pimlico:erc721": "tsx ./pimlico/pimlico.ts erc721",
+    "pimlico:erc721:paymaster": "tsx ./pimlico/pimlico.ts erc721 paymaster=true",
+    "pimlico": "tsx ./pimlico/pimlico.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/safe-global/safe-modules.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe",
+    "Safe module"
+  ],
+  "author": "@safe-global",
+  "bugs": {
+    "url": "https://github.com/safe-global/safe-modules/issues"
+  },
+  "dependencies": {
+    "@alchemy/aa-accounts": "1.2.0",
+    "@alchemy/aa-alchemy": "1.2.0",
+    "@alchemy/aa-core": "1.2.0",
+    "alchemy-sdk": "3.1.0",
+    "dotenv": "16.3.1",
+    "permissionless": "0.0.16",
+    "viem": "1.19.11"
+  },
+  "devDependencies": {
+    "@types/node": "20.10.2",
+    "rimraf": "^5.0.5",
+    "tsx": "3.13.0",
+    "typescript": "^5.3.3"
+  }
+}

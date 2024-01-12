@@ -1,7 +1,6 @@
 ---
 name: Bug report
 about: Bug report about the Safe smart contracts
-
 ---
 
 ## Prerequisites
@@ -10,7 +9,7 @@ about: Bug report about the Safe smart contracts
 - Support questions are better asked on our Discord: https://chat.safe.global
 - Please ensure the issue isn't already reported.
 
-*Please delete the above section and the instructions in the sections below before submitting*
+_Please delete the above section and the instructions in the sections below before submitting_
 
 ## Description
 
@@ -26,7 +25,7 @@ Please describe concisely the bug you have found, and what you expect instead.
 
 ## Steps to reproduce
 
-If applicable, please provide a *minimal* source code example to trigger the bug you have found.
+If applicable, please provide a _minimal_ source code example to trigger the bug you have found.
 Provide as much information as necessary to reproduce the bug.
 
 ## Additional context

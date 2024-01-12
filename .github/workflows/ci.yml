@@ -1,4 +1,4 @@
-name: safe-modules-4337-gas-metering
+name: safe-modules
 on: [push]
 
 jobs:
@@ -12,6 +12,4 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run fmt:check -w modules/4337-gas-metering
-      - run: npm run lint -w modules/4337-gas-metering
-      - run: npm run build -w modules/4337-gas-metering
+      - run: npm run fmt:global-check
