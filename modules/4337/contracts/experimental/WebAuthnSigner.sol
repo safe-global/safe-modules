@@ -3,6 +3,7 @@
 pragma solidity >=0.8.0;
 
 import {FCL_WebAuthn} from "../vendor/FCL/FCL_Webauthn.sol";
+import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
 
 struct SignatureData {
@@ -12,14 +13,14 @@ struct SignatureData {
     uint256[2] rs;
 }
 
-function checkSignature(bytes memory data, bytes calldata signature, uint256 x, uint256 y) view returns (bytes4 magicValue) {
+function checkSignature(bytes memory data, bytes calldata signature, uint256 x, uint256 y) view returns (bool valid) {
     SignatureData calldata signaturePointer;
     // solhint-disable-next-line no-inline-assembly
     assembly ("memory-safe") {
         signaturePointer := signature.offset
     }
 
-    if (
+    return
         FCL_WebAuthn.checkSignature(
             signaturePointer.authenticatorData,
             0x01, // require user presence
@@ -29,17 +30,14 @@ function checkSignature(bytes memory data, bytes calldata signature, uint256 x, 
             signaturePointer.rs,
             x,
             y
-        )
-    ) {
-        magicValue = WebAuthnSigner.isValidSignature.selector;
-    }
+        );
 }
 
 /**
  * @title WebAuthnSigner
  * @dev A contract that represents a WebAuthn signer.
  */
-contract WebAuthnSigner {
+contract WebAuthnSigner is SignatureValidatorConstants {
     uint256 public immutable X;
     uint256 public immutable Y;
 
@@ -60,7 +58,21 @@ contract WebAuthnSigner {
      * @return magicValue The magic value indicating the validity of the signature.
      */
     function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
-        return checkSignature(data, signature, X, Y);
+        if (checkSignature(data, signature, X, Y)) {
+            magicValue = LEGACY_EIP1271_MAGIC_VALUE;
+        }
+    }
+
+    /**
+     * @dev Validates the signature for a given data hash.
+     * @param dataHash The hash of the data to be validated.
+     * @param signature The signature to be validated.
+     * @return magicValue The magic value indicating the validity of the signature.
+     */
+    function isValidSignature(bytes32 dataHash, bytes calldata signature) external view returns (bytes4 magicValue) {
+        if (checkSignature(abi.encode(dataHash), signature, X, Y)) {
+            magicValue = EIP1271_MAGIC_VALUE;
+        }
     }
 }
 
@@ -68,7 +80,7 @@ contract WebAuthnSigner {
  * @title WebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn signers.
  */
-contract WebAuthnSignerFactory is IUniqueSignerFactory {
+contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants {
     /**
      * @dev Retrieves the signer address based on the provided data.
      * @param data Concatenated X and Y coordinates of the signer as bytes.
@@ -106,7 +118,9 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory {
         bytes calldata signerData
     ) external view override returns (bytes4 magicValue) {
         (uint256 x, uint256 y) = abi.decode(signerData, (uint256, uint256));
-        magicValue = checkSignature(data, signature, x, y);
+        if (checkSignature(data, signature, x, y)) {
+            magicValue = LEGACY_EIP1271_MAGIC_VALUE;
+        }
     }
 
     /**
