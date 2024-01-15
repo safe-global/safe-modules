@@ -31,7 +31,7 @@ interface IUniqueSignerFactory {
      * @param data The data whose signature should be verified.
      * @param signature The signature bytes.
      * @param signerData The signer data to verify signature for.
-     * @return magicValue Returns a legacy EIP-1271 magic value (`keccak256(isValidSignature(bytes,bytes)`) when the signature is valid. Reverting or returning any other value implies an invalid signature.
+     * @return magicValue Returns a legacy EIP-1271 magic value (`bytes4(keccak256(isValidSignature(bytes,bytes))`) when the signature is valid. Reverting or returning any other value implies an invalid signature.
      */
     function isValidSignatureForSigner(
         bytes calldata data,
@@ -176,6 +176,11 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstan
         if (missingAccountFunds > 0) {
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
+                // The `pop` is necessary here because solidity 0.5.0
+                // enforces "strict" assembly blocks and "statements (elements of a block) are disallowed if they return something onto the stack at the end."
+                // This is not well documented, the quote is taken from here:
+                // https://github.com/ethereum/solidity/issues/1820
+                // The compiler will throw an error if we keep the success value on the stack
                 pop(call(gas(), caller(), missingAccountFunds, 0, 0, 0, 0))
             }
         }
