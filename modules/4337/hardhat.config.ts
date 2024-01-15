@@ -3,6 +3,7 @@ import 'hardhat-deploy'
 import dotenv from 'dotenv'
 import type { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
 import yargs from 'yargs/yargs'
+import {filesToOverride} from './overrides'
 
 const argv = yargs(process.argv.slice(2))
   .options({ network: { type: 'string', default: 'hardhat' } })
@@ -33,7 +34,8 @@ import './src/tasks/local_verify'
 import './src/tasks/deploy_contracts'
 import './src/tasks/show_codesize'
 
-const solidityVersion = SOLIDITY_VERSION || '0.8.23'
+const defaultSolidityVersion = '0.8.23';
+const primarySolidityVersion = SOLIDITY_VERSION || defaultSolidityVersion;
 const soliditySettings = SOLIDITY_SETTINGS
   ? JSON.parse(SOLIDITY_SETTINGS)
   : {
@@ -53,6 +55,11 @@ const customNetwork = NODE_URL
     }
   : {}
 
+const overrides: { [key: string]: { version: string } } = {};
+for (const file of filesToOverride) {
+  overrides[file] = { version: defaultSolidityVersion };
+}    
+
 const userConfig: HardhatUserConfig = {
   paths: {
     artifacts: 'build/artifacts',
@@ -61,8 +68,10 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    version: solidityVersion,
-    settings: soliditySettings,
+    compilers: [{ version: primarySolidityVersion, settings: soliditySettings }],
+    overrides: {
+      ...overrides,
+    },
   },
   networks: {
     localhost: {
