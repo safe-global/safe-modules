@@ -1,3 +1,16 @@
 const APP_CHAIN_ID = 80001
 
-export { APP_CHAIN_ID }
+/*         CONTRACTS         
+  Some of the contracts used in the PoC app are still experimental, and not included in
+  the production deployment packages, thus we need to hardcode their addresses here.
+  Deployment commit: https://github.com/safe-global/safe-modules/commit/3853f34f31837e0a0aee47a4452564278f8c62ba
+*/
+const SAFE_SIGNER_LAUNCHPAD_ADDRESS = '0x4D276BB3abC959AaC18028903E9bCB714947760F'
+
+const SAFE_4337_MODULE_ADDRESS = '0xD9752e2e2A577Fe7c4340d79b5DD2C9775656bD6'
+
+const ADD_MODULES_LIB_ADDRESS = '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb'
+
+const WEBAUTHN_SIGNER_FACTORY_ADDRESS = '0xd752898D460646913EA56AF892E10Bac741f2DDe'
+
+export { APP_CHAIN_ID, SAFE_SIGNER_LAUNCHPAD_ADDRESS, SAFE_4337_MODULE_ADDRESS, ADD_MODULES_LIB_ADDRESS, WEBAUTHN_SIGNER_FACTORY_ADDRESS }

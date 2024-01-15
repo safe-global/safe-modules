@@ -59,4 +59,8 @@ async function switchToMumbai(provider: ethers.Eip1193Provider) {
     )
 }
 
-export { switchToMumbai }
+function getJsonRpcProviderFromEip1193Provider(provider: ethers.Eip1193Provider): ethers.JsonRpcApiProvider {
+  return new ethers.BrowserProvider(provider)
+}
+
+export { switchToMumbai, getJsonRpcProviderFromEip1193Provider }

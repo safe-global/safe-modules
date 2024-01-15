@@ -45,6 +45,20 @@ function App() {
     }
   }
 
+  const handleDeploySafeClick = () => {
+    if (!walletProvider) return
+
+    setError(undefined)
+    try {
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('Unknown error when deploying Safe')
+      }
+    }
+  }
+
   return (
     <>
       <header className="header">
@@ -74,6 +88,8 @@ function App() {
             <br />
             Passkey Y: {passkey.pubkeyCoordinates.y}
           </p>
+
+          <button onClick={handleDeploySafeClick}>Deploy Safe</button>
         </div>
       ) : (
         <div className="card">
