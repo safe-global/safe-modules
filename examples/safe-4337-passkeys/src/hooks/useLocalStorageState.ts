@@ -15,6 +15,9 @@ function useLocalStorageState<T>(key: string, initialValue: T): [T, React.Dispat
 
     if (storedValue) {
       try {
+        console.log('parsing json')
+        console.log('storedValue', storedValue)
+        console.log('JSON.parse(storedValue)', JSON.parse(storedValue))
         return JSON.parse(storedValue) as T
       } catch {
         // trick eslint with a no-op
@@ -25,7 +28,7 @@ function useLocalStorageState<T>(key: string, initialValue: T): [T, React.Dispat
   })
 
   useEffect(() => {
-    setItem(key, JSON.stringify(state))
+    setItem(key, state)
   }, [key, state])
 
   return [state, setState]

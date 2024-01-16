@@ -73,8 +73,8 @@ async function createPasskey(): Promise<PasskeyCredentialWithPubkeyCoordinates> 
   // Create a PasskeyCredentialWithPubkeyCoordinates object
   const passkeyWithCoordinates: PasskeyCredentialWithPubkeyCoordinates = Object.assign(passkeyCredential, {
     pubkeyCoordinates: {
-      x: Buffer.from(exportedKeyWithXYCoordinates.x, 'base64').toString('hex'),
-      y: Buffer.from(exportedKeyWithXYCoordinates.y, 'base64').toString('hex'),
+      x: '0x' + Buffer.from(exportedKeyWithXYCoordinates.x, 'base64').toString('hex'),
+      y: '0x' + Buffer.from(exportedKeyWithXYCoordinates.y, 'base64').toString('hex'),
     },
   })
 
