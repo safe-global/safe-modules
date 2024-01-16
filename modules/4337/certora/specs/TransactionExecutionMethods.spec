@@ -13,7 +13,7 @@ methods {
     function executeUserOpWithErrorString(address, uint256, bytes, uint8) external;
 }
 
-ghost bool execTransactionFromModuleCalled {
+persistent ghost bool execTransactionFromModuleCalled {
     init_state axiom false;
 }
 

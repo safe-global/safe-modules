@@ -26,9 +26,9 @@ methods {
         Safe4337Module.UserOperation userOp
     ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
 }
-ghost ERC2771MessageSender() returns address;
+persistent ghost ERC2771MessageSender() returns address;
 
-ghost bool checkSignaturesCalled;
+persistent ghost bool checkSignaturesCalled;
 
 function checkSignaturesFunctionCalled() returns bool {
     checkSignaturesCalled = true;
