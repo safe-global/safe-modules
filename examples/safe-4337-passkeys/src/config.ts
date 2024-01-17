@@ -1,6 +1,6 @@
 const APP_CHAIN_ID = 80001
 
-/*         CONTRACTS         
+/*     
   Some of the contracts used in the PoC app are still experimental, and not included in
   the production deployment packages, thus we need to hardcode their addresses here.
   Deployment commit: https://github.com/safe-global/safe-modules/commit/3853f34f31837e0a0aee47a4452564278f8c62ba
@@ -17,12 +17,18 @@ const SAFE_PROXY_FACTORY_ADDRESS = '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67'
 
 const SAFE_SINGLETON_ADDRESS = '0x29fcB43b46531BcA003ddC8FCB67FFE91900C762'
 
+const ENTRYPOINT_ADDRESS = '0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789'
+
+const XANDER_BLAZE_NFT_ADDRESS = '0xBb9ebb7b8Ee75CDBf64e5cE124731A89c2BC4A07'
+
 export {
+  ADD_MODULES_LIB_ADDRESS,
   APP_CHAIN_ID,
+  ENTRYPOINT_ADDRESS,
   SAFE_SIGNER_LAUNCHPAD_ADDRESS,
   SAFE_4337_MODULE_ADDRESS,
-  ADD_MODULES_LIB_ADDRESS,
-  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
+  XANDER_BLAZE_NFT_ADDRESS,
+  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
 }

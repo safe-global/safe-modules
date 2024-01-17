@@ -8,6 +8,7 @@ import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/rea
 import { APP_CHAIN_ID } from './config.ts'
 import { switchToMumbai } from './logic/wallets.ts'
 import { PasskeyCard } from './components/PasskeyCard.tsx'
+import { SafeCard } from './components/SafeCard.tsx'
 
 const PASSKEY_LOCALSTORAGE_KEY = 'passkeyId'
 
@@ -66,7 +67,7 @@ function App() {
     <>
       <PasskeyCard passkey={passkey} handleCreatePasskeyClick={handleCreatePasskeyClick} />
 
-      {passkey && <button onClick={handleDeploySafeClick}>Deploy Safe</button>}
+      {passkey && <SafeCard passkey={passkey} handleDeploySafeClick={handleDeploySafeClick} />}
 
       {error && (
         <div className="card">

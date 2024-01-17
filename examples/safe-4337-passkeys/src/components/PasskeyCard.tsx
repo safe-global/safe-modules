@@ -5,8 +5,6 @@ import { getSignerAddressFromPubkeyCoords } from '../logic/safe'
 
 function PasskeyCard({ passkey, handleCreatePasskeyClick }: { passkey?: PasskeyLocalStorageFormat; handleCreatePasskeyClick: () => void }) {
   const predictedSignerAddress = useMemo(() => {
-    console.log({ passkey })
-
     if (!passkey) return undefined
 
     return getSignerAddressFromPubkeyCoords(passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y)
