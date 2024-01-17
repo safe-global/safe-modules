@@ -1,4 +1,4 @@
-# Safe Module/Fallback handler for EIP4337 Support
+# Safe Module/Fallback handler for ERC-4337 Support
 
 :warning: **This module MUST only be used with Safe 1.4.1 or newer** :warning:
 
