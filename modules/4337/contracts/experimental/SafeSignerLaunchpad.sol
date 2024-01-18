@@ -159,6 +159,35 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstan
             require(initHash == _initHash(), "invalid init hash");
         }
 
+        validationData = _validateSignatures(userOp, userOpHash, signerFactory, signerData);
+        if (missingAccountFunds > 0) {
+            // solhint-disable-next-line no-inline-assembly
+            assembly ("memory-safe") {
+                // The `pop` is necessary here because solidity 0.5.0
+                // enforces "strict" assembly blocks and "statements (elements of a block) are disallowed if they return something onto the stack at the end."
+                // This is not well documented, the quote is taken from here:
+                // https://github.com/ethereum/solidity/issues/1820
+                // The compiler will throw an error if we keep the success value on the stack
+                pop(call(gas(), caller(), missingAccountFunds, 0, 0, 0, 0))
+            }
+        }
+    }
+
+    /**
+     * @dev Validates that the user operation is correctly signed and returns an ERC-4337 packed validation data
+     * of `validAfter || validUntil || authorizer`:
+     *  - `authorizer`: 20-byte address, 0 for valid signature or 1 to mark signature failure (this module does not make use of signature aggregators).
+     *  - `validUntil`: 6-byte timestamp value, or zero for "infinite". The user operation is valid only up to this time.
+     *  - `validAfter`: 6-byte timestamp. The user operation is valid only after this time.
+     * @param userOp User operation struct.
+     * @return validationData An integer indicating the result of the validation.
+     */
+    function _validateSignatures(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        address signerFactory,
+        bytes memory signerData
+    ) internal view returns (uint256 validationData) {
         uint48 validAfter;
         uint48 validUntil;
         bytes calldata signature;
@@ -170,19 +199,13 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstan
         }
 
         bytes memory operationData = _getOperationData(userOpHash, validAfter, validUntil);
-        bytes4 magicValue = IUniqueSignerFactory(signerFactory).isValidSignatureForSigner(operationData, signature, signerData);
-        validationData = _packValidationData(magicValue != LEGACY_EIP1271_MAGIC_VALUE, validUntil, validAfter);
-
-        if (missingAccountFunds > 0) {
-            // solhint-disable-next-line no-inline-assembly
-            assembly ("memory-safe") {
-                // The `pop` is necessary here because solidity 0.5.0
-                // enforces "strict" assembly blocks and "statements (elements of a block) are disallowed if they return something onto the stack at the end."
-                // This is not well documented, the quote is taken from here:
-                // https://github.com/ethereum/solidity/issues/1820
-                // The compiler will throw an error if we keep the success value on the stack
-                pop(call(gas(), caller(), missingAccountFunds, 0, 0, 0, 0))
-            }
+        try IUniqueSignerFactory(signerFactory).isValidSignatureForSigner(operationData, signature, signerData) returns (
+            bytes4 magicValue
+        ) {
+            // The timestamps are validated by the entry point, therefore we will not check them again
+            validationData = _packValidationData(magicValue != LEGACY_EIP1271_MAGIC_VALUE, validUntil, validAfter);
+        } catch {
+            validationData = _packValidationData(true, validUntil, validAfter);
         }
     }
 
