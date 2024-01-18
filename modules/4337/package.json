@@ -74,6 +74,6 @@
     }
   },
   "dependencies": {
-    "@safe-global/safe-contracts": "^1.4.1"
+    "@safe-global/safe-contracts": "github:safe-global/safe-contracts#b140318"
   }
 }

@@ -12,7 +12,7 @@ struct SignatureData {
     uint256[2] rs;
 }
 
-function checkSignature(bytes memory data, bytes calldata signature, uint256 x, uint256 y) view returns (bytes4 magicValue) {
+function checkSignature(bytes32 dataHash, bytes calldata signature, uint256 x, uint256 y) view returns (bytes4 magicValue) {
     SignatureData calldata signaturePointer;
     // solhint-disable-next-line no-inline-assembly
     assembly ("memory-safe") {
@@ -24,7 +24,7 @@ function checkSignature(bytes memory data, bytes calldata signature, uint256 x, 
             signaturePointer.authenticatorData,
             0x01, // require user presence
             signaturePointer.clientData,
-            keccak256(data),
+            dataHash,
             signaturePointer.challengeOffset,
             signaturePointer.rs,
             x,
@@ -55,12 +55,12 @@ contract WebAuthnSigner {
 
     /**
      * @dev Validates the signature for the given data.
-     * @param data The signed data bytes.
+     * @param dataHash The hash of signed data bytes.
      * @param signature The signature to be validated.
      * @return magicValue The magic value indicating the validity of the signature.
      */
-    function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
-        return checkSignature(data, signature, X, Y);
+    function isValidSignature(bytes32 dataHash, bytes calldata signature) external view returns (bytes4 magicValue) {
+        return checkSignature(dataHash, signature, X, Y);
     }
 }
 
@@ -106,7 +106,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory {
         bytes calldata signerData
     ) external view override returns (bytes4 magicValue) {
         (uint256 x, uint256 y) = abi.decode(signerData, (uint256, uint256));
-        magicValue = checkSignature(data, signature, x, y);
+        magicValue = checkSignature(keccak256(data), signature, x, y);
     }
 
     /**

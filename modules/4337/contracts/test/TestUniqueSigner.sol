@@ -5,8 +5,8 @@ pragma solidity >=0.8.0;
 import {ISignatureValidator} from "@safe-global/safe-contracts/contracts/interfaces/ISignatureValidator.sol";
 import {IUniqueSignerFactory} from "../experimental/SafeSignerLaunchpad.sol";
 
-function checkSignature(bytes memory data, uint256 signature, uint256 key) pure returns (bytes4 magicValue) {
-    uint256 message = uint256(keccak256(data));
+function checkSignature(bytes32 dataHash, uint256 signature, uint256 key) pure returns (bytes4 magicValue) {
+    uint256 message = uint256(dataHash);
 
     // A very silly signing scheme where the `message = signature ^ key`
     if (message == signature ^ key) {
@@ -21,9 +21,9 @@ contract TestUniqueSigner is ISignatureValidator {
         KEY = key;
     }
 
-    function isValidSignature(bytes memory data, bytes memory signatureData) public view virtual override returns (bytes4 magicValue) {
+    function isValidSignature(bytes32 dataHash, bytes memory signatureData) public view virtual override returns (bytes4 magicValue) {
         uint256 signature = abi.decode(signatureData, (uint256));
-        magicValue = checkSignature(data, signature, KEY);
+        magicValue = checkSignature(dataHash, signature, KEY);
     }
 }
 
@@ -49,7 +49,7 @@ contract TestUniqueSignerFactory is IUniqueSignerFactory {
     ) external pure override returns (bytes4 magicValue) {
         uint256 key = abi.decode(signerData, (uint256));
         uint256 signature = abi.decode(signatureData, (uint256));
-        magicValue = checkSignature(data, signature, key);
+        magicValue = checkSignature(keccak256(data), signature, key);
     }
 
     function _getSigner(uint256 key) internal view returns (address) {

@@ -16,8 +16,8 @@ contract TestSingletonSigner is ISignatureValidator {
         keys[msg.sender].value = key;
     }
 
-    function isValidSignature(bytes memory data, bytes memory signatureData) public view virtual override returns (bytes4 magicValue) {
-        uint256 message = uint256(keccak256(data));
+    function isValidSignature(bytes32 dataHash, bytes memory signatureData) public view virtual override returns (bytes4 magicValue) {
+        uint256 message = uint256(dataHash);
         uint256 signature = abi.decode(signatureData, (uint256));
         uint256 key = keys[msg.sender].value;
 

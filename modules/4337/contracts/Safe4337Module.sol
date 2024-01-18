@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import {HandlerContext} from "./vendor/Safe/handler/HandlerContext.sol";
-import {CompatibilityFallbackHandler} from "./vendor/Safe/handler/CompatibilityFallbackHandler.sol";
+import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
+import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
 import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
-import {ISafe, Enum} from "./vendor/Safe/interfaces/ISafe.sol";
+import {ISafe, Enum} from "@safe-global/safe-contracts/contracts/interfaces/ISafe.sol";
 
 /**
  * @title Safe4337Module - An extension to the Safe contract that implements the ERC4337 interface.
