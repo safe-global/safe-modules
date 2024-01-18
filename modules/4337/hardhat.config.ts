@@ -36,7 +36,7 @@ import './src/tasks/show_codesize'
 const defaultSolidityVersion = '0.8.23'
 const defaultSoliditySettings = {
   evmVersion: 'paris',
-  viaIR: true,
+  // viaIR: true,
   optimizer: {
     enabled: true,
     runs: 10_000_000,
@@ -62,7 +62,16 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    compilers: [{ version: solidityVersion, settings: soliditySettings }, { version: '0.7.6' }],
+    compilers: [
+      { version: solidityVersion, settings: soliditySettings },
+      { version: '0.8.22', settings: { // Trick hardhat into using different compiler settings. Ideally we should be able to use overrides for the same.
+        viaIR: true,
+        optimizer: {
+          enabled: true,
+          runs: 10_000_000,
+        },
+      }
+    }],
   },
   networks: {
     localhost: {
@@ -112,8 +121,8 @@ const userConfig: HardhatUserConfig = {
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
-  gasReporter: {
-    enabled: true,
-  },
+  // gasReporter: {
+  //   enabled: true,
+  // },
 }
 export default userConfig

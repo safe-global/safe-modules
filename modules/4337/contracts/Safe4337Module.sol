@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity =0.8.22;
 
 import {HandlerContext} from "./vendor/Safe/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "./vendor/Safe/handler/CompatibilityFallbackHandler.sol";
