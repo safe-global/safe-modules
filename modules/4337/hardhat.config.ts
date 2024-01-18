@@ -36,6 +36,7 @@ import './src/tasks/show_codesize'
 const defaultSolidityVersion = '0.8.23'
 const defaultSoliditySettings = {
   evmVersion: 'paris',
+  // viaIR: true,
   optimizer: {
     enabled: true,
     runs: 10_000_000,

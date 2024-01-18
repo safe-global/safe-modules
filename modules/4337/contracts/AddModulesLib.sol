@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import {ISafe} from "./interfaces/Safe.sol";
+import {ISafe} from "./vendor/Safe/interfaces/ISafe.sol";
 
 /// @title AddModulesLib
 contract AddModulesLib {

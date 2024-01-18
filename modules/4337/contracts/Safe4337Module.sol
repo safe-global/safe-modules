@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
-import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
+import {HandlerContext} from "./vendor/Safe/handler/HandlerContext.sol";
+import {CompatibilityFallbackHandler} from "./vendor/Safe/handler/CompatibilityFallbackHandler.sol";
 import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
-import {ISafe} from "./interfaces/Safe.sol";
+import {ISafe, Enum} from "./vendor/Safe/interfaces/ISafe.sol";
 
 /**
  * @title Safe4337Module - An extension to the Safe contract that implements the ERC4337 interface.
@@ -116,7 +116,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         if (missingAccountFunds != 0) {
             // We intentionally ignore errors in paying the missing account funds, as the entry point is responsible for
             // verifying the prefund has been paid. This behaviour matches the reference base account implementation.
-            ISafe(safeAddress).execTransactionFromModule(SUPPORTED_ENTRYPOINT, missingAccountFunds, "", 0);
+            ISafe(safeAddress).execTransactionFromModule(SUPPORTED_ENTRYPOINT, missingAccountFunds, "", Enum.Operation(0));
         }
     }
 
@@ -128,7 +128,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param operation Operation type of the user operation.
      */
     function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
-        require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
+        require(ISafe(msg.sender).execTransactionFromModule(to, value, data, Enum.Operation(operation)), "Execution failed");
     }
 
     /**
@@ -139,7 +139,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param operation Operation type of the user operation.
      */
     function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
-        (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, operation);
+        (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, Enum.Operation(operation));
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
