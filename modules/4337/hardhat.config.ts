@@ -62,7 +62,8 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    compilers: [{ version: solidityVersion, settings: soliditySettings }],
+    version: solidityVersion,
+    settings: soliditySettings,
   },
   networks: {
     localhost: {

@@ -139,7 +139,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param operation Operation type of the user operation.
      */
     function executeUserOpWithErrorString(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
-        (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(to, value, data, Enum.Operation(operation));
+        (bool success, bytes memory returnData) = ISafe(msg.sender).execTransactionFromModuleReturnData(
+            to,
+            value,
+            data,
+            Enum.Operation(operation)
+        );
         if (!success) {
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
