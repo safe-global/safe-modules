@@ -62,7 +62,7 @@ const userConfig: HardhatUserConfig = {
     sources: 'contracts',
   },
   solidity: {
-    compilers: [{ version: solidityVersion, settings: soliditySettings}, { version: "0.7.6" }],
+    compilers: [{ version: solidityVersion, settings: soliditySettings }, { version: '0.7.6' }],
   },
   networks: {
     localhost: {
@@ -114,6 +114,6 @@ const userConfig: HardhatUserConfig = {
   },
   gasReporter: {
     enabled: true,
-  }
+  },
 }
 export default userConfig

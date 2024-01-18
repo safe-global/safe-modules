@@ -129,7 +129,7 @@ describe('E2E - WebAuthn Signers', () => {
         module.interface.encodeFunctionData('executeUserOp', [user.address, ethers.parseEther('0.5'), '0x', 0]),
       ]),
       callGasLimit: ethers.toBeHex(2000000),
-      verificationGasLimit: ethers.toBeHex(500000),
+      verificationGasLimit: ethers.toBeHex(600000),
       preVerificationGas: ethers.toBeHex(60000),
       maxFeePerGas: ethers.toBeHex(10000000000),
       maxPriorityFeePerGas: ethers.toBeHex(10000000000),
