@@ -1,5 +1,7 @@
 # Safe Contract Vendored Detail
 
+`Safe.sol` & `SafeL2.sol` - Taken from tag `v1.4.1` of `safe-contracts` with solidity version locked at `v0.7.6`.
+
 `ISafe.sol` - It is the flattened version. Taken from the latest commit in `safe-contracts`. Commit ID: `b140318`
 
 `CompatibilityFallbackHandler.sol` - Taken from tag `v1.4.1` of `safe-contracts` with `memory-safe` changes taken from commit ID: `b140318` and using `ISafe` instead of `Safe` in imports.
