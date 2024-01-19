@@ -12,6 +12,8 @@ function useUserOpGasLimitEstimation(userOp: UnsignedUserOperation) {
 
       try {
         const estimation = await estimateUserOpGasLimit(userOp)
+        // Increase the gas limit by 50%, otherwise the user op will fail during simulation with "verification more than gas limit" error
+        estimation.verificationGasLimit = '0x' + ((BigInt(estimation.verificationGasLimit) * 15n) / 10n).toString(16)
         setUserOpGasLimitEstimation(estimation)
         setStatus(RequestStatus.SUCCESS)
       } catch (error) {

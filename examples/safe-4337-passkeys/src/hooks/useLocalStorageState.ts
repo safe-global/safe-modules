@@ -13,7 +13,8 @@ function useLocalStorageState<T>(key: string, initialValue: T): [T, React.Dispat
   const [state, setState] = useState<T>(() => {
     const storedValue = getItem(key)
 
-    if (storedValue) {
+    // this naive hook might write 'undefined' or 'null' to local storage as a string
+    if (storedValue && storedValue !== 'undefined' && storedValue !== 'null') {
       try {
         return JSON.parse(storedValue) as T
       } catch {

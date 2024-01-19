@@ -49,25 +49,11 @@ function App() {
     }
   }
 
-  const handleDeploySafeClick = () => {
-    if (!walletProvider) return
-
-    setError(undefined)
-    try {
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message)
-      } else {
-        setError('Unknown error when deploying Safe')
-      }
-    }
-  }
-
   let content = (
     <>
       <PasskeyCard passkey={passkey} handleCreatePasskeyClick={handleCreatePasskeyClick} />
 
-      {passkey && walletProvider && <SafeCard passkey={passkey} handleDeploySafeClick={handleDeploySafeClick} provider={walletProvider} />}
+      {passkey && walletProvider && <SafeCard passkey={passkey} provider={walletProvider} />}
 
       {error && (
         <div className="card">
@@ -76,6 +62,13 @@ function App() {
       )}
     </>
   )
+  if (!walletProvider) {
+    content = (
+      <div className="card">
+        <p>Please connect wallet to continue</p>
+      </div>
+    )
+  }
   if (connectedToWrongChain) {
     content = (
       <div className="card">
@@ -102,7 +95,5 @@ function App() {
     </>
   )
 }
-
-// https://web.dev/articles/passkey-registration
 
 export default App

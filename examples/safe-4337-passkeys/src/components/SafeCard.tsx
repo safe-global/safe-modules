@@ -10,22 +10,14 @@ import {
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
 } from '../config'
 import { PasskeyLocalStorageFormat } from '../logic/passkeys'
-import { getRequiredPrefund, prepareUserOperationWithInitialisation } from '../logic/userOp'
+import { UnsignedUserOperation, getRequiredPrefund, prepareUserOperationWithInitialisation, signAndSendUserOp } from '../logic/userOp'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation'
 import { RequestStatus } from '../utils'
 import { PrefundCard } from './OpPrefundCard'
 import { useFeeData } from '../hooks/useFeeData'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 
-function SafeCard({
-  handleDeploySafeClick,
-  passkey,
-  provider,
-}: {
-  passkey: PasskeyLocalStorageFormat
-  handleDeploySafeClick: () => void
-  provider: ethers.Eip1193Provider
-}) {
+function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; provider: ethers.Eip1193Provider }) {
   const initializer: SafeInitializer = useMemo(
     () => ({
       singleton: SAFE_SINGLETON_ADDRESS,
@@ -49,7 +41,8 @@ function SafeCard({
     feeDataStatus === RequestStatus.SUCCESS &&
     estimationStatus === RequestStatus.SUCCESS &&
     typeof userOpGasLimitEstimation !== 'undefined' &&
-    feeData?.maxFeePerGas != null
+    feeData?.maxFeePerGas != null &&
+    feeData?.maxPriorityFeePerGas != null
 
   const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(provider, unsignedUserOperation.sender)
   const requiredPrefund = gasParametersReady ? getRequiredPrefund(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
@@ -58,6 +51,21 @@ function SafeCard({
 
   const gasParametersError = feeDataStatus === RequestStatus.ERROR || estimationStatus === RequestStatus.ERROR
   const gasParametersLoading = feeDataStatus === RequestStatus.LOADING || estimationStatus === RequestStatus.LOADING
+
+  const handleDeploySafeClick = async () => {
+    if (!gasParametersReady) return
+
+    const userOpToSign: UnsignedUserOperation = {
+      ...unsignedUserOperation,
+      verificationGasLimit: userOpGasLimitEstimation.verificationGasLimit,
+      preVerificationGas: userOpGasLimitEstimation.preVerificationGas,
+      callGasLimit: userOpGasLimitEstimation.callGasLimit,
+      maxFeePerGas: '0x' + feeData?.maxFeePerGas.toString(16),
+      maxPriorityFeePerGas: '0x' + feeData?.maxPriorityFeePerGas.toString(16),
+    }
+
+    await signAndSendUserOp(userOpToSign, passkey)
+  }
 
   return (
     <div className="card">

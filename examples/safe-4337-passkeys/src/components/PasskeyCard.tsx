@@ -7,6 +7,8 @@ function PasskeyCard({ passkey, handleCreatePasskeyClick }: { passkey?: PasskeyL
   const predictedSignerAddress = useMemo(() => {
     if (!passkey) return undefined
 
+    console.log({ passkey })
+
     return getSignerAddressFromPubkeyCoords(passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y)
   }, [passkey])
 
@@ -24,6 +26,7 @@ function PasskeyCard({ passkey, handleCreatePasskeyClick }: { passkey?: PasskeyL
     </div>
   ) : (
     <div className="card">
+      <p>First, you need to create a passkey which will be used to sign transactions</p>
       <button onClick={handleCreatePasskeyClick}>Create Passkey</button>
     </div>
   )

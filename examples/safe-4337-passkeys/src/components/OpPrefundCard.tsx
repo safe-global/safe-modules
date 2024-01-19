@@ -23,7 +23,7 @@ function PrefundCard({
 
   return (
     <div className="card">
-      <p>Required prefund: {requiredPrefund.toString()}</p>
+      <p>You need to prefund your safe with {requiredPrefund.toString()} wei. Click the button below to prefund your safe.</p>
 
       <button onClick={handlePrefundClick}>Prefund</button>
     </div>
