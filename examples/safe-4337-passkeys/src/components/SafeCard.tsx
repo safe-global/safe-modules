@@ -16,6 +16,7 @@ import { RequestStatus } from '../utils'
 import { PrefundCard } from './OpPrefundCard'
 import { useFeeData } from '../hooks/useFeeData'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
+import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
 
 function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; provider: ethers.Eip1193Provider }) {
   const initializer: SafeInitializer = useMemo(
@@ -45,9 +46,12 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
     feeData?.maxPriorityFeePerGas != null
 
   const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(provider, unsignedUserOperation.sender)
+  const [safeCode, safeCodeStatus] = useCodeAtAddress(provider, unsignedUserOperation.sender)
+
+  const deployed = safeCodeStatus === RequestStatus.SUCCESS && safeCode !== '0x'
   const requiredPrefund = gasParametersReady ? getRequiredPrefund(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
-  const needsPrefund = safeBalanceStatus === RequestStatus.SUCCESS && safeBalance < requiredPrefund
-  const readyToDeploy = gasParametersReady && !needsPrefund
+  const needsPrefund = !deployed && safeBalanceStatus === RequestStatus.SUCCESS && safeBalance < requiredPrefund
+  const readyToDeploy = !deployed && gasParametersReady && !needsPrefund
 
   const gasParametersError = feeDataStatus === RequestStatus.ERROR || estimationStatus === RequestStatus.ERROR
   const gasParametersLoading = feeDataStatus === RequestStatus.LOADING || estimationStatus === RequestStatus.LOADING
@@ -69,13 +73,24 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
 
   return (
     <div className="card">
-      <p>Predicted Safe Address: {unsignedUserOperation.sender}</p>
+      <p>Counterfactual Safe Address: {unsignedUserOperation.sender}</p>
 
-      {gasParametersLoading && <p>Estimating gas parameters...</p>}
-      {gasParametersError && <p>Failed to estimate gas limit</p>}
-      {gasParametersReady && needsPrefund && (
-        <PrefundCard provider={provider} safeAddress={unsignedUserOperation.sender} requiredPrefund={requiredPrefund} />
+      {deployed && (
+        <p>
+          Your Safe has been deployed. More info on{' '}
+          <a href={`https://jiffyscan.xyz/account/${unsignedUserOperation.sender}?network=mumbai`}>jiffyscan</a>
+        </p>
       )}
+
+      {needsPrefund ? (
+        <>
+          {gasParametersLoading && <p>Estimating gas parameters...</p>}
+          {gasParametersError && <p>Failed to estimate gas limit</p>}
+          {gasParametersReady && (
+            <PrefundCard provider={provider} safeAddress={unsignedUserOperation.sender} requiredPrefund={requiredPrefund} />
+          )}
+        </>
+      ) : null}
 
       {readyToDeploy && <button onClick={handleDeploySafeClick}>Deploy Safe</button>}
     </div>
