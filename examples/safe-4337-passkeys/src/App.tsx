@@ -67,7 +67,7 @@ function App() {
     <>
       <PasskeyCard passkey={passkey} handleCreatePasskeyClick={handleCreatePasskeyClick} />
 
-      {passkey && <SafeCard passkey={passkey} handleDeploySafeClick={handleDeploySafeClick} />}
+      {passkey && walletProvider && <SafeCard passkey={passkey} handleDeploySafeClick={handleDeploySafeClick} provider={walletProvider} />}
 
       {error && (
         <div className="card">

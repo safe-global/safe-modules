@@ -140,6 +140,26 @@ function estimateUserOpGasLimit(userOp: UnsignedUserOperation, entryPointAddress
 }
 
 /**
+ * Calculates the required prefund amount based on the maximum fee per gas,
+ * user operation gas limit estimation, and a multiplier.
+ *
+ * @param maxFeePerGas - The maximum fee per gas.
+ * @param userOpGasLimitEstimation - The estimation of gas limits for user operation.
+ * @param multiplier - The multiplier to apply to the gas limits.
+ * @returns The required prefund amount as a bigint.
+ */
+function getRequiredPrefund(maxFeePerGas: bigint, userOpGasLimitEstimation: UserOpGasLimitEstimation, multiplier = 12n): bigint {
+  return (
+    (BigInt(maxFeePerGas) *
+      (BigInt(userOpGasLimitEstimation.preVerificationGas) +
+        BigInt(userOpGasLimitEstimation.callGasLimit) +
+        BigInt(userOpGasLimitEstimation.verificationGasLimit)) *
+      multiplier) /
+    10n
+  )
+}
+
+/**
  * Packs a UserOperation object into a string using the defaultAbiCoder.
  * @param op The UserOperation object to pack.
  * @returns The packed UserOperation as a string.
@@ -188,4 +208,4 @@ function getUserOpHash(op: UserOperation, entryPoint: string, chainId: ethers.Bi
 
 export type { UserOperation, UnsignedUserOperation, UserOpGasLimitEstimation }
 
-export { prepareUserOperationWithInitialisation, getEip4337BundlerProvider, estimateUserOpGasLimit }
+export { prepareUserOperationWithInitialisation, getEip4337BundlerProvider, estimateUserOpGasLimit, getRequiredPrefund }

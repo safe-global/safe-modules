@@ -10,11 +10,22 @@ import {
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
 } from '../config'
 import { PasskeyLocalStorageFormat } from '../logic/passkeys'
-import { prepareUserOperationWithInitialisation } from '../logic/userOp'
+import { getRequiredPrefund, prepareUserOperationWithInitialisation } from '../logic/userOp'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation'
 import { RequestStatus } from '../utils'
+import { PrefundCard } from './OpPrefundCard'
+import { useFeeData } from '../hooks/useFeeData'
+import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 
-function SafeCard({ handleDeploySafeClick, passkey }: { passkey: PasskeyLocalStorageFormat; handleDeploySafeClick: () => void }) {
+function SafeCard({
+  handleDeploySafeClick,
+  passkey,
+  provider,
+}: {
+  passkey: PasskeyLocalStorageFormat
+  handleDeploySafeClick: () => void
+  provider: ethers.Eip1193Provider
+}) {
   const initializer: SafeInitializer = useMemo(
     () => ({
       singleton: SAFE_SINGLETON_ADDRESS,
@@ -32,17 +43,33 @@ function SafeCard({ handleDeploySafeClick, passkey }: { passkey: PasskeyLocalSto
     [initializer],
   )
 
+  const [feeData, feeDataStatus] = useFeeData(provider)
   const { userOpGasLimitEstimation, status: estimationStatus } = useUserOpGasLimitEstimation(unsignedUserOperation)
+  const gasParametersReady =
+    feeDataStatus === RequestStatus.SUCCESS &&
+    estimationStatus === RequestStatus.SUCCESS &&
+    typeof userOpGasLimitEstimation !== 'undefined' &&
+    feeData?.maxFeePerGas != null
+
+  const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(provider, unsignedUserOperation.sender)
+  const requiredPrefund = gasParametersReady ? getRequiredPrefund(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
+  const needsPrefund = safeBalanceStatus === RequestStatus.SUCCESS && safeBalance < requiredPrefund
+  const readyToDeploy = gasParametersReady && !needsPrefund
+
+  const gasParametersError = feeDataStatus === RequestStatus.ERROR || estimationStatus === RequestStatus.ERROR
+  const gasParametersLoading = feeDataStatus === RequestStatus.LOADING || estimationStatus === RequestStatus.LOADING
 
   return (
     <div className="card">
       <p>Predicted Safe Address: {unsignedUserOperation.sender}</p>
 
-      {estimationStatus === RequestStatus.LOADING && <p>Estimating gas limit...</p>}
-      {estimationStatus === RequestStatus.ERROR && <p>Failed to estimate gas limit</p>}
-      {estimationStatus === RequestStatus.SUCCESS && <p>Estimated gas limit: {JSON.stringify(userOpGasLimitEstimation, null, 2)}</p>}
+      {gasParametersLoading && <p>Estimating gas parameters...</p>}
+      {gasParametersError && <p>Failed to estimate gas limit</p>}
+      {gasParametersReady && needsPrefund && (
+        <PrefundCard provider={provider} safeAddress={unsignedUserOperation.sender} requiredPrefund={requiredPrefund} />
+      )}
 
-      <button onClick={handleDeploySafeClick}>Deploy Safe</button>
+      {readyToDeploy && <button onClick={handleDeploySafeClick}>Deploy Safe</button>}
     </div>
   )
 }
