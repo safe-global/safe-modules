@@ -2,9 +2,11 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
+import {P256Wrapper} from "./P256Wrapper.sol";
 import {FCL_WebAuthn} from "../vendor/FCL/FCL_Webauthn.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import "hardhat/console.sol";
 
 struct SignatureData {
     bytes authenticatorData;
@@ -13,31 +15,11 @@ struct SignatureData {
     uint256[2] rs;
 }
 
-function checkSignature(bytes memory data, bytes calldata signature, uint256 x, uint256 y) view returns (bool valid) {
-    SignatureData calldata signaturePointer;
-    // solhint-disable-next-line no-inline-assembly
-    assembly ("memory-safe") {
-        signaturePointer := signature.offset
-    }
-
-    return
-        FCL_WebAuthn.checkSignature(
-            signaturePointer.authenticatorData,
-            0x01, // require user presence
-            signaturePointer.clientData,
-            keccak256(data),
-            signaturePointer.challengeOffset,
-            signaturePointer.rs,
-            x,
-            y
-        );
-}
-
 /**
  * @title WebAuthnSigner
  * @dev A contract that represents a WebAuthn signer.
  */
-contract WebAuthnSigner is SignatureValidatorConstants {
+contract WebAuthnSigner is SignatureValidatorConstants, P256Wrapper {
     uint256 public immutable X;
     uint256 public immutable Y;
 
@@ -46,7 +28,7 @@ contract WebAuthnSigner is SignatureValidatorConstants {
      * @param x The X coordinate of the signer's public key.
      * @param y The Y coordinate of the signer's public key.
      */
-    constructor(uint256 x, uint256 y) {
+    constructor(uint256 x, uint256 y, address verifier) P256Wrapper(verifier) {
         X = x;
         Y = y;
     }
@@ -58,7 +40,7 @@ contract WebAuthnSigner is SignatureValidatorConstants {
      * @return magicValue The magic value indicating the validity of the signature.
      */
     function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
-        if (checkSignature(data, signature, X, Y)) {
+        if (checkSignature(keccak256(data), signature)) {
             magicValue = LEGACY_EIP1271_MAGIC_VALUE;
         }
     }
@@ -70,9 +52,30 @@ contract WebAuthnSigner is SignatureValidatorConstants {
      * @return magicValue The magic value indicating the validity of the signature.
      */
     function isValidSignature(bytes32 dataHash, bytes calldata signature) external view returns (bytes4 magicValue) {
-        if (checkSignature(abi.encode(dataHash), signature, X, Y)) {
+        if (checkSignature(dataHash, signature)) {
             magicValue = EIP1271_MAGIC_VALUE;
         }
+        
+    }
+
+    function checkSignature(bytes32 dataHash, bytes calldata signature) internal view returns (bool) {
+        SignatureData calldata signaturePointer;
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            signaturePointer := signature.offset
+        }
+
+        // Let the caller check if User Presence (0x01) or User Verification (0x04) are set
+        bytes32 message = FCL_WebAuthn.WebAuthn_format(
+            signaturePointer.authenticatorData,
+            0x04, // require user verification
+            signaturePointer.clientData,
+            dataHash,
+            signaturePointer.challengeOffset,
+            signaturePointer.rs
+        );
+
+        return verifySignatureAllowMalleability(message, signaturePointer.rs[0], signaturePointer.rs[1], X, Y);
     }
 }
 
@@ -80,15 +83,23 @@ contract WebAuthnSigner is SignatureValidatorConstants {
  * @title WebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn signers.
  */
-contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants {
+contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants, P256Wrapper {
+    /**
+     * @dev Constructor function.
+     * @param verifier The address of the P256Verifier contract.
+     */
+    constructor(address verifier) P256Wrapper(verifier) {}
+
+
     /**
      * @dev Retrieves the signer address based on the provided data.
      * @param data Concatenated X and Y coordinates of the signer as bytes.
      * @return signer The address of the signer.
      */
     function getSigner(bytes calldata data) public view returns (address signer) {
-        (uint256 x, uint256 y) = abi.decode(data, (uint256, uint256));
-        signer = _getSigner(x, y);
+        console.logBytes(data);
+        (uint256 x, uint256 y, address verifier) = abi.decode(data, (uint256, uint256, address));
+        signer = _getSigner(x, y, verifier);
     }
 
     /**
@@ -97,12 +108,17 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @return signer The address of the newly created signer.
      */
     function createSigner(bytes calldata data) external returns (address signer) {
-        (uint256 x, uint256 y) = abi.decode(data, (uint256, uint256));
-        signer = _getSigner(x, y);
-        if (_hasNoCode(signer)) {
-            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y);
+        (uint256 x, uint256 y, address verifier) = abi.decode(data, (uint256, uint256, address));
+        signer = _getSigner(x, y, verifier);
+        if (_hasNoCode(signer) && _validVerifier(verifier)) {
+            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
             require(address(created) == signer);
         }
+    }
+
+    function _validVerifier(address verifier) internal view returns (bool) {
+        // The verifier should either contain code or be the precompile
+        return !_hasNoCode(verifier) || verifier == address(0x0b);
     }
 
     /**
@@ -118,7 +134,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
         bytes calldata signerData
     ) external view override returns (bytes4 magicValue) {
         (uint256 x, uint256 y) = abi.decode(signerData, (uint256, uint256));
-        if (checkSignature(data, signature, x, y)) {
+        if (checkSignature(keccak256(data), signature, x, y)) {
             magicValue = LEGACY_EIP1271_MAGIC_VALUE;
         }
     }
@@ -129,8 +145,8 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @param y The y-coordinate of the signer.
      * @return The address of the signer.
      */
-    function _getSigner(uint256 x, uint256 y) internal view returns (address) {
-        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y));
+    function _getSigner(uint256 x, uint256 y, address verifier) internal view returns (address) {
+        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, verifier));
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
@@ -146,5 +162,25 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
             size := extcodesize(account)
         }
         return size == 0;
+    }
+
+    function checkSignature(bytes32 dataHash, bytes calldata signature, uint256 x, uint256 y) internal view returns (bool) {
+        SignatureData calldata signaturePointer;
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            signaturePointer := signature.offset
+        }
+
+        // Let the caller check if User Presence (0x01) or User Verification (0x04) are set
+        bytes32 message = FCL_WebAuthn.WebAuthn_format(
+            signaturePointer.authenticatorData,
+            0x04, // require user verification
+            signaturePointer.clientData,
+            dataHash,
+            signaturePointer.challengeOffset,
+            signaturePointer.rs
+        );
+
+        return verifySignatureAllowMalleability(message, signaturePointer.rs[0], signaturePointer.rs[1], x, y);
     }
 }
