@@ -101,7 +101,6 @@ function prepareUserOperationWithInitialisation(
     paymasterAndData: '0x',
   }
 
-  console.log(import.meta)
   if (import.meta.env.DEV) {
     console.log('Safe deployment data: ', safeDeploymentData)
     console.log(
