@@ -15,6 +15,10 @@
   height: 6em;
   will-change: filter;
   transition: filter 300ms;
+
+  @media screen and (max-width: 768px) {
+    height: 3em;
+  }
 }
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);

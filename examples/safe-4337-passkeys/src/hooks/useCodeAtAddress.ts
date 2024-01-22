@@ -7,6 +7,14 @@ type Options = {
   pollInterval?: number
 }
 
+/**
+ * Custom hook that retrieves the code at a given address using an Eip1193Provider.
+ *
+ * @param provider - The Eip1193Provider instance.
+ * @param address - The address to retrieve the code from.
+ * @param opts - Optional configuration options.
+ * @returns An array containing the code and the request status.
+ */
 function useCodeAtAddress(provider: ethers.Eip1193Provider, address: string, opts?: Options): [string, RequestStatus] {
   const [code, setCode] = useState<string>('')
   const [status, setStatus] = useState<RequestStatus>(RequestStatus.NOT_REQUESTED)

@@ -111,7 +111,7 @@ function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumber
 }
 
 function getLaunchpadInitializer(safeInitHash: string, optionalCallAddress = ethers.ZeroAddress, optionalCalldata = '0x'): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as SafeSignerLaunchpad['interface']
+  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
 
   const launchpadInitializer = safeSignerLaunchpadInterface.encodeFunctionData('preValidationSetup', [
     safeInitHash,
@@ -130,7 +130,7 @@ function getLaunchpadInitializer(safeInitHash: string, optionalCallAddress = eth
  * @returns The deployment data for creating the Safe contract proxy.
  */
 function getSafeDeploymentData(singleton: string, initializer = '0x', saltNonce = ethers.ZeroHash): string {
-  const safeProxyFactoryInterface = new ethers.Interface(SafeProxyFactoryAbi) as SafeProxyFactory['interface']
+  const safeProxyFactoryInterface = new ethers.Interface(SafeProxyFactoryAbi) as unknown as SafeProxyFactory['interface']
   const deploymentData = safeProxyFactoryInterface.encodeFunctionData('createProxyWithNonce', [singleton, initializer, saltNonce])
 
   return deploymentData
@@ -162,7 +162,7 @@ function getSafeAddress(
  * @returns The encoded function call data.
  */
 function encodeAddModuleLibCall(modules: string[]): string {
-  const addModulesLibInterface = new ethers.Interface(AddModulesLibAbi) as AddModulesLib['interface']
+  const addModulesLibInterface = new ethers.Interface(AddModulesLibAbi) as unknown as AddModulesLib['interface']
   return addModulesLibInterface.encodeFunctionData('enableModules', [modules])
 }
 
@@ -173,7 +173,7 @@ function encodeAddModuleLibCall(modules: string[]): string {
  * @returns The encoded data for initializing the Safe contract and performing the user operation.
  */
 function getLaunchpadInitializeThenUserOpData(initializer: SafeInitializer, encodedUserOp: string): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as SafeSignerLaunchpad['interface']
+  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
 
   const initializeThenUserOpData = safeSignerLaunchpadInterface.encodeFunctionData('initializeThenUserOp', [
     initializer.singleton,
@@ -197,7 +197,7 @@ function getLaunchpadInitializeThenUserOpData(initializer: SafeInitializer, enco
  * @returns The encoded data for the user operation.
  */
 function getExecuteUserOpData(to: string, value: ethers.BigNumberish, data: string, operation: 0 | 1): string {
-  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as Safe4337Module['interface']
+  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
 
   const executeUserOpData = safe4337ModuleInterface.encodeFunctionData('executeUserOp', [to, value, data, operation])
 
@@ -212,7 +212,7 @@ function getExecuteUserOpData(to: string, value: ethers.BigNumberish, data: stri
  * @returns The encoded data for validating the user operation.
  */
 function getValidateUserOpData(userOp: UserOperation, userOpHash: string, missingAccountFunds: ethers.BigNumberish): string {
-  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as Safe4337Module['interface']
+  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
 
   const validateUserOpData = safe4337ModuleInterface.encodeFunctionData('validateUserOp', [userOp, userOpHash, missingAccountFunds])
 

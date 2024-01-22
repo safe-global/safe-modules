@@ -7,8 +7,6 @@ function PasskeyCard({ passkey, handleCreatePasskeyClick }: { passkey?: PasskeyL
   const predictedSignerAddress = useMemo(() => {
     if (!passkey) return undefined
 
-    console.log({ passkey })
-
     return getSignerAddressFromPubkeyCoords(passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y)
   }, [passkey])
 

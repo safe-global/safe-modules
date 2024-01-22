@@ -169,7 +169,7 @@ function getRequiredPrefund(maxFeePerGas: bigint, userOpGasLimitEstimation: User
  * @param op The UserOperation object to pack.
  * @returns The packed UserOperation as a string.
  */
-function packUserOp(op: UserOperation): string {
+function packUserOp(op: UnsignedUserOperation): string {
   return ethers.AbiCoder.defaultAbiCoder().encode(
     [
       'address', // sender
@@ -286,6 +286,10 @@ function extractSignature(response: AuthenticatorAssertionResponse): [bigint, bi
   return [r, s]
 }
 
+type Assertion = {
+  response: AuthenticatorAssertionResponse
+}
+
 /**
  * Signs and sends a user operation to the specified entry point on the blockchain.
  * @param userOp The unsigned user operation to sign and send.
@@ -323,12 +327,12 @@ async function signAndSendUserOp(
     safeInitOp,
   )
 
-  const assertion = await navigator.credentials.get({
+  const assertion = (await navigator.credentials.get({
     publicKey: {
       challenge: ethers.getBytes(safeInitOpHash),
       allowCredentials: [{ type: 'public-key', id: hexStringToUint8Array(passkey.rawId) }],
     },
-  })
+  })) as Assertion | null
 
   if (!assertion) {
     throw new Error('Failed to sign user operation')

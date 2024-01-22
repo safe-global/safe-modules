@@ -7,6 +7,13 @@ type Options = {
   pollInterval?: number
 }
 
+/**
+ * Custom hook to fetch the balance of the native token for a given address.
+ * @param provider The Eip1193Provider instance.
+ * @param address The address for which to fetch the balance.
+ * @param opts Optional configuration options.
+ * @returns An array containing the balance as a bigint and the request status.
+ */
 function useNativeTokenBalance(provider: ethers.Eip1193Provider, address: string, opts?: Options): [bigint, RequestStatus] {
   const [balance, setBalance] = useState<bigint>(0n)
   const [status, setStatus] = useState<RequestStatus>(RequestStatus.NOT_REQUESTED)
