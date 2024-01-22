@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ethers } from 'ethers'
 import { encodeAddModuleLibCall } from '../logic/safe'
 import type { SafeInitializer } from '../logic/safe'
@@ -47,11 +47,12 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
 
   const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(provider, unsignedUserOperation.sender)
   const [safeCode, safeCodeStatus] = useCodeAtAddress(provider, unsignedUserOperation.sender)
+  const [userOpHash, setUserOpHash] = useState<string>()
 
   const deployed = safeCodeStatus === RequestStatus.SUCCESS && safeCode !== '0x'
   const requiredPrefund = gasParametersReady ? getRequiredPrefund(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
   const needsPrefund = !deployed && safeBalanceStatus === RequestStatus.SUCCESS && safeBalance < requiredPrefund
-  const readyToDeploy = !deployed && gasParametersReady && !needsPrefund
+  const readyToDeploy = !userOpHash && !deployed && gasParametersReady && !needsPrefund
 
   const gasParametersError = feeDataStatus === RequestStatus.ERROR || estimationStatus === RequestStatus.ERROR
   const gasParametersLoading = feeDataStatus === RequestStatus.LOADING || estimationStatus === RequestStatus.LOADING
@@ -68,12 +69,20 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
       maxPriorityFeePerGas: '0x' + feeData?.maxPriorityFeePerGas.toString(16),
     }
 
-    await signAndSendUserOp(userOpToSign, passkey)
+    const bundlerUserOpHash = await signAndSendUserOp(userOpToSign, passkey)
+    setUserOpHash(bundlerUserOpHash)
   }
 
   return (
     <div className="card">
       <p>Counterfactual Safe Address: {unsignedUserOperation.sender}</p>
+
+      {userOpHash && (
+        <p>
+          Your Safe is being deployed. Track the user operation on{' '}
+          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=mumbai`}>jiffyscan</a>
+        </p>
+      )}
 
       {deployed && (
         <p>

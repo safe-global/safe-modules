@@ -293,7 +293,7 @@ function extractSignature(response: AuthenticatorAssertionResponse): [bigint, bi
  * @param passkey The passkey used for signing the user operation.
  * @param entryPoint The entry point address on the blockchain. Defaults to ENTRYPOINT_ADDRESS if not provided.
  * @param chainId The chain ID of the blockchain. Defaults to APP_CHAIN_ID if not provided.
- * @returns A Promise that resolves to the result of sending the user operation.
+ * @returns User Operation hash promise.
  * @throws An error if signing the user operation fails.
  */
 async function signAndSendUserOp(
@@ -301,7 +301,7 @@ async function signAndSendUserOp(
   passkey: PasskeyLocalStorageFormat,
   entryPoint: string = ENTRYPOINT_ADDRESS,
   chainId: ethers.BigNumberish = APP_CHAIN_ID,
-): Promise<unknown> {
+): Promise<string> {
   const userOpHash = getUserOpHash(userOp, entryPoint, chainId)
 
   const safeInitOp = {
