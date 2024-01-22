@@ -69,7 +69,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @notice The EntryPoint Address supported by this Module.
+     * @notice The address of the EntryPoint contract supported by this module.
      */
     address public immutable SUPPORTED_ENTRYPOINT;
 
