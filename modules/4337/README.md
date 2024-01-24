@@ -137,7 +137,7 @@ where `validUntil` and `validAfter` are two 48 bit timestamps for signature vali
 npm install
 ```
 
-### Run Tests:
+### Run Hardhat Integration Tests:
 
 ```bash
 npm test
@@ -145,13 +145,18 @@ npm test
 
 ### Run End-to-end Tests:
 
-End-to-end tests with the reference bundler implementation are also provided. These automated tests verify that no user operation validation rules are broken by the implementation.
+End-to-end tests with the reference bundler implementation are also provided. These automated tests verify that no user operation validation rules are broken by the implementation. Docker is required to run these tests.
 
 Note: Geth is used as the RPC because the reference bundler implementation relies on Geth-specific tracing APIs.
 
 ```bash
-docker compose up -d
 npm run test:e2e
+```
+
+### Run Hardhat Integration and End-to-end Tests:
+
+```bash
+npm run test:all
 ```
 
 ### Deployments
