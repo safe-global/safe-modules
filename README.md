@@ -7,6 +7,10 @@ This repository contains a collection of modules for the [Safe Smart Account](ht
 - [4337 Module](./modules/4337)
 - [Allowance Module](./modules/allowances)
 
+## Examples
+
+- [Safe + 4337 + Passkeys](./examples/safe-4337-passkeys)
+
 ## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
