@@ -54,9 +54,14 @@ contract WebAuthnSigner is SignatureValidatorConstants, WebAuthnVerifier {
         if (checkSignature(dataHash, signature)) {
             magicValue = EIP1271_MAGIC_VALUE;
         }
-        
     }
 
+    /**
+     * @dev Checks the validity of a signature for a given data hash.
+     * @param dataHash The hash of the data to be verified.
+     * @param signature The signature to be checked.
+     * @return A boolean indicating whether the signature is valid or not.
+     */
     function checkSignature(bytes32 dataHash, bytes calldata signature) internal view returns (bool) {
         SignatureData calldata signaturePointer;
         // solhint-disable-next-line no-inline-assembly
@@ -64,13 +69,16 @@ contract WebAuthnSigner is SignatureValidatorConstants, WebAuthnVerifier {
             signaturePointer := signature.offset
         }
 
-        bytes32 message = WebAuthnVerifier.signingMessage(
-            signaturePointer.authenticatorData,
-            dataHash,
-            signaturePointer.clientDataFields
-        );
-
-        return verifySignatureAllowMalleability(message, signaturePointer.rs[0], signaturePointer.rs[1], X, Y);
+        return
+            WebAuthnVerifier.checkSignature(
+                signaturePointer.authenticatorData,
+                WebAuthnVerifier.AUTH_DATA_FLAGS_UV,
+                dataHash,
+                signaturePointer.clientDataFields,
+                signaturePointer.rs,
+                X,
+                Y
+            );
     }
 }
 
@@ -84,7 +92,6 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @param p256Verifier The address of the P256Verifier contract.
      */
     constructor(address p256Verifier) WebAuthnVerifier(p256Verifier) {}
-
 
     /**
      * @dev Retrieves the signer address based on the provided data.
@@ -104,6 +111,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
     function createSigner(bytes calldata data) external returns (address signer) {
         (uint256 x, uint256 y, address verifier) = abi.decode(data, (uint256, uint256, address));
         signer = _getSigner(x, y, verifier);
+
         if (_hasNoCode(signer) && _validVerifier(verifier)) {
             WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
             require(address(created) == signer);
@@ -140,7 +148,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @return The address of the signer.
      */
     function _getSigner(uint256 x, uint256 y, address verifier) internal view returns (address) {
-        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, verifier));
+        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, uint256(uint160(verifier))));
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
@@ -158,6 +166,14 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
         return size == 0;
     }
 
+    /**
+     * @dev Checks the validity of a signature using WebAuthnVerifier.
+     * @param dataHash The hash of the data being signed.
+     * @param signature The signature to be verified.
+     * @param x The x-coordinate of the public key.
+     * @param y The y-coordinate of the public key.
+     * @return A boolean indicating whether the signature is valid or not.
+     */
     function checkSignature(bytes32 dataHash, bytes calldata signature, uint256 x, uint256 y) internal view returns (bool) {
         SignatureData calldata signaturePointer;
         // solhint-disable-next-line no-inline-assembly
@@ -165,12 +181,15 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
             signaturePointer := signature.offset
         }
 
-        bytes32 message = WebAuthnVerifier.signingMessage(
-            signaturePointer.authenticatorData,
-            dataHash,
-            signaturePointer.clientDataFields
-        );
-
-        return verifySignatureAllowMalleability(message, signaturePointer.rs[0], signaturePointer.rs[1], x, y);
+        return
+            WebAuthnVerifier.checkSignature(
+                signaturePointer.authenticatorData,
+                WebAuthnVerifier.AUTH_DATA_FLAGS_UV,
+                dataHash,
+                signaturePointer.clientDataFields,
+                signaturePointer.rs,
+                x,
+                y
+            );
     }
 }

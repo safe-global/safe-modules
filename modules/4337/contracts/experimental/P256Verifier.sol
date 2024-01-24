@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
 import {FCL_ecdsa} from "../vendor/FCL/FCL_ecdsa.sol";
 
 /**
  * @title P256Verifier
- * @dev A contract that implements a P256 elliptic curve signature verification using a precompile.
+ * @dev A contract that implements a P256 elliptic curve signature verification following the precompile's interface.
  * The contract provides a fallback function that takes a specific input format and returns a result indicating
  * whether the signature is valid or not.
  * The input format is as follows:

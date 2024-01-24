@@ -12,7 +12,8 @@ describe('E2E - WebAuthn Signers', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, AddModulesLib, SafeL2 } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, AddModulesLib, SafeL2, P256Verifier } =
+      await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -24,7 +25,7 @@ describe('E2E - WebAuthn Signers', () => {
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
-    const signerFactory = await WebAuthnSignerFactory.deploy()
+    const signerFactory = await WebAuthnSignerFactory.deploy(P256Verifier.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),

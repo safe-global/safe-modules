@@ -5,6 +5,9 @@ import {P256Wrapper} from "./P256Wrapper.sol";
 import {Base64Url} from "../vendor/FCL/utils/Base64Url.sol";
 
 contract WebAuthnVerifier is P256Wrapper {
+    // User Verification (UV) flag in the authenticator data
+    bytes1 constant AUTH_DATA_FLAGS_UV = 0x04;
+
     constructor(address verifier) P256Wrapper(verifier) {}
 
     function signingMessage(

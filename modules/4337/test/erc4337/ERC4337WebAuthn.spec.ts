@@ -4,7 +4,13 @@ import { deployReferenceEntryPoint } from '../utils/setup'
 import { buildContractSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
-import { WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
+import {
+  UserVerificationRequirement,
+  WebAuthnCredentials,
+  extractClientDataFields,
+  extractPublicKey,
+  extractSignature,
+} from '../utils/webauthn'
 import { Safe4337 } from '../../src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
@@ -43,7 +49,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     }
   })
 
-  describe.only('executeUserOp - new account', () => {
+  describe('executeUserOp - new account', () => {
     it('should execute user operation', async () => {
       const { user, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, p256Verifier } =
         await setupTests()
@@ -65,7 +71,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = extractPublicKey(credential.response)
-      const signerData = ethers.AbiCoder.defaultAbiCoder().encode(['uint256', 'uint256', 'address'], [publicKey.x, publicKey.y, p256VerifierAddress])
+      const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
+        ['uint256', 'uint256', 'address'],
+        [publicKey.x, publicKey.y, p256VerifierAddress],
+      )
       const signerAddress = await signerFactory.getSigner(signerData)
 
       const safeInit = {
@@ -161,6 +170,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           challenge: ethers.getBytes(safeInitOpHash),
           rpId: 'safe.global',
           allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+          userVerification: UserVerificationRequirement.required,
         },
       })
       const signature = ethers.solidityPacked(
@@ -200,7 +210,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, addModulesLib, module, entryPoint, singleton, signerFactory, navigator, p256Verifier } = await setupTests()
+      const { user, proxyFactory, addModulesLib, module, entryPoint, singleton, signerFactory, navigator, p256Verifier } =
+        await setupTests()
       const p256VerifierAddress = await p256Verifier.getAddress()
       const credential = navigator.credentials.create({
         publicKey: {
@@ -218,7 +229,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = extractPublicKey(credential.response)
-      const signerData = ethers.solidityPacked(['uint256', 'uint256', 'address'], [publicKey.x, publicKey.y, p256VerifierAddress])
+      const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
+        ['uint256', 'uint256', 'address'],
+        [publicKey.x, publicKey.y, p256VerifierAddress],
+      )
       await signerFactory.createSigner(signerData)
       const signer = await ethers.getContractAt('WebAuthnSigner', await signerFactory.getSigner(signerData))
 
@@ -247,6 +261,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           challenge: ethers.getBytes(safeOpHash),
           rpId: 'safe.global',
           allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+          userVerification: UserVerificationRequirement.required,
         },
       })
       const signature = buildContractSignatureBytes([

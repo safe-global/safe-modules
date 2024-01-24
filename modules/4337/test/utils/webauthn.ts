@@ -15,6 +15,12 @@ export interface CredentialCreationOptions {
   publicKey: PublicKeyCredentialCreationOptions
 }
 
+export enum UserVerificationRequirement {
+  'required',
+  'preferred',
+  'discouraged',
+}
+
 /**
  * Public key credetial creation options, restricted to a subset of options that this module supports.
  * See <https://w3c.github.io/webauthn/#dictionary-makecredentialoptions>.
@@ -28,6 +34,7 @@ export interface PublicKeyCredentialCreationOptions {
     alg: number
   }[]
   attestation?: 'none'
+  userVerification?: Exclude<UserVerificationRequirement, UserVerificationRequirement.discouraged>
 }
 
 export interface CredentialRequestOptions {
@@ -45,6 +52,8 @@ export interface PublicKeyCredentialRequestOptions {
     type: 'public-key'
     id: Uint8Array
   }[]
+  // we don't support discouraged user verification
+  userVerification?: Exclude<UserVerificationRequirement, UserVerificationRequirement.discouraged>
   attestation?: 'none'
 }
 
@@ -140,6 +149,9 @@ export class WebAuthnCredentials {
       origin: `https://${publicKey.rp.id}`,
     }
 
+    const userVerification = publicKey.userVerification ?? 'preferred'
+    const userVerificationFlag = userVerification === UserVerificationRequirement.required ? 0x04 : 0x01
+
     // <https://w3c.github.io/webauthn/#sctn-attestation>
     const attestationObject = {
       authData: ethers.getBytes(
@@ -147,7 +159,7 @@ export class WebAuthnCredentials {
           ['bytes32', 'uint8', 'uint32', 'bytes16', 'uint16', 'bytes', 'bytes'],
           [
             ethers.sha256(ethers.toUtf8Bytes(publicKey.rp.id)),
-            0x41, // flags = attested_data + user_present
+            0x40 + userVerificationFlag, // flags = attested_data + user_present
             0, // signCount
             `0x${'42'.repeat(16)}`, // aaguid
             ethers.dataLength(credential.id),
@@ -193,6 +205,8 @@ export class WebAuthnCredentials {
       origin: `https://${publicKey.rpId}`,
     }
 
+    const userVerification = publicKey.userVerification ?? 'preferred'
+    const userVerificationFlag = userVerification === UserVerificationRequirement.required ? 0x04 : 0x01
     // <https://w3c.github.io/webauthn/#sctn-authenticator-data>
     // Note that we use a constant 0 value for signCount to simplify things:
     // > If the authenticator does not implement a signature counter, let the signature counter
@@ -201,7 +215,7 @@ export class WebAuthnCredentials {
       ['bytes32', 'uint8', 'uint32'],
       [
         ethers.sha256(ethers.toUtf8Bytes(publicKey.rpId)),
-        0x01, // flags = user_present
+        userVerificationFlag, // flags = user_present
         0, // signCount
       ],
     )
