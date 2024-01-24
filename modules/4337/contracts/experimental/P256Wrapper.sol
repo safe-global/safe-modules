@@ -8,7 +8,7 @@ pragma solidity >=0.8.0 <0.9.0;
  *      Follows precompile interface.
  * @custom:acknowledgement The contract is heavily inspired by https://github.com/daimo-eth/p256-verifier
  */
-contract P256Wrapper {
+abstract contract P256Wrapper {
     address immutable VERIFIER;
 
     constructor(address verifier) {
