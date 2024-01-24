@@ -4,7 +4,7 @@ import { deployReferenceEntryPoint } from '../utils/setup'
 import { buildContractSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
-import { WebAuthnCredentials, extractChallengeOffset, extractPublicKey, extractSignature } from '../utils/webauthn'
+import { WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
 import { Safe4337 } from '../../src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
@@ -169,11 +169,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           safeInitOp.validAfter,
           safeInitOp.validUntil,
           ethers.AbiCoder.defaultAbiCoder().encode(
-            ['bytes', 'bytes', 'uint256', 'uint256[2]'],
+            ['bytes', 'bytes', 'uint256[2]'],
             [
               new Uint8Array(assertion.response.authenticatorData),
-              new Uint8Array(assertion.response.clientDataJSON),
-              extractChallengeOffset(assertion.response, safeInitOpHash),
+              extractClientDataFields(assertion.response),
               extractSignature(assertion.response),
             ],
           ),
@@ -254,11 +253,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         {
           signer: signer.target as string,
           data: ethers.AbiCoder.defaultAbiCoder().encode(
-            ['bytes', 'bytes', 'uint256', 'uint256[2]'],
+            ['bytes', 'bytes', 'uint256[2]'],
             [
               new Uint8Array(assertion.response.authenticatorData),
-              new Uint8Array(assertion.response.clientDataJSON),
-              extractChallengeOffset(assertion.response, safeOpHash),
+              extractClientDataFields(assertion.response),
               extractSignature(assertion.response),
             ],
           ),

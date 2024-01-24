@@ -7,11 +7,13 @@ import {FCL_WebAuthn} from "../vendor/FCL/FCL_Webauthn.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
 import "hardhat/console.sol";
+import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
+import {WebAuthn} from "./WebAuthn.sol";
 
 struct SignatureData {
     bytes authenticatorData;
-    bytes clientData;
-    uint256 challengeOffset;
+    bytes clientDataFields;
     uint256[2] rs;
 }
 
@@ -65,14 +67,10 @@ contract WebAuthnSigner is SignatureValidatorConstants, P256Wrapper {
             signaturePointer := signature.offset
         }
 
-        // Let the caller check if User Presence (0x01) or User Verification (0x04) are set
-        bytes32 message = FCL_WebAuthn.WebAuthn_format(
+        bytes32 message = WebAuthn.signingMessage(
             signaturePointer.authenticatorData,
-            0x04, // require user verification
-            signaturePointer.clientData,
             dataHash,
-            signaturePointer.challengeOffset,
-            signaturePointer.rs
+            signaturePointer.clientDataFields
         );
 
         return verifySignatureAllowMalleability(message, signaturePointer.rs[0], signaturePointer.rs[1], X, Y);
@@ -171,14 +169,10 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
             signaturePointer := signature.offset
         }
 
-        // Let the caller check if User Presence (0x01) or User Verification (0x04) are set
-        bytes32 message = FCL_WebAuthn.WebAuthn_format(
+        bytes32 message = WebAuthn.signingMessage(
             signaturePointer.authenticatorData,
-            0x04, // require user verification
-            signaturePointer.clientData,
             dataHash,
-            signaturePointer.challengeOffset,
-            signaturePointer.rs
+            signaturePointer.clientDataFields
         );
 
         return verifySignatureAllowMalleability(message, signaturePointer.rs[0], signaturePointer.rs[1], x, y);
