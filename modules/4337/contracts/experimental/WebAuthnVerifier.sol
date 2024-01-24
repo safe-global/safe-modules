@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {FCL_ecdsa_utils} from "../vendor/FCL/FCL_ecdsa_utils.sol";
+import {P256Wrapper} from "./P256Wrapper.sol";
 import {Base64Url} from "../vendor/FCL/utils/Base64Url.sol";
 
-library WebAuthn {
+contract WebAuthnVerifier is P256Wrapper {
+    constructor(address verifier) P256Wrapper(verifier) {}
+
     function signingMessage(
         bytes calldata authenticatorData,
         bytes32 challenge,
@@ -38,6 +40,7 @@ library WebAuthn {
         }
 
         bytes32 message = signingMessage(authenticatorData, challenge, clientDataFields);
-        result = FCL_ecdsa_utils.ecdsa_verify(message, rs, qx, qy);
+
+        result = verifySignatureAllowMalleability(message, rs[0], rs[1], qx, qy);
     }
 }

@@ -2,14 +2,10 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {P256Wrapper} from "./P256Wrapper.sol";
-import {FCL_WebAuthn} from "../vendor/FCL/FCL_Webauthn.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
-import "hardhat/console.sol";
-import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
-import {WebAuthn} from "./WebAuthn.sol";
+import {WebAuthnVerifier} from "./WebAuthnVerifier.sol";
 
 struct SignatureData {
     bytes authenticatorData;
@@ -21,7 +17,7 @@ struct SignatureData {
  * @title WebAuthnSigner
  * @dev A contract that represents a WebAuthn signer.
  */
-contract WebAuthnSigner is SignatureValidatorConstants, P256Wrapper {
+contract WebAuthnSigner is SignatureValidatorConstants, WebAuthnVerifier {
     uint256 public immutable X;
     uint256 public immutable Y;
 
@@ -29,8 +25,9 @@ contract WebAuthnSigner is SignatureValidatorConstants, P256Wrapper {
      * @dev Constructor function.
      * @param x The X coordinate of the signer's public key.
      * @param y The Y coordinate of the signer's public key.
+     * @param p256Verifier The address of the P256Verifier contract.
      */
-    constructor(uint256 x, uint256 y, address verifier) P256Wrapper(verifier) {
+    constructor(uint256 x, uint256 y, address p256Verifier) WebAuthnVerifier(p256Verifier) {
         X = x;
         Y = y;
     }
@@ -67,7 +64,7 @@ contract WebAuthnSigner is SignatureValidatorConstants, P256Wrapper {
             signaturePointer := signature.offset
         }
 
-        bytes32 message = WebAuthn.signingMessage(
+        bytes32 message = WebAuthnVerifier.signingMessage(
             signaturePointer.authenticatorData,
             dataHash,
             signaturePointer.clientDataFields
@@ -81,12 +78,12 @@ contract WebAuthnSigner is SignatureValidatorConstants, P256Wrapper {
  * @title WebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn signers.
  */
-contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants, P256Wrapper {
+contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants, WebAuthnVerifier {
     /**
      * @dev Constructor function.
-     * @param verifier The address of the P256Verifier contract.
+     * @param p256Verifier The address of the P256Verifier contract.
      */
-    constructor(address verifier) P256Wrapper(verifier) {}
+    constructor(address p256Verifier) WebAuthnVerifier(p256Verifier) {}
 
 
     /**
@@ -95,7 +92,6 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @return signer The address of the signer.
      */
     function getSigner(bytes calldata data) public view returns (address signer) {
-        console.logBytes(data);
         (uint256 x, uint256 y, address verifier) = abi.decode(data, (uint256, uint256, address));
         signer = _getSigner(x, y, verifier);
     }
@@ -169,7 +165,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
             signaturePointer := signature.offset
         }
 
-        bytes32 message = WebAuthn.signingMessage(
+        bytes32 message = WebAuthnVerifier.signingMessage(
             signaturePointer.authenticatorData,
             dataHash,
             signaturePointer.clientDataFields
