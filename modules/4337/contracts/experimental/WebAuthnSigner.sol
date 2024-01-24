@@ -148,6 +148,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @return The address of the signer.
      */
     function _getSigner(uint256 x, uint256 y, address verifier) internal view returns (address) {
+        // We need to convert the address to uint256, so it is padded to 32 bytes
         bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, uint256(uint160(verifier))));
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }

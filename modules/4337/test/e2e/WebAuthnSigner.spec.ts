@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
-import { WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
+import { UserVerificationRequirement, WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
 
 describe('E2E - WebAuthn Signers', () => {
   before(function () {
@@ -23,6 +23,7 @@ describe('E2E - WebAuthn Signers', () => {
     const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
     const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
+    const p256Verifier = await ethers.getContractAt('P256Verifier', P256Verifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
     const signerFactory = await WebAuthnSignerFactory.deploy(P256Verifier.address)
@@ -42,12 +43,14 @@ describe('E2E - WebAuthn Signers', () => {
       singleton,
       signerFactory,
       navigator,
+      p256Verifier,
     }
   })
 
   it('should execute a user op and deploy a WebAuthn signer', async () => {
-    const { user, bundler, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator } =
+    const { user, bundler, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, p256Verifier } =
       await setupTests()
+    const p256VerifierAddress = await p256Verifier.getAddress()
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -65,7 +68,10 @@ describe('E2E - WebAuthn Signers', () => {
       },
     })
     const publicKey = extractPublicKey(credential.response)
-    const signerData = ethers.solidityPacked(['uint256', 'uint256'], [publicKey.x, publicKey.y])
+    const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
+      ['uint256', 'uint256', 'address'],
+      [publicKey.x, publicKey.y, p256VerifierAddress],
+    )
     const signerAddress = await signerFactory.getSigner(signerData)
 
     const safeInit = {
@@ -161,6 +167,7 @@ describe('E2E - WebAuthn Signers', () => {
         challenge: ethers.getBytes(safeInitOpHash),
         rpId: 'safe.global',
         allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+        userVerification: UserVerificationRequirement.required,
       },
     })
     const signature = ethers.solidityPacked(
