@@ -1,13 +1,13 @@
 import { ethers } from 'ethers'
-import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-eip4337/build/artifacts/contracts/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
-import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-eip4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSignerFactory.json'
-import { abi as AddModulesLibAbi } from '@safe-global/safe-eip4337/build/artifacts/contracts/AddModulesLib.sol/AddModulesLib.json'
+import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
+import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSignerFactory.json'
+import { abi as AddModulesLibAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/AddModulesLib.sol/AddModulesLib.json'
 import {
   abi as WebAuthnSignerAbi,
   bytecode as WebAuthSignerBytecode,
-} from '@safe-global/safe-eip4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSigner.json'
-import { abi as Safe4337ModuleAbi } from '@safe-global/safe-eip4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
-import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-eip4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
+} from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSigner.json'
+import { abi as Safe4337ModuleAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
+import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-erc4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
 import type {
   SafeSignerLaunchpad,
   Safe4337Module,
@@ -15,7 +15,7 @@ import type {
   WebAuthnSigner,
   WebAuthnSignerFactory,
   AddModulesLib,
-} from '@safe-global/safe-eip4337/typechain-types/'
+} from '@safe-global/safe-erc4337/typechain-types/'
 
 import {
   SAFE_SIGNER_LAUNCHPAD_ADDRESS,
