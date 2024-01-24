@@ -2,7 +2,13 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
-import { UserVerificationRequirement, WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
+import {
+  UserVerificationRequirement,
+  WebAuthnCredentials,
+  extractClientDataFields,
+  extractPublicKey,
+  extractSignature,
+} from '../utils/webauthn'
 
 describe('E2E - WebAuthn Signers', () => {
   before(function () {
@@ -48,8 +54,19 @@ describe('E2E - WebAuthn Signers', () => {
   })
 
   it('should execute a user op and deploy a WebAuthn signer', async () => {
-    const { user, bundler, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, p256Verifier } =
-      await setupTests()
+    const {
+      user,
+      bundler,
+      proxyFactory,
+      addModulesLib,
+      module,
+      entryPoint,
+      signerLaunchpad,
+      singleton,
+      signerFactory,
+      navigator,
+      p256Verifier,
+    } = await setupTests()
     const p256VerifierAddress = await p256Verifier.getAddress()
 
     const credential = navigator.credentials.create({
