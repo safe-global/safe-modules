@@ -2,14 +2,13 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {FCL_WebAuthn} from "../vendor/FCL/FCL_Webauthn.sol";
-import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
+import {WebAuthn} from "./WebAuthn.sol";
 
 struct SignatureData {
     bytes authenticatorData;
-    bytes clientData;
-    uint256 challengeOffset;
+    bytes clientDataFields;
     uint256[2] rs;
 }
 
@@ -21,12 +20,11 @@ function checkSignature(bytes memory data, bytes calldata signature, uint256 x, 
     }
 
     return
-        FCL_WebAuthn.checkSignature(
+        WebAuthn.checkSignature(
             signaturePointer.authenticatorData,
             0x01, // require user presence
-            signaturePointer.clientData,
             keccak256(data),
-            signaturePointer.challengeOffset,
+            signaturePointer.clientDataFields,
             signaturePointer.rs,
             x,
             y

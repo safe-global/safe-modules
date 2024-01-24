@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
-import { WebAuthnCredentials, extractChallengeOffset, extractPublicKey, extractSignature } from '../utils/webauthn'
+import { WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
 
 describe('E2E - WebAuthn Signers', () => {
   before(function () {
@@ -168,11 +168,10 @@ describe('E2E - WebAuthn Signers', () => {
         safeInitOp.validAfter,
         safeInitOp.validUntil,
         ethers.AbiCoder.defaultAbiCoder().encode(
-          ['bytes', 'bytes', 'uint256', 'uint256[2]'],
+          ['bytes', 'bytes', 'uint256[2]'],
           [
             new Uint8Array(assertion.response.authenticatorData),
-            new Uint8Array(assertion.response.clientDataJSON),
-            extractChallengeOffset(assertion.response, safeInitOpHash),
+            extractClientDataFields(assertion.response),
             extractSignature(assertion.response),
           ],
         ),

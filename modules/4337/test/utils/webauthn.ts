@@ -266,19 +266,22 @@ export function extractPublicKey(response: AuthenticatorAttestationResponse): { 
 }
 
 /**
- * Compute the challenge offset in the client data JSON. This is the offset, in bytes, of the
- * value associated with the `challenge` key in the JSON blob.
+ * Compute the additional client data JSON fields. This is the fields other than `type` and
+ * `challenge` (including `origin` and any other additional client data fields that may be
+ * added by the authenticator).
+ *
+ * See <https://w3c.github.io/webauthn/#clientdatajson-serialization>
  */
-export function extractChallengeOffset(response: AuthenticatorAssertionResponse, challenge: string): number {
+export function extractClientDataFields(response: AuthenticatorAssertionResponse): string {
   const clientDataJSON = new TextDecoder('utf-8').decode(response.clientDataJSON)
+  const match = clientDataJSON.match(/^\{"type":"webauthn.get","challenge":"[A-Za-z0-9\-_]{43}",(.*)\}$/)
 
-  const encodedChallenge = base64UrlEncode(challenge)
-  const offset = clientDataJSON.indexOf(encodedChallenge)
-  if (offset < 0) {
+  if (!match) {
     throw new Error('challenge not found in client data JSON')
   }
 
-  return offset
+  const [, fields] = match
+  return ethers.hexlify(ethers.toUtf8Bytes(fields))
 }
 
 /**
