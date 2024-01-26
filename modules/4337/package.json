@@ -52,7 +52,7 @@
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/contracts": "^5.0.1",
     "@safe-global/safe-contracts": "git://github.com:safe-global/safe-smart-account.git#temp/1.5.0-build",
-    "@simplewebauthn/server": "^9.0.1",
+    "@simplewebauthn/server": "^8.3.5",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.7",
