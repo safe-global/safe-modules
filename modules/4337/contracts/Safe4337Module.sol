@@ -69,7 +69,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @notice The address of the EntryPoint contract supported by this module.
+     * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
      */
     address public immutable SUPPORTED_ENTRYPOINT;
 
