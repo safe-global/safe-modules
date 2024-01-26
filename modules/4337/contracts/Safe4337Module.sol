@@ -69,7 +69,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
+     * @notice The address of the EntryPoint contract supported by this module.
      */
     address public immutable SUPPORTED_ENTRYPOINT;
 
@@ -96,9 +96,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 missingAccountFunds
     ) external onlySupportedEntryPoint returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
-        // The entry point address is appended to the calldata in `HandlerContext` contract
-        // Because of this, the relayer may manipulate the entry point address, therefore we have to verify that
-        // the sender is the Safe specified in the userOperation
+        // The entry point address is appended to the calldata by the Safe in the `FallbackManager` contract,
+        // following ERC-2771. Because of this, the relayer may manipulate the entry point address, therefore
+        // we have to verify that the sender is the Safe specified in the userOperation.
         require(safeAddress == msg.sender, "Invalid caller");
 
         // We check the execution function signature to make sure the entry point can't call any other function
