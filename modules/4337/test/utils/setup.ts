@@ -1,4 +1,4 @@
-import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPoint.json'
+import EntryPointArtifact from '@account-abstraction/contracts/artifacts/contracts/core/EntryPoint.sol/EntryPoint.json'
 import { deployments, ethers } from 'hardhat'
 import { Contract, Signer } from 'ethers'
 import solc from 'solc'

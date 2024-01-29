@@ -2,9 +2,10 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
-import {UserOperation, UserOperationLib} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
-import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
+import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
+import {UserOperationLib} from "@account-abstraction/contracts/contracts/core/UserOperationLib.sol";
+import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/contracts/core/Helpers.sol";
 
 contract SafeMock {
     address public singleton;
@@ -96,24 +97,26 @@ contract SafeMock {
 }
 
 contract Safe4337Mock is SafeMock, IAccount {
-    using UserOperationLib for UserOperation;
+    using UserOperationLib for PackedUserOperation;
 
     /// keccak256("EIP712Domain(uint256 chainId,address verifyingContract)") = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
-    /// keccak256(
-    ///    "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-    /// ) = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd
-    bytes32 private constant SAFE_OP_TYPEHASH = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd;
+    //  keccak256(
+    //         "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+    //     ) = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de
+    bytes32 private constant SAFE_OP_TYPEHASH = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de;
 
+    /**
+     * @dev A structure used internally for manually encoding a Safe operation for when computing the EIP-712 struct hash.
+     */
     struct EncodedSafeOpStruct {
         bytes32 typeHash;
         address safe;
         uint256 nonce;
         bytes32 initCodeHash;
         bytes32 callDataHash;
-        uint256 callGasLimit;
-        uint256 verificationGasLimit;
+        bytes32 accountGasLimits;
         uint256 preVerificationGas;
         uint256 maxFeePerGas;
         uint256 maxPriorityFeePerGas;
@@ -140,7 +143,7 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// @dev Validates user operation provided by the entry point
     /// @inheritdoc IAccount
     function validateUserOp(
-        UserOperation calldata userOp,
+        PackedUserOperation calldata userOp,
         bytes32,
         uint256 missingAccountFunds
     ) external onlySupportedEntryPoint returns (uint256 validationData) {
@@ -201,7 +204,7 @@ contract Safe4337Mock is SafeMock, IAccount {
      * @param userOp The ERC-4337 user operation.
      * @return operationHash Operation hash.
      */
-    function getOperationHash(UserOperation calldata userOp) external view returns (bytes32 operationHash) {
+    function getOperationHash(PackedUserOperation calldata userOp) external view returns (bytes32 operationHash) {
         (bytes memory operationData, , , ) = _getSafeOp(userOp);
         operationHash = keccak256(operationData);
     }
@@ -211,7 +214,7 @@ contract Safe4337Mock is SafeMock, IAccount {
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
      */
-    function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
+    function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
         checkSignatures(keccak256(operationData), operationData, signatures);
         validationData = _packValidationData(false, validUntil, validAfter);
@@ -226,7 +229,7 @@ contract Safe4337Mock is SafeMock, IAccount {
      * @return signatures The Safe owner signatures extracted from the user operation.
      */
     function _getSafeOp(
-        UserOperation calldata userOp
+        PackedUserOperation calldata userOp
     ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
         // Extract additional Safe operation fields from the user operation signature which is encoded as:
         // `abi.encodePacked(validAfter, validUntil, signatures)`
@@ -252,8 +255,7 @@ contract Safe4337Mock is SafeMock, IAccount {
                 nonce: userOp.nonce,
                 initCodeHash: keccak256(userOp.initCode),
                 callDataHash: keccak256(userOp.callData),
-                callGasLimit: userOp.callGasLimit,
-                verificationGasLimit: userOp.verificationGasLimit,
+                accountGasLimits: userOp.accountGasLimits,
                 preVerificationGas: userOp.preVerificationGas,
                 maxFeePerGas: userOp.maxFeePerGas,
                 maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
@@ -267,9 +269,9 @@ contract Safe4337Mock is SafeMock, IAccount {
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
                 // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
-                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 14
-                // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
-                safeOpStructHash := keccak256(encodedSafeOp, 448)
+                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 13
+                // 32-byte fields to hash, for a length of `13 * 32 = 448` bytes.
+                safeOpStructHash := keccak256(encodedSafeOp, 416)
             }
 
             operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);

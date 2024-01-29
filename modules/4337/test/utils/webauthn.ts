@@ -91,10 +91,7 @@ class Credential {
   public id: string
   public pk: bigint
 
-  constructor(
-    public rp: string,
-    public user: Uint8Array,
-  ) {
+  constructor(public rp: string, public user: Uint8Array) {
     this.pk = p256.utils.normPrivateKeyToScalar(p256.utils.randomPrivateKey())
     this.id = ethers.dataSlice(ethers.keccak256(ethers.dataSlice(p256.getPublicKey(this.pk, false), 1)), 12)
   }
