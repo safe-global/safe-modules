@@ -27,11 +27,10 @@
     "deploy": "hardhat deploy --network",
     "lint": "npm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint:ts": "eslint ./src && eslint ./test",
-    "fmt": "prettier --write .",
-    "fmt:check": "prettier --check .",
+    "lint:ts": "eslint ./src --fix && eslint ./test --fix",
+    "fmt": "prettier --write ./contracts/**/*.sol",
+    "fmt:check": "prettier --check ./**/*.sol",
     "prepack": "npm run build",
-    "prepare": "cd ../.. && husky install modules/4337/.husky",
     "prepublish": "npx rimraf build && npm run build && npm run build:ts"
   },
   "repository": {

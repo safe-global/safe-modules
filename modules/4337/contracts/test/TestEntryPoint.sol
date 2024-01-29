@@ -47,9 +47,7 @@ contract TestEntryPoint is INonceManager {
         balances[msg.sender] = balances[msg.sender] + msg.value;
     }
 
-    function unpackAccountGasLimits(
-        bytes32 accountGasLimits
-    ) internal pure returns (uint256 validationGasLimit, uint256 callGasLimit) {
+    function unpackAccountGasLimits(bytes32 accountGasLimits) internal pure returns (uint256 validationGasLimit, uint256 callGasLimit) {
         return (uint128(bytes16(accountGasLimits)), uint128(uint256(accountGasLimits)));
     }
 
@@ -58,7 +56,7 @@ contract TestEntryPoint is INonceManager {
             require(userOp.initCode.length >= 20, "Invalid initCode provided");
             require(userOp.sender == SENDER_CREATOR.createSender(userOp.initCode), "Could not create expected account");
         }
-        
+
         (uint256 validationGasLimit, uint256 callGasLimit) = unpackAccountGasLimits(userOp.accountGasLimits);
 
         require(gasleft() > validationGasLimit, "Not enough gas for verification");
@@ -66,11 +64,7 @@ contract TestEntryPoint is INonceManager {
         uint256 userBalance = balances[userOp.sender];
         uint256 missingAccountFunds = requiredPrefund > userBalance ? requiredPrefund - userBalance : 0;
 
-        uint256 validationData = IAccount(userOp.sender).validateUserOp{gas: validationGasLimit}(
-            userOp,
-            bytes32(0),
-            missingAccountFunds
-        );
+        uint256 validationData = IAccount(userOp.sender).validateUserOp{gas: validationGasLimit}(userOp, bytes32(0), missingAccountFunds);
         require(validationData == 0, "Signature validation failed");
 
         userBalance = balances[userOp.sender];
