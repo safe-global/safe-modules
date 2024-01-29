@@ -150,10 +150,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     /**
      * @notice Computes the 32-byte domain separator used in EIP-712 signature verification for Safe operations.
-     * @return The EIP-712 domain separator hash for this contract.
+     * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
      */
-    function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
+    function domainSeparator() public view returns (bytes32 domainSeparatorHash) {
+        domainSeparatorHash = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
     }
 
     /**
