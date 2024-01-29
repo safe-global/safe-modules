@@ -19,9 +19,8 @@ contract SafeModuleSetup {
      * @param modules The modules to enable.
      */
     function enableModules(address[] calldata modules) external {
-        for (uint256 i = modules.length; i > 0; i--) {
-            // This call will only work properly if used via a delegatecall
-            ISafe(address(this)).enableModule(modules[i - 1]);
+        for (uint256 i = 0; i < modules.length; i++) {
+            ISafe(address(this)).enableModule(modules[i]);
         }
     }
 }
