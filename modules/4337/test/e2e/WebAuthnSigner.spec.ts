@@ -12,14 +12,14 @@ describe('E2E - WebAuthn Signers', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, AddModulesLib, SafeL2 } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2 } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
     const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
-    const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
+    const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
     const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
 
@@ -34,7 +34,7 @@ describe('E2E - WebAuthn Signers', () => {
       user,
       bundler,
       proxyFactory,
-      addModulesLib,
+      safeModuleSetup,
       module,
       entryPoint,
       signerLaunchpad,
@@ -45,7 +45,7 @@ describe('E2E - WebAuthn Signers', () => {
   })
 
   it('should execute a user op and deploy a WebAuthn signer', async () => {
-    const { user, bundler, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator } =
+    const { user, bundler, proxyFactory, safeModuleSetup, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator } =
       await setupTests()
 
     const credential = navigator.credentials.create({
@@ -71,8 +71,8 @@ describe('E2E - WebAuthn Signers', () => {
       singleton: singleton.target,
       signerFactory: signerFactory.target,
       signerData,
-      setupTo: addModulesLib.target,
-      setupData: addModulesLib.interface.encodeFunctionData('enableModules', [[module.target]]),
+      setupTo: safeModuleSetup.target,
+      setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
       fallbackHandler: module.target,
     }
     const safeInitHash = ethers.TypedDataEncoder.hash(

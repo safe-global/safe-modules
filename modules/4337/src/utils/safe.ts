@@ -41,7 +41,7 @@ export interface GlobalConfig {
   erc4337module: string
   proxyFactory: string
   proxyCreationCode: string
-  addModulesLib: string
+  safeModuleSetup: string
   chainId: number
 }
 
@@ -62,7 +62,7 @@ const buildInitParamsForConfig = (safeConfig: SafeConfig, globalConfig: GlobalCo
   const setupData = INTERFACES.encodeFunctionData('setup', [
     safeConfig.signers,
     safeConfig.threshold,
-    globalConfig.addModulesLib,
+    globalConfig.safeModuleSetup,
     initData,
     globalConfig.erc4337module,
     ethers.ZeroAddress,

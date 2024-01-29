@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { getSafe4337Module, getEntryPoint, getFactory, getAddModulesLib, getSafeL2Singleton } from '../utils/setup'
+import { getSafe4337Module, getEntryPoint, getFactory, getSafeModuleSetup, getSafeL2Singleton } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
@@ -15,14 +15,14 @@ describe('Safe4337Module - Newly deployed safe', () => {
     const module = await getSafe4337Module()
     const proxyFactory = await getFactory()
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
-    const addModulesLib = await getAddModulesLib()
+    const safeModuleSetup = await getSafeModuleSetup()
     const singleton = await getSafeL2Singleton()
     const safe = await Safe4337.withSigner(user1.address, {
       safeSingleton: await singleton.getAddress(),
       entryPoint: await entryPoint.getAddress(),
       erc4337module: await module.getAddress(),
       proxyFactory: await proxyFactory.getAddress(),
-      addModulesLib: await addModulesLib.getAddress(),
+      safeModuleSetup: await safeModuleSetup.getAddress(),
       proxyCreationCode,
       chainId: Number(await chainId()),
     })
@@ -31,7 +31,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
       user1,
       safe: safe.connect(ethers.provider),
       proxyFactory,
-      addModulesLib,
+      safeModuleSetup,
       validator: module,
       entryPoint,
     }

@@ -3,8 +3,8 @@ pragma solidity >=0.8.0 <0.9.0;
 
 import {ISafe} from "./interfaces/Safe.sol";
 
-/// @title AddModulesLib
-contract AddModulesLib {
+/// @title SafeModuleSetup
+contract SafeModuleSetup {
     function enableModules(address[] calldata modules) external {
         for (uint256 i = modules.length; i > 0; i--) {
             // This call will only work properly if used via a delegatecall
