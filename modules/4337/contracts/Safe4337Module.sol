@@ -18,6 +18,7 @@ import {ISafe} from "./interfaces/Safe.sol";
  *      - The user operation hash is signed by the Safe owner(s) and validated by the module.
  *      - The user operation is not allowed to execute any other function than `executeUserOp` and `executeUserOpWithErrorString`.
  *      - Replay protection is handled by the entry point.
+ * @custom:security-contact bounty@safe.global
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     /**
