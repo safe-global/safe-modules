@@ -28,20 +28,8 @@ jobs:
           node-version: 20.x
           cache: npm
           cache-dependency-path: package-lock.json
-      - run: npm ci
       - run: |
-          docker compose -f modules/4337/docker-compose.yaml up -d
-          # wait for containers to start up
-          SECONDS=0
-          until curl -fs http://localhost:8545 >/dev/null && curl -fs http://localhost:3000 >/dev/null; do
-            if [[ $SECONDS -gt 30 ]]; then
-              echo "ERROR: timeout waiting for local node and bundler to start"
-              docker compose logs
-              exit 1
-            fi
-            sleep 1
-          done
-
+          npm ci
           npm run test:e2e -w modules/4337
   lint:
     runs-on: ubuntu-latest

@@ -66,6 +66,7 @@ const userConfig: HardhatUserConfig = {
   },
   networks: {
     localhost: {
+      url: 'http://localhost:8545',
       tags: ['dev', 'safe'],
     },
     hardhat: {
