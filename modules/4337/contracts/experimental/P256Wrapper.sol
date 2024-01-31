@@ -6,6 +6,7 @@ pragma solidity >=0.8.0 <0.9.0;
  * @dev A contract that implements P256 wrapper with mallability check.
  *      As recommended in https://eips.ethereum.org/EIPS/eip-7212
  *      Follows precompile interface.
+ *      The contract is not used in the current implementation, it is kept for the sake of example.
  * @custom:acknowledgement The contract is heavily inspired by https://github.com/daimo-eth/p256-verifier
  */
 abstract contract P256Wrapper {

@@ -51,8 +51,18 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - new account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, webAuthnVerifier } =
-        await setupTests()
+      const {
+        user,
+        proxyFactory,
+        addModulesLib,
+        module,
+        entryPoint,
+        signerLaunchpad,
+        singleton,
+        signerFactory,
+        navigator,
+        webAuthnVerifier,
+      } = await setupTests()
       const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
 
       const credential = navigator.credentials.create({

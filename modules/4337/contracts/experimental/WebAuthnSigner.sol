@@ -114,9 +114,14 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
         }
     }
 
+    /**
+     * @dev Checks if the given verifier address contains code.
+     * @param verifier The address of the verifier to check.
+     * @return A boolean indicating whether the verifier contains code or not.
+     */
     function _validVerifier(address verifier) internal view returns (bool) {
-        // The verifier should either contain code or be the precompile
-        return !_hasNoCode(verifier) || verifier == address(0x0b);
+        // The verifier should contain code (The only way to implement a webauthn verifier is with a smart contract)
+        return !_hasNoCode(verifier);
     }
 
     /**
@@ -172,7 +177,13 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @param y The y-coordinate of the public key.
      * @return A boolean indicating whether the signature is valid or not.
      */
-    function checkSignature(address verifier, bytes32 dataHash, bytes calldata signature, uint256 x, uint256 y) internal view returns (bool) {
+    function checkSignature(
+        address verifier,
+        bytes32 dataHash,
+        bytes calldata signature,
+        uint256 x,
+        uint256 y
+    ) internal view returns (bool) {
         SignatureData calldata signaturePointer;
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
