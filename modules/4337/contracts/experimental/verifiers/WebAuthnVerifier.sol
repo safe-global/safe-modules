@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {P256VerifierWithWrapperFunctions} from "./P256Verifier.sol";
-import {Base64Url} from "../vendor/FCL/utils/Base64Url.sol";
+import {P256Verifier} from "./P256Verifier.sol";
+import {Base64Url} from "../../vendor/FCL/utils/Base64Url.sol";
 
 /**
  * @title WebAuthnConstants
@@ -86,7 +86,10 @@ interface IWebAuthnVerifier {
  * Both functions take the authenticator data, authenticator flags, challenge, client data fields, r and s components of the signature, and x and y coordinates of the public key as input.
  * The `verifyWebAuthnSignature` function also checks for signature malleability by ensuring that the s component is less than the curve order n/2.
  */
-contract WebAuthnVerifier is IWebAuthnVerifier, P256VerifierWithWrapperFunctions {
+contract WebAuthnVerifier is IWebAuthnVerifier, P256Verifier {
+    /// P256 curve order n/2 for malleability check
+    uint256 constant P256_N_DIV_2 = 57896044605178124381348723474703786764998477612067880171211129530534256022184;
+
     /**
      * @dev Generates a signing message based on the authenticator data, challenge, and client data fields.
      * @param authenticatorData Authenticator data.
@@ -139,7 +142,7 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256VerifierWithWrapperFunctions
 
         bytes32 message = signingMessage(authenticatorData, challenge, clientDataFields);
 
-        result = verifySignatureAllowMalleability(message, rs[0], rs[1], qx, qy);
+        result = ecdsaVerify(message, rs[0], rs[1], qx, qy);
     }
 
     /**
@@ -167,8 +170,13 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256VerifierWithWrapperFunctions
             return false;
         }
 
+        // check for signature malleability
+        if (rs[1] > P256_N_DIV_2) {
+            return false;
+        }
+
         bytes32 message = signingMessage(authenticatorData, challenge, clientDataFields);
 
-        result = verifySignature(message, rs[0], rs[1], qx, qy);
+        result = ecdsaVerify(message, rs[0], rs[1], qx, qy);
     }
 }

@@ -5,7 +5,7 @@ pragma solidity >=0.8.0;
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
-import {IWebAuthnVerifier, WebAuthnConstants} from "./WebAuthnVerifier.sol";
+import {IWebAuthnVerifier, WebAuthnConstants} from "./verifiers/WebAuthnVerifier.sol";
 
 struct SignatureData {
     bytes authenticatorData;

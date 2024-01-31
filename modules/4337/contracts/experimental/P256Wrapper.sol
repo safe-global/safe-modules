@@ -9,7 +9,7 @@ pragma solidity >=0.8.0 <0.9.0;
  *      The contract is not used in the current implementation, it is kept for the sake of example.
  * @custom:acknowledgement The contract is heavily inspired by https://github.com/daimo-eth/p256-verifier
  */
-abstract contract P256Wrapper {
+contract P256Wrapper {
     address immutable VERIFIER;
 
     constructor(address verifier) {
@@ -35,7 +35,7 @@ abstract contract P256Wrapper {
         uint256 s,
         uint256 x,
         uint256 y
-    ) internal view returns (bool) {
+    ) public view returns (bool) {
         bytes memory args = abi.encode(message_hash, r, s, x, y);
         (bool success, bytes memory ret) = VERIFIER.staticcall(args);
         assert(success); // never reverts, always returns 0 or 1
