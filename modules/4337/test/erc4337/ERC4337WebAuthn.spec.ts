@@ -15,7 +15,7 @@ import { Safe4337 } from '../../src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { AddModulesLib, SafeL2, SafeProxyFactory, P256Verifier } = await deployments.fixture()
+    const { AddModulesLib, SafeL2, SafeProxyFactory, WebAuthnVerifier } = await deployments.fixture()
 
     const [deployer, relayer, user] = await ethers.getSigners()
     const entryPoint = await deployReferenceEntryPoint(deployer, relayer)
@@ -26,10 +26,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     const signerLaunchpadFactory = await ethers.getContractFactory('SafeSignerLaunchpad')
     const signerLaunchpad = await signerLaunchpadFactory.deploy(entryPoint.target)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
-    const p256Verifier = await ethers.getContractAt('P256Verifier', P256Verifier.address)
+    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
-    const signerFactory = await WebAuthnSignerFactory.deploy(P256Verifier.address)
+    const signerFactory = await WebAuthnSignerFactory.deploy()
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
@@ -45,15 +45,15 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       singleton,
       signerFactory,
       navigator,
-      p256Verifier,
+      webAuthnVerifier,
     }
   })
 
   describe('executeUserOp - new account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, p256Verifier } =
+      const { user, proxyFactory, addModulesLib, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, webAuthnVerifier } =
         await setupTests()
-      const p256VerifierAddress = await p256Verifier.getAddress()
+      const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
 
       const credential = navigator.credentials.create({
         publicKey: {
@@ -73,7 +73,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       const publicKey = extractPublicKey(credential.response)
       const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
         ['uint256', 'uint256', 'address'],
-        [publicKey.x, publicKey.y, p256VerifierAddress],
+        [publicKey.x, publicKey.y, webAuthnVerifierAddress],
       )
       const signerAddress = await signerFactory.getSigner(signerData)
 
@@ -210,9 +210,9 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, addModulesLib, module, entryPoint, singleton, signerFactory, navigator, p256Verifier } =
+      const { user, proxyFactory, addModulesLib, module, entryPoint, singleton, signerFactory, navigator, webAuthnVerifier } =
         await setupTests()
-      const p256VerifierAddress = await p256Verifier.getAddress()
+      const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
       const credential = navigator.credentials.create({
         publicKey: {
           rp: {
@@ -231,7 +231,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       const publicKey = extractPublicKey(credential.response)
       const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
         ['uint256', 'uint256', 'address'],
-        [publicKey.x, publicKey.y, p256VerifierAddress],
+        [publicKey.x, publicKey.y, webAuthnVerifierAddress],
       )
       await signerFactory.createSigner(signerData)
       const signer = await ethers.getContractAt('WebAuthnSigner', await signerFactory.getSigner(signerData))

@@ -15,9 +15,16 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
     deterministicDeployment: true,
   })
 
-  await deploy('WebAuthnSignerFactory', {
+  await deploy('WebAuthnVerifier', {
     from: deployer,
     args: [p256VerifierDeployment.address],
+    log: true,
+    deterministicDeployment: true,
+  })
+
+  await deploy('WebAuthnSignerFactory', {
+    from: deployer,
+    args: [],
     log: true,
     deterministicDeployment: true,
   })

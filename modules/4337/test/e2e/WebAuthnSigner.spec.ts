@@ -18,7 +18,7 @@ describe('E2E - WebAuthn Signers', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, AddModulesLib, SafeL2, P256Verifier } =
+    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, AddModulesLib, SafeL2, WebAuthnVerifier } =
       await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
@@ -29,10 +29,10 @@ describe('E2E - WebAuthn Signers', () => {
     const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
     const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
-    const p256Verifier = await ethers.getContractAt('P256Verifier', P256Verifier.address)
+    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
-    const signerFactory = await WebAuthnSignerFactory.deploy(P256Verifier.address)
+    const signerFactory = await WebAuthnSignerFactory.deploy()
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
@@ -49,7 +49,7 @@ describe('E2E - WebAuthn Signers', () => {
       singleton,
       signerFactory,
       navigator,
-      p256Verifier,
+      webAuthnVerifier,
     }
   })
 
@@ -65,9 +65,9 @@ describe('E2E - WebAuthn Signers', () => {
       singleton,
       signerFactory,
       navigator,
-      p256Verifier,
+      webAuthnVerifier,
     } = await setupTests()
-    const p256VerifierAddress = await p256Verifier.getAddress()
+    const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -87,7 +87,7 @@ describe('E2E - WebAuthn Signers', () => {
     const publicKey = extractPublicKey(credential.response)
     const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
       ['uint256', 'uint256', 'address'],
-      [publicKey.x, publicKey.y, p256VerifierAddress],
+      [publicKey.x, publicKey.y, webAuthnVerifierAddress],
     )
     const signerAddress = await signerFactory.getSigner(signerData)
 

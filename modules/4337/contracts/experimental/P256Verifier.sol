@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import {FCL_ecdsa} from "../vendor/FCL/FCL_ecdsa.sol";
 
 /**
- * @title P256Verifier
+ * @title P256VerifierWithFallback
  * @dev A contract that implements a P256 elliptic curve signature verification following the precompile's interface.
  * The contract provides a fallback function that takes a specific input format and returns a result indicating
  * whether the signature is valid or not.
@@ -17,7 +17,7 @@ import {FCL_ecdsa} from "../vendor/FCL/FCL_ecdsa.sol";
  * The result is a bytes array where the first 32 bytes represent 0x00..00 (invalid) or 0x00..01 (valid).
  * For more details, refer to the EIP-7212 specification: https://eips.ethereum.org/EIPS/eip-7212
  */
-contract P256Verifier {
+contract P256Verifier{
     fallback(bytes calldata input) external returns (bytes memory) {
         if (input.length != 160) {
             return abi.encodePacked(uint256(0));
