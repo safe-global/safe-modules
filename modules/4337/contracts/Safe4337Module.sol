@@ -82,7 +82,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Validates the call is initiated by the entry point.
      */
     modifier onlySupportedEntryPoint() {
-        require(_msgSender() == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
+        _onlySupportedEntryPoint();
         _;
     }
 
@@ -243,5 +243,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
             operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);
         }
+    }
+
+    /**
+     * @dev This function reverts if the ERC-2771 passed caller is not the supported entry point.
+     */
+    function _onlySupportedEntryPoint() private view {
+        require(_msgSender() == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
     }
 }
