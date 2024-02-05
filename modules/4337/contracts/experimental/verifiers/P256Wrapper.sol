@@ -29,18 +29,46 @@ contract P256Wrapper {
      * @param y The y coordinate of the public key.
      * @return A boolean indicating whether the signature is valid or not.
      */
+    /**
+     * @dev Verifies the signature of a message using P256 elliptic curve.
+     * @param message_hash The hash of the message to be verified.
+     * @param r The r component of the signature.
+     * @param s The s component of the signature.
+     * @param x The x coordinate of the public key.
+     * @param y The y coordinate of the public key.
+     * @return success A boolean indicating whether the signature is valid or not.
+     */
     function verifySignatureAllowMalleability(
         bytes32 message_hash,
         uint256 r,
         uint256 s,
         uint256 x,
         uint256 y
-    ) public view returns (bool) {
-        bytes memory args = abi.encode(message_hash, r, s, x, y);
-        (bool success, bytes memory ret) = VERIFIER.staticcall(args);
-        assert(success); // never reverts, always returns 0 or 1
+    ) public view returns (bool success) {
+        address verifier = VERIFIER;
 
-        return abi.decode(ret, (uint256)) == 1;
+        assembly ("memory-safe") {
+            // Prepare input for staticcall
+            let input := mload(0x40) // Free memory pointer
+            mstore(input, message_hash)
+            mstore(add(input, 32), r)
+            mstore(add(input, 64), s)
+            mstore(add(input, 96), x)
+            mstore(add(input, 128), y)
+
+            // Perform staticcall
+            success := staticcall(gas(), verifier, input, 160, 0, 32)
+
+            // Check for success and return value
+            switch success
+            case 0 {
+                revert(0, 0)
+            }
+            case 1 {
+                success := mload(0)
+                return(0, 32)
+            }
+        }
     }
 
     /**

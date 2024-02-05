@@ -29,25 +29,6 @@ contract P256Verifier {
         uint256 x = uint256(bytes32(input[96:128]));
         uint256 y = uint256(bytes32(input[128:160]));
 
-        return abi.encode(ecdsaVerify(hash, r, s, x, y));
-    }
-
-    /**
-     * @dev Verifies an ECDSA signature using the P256 curve. Can be replaced with a call to the precompile later.
-     * @param hash The hash of the message that was signed.
-     * @param r The r component of the signature.
-     * @param s The s component of the signature.
-     * @param x The x coordinate of the public key.
-     * @param y The y coordinate of the public key.
-     * @return A boolean indicating whether the signature is valid.
-     */
-    function ecdsaVerify(
-        bytes32 hash,
-        uint256 r,
-        uint256 s,
-        uint256 x,
-        uint256 y
-    ) internal view returns (bool) {
-        return FCL_ecdsa.ecdsa_verify(hash, r, s, x, y);
+        return abi.encode(FCL_ecdsa.ecdsa_verify(hash, r, s, x, y));
     }
 }

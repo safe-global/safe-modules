@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {P256Verifier} from "./P256Verifier.sol";
+import {P256Wrapper} from "./P256Wrapper.sol";
 import {Base64Url} from "../../vendor/FCL/utils/Base64Url.sol";
 
 /**
@@ -86,9 +86,8 @@ interface IWebAuthnVerifier {
  * Both functions take the authenticator data, authenticator flags, challenge, client data fields, r and s components of the signature, and x and y coordinates of the public key as input.
  * The `verifyWebAuthnSignature` function also checks for signature malleability by ensuring that the s component is less than the curve order n/2.
  */
-contract WebAuthnVerifier is IWebAuthnVerifier, P256Verifier {
-    /// P256 curve order n/2 for malleability check
-    uint256 constant P256_N_DIV_2 = 57896044605178124381348723474703786764998477612067880171211129530534256022184;
+contract WebAuthnVerifier is IWebAuthnVerifier, P256Wrapper {
+    constructor(address verifier) P256Wrapper(verifier) {}
 
     /**
      * @dev Generates a signing message based on the authenticator data, challenge, and client data fields.
@@ -142,7 +141,7 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256Verifier {
 
         bytes32 message = signingMessage(authenticatorData, challenge, clientDataFields);
 
-        result = ecdsaVerify(message, rs[0], rs[1], qx, qy);
+        result = verifySignatureAllowMalleability(message, rs[0], rs[1], qx, qy);
     }
 
     /**
@@ -175,8 +174,6 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256Verifier {
             return false;
         }
 
-        bytes32 message = signingMessage(authenticatorData, challenge, clientDataFields);
-
-        result = ecdsaVerify(message, rs[0], rs[1], qx, qy);
+        result = verifyWebAuthnSignatureAllowMalleability(authenticatorData, authenticatorFlags, challenge, clientDataFields, rs, qx, qy);
     }
 }
