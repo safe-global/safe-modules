@@ -27,14 +27,14 @@ interface IUniqueSignerFactory {
     /**
      * @notice Verifies a signature for the specified address without deploying it.
      * @dev This must be equivalent to first deploying the signer with the factory, and then verifying the signature
-     * with it directly: `factory.createSigner(signerData).isValidSignature(data, signature)`
-     * @param data The data whose signature should be verified.
+     * with it directly: `factory.createSigner(signerData).isValidSignature(message, signature)`
+     * @param message The singing message.
      * @param signature The signature bytes.
      * @param signerData The signer data to verify signature for.
      * @return magicValue Returns a legacy EIP-1271 magic value (`bytes4(keccak256(isValidSignature(bytes,bytes))`) when the signature is valid. Reverting or returning any other value implies an invalid signature.
      */
     function isValidSignatureForSigner(
-        bytes calldata data,
+        bytes32 message,
         bytes calldata signature,
         bytes calldata signerData
     ) external view returns (bytes4 magicValue);
@@ -199,11 +199,12 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstan
         }
 
         bytes memory operationData = _getOperationData(userOpHash, validAfter, validUntil);
-        try IUniqueSignerFactory(signerFactory).isValidSignatureForSigner(operationData, signature, signerData) returns (
+        bytes32 operationHash = keccak256(operationData);
+        try IUniqueSignerFactory(signerFactory).isValidSignatureForSigner(operationHash, signature, signerData) returns (
             bytes4 magicValue
         ) {
             // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(magicValue != LEGACY_EIP1271_MAGIC_VALUE, validUntil, validAfter);
+            validationData = _packValidationData(magicValue != EIP1271_MAGIC_VALUE, validUntil, validAfter);
         } catch {
             validationData = _packValidationData(true, validUntil, validAfter);
         }

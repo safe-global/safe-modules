@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import {SignatureValidator} from "./SignatureValidator.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 import {IWebAuthnVerifier, WebAuthnConstants} from "./verifiers/WebAuthnVerifier.sol";
 
@@ -17,7 +18,7 @@ struct SignatureData {
  * @title WebAuthnSigner
  * @dev A contract that represents a WebAuthn signer.
  */
-contract WebAuthnSigner is SignatureValidatorConstants {
+contract WebAuthnSigner is SignatureValidator {
     uint256 public immutable X;
     uint256 public immutable Y;
     IWebAuthnVerifier public immutable WEBAUTHN_SIG_VERIFIER;
@@ -35,36 +36,9 @@ contract WebAuthnSigner is SignatureValidatorConstants {
     }
 
     /**
-     * @dev Validates the signature for the given data.
-     * @param data The signed data bytes.
-     * @param signature The signature to be validated.
-     * @return magicValue The magic value indicating the validity of the signature.
+     * @inheritdoc SignatureValidator
      */
-    function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
-        if (checkSignature(keccak256(data), signature)) {
-            magicValue = LEGACY_EIP1271_MAGIC_VALUE;
-        }
-    }
-
-    /**
-     * @dev Validates the signature for a given data hash.
-     * @param dataHash The hash of the data to be validated.
-     * @param signature The signature to be validated.
-     * @return magicValue The magic value indicating the validity of the signature.
-     */
-    function isValidSignature(bytes32 dataHash, bytes calldata signature) external view returns (bytes4 magicValue) {
-        if (checkSignature(dataHash, signature)) {
-            magicValue = EIP1271_MAGIC_VALUE;
-        }
-    }
-
-    /**
-     * @dev Checks the validity of a signature for a given data hash.
-     * @param dataHash The hash of the data to be verified.
-     * @param signature The signature to be checked.
-     * @return A boolean indicating whether the signature is valid or not.
-     */
-    function checkSignature(bytes32 dataHash, bytes calldata signature) internal view returns (bool) {
+    function _verifySignature(bytes32 message, bytes calldata signature) internal view virtual override returns (bool isValid) {
         SignatureData calldata signaturePointer;
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
@@ -75,7 +49,7 @@ contract WebAuthnSigner is SignatureValidatorConstants {
             WEBAUTHN_SIG_VERIFIER.verifyWebAuthnSignatureAllowMalleability(
                 signaturePointer.authenticatorData,
                 WebAuthnConstants.AUTH_DATA_FLAGS_UV,
-                dataHash,
+                message,
                 signaturePointer.clientDataFields,
                 signaturePointer.rs,
                 X,
@@ -126,19 +100,19 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
 
     /**
      * @dev Checks if the provided signature is valid for the given signer.
-     * @param data The signed data as bytes.
+     * @param message The signing message.
      * @param signature The signature to be verified.
      * @param signerData The data used to identify the signer. In this case, the X and Y coordinates of the signer.
      * @return magicValue The magic value indicating the validity of the signature.
      */
     function isValidSignatureForSigner(
-        bytes memory data,
+        bytes32 message,
         bytes calldata signature,
         bytes calldata signerData
     ) external view override returns (bytes4 magicValue) {
         (uint256 x, uint256 y, address verifier) = abi.decode(signerData, (uint256, uint256, address));
-        if (checkSignature(verifier, keccak256(data), signature, x, y)) {
-            magicValue = LEGACY_EIP1271_MAGIC_VALUE;
+        if (checkSignature(verifier, message, signature, x, y)) {
+            magicValue = EIP1271_MAGIC_VALUE;
         }
     }
 
