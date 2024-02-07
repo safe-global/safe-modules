@@ -70,12 +70,46 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
+     * @notice An error indicating that the entry point used when deploying a new module instance is invalid.
+     */
+    error InvalidEntryPoint();
+
+    /**
+     * @notice An error indicating that the caller does not match the Safe in the corresponding user operation.
+     * @dev This indicates that the module is being used to validate a user operation for a Safe that did not directly
+     * call this module.
+     */
+    error InvalidCaller();
+
+    /**
+     * @notice An error indicating that the call validating or executing a user operation was not called by the
+     * supported entry point contract.
+     */
+    error UnsupportedEntryPoint();
+
+    /**
+     * @notice An error indicating that the user operation `callData` does not correspond to one of the two supported
+     * execution functions: `executeUserOp` or `executeUserOpWithErrorString`.
+     */
+    error UnsupportedExecutionFunction(bytes4 selector);
+
+    /**
+     * @notice An error indicating that the user operation failed to execute successfully.
+     * @dev The contract reverts with this error when `executeUserOp` is used instead of bubbling up the original revert
+     * data. When bubbling up revert data is desirable, `executeUserOpWithErrorString` should be used instead.
+     */
+    error ExecutionFailed();
+
+    /**
      * @notice The address of the EntryPoint contract supported by this module.
      */
     address public immutable SUPPORTED_ENTRYPOINT;
 
     constructor(address entryPoint) {
-        require(entryPoint != address(0), "Invalid entry point");
+        if (entryPoint == address(0)) {
+            revert InvalidEntryPoint();
+        }
+
         SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
@@ -83,7 +117,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Validates the call is initiated by the entry point.
      */
     modifier onlySupportedEntryPoint() {
-        require(_msgSender() == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
+        if (_msgSender() != SUPPORTED_ENTRYPOINT) {
+            revert UnsupportedEntryPoint();
+        }
         _;
     }
 
@@ -100,14 +136,16 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         // The entry point address is appended to the calldata by the Safe in the `FallbackManager` contract,
         // following ERC-2771. Because of this, the relayer may manipulate the entry point address, therefore
         // we have to verify that the sender is the Safe specified in the userOperation.
-        require(safeAddress == msg.sender, "Invalid caller");
+        if (safeAddress != msg.sender) {
+            revert InvalidCaller();
+        }
 
         // We check the execution function signature to make sure the entry point can't call any other function
         // and make sure the execution of the user operation is handled by the module
-        require(
-            this.executeUserOp.selector == bytes4(userOp.callData) || this.executeUserOpWithErrorString.selector == bytes4(userOp.callData),
-            "Unsupported execution function id"
-        );
+        bytes4 selector = bytes4(userOp.callData);
+        if (selector != this.executeUserOp.selector && selector != this.executeUserOpWithErrorString.selector) {
+            revert UnsupportedExecutionFunction(selector);
+        }
 
         // The userOp nonce is validated in the entry point (for 0.6.0+), therefore we will not check it again
         validationData = _validateSignatures(userOp);
@@ -129,7 +167,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param operation Operation type of the user operation.
      */
     function executeUserOp(address to, uint256 value, bytes memory data, uint8 operation) external onlySupportedEntryPoint {
-        require(ISafe(msg.sender).execTransactionFromModule(to, value, data, operation), "Execution failed");
+        if (!ISafe(msg.sender).execTransactionFromModule(to, value, data, operation)) {
+            revert ExecutionFailed();
+        }
     }
 
     /**
