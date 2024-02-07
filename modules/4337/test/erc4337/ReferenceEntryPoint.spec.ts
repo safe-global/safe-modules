@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { EventLog, Log } from 'ethers'
-import { deployReferenceEntryPoint, getFactory, getAddModulesLib } from '../utils/setup'
+import { deployReferenceEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
 import { buildContractSignatureBytes, buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
@@ -23,7 +23,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     const module = await moduleFactory.deploy(await entryPoint.getAddress())
     const proxyFactory = await getFactory()
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
-    const addModulesLib = await getAddModulesLib()
+    const safeModuleSetup = await getSafeModuleSetup()
     const singletonFactory = await ethers.getContractFactory('SafeL2', deployer)
     const singleton = await singletonFactory.deploy()
 
@@ -32,7 +32,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       entryPoint: await entryPoint.getAddress(),
       erc4337module: await module.getAddress(),
       proxyFactory: await proxyFactory.getAddress(),
-      addModulesLib: await addModulesLib.getAddress(),
+      safeModuleSetup: await safeModuleSetup.getAddress(),
       proxyCreationCode,
       chainId: Number(await chainId()),
     }

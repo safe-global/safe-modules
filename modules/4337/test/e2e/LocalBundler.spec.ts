@@ -14,7 +14,7 @@ describe('E2E - Local Bundler', () => {
   })
 
   const setupTests = async () => {
-    const { AddModulesLib, EntryPoint, HariWillibaldToken, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
+    const { SafeModuleSetup, EntryPoint, HariWillibaldToken, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -29,7 +29,7 @@ describe('E2E - Local Bundler', () => {
       entryPoint: EntryPoint.address,
       erc4337module: Safe4337Module.address,
       proxyFactory: SafeProxyFactory.address,
-      addModulesLib: AddModulesLib.address,
+      safeModuleSetup: SafeModuleSetup.address,
       proxyCreationCode,
       chainId: Number(await chainId()),
     })

@@ -12,14 +12,14 @@ describe('E2E - Singleton Signers', () => {
   })
 
   const setupTests = async () => {
-    const { AddModulesLib, EntryPoint, MultiSend, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
+    const { SafeModuleSetup, EntryPoint, MultiSend, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
     const entryPoint = new ethers.Contract(EntryPoint.address, EntryPoint.abi, ethers.provider)
     const validator = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
-    const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
+    const safeModuleSEtup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
     const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
     const safeSingleton = await ethers.getContractAt('SafeL2', SafeL2.address)
 
@@ -48,7 +48,7 @@ describe('E2E - Singleton Signers', () => {
       bundler,
       validator,
       entryPoint,
-      addModulesLib,
+      safeModuleSEtup,
       multiSend,
       proxyFactory,
       safeSingleton,
@@ -58,15 +58,15 @@ describe('E2E - Singleton Signers', () => {
   }
 
   it('should deploy a new Safe with alternate signing scheme accessing associated storage', async () => {
-    const { user, bundler, validator, entryPoint, addModulesLib, multiSend, proxyFactory, safeSingleton, stakedFactory, customSigners } =
+    const { user, bundler, validator, entryPoint, safeModuleSEtup, multiSend, proxyFactory, safeSingleton, stakedFactory, customSigners } =
       await setupTests()
 
     const initData = multiSend.interface.encodeFunctionData('multiSend', [
       encodeMultiSendTransactions([
         {
           op: 1,
-          to: addModulesLib.target,
-          data: addModulesLib.interface.encodeFunctionData('enableModules', [[validator.target]]),
+          to: safeModuleSEtup.target,
+          data: safeModuleSEtup.interface.encodeFunctionData('enableModules', [[validator.target]]),
         },
         ...customSigners.map(({ signer, key }) => ({
           op: 0 as const,

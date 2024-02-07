@@ -4,7 +4,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  await deploy('AddModulesLib', {
+  await deploy('SafeModuleSetup', {
     from: deployer,
     args: [],
     log: true,
