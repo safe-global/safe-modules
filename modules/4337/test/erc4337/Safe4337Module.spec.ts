@@ -104,7 +104,7 @@ describe('Safe4337Module', () => {
   describe('constructor', () => {
     it('should revert when entry point is not specified', async () => {
       const factory = await ethers.getContractFactory('Safe4337Module')
-      await expect(factory.deploy(ethers.ZeroAddress)).to.be.revertedWith('Invalid entry point')
+      await expect(factory.deploy(ethers.ZeroAddress)).to.be.revertedWithCustomError(factory, 'InvalidEntryPoint')
     })
   })
 
@@ -166,7 +166,10 @@ describe('Safe4337Module', () => {
       expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(0)
 
       const otherSafe = (await makeSafeModule(user)).connect(entryPointImpersonator)
-      await expect(otherSafe.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.be.revertedWith('Invalid caller')
+      await expect(otherSafe.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.be.revertedWithCustomError(
+        safeModule,
+        'InvalidCaller',
+      )
     })
 
     it('should revert when calling an unsupported Safe method', async () => {
@@ -189,9 +192,9 @@ describe('Safe4337Module', () => {
 
       const entryPointAddress = await ethers.getSigner(await entryPoint.getAddress())
       const safeFromEntryPoint = safeModule.connect(entryPointAddress)
-      await expect(safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.be.revertedWith(
-        'Unsupported execution function id',
-      )
+      await expect(safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0))
+        .to.be.revertedWithCustomError(safeModule, 'UnsupportedExecutionFunction')
+        .withArgs(ethers.dataSlice(callData, 0, 4))
     })
 
     it('should revert when not called from the trusted entrypoint', async () => {
@@ -204,7 +207,10 @@ describe('Safe4337Module', () => {
         signature,
       })
 
-      await expect(safeModule.connect(untrusted).validateUserOp(userOp, ethers.ZeroHash, 0)).to.be.revertedWith('Unsupported entry point')
+      await expect(safeModule.connect(untrusted).validateUserOp(userOp, ethers.ZeroHash, 0)).to.be.revertedWithCustomError(
+        safeModule,
+        'UnsupportedEntryPoint',
+      )
     })
 
     it('should return correct validAfter and validUntil timestamps', async () => {
@@ -245,8 +251,9 @@ describe('Safe4337Module', () => {
   describe('execUserOp', () => {
     it('should revert when not called from the trusted entrypoint', async () => {
       const { untrusted, safeModule } = await setupTests()
-      await expect(safeModule.connect(untrusted).executeUserOp(ethers.ZeroAddress, 0, '0x', 0)).to.be.revertedWith(
-        'Unsupported entry point',
+      await expect(safeModule.connect(untrusted).executeUserOp(ethers.ZeroAddress, 0, '0x', 0)).to.be.revertedWithCustomError(
+        safeModule,
+        'UnsupportedEntryPoint',
       )
     })
   })
@@ -254,9 +261,9 @@ describe('Safe4337Module', () => {
   describe('execUserOpWithErrorString', () => {
     it('should revert when not called from the trusted entrypoint', async () => {
       const { untrusted, safeModule } = await setupTests()
-      await expect(safeModule.connect(untrusted).executeUserOpWithErrorString(ethers.ZeroAddress, 0, '0x', 0)).to.be.revertedWith(
-        'Unsupported entry point',
-      )
+      await expect(
+        safeModule.connect(untrusted).executeUserOpWithErrorString(ethers.ZeroAddress, 0, '0x', 0),
+      ).to.be.revertedWithCustomError(safeModule, 'UnsupportedEntryPoint')
     })
   })
 })
