@@ -22,3 +22,14 @@ services:
     command: ['--auto', '--network=http://geth:8545']
     ports:
       - 3000:3000
+
+  bundler-upstream:
+    build:
+      context: .
+      dockerfile: docker/bundler/Dockerfile
+      args:
+        TAG: main
+    restart: always
+    command: ['--auto', '--network=http://geth:8545']
+    ports:
+      - 3000:3000
