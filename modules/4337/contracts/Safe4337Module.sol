@@ -70,6 +70,31 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
+     * @dev A signed Safe operation, this data is emitted as part of an event when Safe operations get executed.
+     */
+    struct SignedSafeOp {
+        address safe;
+        uint256 nonce;
+        bytes initCode;
+        bytes callData;
+        uint256 callGasLimit;
+        uint256 verificationGasLimit;
+        uint256 preVerificationGas;
+        uint256 maxFeePerGas;
+        uint256 maxPriorityFeePerGas;
+        bytes paymasterAndData;
+        uint48 validAfter;
+        uint48 validUntil;
+        address entryPoint;
+        bytes signatures;
+    }
+
+    /**
+     * @notice An event that gets emitted when a Safe operation executes.
+     */
+    event SafeOperation(SignedSafeOp operation);
+
+    /**
      * @notice An error indicating that the entry point used when deploying a new module instance is invalid.
      */
     error InvalidEntryPoint();
@@ -214,14 +239,33 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *  - `authorizer`: 20-byte address, 0 for valid signature or 1 to mark signature failure (this module does not make use of signature aggregators).
      *  - `validUntil`: 6-byte timestamp value, or zero for "infinite". The user operation is valid only up to this time.
      *  - `validAfter`: 6-byte timestamp. The user operation is valid only after this time.
+     * Additionally, a SafeOperation event is emitted for a valid user operation.
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
      */
-    function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
+    function _validateSignatures(UserOperation calldata userOp) internal returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
         try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
             // The timestamps are validated by the entry point, therefore we will not check them again
             validationData = _packValidationData(false, validUntil, validAfter);
+            emit SafeOperation(
+                SignedSafeOp({
+                    safe: userOp.sender,
+                    nonce: userOp.nonce,
+                    initCode: userOp.initCode,
+                    callData: userOp.callData,
+                    callGasLimit: userOp.callGasLimit,
+                    verificationGasLimit: userOp.verificationGasLimit,
+                    preVerificationGas: userOp.preVerificationGas,
+                    maxFeePerGas: userOp.maxFeePerGas,
+                    maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+                    paymasterAndData: userOp.paymasterAndData,
+                    validAfter: validAfter,
+                    validUntil: validUntil,
+                    entryPoint: SUPPORTED_ENTRYPOINT,
+                    signatures: signatures
+                })
+            );
         } catch {
             validationData = _packValidationData(true, validUntil, validAfter);
         }
