@@ -241,6 +241,7 @@ npx hardhat --network <network> etherscan-verify
 ## Audits
 
 - [For version 0.1.0 by Ackee Blockchain](docs/v0.1.0/audit.md)
+- [For version 0.2.0 by Multiple Auditors](docs/v0.2.0/audit.md)
 
 ## Security and Liability
 
