@@ -40,22 +40,30 @@ describe('Safe4337Mock', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          maxFeePerGas: '0',
+        },
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
-      await logGas('Execute UserOp without fee payment', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Execute UserOp without fee payment', entryPoint.handleOps([userOp], user1.address))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
     })
 
     it('should execute contract calls with fee', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()
+      const randomAddress = ethers.Wallet.createRandom().address
+      const randomAddress2 = ethers.Wallet.createRandom().address
 
+      expect(await ethers.provider.getBalance(randomAddress)).to.be.eq(0)
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
       const safeOp = buildSafeUserOpTransaction(
         await safe.getAddress(),
-        user1.address,
+        randomAddress2,
         ethers.parseEther('0.5'),
         '0x',
         '0',
@@ -64,8 +72,12 @@ describe('Safe4337Mock', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
-      await logGas('Execute UserOp with fee payment', entryPoint.executeUserOp(userOp, ethers.parseEther('0.000001')))
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.499999'))
+      await logGas('Execute UserOp with fee payment', entryPoint.handleOps([userOp], randomAddress))
+
+      // checking that the fee was paid
+      expect(await ethers.provider.getBalance(randomAddress)).to.be.gt(0)
+      // check that the call was executed
+      expect(await ethers.provider.getBalance(randomAddress2)).to.be.eq(ethers.parseEther('0.5'))
     })
   })
 

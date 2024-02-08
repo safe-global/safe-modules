@@ -1,9 +1,8 @@
-import EntryPointArtifact from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { deployments, ethers } from 'hardhat'
 import { Contract, Signer } from 'ethers'
 import solc from 'solc'
 import { logGas } from '../../src/utils/execution'
-import { Safe4337Mock, SafeMock, IEntryPoint } from '../../typechain-types'
+import { Safe4337Mock, SafeMock } from '../../typechain-types'
 
 const getRandomInt = (min = 0, max: number = Number.MAX_SAFE_INTEGER): number => {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -51,7 +50,7 @@ export const getSafe4337Module = async () => {
 
 export const getEntryPoint = async () => {
   const EntryPointDeployment = await deployments.get('EntryPoint')
-  return await ethers.getContractAt('TestEntryPoint', EntryPointDeployment.address)
+  return await ethers.getContractAt('IEntryPoint', EntryPointDeployment.address)
 }
 
 export const getSafeAtAddress = async (address: string) => {
@@ -112,15 +111,4 @@ export const deployContract = async (deployer: Signer, source: string): Promise<
     throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
   }
   return new Contract(contractAddress, output.interface, deployer)
-}
-
-export const deployReferenceEntryPoint = async (deployer: Signer, relayer?: Signer) => {
-  const { abi, bytecode } = EntryPointArtifact
-  const transaction = await deployer.sendTransaction({ data: bytecode })
-  const receipt = await transaction.wait()
-  const contractAddress = receipt.contractAddress
-  if (contractAddress === null) {
-    throw new Error(`contract deployment transaction ${transaction.hash} missing address`)
-  }
-  return new ethers.Contract(contractAddress, abi, relayer) as unknown as IEntryPoint
 }
