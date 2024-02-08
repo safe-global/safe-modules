@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
+/* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
 import {P256Wrapper} from "./P256Wrapper.sol";
@@ -17,10 +18,10 @@ library WebAuthnConstants {
      * - `AUTH_DATA_FLAGS_BE`: Attested Credential Data (BE) flag in the authenticator data.
      * - `AUTH_DATA_FLAGS_BS`: Extension Data (BS) flag in the authenticator data.
      */
-    bytes1 constant AUTH_DATA_FLAGS_UP = 0x01;
-    bytes1 constant AUTH_DATA_FLAGS_UV = 0x04;
-    bytes1 constant AUTH_DATA_FLAGS_BE = 0x08;
-    bytes1 constant AUTH_DATA_FLAGS_BS = 0x10;
+    bytes1 internal constant AUTH_DATA_FLAGS_UP = 0x01;
+    bytes1 internal constant AUTH_DATA_FLAGS_UV = 0x04;
+    bytes1 internal constant AUTH_DATA_FLAGS_BE = 0x08;
+    bytes1 internal constant AUTH_DATA_FLAGS_BS = 0x10;
 }
 
 /**
@@ -164,13 +165,8 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256Wrapper {
         uint256 qx,
         uint256 qy
     ) public view returns (bool result) {
-        // check authenticator flags, e.g. for User Presence (0x01) and/or User Verification (0x04)
-        if ((authenticatorData[32] & authenticatorFlags) != authenticatorFlags) {
-            return false;
-        }
-
         // check for signature malleability
-        if (rs[1] > P256_N_DIV_2) {
+        if (rs[1] > _P256_N_DIV_2) {
             return false;
         }
 
