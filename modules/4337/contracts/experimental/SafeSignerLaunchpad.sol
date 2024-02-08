@@ -28,7 +28,7 @@ interface IUniqueSignerFactory {
      * @notice Verifies a signature for the specified address without deploying it.
      * @dev This must be equivalent to first deploying the signer with the factory, and then verifying the signature
      * with it directly: `factory.createSigner(signerData).isValidSignature(message, signature)`
-     * @param message The singing message.
+     * @param message The signed message.
      * @param signature The signature bytes.
      * @param signerData The signer data to verify signature for.
      * @return magicValue Returns a legacy EIP-1271 magic value (`bytes4(keccak256(isValidSignature(bytes,bytes))`) when the signature is valid. Reverting or returning any other value implies an invalid signature.
