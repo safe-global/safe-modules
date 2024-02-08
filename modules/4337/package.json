@@ -18,6 +18,7 @@
     "build:ts": "npx rimraf dist && tsc",
     "test": "hardhat test --deploy-fixture",
     "test:e2e": "./test/e2e/run.sh",
+    "test:e2e:upstream": "USE_UPSTREAM_BUNDLER=1 ./test/e2e/run.sh",
     "test:all": "npm run test && npm run test:e2e",
     "coverage": "hardhat coverage --network hardhat",
     "codesize": "hardhat codesize",

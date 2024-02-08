@@ -10,7 +10,7 @@ describe('InitCode', () => {
       entryPoint: addr(0x02),
       erc4337module: addr(0x03),
       proxyFactory: addr(0x04),
-      addModulesLib: addr(0x05),
+      safeModuleSetup: addr(0x05),
       proxyCreationCode: '0x',
       chainId: 42,
     }

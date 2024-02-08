@@ -3,19 +3,19 @@ pragma solidity >=0.8.0;
 
 contract InitCode {
     struct Config {
-        address addModulesLib;
+        address safeModuleSetup;
         address erc4337module;
         address safeSingleton;
         address proxyFactory;
     }
 
-    address public immutable ADD_MODULES_LIB_ADDRESS;
+    address public immutable SAFE_MODULE_SETUP_ADDRESS;
     address public immutable SAFE_4337_MODULE_ADDRESS;
     address public immutable SAFE_SINGLETON_ADDRESS;
     address public immutable SAFE_PROXY_FACTORY_ADDRESS;
 
     constructor(Config memory config) {
-        ADD_MODULES_LIB_ADDRESS = config.addModulesLib;
+        SAFE_MODULE_SETUP_ADDRESS = config.safeModuleSetup;
         SAFE_4337_MODULE_ADDRESS = config.erc4337module;
         SAFE_SINGLETON_ADDRESS = config.safeSingleton;
         SAFE_PROXY_FACTORY_ADDRESS = config.proxyFactory;
@@ -35,7 +35,7 @@ contract InitCode {
             "setup(address[],uint256,address,bytes,address,address,uint256,address)",
             owners,
             threshold,
-            ADD_MODULES_LIB_ADDRESS,
+            SAFE_MODULE_SETUP_ADDRESS,
             abi.encodeWithSignature("enableModules(address[])", modules),
             SAFE_4337_MODULE_ADDRESS,
             // We do not want to use any refund logic; therefore, this is all set to 0

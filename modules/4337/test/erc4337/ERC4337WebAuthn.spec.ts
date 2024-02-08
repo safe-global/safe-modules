@@ -15,14 +15,14 @@ import { Safe4337 } from '../../src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { AddModulesLib, SafeL2, SafeProxyFactory, WebAuthnVerifier } = await deployments.fixture()
+    const { SafeModuleSetup, SafeL2, SafeProxyFactory, WebAuthnVerifier } = await deployments.fixture()
 
     const [deployer, relayer, user] = await ethers.getSigners()
     const entryPoint = await deployReferenceEntryPoint(deployer, relayer)
     const moduleFactory = await ethers.getContractFactory('Safe4337Module')
     const module = await moduleFactory.deploy(entryPoint.target)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
-    const addModulesLib = await ethers.getContractAt('AddModulesLib', AddModulesLib.address)
+    const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
     const signerLaunchpadFactory = await ethers.getContractFactory('SafeSignerLaunchpad')
     const signerLaunchpad = await signerLaunchpadFactory.deploy(entryPoint.target)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
@@ -38,7 +38,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     return {
       user,
       proxyFactory,
-      addModulesLib,
+      safeModuleSetup,
       module,
       entryPoint,
       signerLaunchpad,
@@ -54,7 +54,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       const {
         user,
         proxyFactory,
-        addModulesLib,
+        safeModuleSetup,
         module,
         entryPoint,
         signerLaunchpad,
@@ -91,8 +91,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         singleton: singleton.target,
         signerFactory: signerFactory.target,
         signerData,
-        setupTo: addModulesLib.target,
-        setupData: addModulesLib.interface.encodeFunctionData('enableModules', [[module.target]]),
+        setupTo: safeModuleSetup.target,
+        setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
         fallbackHandler: module.target,
       }
       const safeInitHash = ethers.TypedDataEncoder.hash(
@@ -220,7 +220,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, addModulesLib, module, entryPoint, singleton, signerFactory, navigator, webAuthnVerifier } =
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, webAuthnVerifier } =
         await setupTests()
       const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
       const credential = navigator.credentials.create({
@@ -251,7 +251,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         entryPoint: await entryPoint.getAddress(),
         erc4337module: await module.getAddress(),
         proxyFactory: await proxyFactory.getAddress(),
-        addModulesLib: await addModulesLib.getAddress(),
+        safeModuleSetup: await safeModuleSetup.getAddress(),
         proxyCreationCode: await proxyFactory.proxyCreationCode(),
         chainId: Number(await chainId()),
       })

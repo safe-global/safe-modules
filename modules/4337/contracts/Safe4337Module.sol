@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity 0.8.23;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
@@ -18,6 +18,7 @@ import {ISafe} from "./interfaces/Safe.sol";
  *      - The user operation hash is signed by the Safe owner(s) and validated by the module.
  *      - The user operation is not allowed to execute any other function than `executeUserOp` and `executeUserOpWithErrorString`.
  *      - Replay protection is handled by the entry point.
+ * @custom:security-contact bounty@safe.global
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
     /**
@@ -69,7 +70,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
+     * @notice The address of the EntryPoint contract supported by this module.
      */
     address public immutable SUPPORTED_ENTRYPOINT;
 
@@ -96,9 +97,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 missingAccountFunds
     ) external onlySupportedEntryPoint returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
-        // The entry point address is appended to the calldata in `HandlerContext` contract
-        // Because of this, the relayer may manipulate the entry point address, therefore we have to verify that
-        // the sender is the Safe specified in the userOperation
+        // The entry point address is appended to the calldata by the Safe in the `FallbackManager` contract,
+        // following ERC-2771. Because of this, the relayer may manipulate the entry point address, therefore
+        // we have to verify that the sender is the Safe specified in the userOperation.
         require(safeAddress == msg.sender, "Invalid caller");
 
         // We check the execution function signature to make sure the entry point can't call any other function
@@ -150,10 +151,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     /**
      * @notice Computes the 32-byte domain separator used in EIP-712 signature verification for Safe operations.
-     * @return The EIP-712 domain separator hash for this contract.
+     * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
      */
-    function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
+    function domainSeparator() public view returns (bytes32 domainSeparatorHash) {
+        domainSeparatorHash = keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, this));
     }
 
     /**

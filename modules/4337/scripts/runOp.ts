@@ -11,7 +11,7 @@ const MNEMONIC = process.env.SCRIPT_MNEMONIC
 const BUNDLER_URL = process.env.SCRIPT_BUNDLER_URL
 const SAFE_SINGLETON_ADDRESS = process.env.SCRIPT_SAFE_SINGLETON_ADDRESS!!
 const PROXY_FACTORY_ADDRESS = process.env.SCRIPT_PROXY_FACTORY_ADDRESS!!
-const ADD_MODULES_LIB_ADDRESS = process.env.SCRIPT_ADD_MODULES_LIB_ADDRESS!!
+const SAFE_MODULE_SETUP_ADDRESS = process.env.SCRIPT_SAFE_MODULE_SETUP_ADDRESS!!
 const MODULE_ADDRESS = process.env.SCRIPT_MODULE_ADDRESS!!
 const ERC20_TOKEN_ADDRESS = process.env.SCRIPT_ERC20_TOKEN_ADDRESS!!
 
@@ -61,7 +61,7 @@ const runOp = async () => {
     erc4337module: MODULE_ADDRESS,
     proxyFactory: PROXY_FACTORY_ADDRESS,
     proxyCreationCode,
-    addModulesLib: ADD_MODULES_LIB_ADDRESS,
+    safeModuleSetup: SAFE_MODULE_SETUP_ADDRESS,
     chainId: Number(await chainId()),
   }
   const safe = await Safe4337.withSigner(user1.address, globalConfig)
