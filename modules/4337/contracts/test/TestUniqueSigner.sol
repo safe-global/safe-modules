@@ -2,32 +2,29 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {ISignatureValidator} from "@safe-global/safe-contracts/contracts/interfaces/ISignatureValidator.sol";
 import {IUniqueSignerFactory} from "../experimental/SafeSignerLaunchpad.sol";
+import {SignatureValidator} from "../experimental/SignatureValidator.sol";
+import {SignatureValidatorConstants} from "../experimental/SignatureValidatorConstants.sol";
 
-function checkSignature(bytes memory data, uint256 signature, uint256 key) pure returns (bytes4 magicValue) {
-    uint256 message = uint256(keccak256(data));
-
+function checkSignature(bytes32 message, uint256 signature, uint256 key) pure returns (bool isValid) {
     // A very silly signing scheme where the `message = signature ^ key`
-    if (message == signature ^ key) {
-        magicValue = ISignatureValidator.isValidSignature.selector;
-    }
+    isValid = uint256(message) == signature ^ key;
 }
 
-contract TestUniqueSigner is ISignatureValidator {
+contract TestUniqueSigner is SignatureValidator {
     uint256 public immutable KEY;
 
     constructor(uint256 key) {
         KEY = key;
     }
 
-    function isValidSignature(bytes memory data, bytes memory signatureData) public view virtual override returns (bytes4 magicValue) {
+    function _verifySignature(bytes32 message, bytes calldata signatureData) internal view virtual override returns (bool isValid) {
         uint256 signature = abi.decode(signatureData, (uint256));
-        magicValue = checkSignature(data, signature, KEY);
+        isValid = checkSignature(message, signature, KEY);
     }
 }
 
-contract TestUniqueSignerFactory is IUniqueSignerFactory {
+contract TestUniqueSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants {
     function getSigner(bytes calldata data) public view returns (address signer) {
         uint256 key = abi.decode(data, (uint256));
         signer = _getSigner(key);
@@ -43,13 +40,15 @@ contract TestUniqueSignerFactory is IUniqueSignerFactory {
     }
 
     function isValidSignatureForSigner(
-        bytes memory data,
-        bytes memory signatureData,
-        bytes memory signerData
+        bytes32 message,
+        bytes calldata signatureData,
+        bytes calldata signerData
     ) external pure override returns (bytes4 magicValue) {
         uint256 key = abi.decode(signerData, (uint256));
         uint256 signature = abi.decode(signatureData, (uint256));
-        magicValue = checkSignature(data, signature, key);
+        if (checkSignature(message, signature, key)) {
+            magicValue = EIP1271_MAGIC_VALUE;
+        }
     }
 
     function _getSigner(uint256 key) internal view returns (address) {
