@@ -100,7 +100,7 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
 
     /**
      * @dev Checks if the provided signature is valid for the given signer.
-     * @param message The signing message.
+     * @param message The signed message.
      * @param signature The signature to be verified.
      * @param signerData The data used to identify the signer. In this case, the X and Y coordinates of the signer.
      * @return magicValue The magic value indicating the validity of the signature.

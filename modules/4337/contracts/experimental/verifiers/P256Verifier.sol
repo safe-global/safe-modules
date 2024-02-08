@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
+/* solhint-disable no-complex-fallback */
+/* solhint-disable payable-fallback */
 pragma solidity >=0.8.0;
 
 import {FCL_ecdsa} from "../../vendor/FCL/FCL_ecdsa.sol";
@@ -9,7 +11,7 @@ import {FCL_ecdsa} from "../../vendor/FCL/FCL_ecdsa.sol";
  * The contract provides a fallback function that takes a specific input format and returns a result indicating
  * whether the signature is valid or not.
  * The input format is as follows:
- * - input[  0: 32] = signed data hash
+ * - input[  0: 32] = signed message
  * - input[ 32: 64] = signature r
  * - input[ 64: 96] = signature s
  * - input[ 96:128] = public key x
@@ -23,12 +25,12 @@ contract P256Verifier {
             return abi.encodePacked(uint256(0));
         }
 
-        bytes32 hash = bytes32(input[0:32]);
+        bytes32 message = bytes32(input[0:32]);
         uint256 r = uint256(bytes32(input[32:64]));
         uint256 s = uint256(bytes32(input[64:96]));
         uint256 x = uint256(bytes32(input[96:128]));
         uint256 y = uint256(bytes32(input[128:160]));
 
-        return abi.encode(FCL_ecdsa.ecdsa_verify(hash, r, s, x, y));
+        return abi.encode(FCL_ecdsa.ecdsa_verify(message, r, s, x, y));
     }
 }

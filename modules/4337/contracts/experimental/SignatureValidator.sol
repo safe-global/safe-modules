@@ -22,7 +22,7 @@ abstract contract SignatureValidator is SignatureValidatorConstants {
 
     /**
      * @dev Validates the signature for a given data hash.
-     * @param message The signing message.
+     * @param message The signed message.
      * @param signature The signature to be validated.
      * @return magicValue The magic value indicating the validity of the signature.
      */
@@ -34,7 +34,7 @@ abstract contract SignatureValidator is SignatureValidatorConstants {
 
     /**
      * @dev Verifies a signature.
-     * @param message The signing message.
+     * @param message The signed message.
      * @param signature The signature to be validated.
      * @return isValid Whether or not the signature is valid.
      */

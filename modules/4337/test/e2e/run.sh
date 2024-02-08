@@ -21,5 +21,9 @@ until curl -fs http://localhost:8545 >/dev/null && curl -fs http://localhost:300
 done
 
 hardhat test --deploy-fixture --network localhost --grep '^E2E - '
+success=$?
 
 "$DOCKER" compose down
+
+# exit with the E2E test's exit code
+exit $success
