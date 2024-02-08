@@ -603,12 +603,10 @@ function SqrtMod(uint256 self) internal view returns (uint256 result){
                                 T3 := mulmod(X, T2, p) // S = X1*V
 
                                 T1 := mulmod(T1, T2, p) // W=UV
-                                y2 := addmod(X, zz, p) //X+ZZ
-                                let TT1 := addmod(X, sub(p, zz), p) //X-ZZ
-                                y2 := mulmod(y2, TT1, p) //(X-ZZ)(X+ZZ)
-                                T4 := mulmod(3, y2, p) //M
+                                y2 := mulmod(addmod(X, zz, p), addmod(X, sub(p, zz), p), p) //(X-ZZ)(X+ZZ)
+                                T4 := mulmod(3, y2, p) //M=3*(X-ZZ)(X+ZZ)
 
-                                zzz := mulmod(TT1, zzz, p) //zzz3=W*zzz1
+                                zzz := mulmod(T1, zzz, p) //zzz3=W*zzz1
                                 zz := mulmod(T2, zz, p) //zz3=V*ZZ1, V free
 
                                 X := addmod(mulmod(T4, T4, p), mulmod(minus_2, T3, p), p) //X3=M^2-2S
@@ -755,12 +753,10 @@ function SqrtMod(uint256 self) internal view returns (uint256 result){
                                 let T3 := mulmod(X, T2, p) // S = X1*V
 
                                 T1 := mulmod(T1, T2, p) // W=UV
-                                y2 := addmod(X, zz, p) //X+ZZ
-                                let TT1 := addmod(X, sub(p, zz), p) //X-ZZ
-                                y2 := mulmod(y2, TT1, p) //(X-ZZ)(X+ZZ)
-                                let T4 := mulmod(3, y2, p) //M
+                                y2 := mulmod(addmod(X, zz, p), addmod(X, sub(p, zz), p), p) //(X-ZZ)(X+ZZ)
+                                let T4 := mulmod(3, y2, p) //M=3*(X-ZZ)(X+ZZ)
 
-                                zzz := mulmod(TT1, zzz, p) //zzz3=W*zzz1
+                                zzz := mulmod(T1, zzz, p) //zzz3=W*zzz1
                                 zz := mulmod(T2, zz, p) //zz3=V*ZZ1, V free
 
                                 X := addmod(mulmod(T4, T4, p), mulmod(minus_2, T3, p), p) //X3=M^2-2S

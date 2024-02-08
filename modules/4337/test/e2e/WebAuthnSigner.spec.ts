@@ -2,7 +2,13 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
-import { WebAuthnCredentials, extractClientDataFields, extractPublicKey, extractSignature } from '../utils/webauthn'
+import {
+  UserVerificationRequirement,
+  WebAuthnCredentials,
+  extractClientDataFields,
+  extractPublicKey,
+  extractSignature,
+} from '../utils/webauthn'
 
 describe('E2E - WebAuthn Signers', () => {
   before(function () {
@@ -12,7 +18,8 @@ describe('E2E - WebAuthn Signers', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2 } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, WebAuthnVerifier } =
+      await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -22,6 +29,7 @@ describe('E2E - WebAuthn Signers', () => {
     const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
     const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
+    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
     const signerFactory = await WebAuthnSignerFactory.deploy()
@@ -41,12 +49,25 @@ describe('E2E - WebAuthn Signers', () => {
       singleton,
       signerFactory,
       navigator,
+      webAuthnVerifier,
     }
   })
 
   it('should execute a user op and deploy a WebAuthn signer', async () => {
-    const { user, bundler, proxyFactory, safeModuleSetup, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator } =
-      await setupTests()
+    const {
+      user,
+      bundler,
+      proxyFactory,
+      safeModuleSetup,
+      module,
+      entryPoint,
+      signerLaunchpad,
+      singleton,
+      signerFactory,
+      navigator,
+      webAuthnVerifier,
+    } = await setupTests()
+    const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -64,7 +85,10 @@ describe('E2E - WebAuthn Signers', () => {
       },
     })
     const publicKey = extractPublicKey(credential.response)
-    const signerData = ethers.solidityPacked(['uint256', 'uint256'], [publicKey.x, publicKey.y])
+    const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
+      ['uint256', 'uint256', 'address'],
+      [publicKey.x, publicKey.y, webAuthnVerifierAddress],
+    )
     const signerAddress = await signerFactory.getSigner(signerData)
 
     const safeInit = {
@@ -160,6 +184,7 @@ describe('E2E - WebAuthn Signers', () => {
         challenge: ethers.getBytes(safeInitOpHash),
         rpId: 'safe.global',
         allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+        userVerification: UserVerificationRequirement.required,
       },
     })
     const signature = ethers.solidityPacked(
