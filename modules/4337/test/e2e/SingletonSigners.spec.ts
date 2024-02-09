@@ -113,7 +113,7 @@ describe('E2E - Singleton Signers', () => {
     const signature = buildContractSignatureBytes(
       customSigners.map(({ signer, key }) => ({
         signer: signer.target as string,
-        data: ethers.toBeHex(BigInt(opHash) ^ key),
+        data: ethers.toBeHex(BigInt(opHash) ^ key, 32),
       })),
     )
     const userOp = buildUserOperationFromSafeUserOperation({
