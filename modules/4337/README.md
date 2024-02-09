@@ -2,6 +2,8 @@
 
 :warning: **This module MUST only be used with Safe 1.4.1 or newer** :warning:
 
+For the supported EntryPoint version, please refer to the [CHANGELOG](./CHANGELOG.md). The module was tested and audited with the EntryPoint version mentioned in the changelog in mind; if you use a different version, you do so at your own risk.
+
 ## Execution Flow
 
 The diagram below outlines the flow triggered when a user operation is submitted to the entrypoint. Additionally, the gas overhead compared to a native implementation is mentioned.

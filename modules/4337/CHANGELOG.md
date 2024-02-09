@@ -10,6 +10,10 @@ Solidity compiler: [0.8.23](https://github.com/ethereum/solidity/releases/tag/v0
 
 Solidity optimizer: enabled with 10.000.000 runs
 
+## Supported EntryPoint
+
+The official deployments support the EntryPoint v0.6.0 with the canonical deployment at `0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789`.
+
 ## Expected addresses
 
 - `AddModulesLib` at `0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb`
