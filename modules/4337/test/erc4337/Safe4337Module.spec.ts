@@ -8,6 +8,7 @@ import {
   buildSafeUserOpTransaction,
   buildUserOperationFromSafeUserOperation,
   calculateSafeOperationHash,
+  packAccountGasLimits,
   packValidationData,
 } from '../../src/utils/userOp'
 import { chainId, timestamp } from '../utils/encoding'
@@ -69,8 +70,7 @@ describe('Safe4337Module', () => {
         nonce: 0x12,
         initCode: '0x13',
         callData: '0x14',
-        callGasLimit: 0x15,
-        verificationGasLimit: 0x16,
+        accountGasLimits: packAccountGasLimits(0x16, 0x15),
         preVerificationGas: 0x17,
         maxFeePerGas: 0x18,
         maxPriorityFeePerGas: 0x19,
@@ -87,8 +87,7 @@ describe('Safe4337Module', () => {
         ['nonce', 0x22],
         ['initCode', '0x23'],
         ['callData', '0x24'],
-        ['callGasLimit', 0x25],
-        ['verificationGasLimit', 0x26],
+        ['accountGasLimits', packAccountGasLimits(0x26, 0x25)],
         ['preVerificationGas', 0x27],
         ['maxFeePerGas', 0x28],
         ['maxPriorityFeePerGas', 0x29],
