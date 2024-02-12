@@ -2,7 +2,7 @@ import { AddressLike, JsonRpcProvider, Provider, Signer, ethers } from 'ethers'
 
 // Import from Safe contracts repo once it is upgraded to ethers v6 and can be installed via npm
 import { MetaTransaction, SafeSignature, SignedSafeTransaction, buildSignatureBytes } from './execution'
-import { UserOperation, EIP712_SAFE_OPERATION_TYPE } from './userOp'
+import { UserOperation, EIP712_SAFE_OPERATION_TYPE, packAccountGasLimits } from './userOp'
 
 const AddressOne = '0x0000000000000000000000000000000000000001'
 
@@ -161,9 +161,8 @@ export class Safe4337Operation {
     return {
       nonce: ethers.toBeHex(this.params.nonce),
       callData: actionCalldata(this.action),
-      verificationGasLimit: ethers.toBeHex(this.params.verificationGasLimit),
+      accountGasLimits: packAccountGasLimits(this.params.verificationGasLimit, this.params.callGasLimit),
       preVerificationGas: ethers.toBeHex(this.params.preVerificationGas),
-      callGasLimit: ethers.toBeHex(this.params.callGasLimit),
       maxFeePerGas: ethers.toBeHex(this.params.maxFeePerGas),
       maxPriorityFeePerGas: ethers.toBeHex(this.params.maxPriorityFeePerGas),
       initCode: this.params.initCode,

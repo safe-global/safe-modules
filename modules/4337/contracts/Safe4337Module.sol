@@ -3,9 +3,9 @@ pragma solidity 0.8.23;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
-import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
-import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
-import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
+import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
+import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/contracts/core/Helpers.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**
@@ -33,8 +33,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *  {uint256} nonce - A unique number associated with the user operation, preventing replay attacks by ensuring each operation is unique.
      *  {bytes} initCode - The packed encoding of a factory address and its factory-specific data for creating a new Safe account.
      *  {bytes} callData - The bytes representing the data of the function call to be executed.
-     *  {uint256} callGasLimit - The maximum amount of gas allowed for executing the function call.
-     *  {uint256} verificationGasLimit - The maximum amount of gas allowed for the verification process.
+     *  {bytes32} accountGasLimits - Packed encoding of the gas limits for the account: {uint128 validationGasLimit, uint128 callGasLimit}.
      *  {uint256} preVerificationGas - The amount of gas allocated for pre-verification steps before executing the main operation.
      *  {uint256} maxFeePerGas - The maximum fee per gas that the user is willing to pay for the transaction.
      *  {uint256} maxPriorityFeePerGas - The maximum priority fee per gas that the user is willing to pay for the transaction.
@@ -44,10 +43,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *  {address} entryPoint - The address of the entry point that will execute the user operation.
      * @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes.
      * keccak256(
-            "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-        ) = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd
+            "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+        ) = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de
      */
-    bytes32 private constant SAFE_OP_TYPEHASH = 0x84aa190356f56b8c87825f54884392a9907c23ee0f8e1ea86336b763faf021bd;
+    bytes32 private constant SAFE_OP_TYPEHASH = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de;
 
     /**
      * @dev A structure used internally for manually encoding a Safe operation for when computing the EIP-712 struct hash.
@@ -58,8 +57,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 nonce;
         bytes32 initCodeHash;
         bytes32 callDataHash;
-        uint256 callGasLimit;
-        uint256 verificationGasLimit;
+        bytes32 accountGasLimits;
         uint256 preVerificationGas;
         uint256 maxFeePerGas;
         uint256 maxPriorityFeePerGas;
@@ -128,7 +126,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @inheritdoc IAccount
      */
     function validateUserOp(
-        UserOperation calldata userOp,
+        PackedUserOperation calldata userOp,
         bytes32,
         uint256 missingAccountFunds
     ) external onlySupportedEntryPoint returns (uint256 validationData) {
@@ -203,7 +201,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param userOp The ERC-4337 user operation.
      * @return operationHash Operation hash.
      */
-    function getOperationHash(UserOperation calldata userOp) external view returns (bytes32 operationHash) {
+    function getOperationHash(PackedUserOperation calldata userOp) external view returns (bytes32 operationHash) {
         (bytes memory operationData, , , ) = _getSafeOp(userOp);
         operationHash = keccak256(operationData);
     }
@@ -217,7 +215,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param userOp User operation struct.
      * @return validationData An integer indicating the result of the validation.
      */
-    function _validateSignatures(UserOperation calldata userOp) internal view returns (uint256 validationData) {
+    function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
         try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
             // The timestamps are validated by the entry point, therefore we will not check them again
@@ -236,7 +234,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @return signatures The Safe owner signatures extracted from the user operation.
      */
     function _getSafeOp(
-        UserOperation calldata userOp
+        PackedUserOperation calldata userOp
     ) internal view returns (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) {
         // Extract additional Safe operation fields from the user operation signature which is encoded as:
         // `abi.encodePacked(validAfter, validUntil, signatures)`
@@ -262,8 +260,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 nonce: userOp.nonce,
                 initCodeHash: keccak256(userOp.initCode),
                 callDataHash: keccak256(userOp.callData),
-                callGasLimit: userOp.callGasLimit,
-                verificationGasLimit: userOp.verificationGasLimit,
+                accountGasLimits: userOp.accountGasLimits,
                 preVerificationGas: userOp.preVerificationGas,
                 maxFeePerGas: userOp.maxFeePerGas,
                 maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
@@ -277,9 +274,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
                 // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
-                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 14
-                // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
-                safeOpStructHash := keccak256(encodedSafeOp, 448)
+                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 13
+                // 32-byte fields to hash, for a length of `13 * 32 = 448` bytes.
+                safeOpStructHash := keccak256(encodedSafeOp, 416)
             }
 
             operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);

@@ -147,7 +147,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
         safeOp,
         signature,
       })
-      const expectedReturnData = validator.interface.encodeErrorResult('Error(string)', ['Execution failed'])
+      const expectedReturnData = validator.interface.encodeErrorResult('ExecutionFailed()', [])
       await expect(entryPoint.handleOps([userOp], user1.address))
         .to.emit(entryPoint, 'UserOperationRevertReason')
         .withArgs(await entryPoint.getUserOpHash(userOp), userOp.sender, 0, expectedReturnData)
