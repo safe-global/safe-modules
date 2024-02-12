@@ -2,9 +2,9 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
-import {INonceManager} from "@account-abstraction/contracts/interfaces/INonceManager.sol";
-import {UserOperation} from "@account-abstraction/contracts/interfaces/UserOperation.sol";
+import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
+import {INonceManager} from "@account-abstraction/contracts/contracts/interfaces/INonceManager.sol";
+import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
 
 /**
  * helper contract for EntryPoint, to call userOp.initCode from a "neutral" address,
@@ -47,22 +47,24 @@ contract TestEntryPoint is INonceManager {
         balances[msg.sender] = balances[msg.sender] + msg.value;
     }
 
-    function executeUserOp(UserOperation calldata userOp, uint256 requiredPrefund) external {
+    function unpackAccountGasLimits(bytes32 accountGasLimits) internal pure returns (uint256 validationGasLimit, uint256 callGasLimit) {
+        return (uint128(bytes16(accountGasLimits)), uint128(uint256(accountGasLimits)));
+    }
+
+    function executeUserOp(PackedUserOperation calldata userOp, uint256 requiredPrefund) external {
         if (userOp.sender.code.length == 0) {
             require(userOp.initCode.length >= 20, "Invalid initCode provided");
             require(userOp.sender == SENDER_CREATOR.createSender(userOp.initCode), "Could not create expected account");
         }
 
-        require(gasleft() > userOp.verificationGasLimit, "Not enough gas for verification");
+        (uint256 validationGasLimit, uint256 callGasLimit) = unpackAccountGasLimits(userOp.accountGasLimits);
+
+        require(gasleft() > validationGasLimit, "Not enough gas for verification");
 
         uint256 userBalance = balances[userOp.sender];
         uint256 missingAccountFunds = requiredPrefund > userBalance ? requiredPrefund - userBalance : 0;
 
-        uint256 validationData = IAccount(userOp.sender).validateUserOp{gas: userOp.verificationGasLimit}(
-            userOp,
-            bytes32(0),
-            missingAccountFunds
-        );
+        uint256 validationData = IAccount(userOp.sender).validateUserOp{gas: validationGasLimit}(userOp, bytes32(0), missingAccountFunds);
         require(validationData == 0, "Signature validation failed");
 
         userBalance = balances[userOp.sender];
@@ -75,8 +77,8 @@ contract TestEntryPoint is INonceManager {
             revert InvalidNonce(userOp.nonce);
         }
 
-        require(gasleft() > userOp.callGasLimit, "Not enough gas for execution");
-        (bool success, bytes memory returnData) = userOp.sender.call{gas: userOp.callGasLimit}(userOp.callData);
+        require(gasleft() > callGasLimit, "Not enough gas for execution");
+        (bool success, bytes memory returnData) = userOp.sender.call{gas: callGasLimit}(userOp.callData);
         if (!success) {
             emit UserOpReverted(returnData);
         }

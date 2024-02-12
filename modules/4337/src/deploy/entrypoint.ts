@@ -1,4 +1,4 @@
-import EntryPoint from '@account-abstraction/contracts/artifacts/EntryPoint.json'
+import EntryPoint from '@account-abstraction/contracts/artifacts/contracts/core/EntryPoint.sol/EntryPoint.json'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 const ENTRY_POINT = process.env.DEPLOYMENT_ENTRY_POINT_ADDRESS

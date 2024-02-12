@@ -7,14 +7,14 @@ methods {
     function safeContract.getSignatures(bytes signature) external returns (bytes) envfree;
 
     // Optional
-    function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
+    function validateUserOp(Safe4337Module.PackedUserOperation,bytes32,uint256) external returns(uint256);
     function getOperationHash(
-        Safe4337Module.UserOperation userOp
+        Safe4337Module.PackedUserOperation userOp
     ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
 }
 
 rule validationDataLastBitOneIfCheckSignaturesFails(address sender,
-        Safe4337Module.UserOperation userOp,
+        Safe4337Module.PackedUserOperation userOp,
         bytes32 dummyData,
         uint256 missingAccountFunds) {
     env e;
