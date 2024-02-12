@@ -102,9 +102,9 @@ contract Safe4337Mock is SafeMock, IAccount {
     /// keccak256("EIP712Domain(uint256 chainId,address verifyingContract)") = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
-    //  keccak256(
-    //         "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-    //     ) = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de
+    // keccak256(
+    //     "SafeOp("SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+    // ) = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de
     bytes32 private constant SAFE_OP_TYPEHASH = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de;
 
     /**

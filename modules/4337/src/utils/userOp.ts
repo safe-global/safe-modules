@@ -187,7 +187,7 @@ export const packValidationData = (authorizer: BigNumberish, validUntil: BigNumb
   const validUntilBigInt = BigInt(validUntil)
   const validAfterBigInt = BigInt(validAfter)
 
-  const result = addrBigInt | (validUntilBigInt << BigInt(160)) | (validAfterBigInt << BigInt(160 + 48))
+  const result = addrBigInt | (validUntilBigInt << 160n) | (validAfterBigInt << (160n + 48n))
 
   return result
 }
@@ -199,25 +199,8 @@ export const packValidationData = (authorizer: BigNumberish, validUntil: BigNumb
  * @param callGasLimit - The call gas limit.
  * @returns The packed gas limits as a string.
  */
-export const packAccountGasLimits = (validationGasLimit: string | number | bigint, callGasLimit: string | number | bigint): string => {
-  // Convert inputs to BigInt
-  const validationGasLimitBigInt = BigInt(validationGasLimit)
-  const callGasLimitBigInt = BigInt(callGasLimit)
-
-  // Ensure the values fit within 128 bits
-  const maxUint128 = BigInt('0xffffffffffffffffffffffffffffffff')
-  if (validationGasLimitBigInt > maxUint128) {
-    throw new Error('Validation gas limit exceeds 128 bits')
-  }
-
-  if (callGasLimitBigInt > maxUint128) {
-    throw new Error('Call gas limit exceeds 128 bits')
-  }
-
-  // Pack the values into a bytes32 string using bitwise operations
-  const packedGasLimits = '0x' + ((validationGasLimitBigInt << BigInt(128)) | callGasLimitBigInt).toString(16).padStart(64, '0')
-
-  return packedGasLimits
+export const packAccountGasLimits = (validationGasLimit: BigNumberish, callGasLimit: BigNumberish): string => {
+  return ethers.solidityPacked(['uint128', 'uint128'], [validationGasLimit, callGasLimit])
 }
 
 /**
@@ -227,29 +210,18 @@ export const packAccountGasLimits = (validationGasLimit: string | number | bigin
  * @returns An object containing the validation gas limit and the call gas limit.
  */
 export const unpackAccountGasLimits = (accountGasLimits: BytesLike): { validationGasLimit: bigint; callGasLimit: bigint } => {
-  let hexString: string
-
-  // Check if accountGasLimits is a Uint8Array and convert it to a hex string
-  if (accountGasLimits instanceof Uint8Array) {
-    hexString = Array.from(accountGasLimits)
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('')
-  } else {
-    hexString = accountGasLimits
-  }
-
-  // Ensure the hex string has the expected length (64 characters for a bytes32 hex-encoded string)
-  if (hexString.length !== 64) {
-    throw new Error('Invalid input: hex-encoded string must be 64 characters long')
+  // Ensure the bytes have the expected length.
+  if (ethers.dataLength(accountGasLimits) !== 32) {
+    throw new Error('Invalid input: account gas limits must be 32-bytes long')
   }
 
   // Split the hex string into two parts (32 characters each)
-  const validationGasHex = hexString.slice(0, 32)
-  const callGasHex = hexString.slice(32)
+  const validationGasHex = ethers.dataSlice(accountGasLimits, 0, 16)
+  const callGasHex = ethers.dataSlice(accountGasLimits, 16, 32)
 
   // Convert hex values to BigInts
-  const validationGasLimit = BigInt(`0x${validationGasHex}`)
-  const callGasLimit = BigInt(`0x${callGasHex}`)
+  const validationGasLimit = BigInt(validationGasHex)
+  const callGasLimit = BigInt(callGasHex)
 
   return { validationGasLimit, callGasLimit }
 }
