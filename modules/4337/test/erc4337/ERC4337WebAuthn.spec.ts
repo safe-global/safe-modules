@@ -2,7 +2,12 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getEntryPoint } from '../utils/setup'
 import { buildContractSignatureBytes, logGas } from '../../src/utils/execution'
-import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
+import {
+  buildSafeUserOpTransaction,
+  buildUserOperationFromSafeUserOperation,
+  calculateSafeOperationHash,
+  packAccountGasLimits,
+} from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import {
   UserVerificationRequirement,
@@ -148,8 +153,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           safeInit.fallbackHandler,
           module.interface.encodeFunctionData('executeUserOp', [user.address, ethers.parseEther('0.5'), '0x', 0]),
         ]),
-        callGasLimit: ethers.toBeHex(2500000),
-        verificationGasLimit: ethers.toBeHex(500000),
+        accountGasLimits: packAccountGasLimits(500000, 2500000),
         preVerificationGas: ethers.toBeHex(60000),
         maxFeePerGas: ethers.toBeHex(10000000000),
         maxPriorityFeePerGas: ethers.toBeHex(10000000000),

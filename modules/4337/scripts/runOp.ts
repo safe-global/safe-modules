@@ -9,11 +9,11 @@ import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
 const DEBUG = process.env.SCRIPT_DEBUG || false
 const MNEMONIC = process.env.SCRIPT_MNEMONIC
 const BUNDLER_URL = process.env.SCRIPT_BUNDLER_URL
-const SAFE_SINGLETON_ADDRESS = process.env.SCRIPT_SAFE_SINGLETON_ADDRESS!!
-const PROXY_FACTORY_ADDRESS = process.env.SCRIPT_PROXY_FACTORY_ADDRESS!!
-const SAFE_MODULE_SETUP_ADDRESS = process.env.SCRIPT_SAFE_MODULE_SETUP_ADDRESS!!
-const MODULE_ADDRESS = process.env.SCRIPT_MODULE_ADDRESS!!
-const ERC20_TOKEN_ADDRESS = process.env.SCRIPT_ERC20_TOKEN_ADDRESS!!
+const SAFE_SINGLETON_ADDRESS = process.env.SCRIPT_SAFE_SINGLETON_ADDRESS!
+const PROXY_FACTORY_ADDRESS = process.env.SCRIPT_PROXY_FACTORY_ADDRESS!
+const SAFE_MODULE_SETUP_ADDRESS = process.env.SCRIPT_SAFE_MODULE_SETUP_ADDRESS!
+const MODULE_ADDRESS = process.env.SCRIPT_MODULE_ADDRESS!
+const ERC20_TOKEN_ADDRESS = process.env.SCRIPT_ERC20_TOKEN_ADDRESS!
 
 const INTERFACES = new ethers.Interface([
   'function SUPPORTED_ENTRYPOINT() returns (address)',
@@ -46,7 +46,7 @@ const runOp = async () => {
 
   // This node only allows eth_chainId, eth_getSupportedEntrypoints, eth_sendUserOperation
   // All other methods return an error
-  const accountAbstractionProvider = new MultiProvider4337(BUNDLER_URL!!, ethers.provider)
+  const accountAbstractionProvider = new MultiProvider4337(BUNDLER_URL!, ethers.provider)
   const entryPoints = await getSupportedEntryPoints(accountAbstractionProvider)
   const entryPoint = entryPoints[0]
   const moduleAddress = MODULE_ADDRESS ?? (await getSafe4337Module().then((module) => module.getAddress()))
@@ -114,26 +114,22 @@ const runOp = async () => {
       {
         from: entryPoint,
         to: safe.address,
-        data: buildData(
-          'validateUserOp((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)',
+        data: buildData('validateUserOp((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)', [
           [
-            [
-              userOp.sender,
-              userOp.nonce,
-              userOp.initCode,
-              userOp.callData,
-              userOp.callGasLimit,
-              userOp.verificationGasLimit,
-              userOp.preVerificationGas,
-              userOp.maxFeePerGas,
-              userOp.maxPriorityFeePerGas,
-              userOp.paymasterAndData,
-              userOp.signature,
-            ],
-            '0x0000000000000000000000000000000000000000000000000000000000000000',
-            getRequiredPrefund(userOp),
+            userOp.sender,
+            userOp.nonce,
+            userOp.initCode,
+            userOp.callData,
+            userOp.accountGasLimits,
+            userOp.preVerificationGas,
+            userOp.maxFeePerGas,
+            userOp.maxPriorityFeePerGas,
+            userOp.paymasterAndData,
+            userOp.signature,
           ],
-        ),
+          '0x0000000000000000000000000000000000000000000000000000000000000000',
+          getRequiredPrefund(userOp),
+        ]),
       },
       'latest',
     ]),

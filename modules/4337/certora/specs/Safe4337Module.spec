@@ -19,11 +19,11 @@ methods {
     ) external => DISPATCHER(true); 
 
     // Optional
-    function validateUserOp(Safe4337Module.UserOperation,bytes32,uint256) external returns(uint256);
+    function validateUserOp(Safe4337Module.PackedUserOperation,bytes32,uint256) external returns(uint256);
     function executeUserOp(address, uint256, bytes, uint8) external;
     function executeUserOpWithErrorString(address, uint256, bytes, uint8) external;
     function getOperationHash(
-        Safe4337Module.UserOperation userOp
+        Safe4337Module.PackedUserOperation userOp
     ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
 }
 persistent ghost ERC2771MessageSender() returns address;
@@ -36,7 +36,7 @@ function checkSignaturesFunctionCalled() returns bool {
 }
 
 rule onlyEntryPointCallable(method f) filtered {
-    f -> f.selector == sig:validateUserOp(Safe4337Module.UserOperation,bytes32,uint256).selector ||
+    f -> f.selector == sig:validateUserOp(Safe4337Module.PackedUserOperation,bytes32,uint256).selector ||
             f.selector == sig:executeUserOp(address,uint256,bytes,uint8).selector ||
             f.selector == sig:executeUserOpWithErrorString(address,uint256,bytes,uint8).selector
 } {
@@ -48,7 +48,7 @@ rule onlyEntryPointCallable(method f) filtered {
 
 // checkSignatures should be always called if validateUserOp succeeds
 rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
-        Safe4337Module.UserOperation userOp,
+        Safe4337Module.PackedUserOperation userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
@@ -59,7 +59,7 @@ rule checkSignaturesIsCalledIfValidateUserOpSucceeds(address sender,
 }
 
 rule signatureTimestampsPresentInValidationData(address sender,
-        Safe4337Module.UserOperation userOp,
+        Safe4337Module.PackedUserOperation userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
@@ -76,7 +76,7 @@ rule signatureTimestampsPresentInValidationData(address sender,
 }
 
 rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
-        Safe4337Module.UserOperation userOp,
+        Safe4337Module.PackedUserOperation userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds) {
     env e;
@@ -93,7 +93,7 @@ rule validationDataLastBitZeroIfCheckSignaturesSucceeds(address sender,
 }
 
 rule balanceChangeAfterValidateUserOp(
-        Safe4337Module.UserOperation userOp,
+        Safe4337Module.PackedUserOperation userOp,
         bytes32 dummyData,
         uint256 missingAccountFunds)  {
 
