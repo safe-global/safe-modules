@@ -137,7 +137,7 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
       const userOpHash = await entryPoint.getUserOpHash(userOp)
-      const expectedReturnData = validator.interface.encodeErrorResult('Error(string)', ['Execution failed'])
+      const expectedReturnData = validator.interface.encodeErrorResult('ExecutionFailed()', [])
 
       await expect(entryPoint.handleOps([userOp], user1.address))
         .to.emit(entryPoint, 'UserOperationRevertReason')
