@@ -4,12 +4,14 @@ import { Signer } from 'ethers'
 import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash } from '../../src/utils/execution'
 import {
+  GasParameters,
   buildSafeUserOp,
   buildSafeUserOpTransaction,
   buildUserOperationFromSafeUserOperation,
   calculateSafeOperationHash,
-  packAccountGasLimits,
+  packGasParameters,
   packValidationData,
+  unpackGasParameters,
 } from '../../src/utils/userOp'
 import { chainId, timestamp } from '../utils/encoding'
 
@@ -38,26 +40,42 @@ describe('Safe4337Module', () => {
 
   describe('getOperationHash', () => {
     it('should correctly calculate EIP-712 hash of the operation', async () => {
-      const { validator, safeModule, entryPoint } = await setupTests()
+      const { entryPoint, validator } = await setupTests()
 
-      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
-      const validAfter = (await timestamp()) + 10000
-      const validUntil = validAfter + 10000000000
+      const safeOp = {
+        safe: '0x0000000000000000000000000000000000000011',
+        nonce: 0x12,
+        initCode: '0x13',
+        callData: '0x14',
+        preVerificationGas: 0x15,
+        verificationGasLimit: 0x16,
+        callGasLimit: 0x17,
+        maxPriorityFeePerGas: 0x18,
+        maxFeePerGas: 0x19,
+        paymasterAndData: '0x1a',
+        validAfter: 0x1b,
+        validUntil: 0x1c,
+        entryPoint: entryPoint.target as string,
+      }
+      const userOp = {
+        sender: safeOp.safe,
+        nonce: safeOp.nonce,
+        initCode: safeOp.initCode,
+        callData: safeOp.callData,
+        preVerificationGas: safeOp.preVerificationGas,
+        ...packGasParameters({
+          verificationGasLimit: safeOp.verificationGasLimit,
+          callGasLimit: safeOp.callGasLimit,
+          maxPriorityFeePerGas: safeOp.maxPriorityFeePerGas,
+          maxFeePerGas: safeOp.maxFeePerGas,
+        }),
+        paymasterAndData: safeOp.paymasterAndData,
+        signature: ethers.solidityPacked(['uint48', 'uint48'], [safeOp.validAfter, safeOp.validUntil]),
+      }
 
-      const safeOp = buildSafeUserOp({
-        safe: safeAddress,
-        nonce: '0',
-        entryPoint: await entryPoint.getAddress(),
-        validAfter,
-        validUntil,
-      })
-      const userOp = buildUserOperationFromSafeUserOperation({
-        safeOp,
-        signature: '0x',
-      })
-      const operationHash = await safeModule.getOperationHash(userOp)
-
-      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId()))
+      expect(await validator.getOperationHash(userOp)).to.equal(
+        calculateSafeOperationHash(validator.target as string, safeOp, await chainId()),
+      )
     })
 
     it('should change if any UserOperation fields change', async () => {
@@ -70,10 +88,13 @@ describe('Safe4337Module', () => {
         nonce: 0x12,
         initCode: '0x13',
         callData: '0x14',
-        accountGasLimits: packAccountGasLimits(0x16, 0x15),
-        preVerificationGas: 0x17,
-        maxFeePerGas: 0x18,
-        maxPriorityFeePerGas: 0x19,
+        preVerificationGas: 0x15,
+        ...packGasParameters({
+          verificationGasLimit: 0x16,
+          callGasLimit: 0x17,
+          maxPriorityFeePerGas: 0x18,
+          maxFeePerGas: 0x19,
+        }),
         paymasterAndData: '0x1a',
         signature: signature({
           validAfter: 0x1b,
@@ -82,19 +103,21 @@ describe('Safe4337Module', () => {
       }
       const operationHash = await validator.getOperationHash(userOp)
 
+      const gasParams = (changes: Partial<GasParameters>) => packGasParameters({ ...unpackGasParameters(userOp), ...changes })
       for (const [name, value] of [
         ['sender', '0x0000000000000000000000000000000000000021'],
         ['nonce', 0x22],
         ['initCode', '0x23'],
         ['callData', '0x24'],
-        ['accountGasLimits', packAccountGasLimits(0x26, 0x25)],
-        ['preVerificationGas', 0x27],
-        ['maxFeePerGas', 0x28],
-        ['maxPriorityFeePerGas', 0x29],
+        ['preVerificationGas', 0x25],
+        ['accountGasLimits', gasParams({ verificationGasLimit: 0x26 }).accountGasLimits],
+        ['accountGasLimits', gasParams({ callGasLimit: 0x27 }).accountGasLimits],
+        ['gasFees', gasParams({ maxPriorityFeePerGas: 0x28 }).gasFees],
+        ['gasFees', gasParams({ maxFeePerGas: 0x29 }).gasFees],
         ['paymasterAndData', '0x2a'],
         ['signature', signature({ validAfter: 0x2b, validUntil: 0x1c })],
         ['signature', signature({ validAfter: 0x1b, validUntil: 0x2c })],
-      ]) {
+      ] as const) {
         expect(await validator.getOperationHash({ ...userOp, [name]: value })).to.not.equal(operationHash)
       }
     })

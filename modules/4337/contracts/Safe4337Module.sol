@@ -6,6 +6,7 @@ import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contract
 import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
 import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
 import {_packValidationData} from "@account-abstraction/contracts/contracts/core/Helpers.sol";
+import {UserOperationLib} from "@account-abstraction/contracts/contracts/core/UserOperationLib.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**
@@ -21,6 +22,8 @@ import {ISafe} from "./interfaces/Safe.sol";
  * @custom:security-contact bounty@safe.global
  */
 contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandler {
+    using UserOperationLib for PackedUserOperation;
+
     /**
      * @notice The EIP-712 type-hash for the domain separator used for verifying Safe operation signatures.
      * @dev keccak256("EIP712Domain(uint256 chainId,address verifyingContract)") = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218
@@ -33,20 +36,21 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *  {uint256} nonce - A unique number associated with the user operation, preventing replay attacks by ensuring each operation is unique.
      *  {bytes} initCode - The packed encoding of a factory address and its factory-specific data for creating a new Safe account.
      *  {bytes} callData - The bytes representing the data of the function call to be executed.
-     *  {bytes32} accountGasLimits - Packed encoding of the gas limits for the account: {uint128 validationGasLimit, uint128 callGasLimit}.
+     *  {uint128} verificationGasLimit - The maximum amount of gas allowed for the verification process.
+     *  {uint128} callGasLimit - The maximum amount of gas allowed for executing the function call.
      *  {uint256} preVerificationGas - The amount of gas allocated for pre-verification steps before executing the main operation.
-     *  {uint256} maxFeePerGas - The maximum fee per gas that the user is willing to pay for the transaction.
-     *  {uint256} maxPriorityFeePerGas - The maximum priority fee per gas that the user is willing to pay for the transaction.
+     *  {uint128} maxPriorityFeePerGas - The maximum priority fee per gas that the user is willing to pay for the transaction.
+     *  {uint128} maxFeePerGas - The maximum fee per gas that the user is willing to pay for the transaction.
      *  {bytes} paymasterAndData - The packed encoding of a paymaster address and its paymaster-specific data for sponsoring the user operation.
      *  {uint48} validAfter - A timestamp representing from when the user operation is valid.
      *  {uint48} validUntil - A timestamp representing until when the user operation is valid, or 0 to indicated "forever".
      *  {address} entryPoint - The address of the entry point that will execute the user operation.
-     * @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes.
+     * @dev When validating the user operation, the signature timestamps are pre-pended to the signature bytes. Equal to:
      * keccak256(
-            "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-        ) = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de
+     *     "SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,uint128 verificationGasLimit,uint128 callGasLimit,uint256 preVerificationGas,uint128 maxPriorityFeePerGas,uint128 maxFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
+     * ) = 0xc03dfc11d8b10bf9cf703d558958c8c42777f785d998c62060d85a4f0ef6ea7f
      */
-    bytes32 private constant SAFE_OP_TYPEHASH = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de;
+    bytes32 private constant SAFE_OP_TYPEHASH = 0xc03dfc11d8b10bf9cf703d558958c8c42777f785d998c62060d85a4f0ef6ea7f;
 
     /**
      * @dev A structure used internally for manually encoding a Safe operation for when computing the EIP-712 struct hash.
@@ -57,10 +61,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         uint256 nonce;
         bytes32 initCodeHash;
         bytes32 callDataHash;
-        bytes32 accountGasLimits;
+        uint128 verificationGasLimit;
+        uint128 callGasLimit;
         uint256 preVerificationGas;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
+        uint128 maxPriorityFeePerGas;
+        uint128 maxFeePerGas;
         bytes32 paymasterAndDataHash;
         uint48 validAfter;
         uint48 validUntil;
@@ -260,10 +265,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 nonce: userOp.nonce,
                 initCodeHash: keccak256(userOp.initCode),
                 callDataHash: keccak256(userOp.callData),
-                accountGasLimits: userOp.accountGasLimits,
+                verificationGasLimit: uint128(userOp.unpackVerificationGasLimit()),
+                callGasLimit: uint128(userOp.unpackCallGasLimit()),
                 preVerificationGas: userOp.preVerificationGas,
-                maxFeePerGas: userOp.maxFeePerGas,
-                maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+                maxPriorityFeePerGas: uint128(userOp.unpackMaxPriorityFeePerGas()),
+                maxFeePerGas: uint128(userOp.unpackMaxFeePerGas()),
                 paymasterAndDataHash: keccak256(userOp.paymasterAndData),
                 validAfter: validAfter,
                 validUntil: validUntil,
@@ -275,8 +281,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             assembly ("memory-safe") {
                 // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
                 // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 13
-                // 32-byte fields to hash, for a length of `13 * 32 = 448` bytes.
-                safeOpStructHash := keccak256(encodedSafeOp, 416)
+                // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
+                safeOpStructHash := keccak256(encodedSafeOp, 448)
             }
 
             operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);

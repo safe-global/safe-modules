@@ -2,7 +2,7 @@ import { AddressLike, JsonRpcProvider, Provider, Signer, ethers } from 'ethers'
 
 // Import from Safe contracts repo once it is upgraded to ethers v6 and can be installed via npm
 import { MetaTransaction, SafeSignature, SignedSafeTransaction, buildSignatureBytes } from './execution'
-import { UserOperation, EIP712_SAFE_OPERATION_TYPE, packAccountGasLimits } from './userOp'
+import { UserOperation, EIP712_SAFE_OPERATION_TYPE, packGasParameters } from './userOp'
 
 const AddressOne = '0x0000000000000000000000000000000000000001'
 
@@ -26,11 +26,11 @@ const INTERFACES = new ethers.Interface([
 export interface OperationParams {
   nonce: bigint
   initCode: string
-  preVerificationGas: bigint
   verificationGasLimit: bigint
   callGasLimit: bigint
-  maxFeePerGas: bigint
+  preVerificationGas: bigint
   maxPriorityFeePerGas: bigint
+  maxFeePerGas: bigint
   paymasterAndData: string
   validAfter: bigint
   validUntil: bigint
@@ -158,13 +158,13 @@ export class Safe4337Operation {
   }
 
   async userOperation(paymasterAndData = '0x'): Promise<UserOperation> {
+    const { accountGasLimits, gasFees } = packGasParameters(this.params)
     return {
       nonce: ethers.toBeHex(this.params.nonce),
       callData: actionCalldata(this.action),
-      accountGasLimits: packAccountGasLimits(this.params.verificationGasLimit, this.params.callGasLimit),
+      accountGasLimits: ethers.hexlify(accountGasLimits),
       preVerificationGas: ethers.toBeHex(this.params.preVerificationGas),
-      maxFeePerGas: ethers.toBeHex(this.params.maxFeePerGas),
-      maxPriorityFeePerGas: ethers.toBeHex(this.params.maxPriorityFeePerGas),
+      gasFees: ethers.hexlify(gasFees),
       initCode: this.params.initCode,
       paymasterAndData,
       sender: this.safe.address,

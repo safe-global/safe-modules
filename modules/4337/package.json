@@ -48,7 +48,7 @@
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
   "devDependencies": {
-    "@account-abstraction/contracts": "github:5afe/account-abstraction#a476d9da6342cf827d0a458c2fb6356e0f015342",
+    "@account-abstraction/contracts": "github:5afe/account-abstraction#prerelease/2024-02-12",
     "@noble/curves": "^1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/contracts": "^5.0.2",
