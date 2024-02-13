@@ -40,26 +40,42 @@ describe('Safe4337Module', () => {
 
   describe('getOperationHash', () => {
     it('should correctly calculate EIP-712 hash of the operation', async () => {
-      const { validator, safeModule, entryPoint } = await setupTests()
+      const { entryPoint, validator } = await setupTests()
 
-      const safeAddress = ethers.hexlify(ethers.randomBytes(20))
-      const validAfter = (await timestamp()) + 10000
-      const validUntil = validAfter + 10000000000
+      const safeOp = {
+        safe: '0x0000000000000000000000000000000000000011',
+        nonce: 0x12,
+        initCode: '0x13',
+        callData: '0x14',
+        preVerificationGas: 0x15,
+        verificationGasLimit: 0x16,
+        callGasLimit: 0x17,
+        maxPriorityFeePerGas: 0x18,
+        maxFeePerGas: 0x19,
+        paymasterAndData: '0x1a',
+        validAfter: 0x1b,
+        validUntil: 0x1c,
+        entryPoint: entryPoint.target as string,
+      }
+      const userOp = {
+        sender: safeOp.safe,
+        nonce: safeOp.nonce,
+        initCode: safeOp.initCode,
+        callData: safeOp.callData,
+        preVerificationGas: safeOp.preVerificationGas,
+        ...packGasParameters({
+          verificationGasLimit: safeOp.verificationGasLimit,
+          callGasLimit: safeOp.callGasLimit,
+          maxPriorityFeePerGas: safeOp.maxPriorityFeePerGas,
+          maxFeePerGas: safeOp.maxFeePerGas,
+        }),
+        paymasterAndData: safeOp.paymasterAndData,
+        signature: ethers.solidityPacked(['uint48', 'uint48'], [safeOp.validAfter, safeOp.validUntil]),
+      }
 
-      const safeOp = buildSafeUserOp({
-        safe: safeAddress,
-        nonce: '0',
-        entryPoint: await entryPoint.getAddress(),
-        validAfter,
-        validUntil,
-      })
-      const userOp = buildUserOperationFromSafeUserOperation({
-        safeOp,
-        signature: '0x',
-      })
-      const operationHash = await safeModule.getOperationHash(userOp)
-
-      expect(operationHash).to.equal(calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId()))
+      expect(await validator.getOperationHash(userOp)).to.equal(
+        calculateSafeOperationHash(validator.target as string, safeOp, await chainId()),
+      )
     })
 
     it('should change if any UserOperation fields change', async () => {
@@ -104,45 +120,6 @@ describe('Safe4337Module', () => {
       ] as const) {
         expect(await validator.getOperationHash({ ...userOp, [name]: value })).to.not.equal(operationHash)
       }
-    })
-
-    it('should match locally computed Safe operation hash', async () => {
-      const { entryPoint, validator } = await setupTests()
-
-      const safeOp = {
-        safe: '0x0000000000000000000000000000000000000011',
-        nonce: 0x12,
-        initCode: '0x13',
-        callData: '0x14',
-        preVerificationGas: 0x15,
-        verificationGasLimit: 0x16,
-        callGasLimit: 0x17,
-        maxPriorityFeePerGas: 0x18,
-        maxFeePerGas: 0x19,
-        paymasterAndData: '0x1a',
-        validAfter: 0x1b,
-        validUntil: 0x1c,
-        entryPoint: entryPoint.target as string,
-      }
-      const userOp = {
-        sender: '0x0000000000000000000000000000000000000011',
-        nonce: 0x12,
-        initCode: '0x13',
-        callData: '0x14',
-        preVerificationGas: 0x15,
-        ...packGasParameters({
-          verificationGasLimit: 0x16,
-          callGasLimit: 0x17,
-          maxPriorityFeePerGas: 0x18,
-          maxFeePerGas: 0x19,
-        }),
-        paymasterAndData: '0x1a',
-        signature: ethers.solidityPacked(['uint48', 'uint48'], [0x1b, 0x1c]),
-      }
-
-      expect(await validator.getOperationHash(userOp)).to.equal(
-        calculateSafeOperationHash(validator.target as string, safeOp, await chainId()),
-      )
     })
   })
 
