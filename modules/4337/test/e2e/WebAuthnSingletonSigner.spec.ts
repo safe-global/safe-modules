@@ -8,7 +8,7 @@ import {
   extractPublicKey,
   extractSignature,
 } from '../utils/webauthn'
-import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, packAccountGasLimits } from '../../src/utils/userOp'
+import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation } from '../../src/utils/userOp'
 import { buildSignatureBytes } from '../../src/utils/execution'
 
 describe('E2E - WebAuthn Singleton Signers', () => {
@@ -135,7 +135,7 @@ describe('E2E - WebAuthn Singleton Signers', () => {
       false,
       {
         initCode,
-        accountGasLimits: packAccountGasLimits(700000, 2000000),
+        verificationGasLimit: 700000,
       },
     )
     const opHash = await module.getOperationHash(

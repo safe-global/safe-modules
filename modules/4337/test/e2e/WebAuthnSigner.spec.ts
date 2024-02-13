@@ -9,7 +9,7 @@ import {
   extractPublicKey,
   extractSignature,
 } from '../utils/webauthn'
-import { packAccountGasLimits } from '../../src/utils/userOp'
+import { packGasParameters } from '../../src/utils/userOp'
 
 describe('E2E - WebAuthn Signers', () => {
   before(function () {
@@ -153,10 +153,13 @@ describe('E2E - WebAuthn Signers', () => {
         safeInit.fallbackHandler,
         module.interface.encodeFunctionData('executeUserOp', [user.address, ethers.parseEther('0.5'), '0x', 0]),
       ]),
-      accountGasLimits: packAccountGasLimits(500000, 2000000),
       preVerificationGas: ethers.toBeHex(60000),
-      maxFeePerGas: ethers.toBeHex(10000000000),
-      maxPriorityFeePerGas: ethers.toBeHex(10000000000),
+      ...packGasParameters({
+        verificationGasLimit: 500000,
+        callGasLimit: 2000000,
+        maxFeePerGas: 10000000000,
+        maxPriorityFeePerGas: 10000000000,
+      }),
       paymasterAndData: '0x',
     }
 

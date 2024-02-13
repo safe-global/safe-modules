@@ -102,13 +102,9 @@ contract SafeMock {
 contract Safe4337Mock is SafeMock, IAccount {
     using UserOperationLib for PackedUserOperation;
 
-    /// keccak256("EIP712Domain(uint256 chainId,address verifyingContract)") = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
-    // keccak256(
-    //     "SafeOp("SafeOp(address safe,uint256 nonce,bytes initCode,bytes callData,bytes32 accountGasLimits,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,uint48 validAfter,uint48 validUntil,address entryPoint)"
-    // ) = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de
-    bytes32 private constant SAFE_OP_TYPEHASH = 0x9efbfd16c059a992a21cba49ddec650b37de25cf6baa04788c16c00b47bb62de;
+    bytes32 private constant SAFE_OP_TYPEHASH = 0xc03dfc11d8b10bf9cf703d558958c8c42777f785d998c62060d85a4f0ef6ea7f;
 
     /**
      * @dev A structure used internally for manually encoding a Safe operation for when computing the EIP-712 struct hash.
@@ -119,10 +115,11 @@ contract Safe4337Mock is SafeMock, IAccount {
         uint256 nonce;
         bytes32 initCodeHash;
         bytes32 callDataHash;
-        bytes32 accountGasLimits;
+        uint128 verificationGasLimit;
+        uint128 callGasLimit;
         uint256 preVerificationGas;
-        uint256 maxFeePerGas;
-        uint256 maxPriorityFeePerGas;
+        uint128 maxPriorityFeePerGas;
+        uint128 maxFeePerGas;
         bytes32 paymasterAndDataHash;
         uint48 validAfter;
         uint48 validUntil;
@@ -258,10 +255,11 @@ contract Safe4337Mock is SafeMock, IAccount {
                 nonce: userOp.nonce,
                 initCodeHash: keccak256(userOp.initCode),
                 callDataHash: keccak256(userOp.callData),
-                accountGasLimits: userOp.accountGasLimits,
+                verificationGasLimit: uint128(userOp.unpackVerificationGasLimit()),
+                callGasLimit: uint128(userOp.unpackCallGasLimit()),
                 preVerificationGas: userOp.preVerificationGas,
-                maxFeePerGas: userOp.maxFeePerGas,
-                maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
+                maxPriorityFeePerGas: uint128(userOp.unpackMaxPriorityFeePerGas()),
+                maxFeePerGas: uint128(userOp.unpackMaxFeePerGas()),
                 paymasterAndDataHash: keccak256(userOp.paymasterAndData),
                 validAfter: validAfter,
                 validUntil: validUntil,
@@ -273,8 +271,8 @@ contract Safe4337Mock is SafeMock, IAccount {
             assembly ("memory-safe") {
                 // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
                 // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 13
-                // 32-byte fields to hash, for a length of `13 * 32 = 448` bytes.
-                safeOpStructHash := keccak256(encodedSafeOp, 416)
+                // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
+                safeOpStructHash := keccak256(encodedSafeOp, 448)
             }
 
             operationData = abi.encodePacked(bytes1(0x19), bytes1(0x01), domainSeparator(), safeOpStructHash);
