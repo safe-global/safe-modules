@@ -7,15 +7,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  if (network.tags.test) {
-    await deploy('EntryPoint', {
-      from: deployer,
-      contract: 'TestEntryPoint',
-      args: [],
-      log: true,
-      deterministicDeployment: true,
-    })
-  } else if (network.tags.dev) {
+  if (network.tags.dev || network.tags.test) {
     await deploy('EntryPoint', {
       from: deployer,
       contract: EntryPoint,

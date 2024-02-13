@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { EventLog, Log } from 'ethers'
-import { deployReferenceEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
+import { getEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
 import { buildContractSignatureBytes, buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
@@ -16,9 +16,9 @@ import { Safe4337 } from '../../src/utils/safe'
 describe('Safe4337Module - Reference EntryPoint', () => {
   const setupTests = async () => {
     await deployments.fixture()
-    const [deployer, user, relayer] = await ethers.getSigners()
+    const [user, deployer, relayer] = await ethers.getSigners()
 
-    const entryPoint = await deployReferenceEntryPoint(deployer, relayer)
+    const entryPoint = await getEntryPoint()
     const moduleFactory = await ethers.getContractFactory('Safe4337Module')
     const module = await moduleFactory.deploy(await entryPoint.getAddress())
     const proxyFactory = await getFactory()

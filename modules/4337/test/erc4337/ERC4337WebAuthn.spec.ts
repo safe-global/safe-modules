@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { deployReferenceEntryPoint } from '../utils/setup'
+import { getEntryPoint } from '../utils/setup'
 import { buildContractSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
@@ -17,8 +17,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { SafeModuleSetup, SafeL2, SafeProxyFactory, WebAuthnVerifier } = await deployments.fixture()
 
-    const [deployer, relayer, user] = await ethers.getSigners()
-    const entryPoint = await deployReferenceEntryPoint(deployer, relayer)
+    const [user] = await ethers.getSigners()
+    const entryPoint = await getEntryPoint()
     const moduleFactory = await ethers.getContractFactory('Safe4337Module')
     const module = await moduleFactory.deploy(entryPoint.target)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)

@@ -44,6 +44,8 @@ describe('Gas Metering', () => {
     it('Safe with 4337 Module Deployment', async () => {
       const { user, entryPoint, validator, safe } = await setupTests()
 
+      // cover the prefund
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
       const safeOp = buildSafeUserOpTransaction(
@@ -67,7 +69,7 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Deployment', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module Deployment', entryPoint.handleOps([userOp], user.address))
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
     })
@@ -77,18 +79,17 @@ describe('Gas Metering', () => {
     it('Safe with 4337 Module Deployment + Native Transfer', async () => {
       const { user, entryPoint, validator, safe } = await setupTests()
       const amount = ethers.parseEther('0.00001')
+      const receiver = ethers.Wallet.createRandom().address
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
       await user.sendTransaction({
         to: safe.address,
-        value: amount,
+        value: ethers.parseEther('1'),
       })
-      const safeBalBefore = await ethers.provider.getBalance(safe.address)
-      expect(safeBalBefore).to.equal(amount)
 
       const safeOp = buildSafeUserOpTransaction(
         safe.address,
-        user.address,
+        receiver,
         amount,
         '0x',
         await entryPoint.getNonce(safe.address, 0),
@@ -107,77 +108,52 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.handleOps([userOp], user.address))
 
-      const safeBalAfter = await ethers.provider.getBalance(safe.address)
+      const recipientBalAfter = await ethers.provider.getBalance(receiver)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
-      expect(safeBalAfter).to.equal(0)
+      expect(recipientBalAfter).to.equal(amount)
     })
 
     it('Safe with 4337 Module Native Transfer', async () => {
       const { user, entryPoint, validator, safe } = await setupTests()
 
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
-      let safeOp = buildSafeUserOpTransaction(
-        safe.address,
-        safe.address,
-        0,
-        '0x',
-        await entryPoint.getNonce(safe.address, 0),
-        await entryPoint.getAddress(),
-        false,
-        false,
-        {
-          initCode: safe.getInitCode(),
-        },
-      )
-      let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      let userOp = buildUserOperationFromSafeUserOperation({
-        safeOp,
-        signature,
-      })
-
-      await entryPoint.executeUserOp(userOp, 0)
+      await safe.deploy(user)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
 
       // Now Native Transfer
       const amount = ethers.parseEther('0.00001')
-      expect(await ethers.provider.getBalance(safe.address)).to.equal(0)
-      await user.sendTransaction({
-        to: safe.address,
-        value: amount,
-      })
-      expect(await ethers.provider.getBalance(safe.address)).to.equal(amount)
-
-      safeOp = buildSafeUserOpTransaction(
+      const receiver = ethers.Wallet.createRandom().address
+      const safeOp = buildSafeUserOpTransaction(
         safe.address,
-        user.address,
+        receiver,
         amount,
         '0x',
         await entryPoint.getNonce(safe.address, 0),
         await entryPoint.getAddress(),
         false,
         false,
-        {
-          initCode: safe.getInitCode(),
-        },
       )
-      signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      userOp = buildUserOperationFromSafeUserOperation({
+      const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+      const userOp = buildUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
 
-      await logGas('Safe with 4337 Module Native Transfer', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module Native Transfer', entryPoint.handleOps([userOp], user.address))
 
-      expect(await ethers.provider.getBalance(safe.address)).to.equal(0)
+      expect(await ethers.provider.getBalance(receiver)).to.equal(amount)
     })
   })
 
   describe('Safe Deployment + Enabling 4337 Module + Token Operations', () => {
     it('Safe with 4337 Module Deployment + ERC20 Token Transfer', async () => {
       const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
+
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
@@ -206,7 +182,7 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Deployment + ERC20 Transfer', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module Deployment + ERC20 Transfer', entryPoint.handleOps([userOp], user.address))
       expect(await erc20Token.balanceOf(safe.address)).to.equal(0)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
     })
@@ -214,6 +190,8 @@ describe('Gas Metering', () => {
     it('Safe with 4337 Module Deployment + ERC721 Token Minting', async () => {
       const { user, entryPoint, validator, safe, erc721Token } = await setupTests()
       const tokenID = 1
+
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
@@ -237,7 +215,7 @@ describe('Gas Metering', () => {
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
-      await logGas('Safe with 4337 Module Deployment + ERC721 Transfer', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module Deployment + ERC721 Transfer', entryPoint.handleOps([userOp], user.address))
       expect(await erc721Token.balanceOf(safe.address)).to.equal(1)
       expect(await erc721Token.ownerOf(tokenID)).to.equal(safe.address)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
@@ -248,28 +226,11 @@ describe('Gas Metering', () => {
     it('Safe with 4337 Module ERC20 Token Transfer', async () => {
       const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
 
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
+
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
-      let safeOp = buildSafeUserOpTransaction(
-        safe.address,
-        safe.address, // No functions are called.
-        0,
-        '0x',
-        await entryPoint.getNonce(safe.address, 0),
-        await entryPoint.getAddress(),
-        false,
-        false,
-        {
-          initCode: safe.getInitCode(),
-        },
-      )
-      let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      let userOp = buildUserOperationFromSafeUserOperation({
-        safeOp,
-        signature,
-      })
-
-      await entryPoint.executeUserOp(userOp, 0)
+      await safe.deploy(user)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
 
       // Now Token Transfer
@@ -277,7 +238,7 @@ describe('Gas Metering', () => {
       await erc20Token.transfer(safe.address, ethers.parseUnits('4.2', 18)).then((tx) => tx.wait())
       expect(await erc20Token.balanceOf(safe.address)).to.equal(ethers.parseUnits('4.2', 18))
 
-      safeOp = buildSafeUserOpTransaction(
+      const safeOp = buildSafeUserOpTransaction(
         safe.address,
         await erc20Token.getAddress(),
         0,
@@ -286,17 +247,14 @@ describe('Gas Metering', () => {
         await entryPoint.getAddress(),
         false,
         false,
-        {
-          initCode: safe.getInitCode(),
-        },
       )
-      signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      userOp = buildUserOperationFromSafeUserOperation({
+      const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+      const userOp = buildUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
 
-      await logGas('Safe with 4337 Module ERC20 Transfer', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module ERC20 Transfer', entryPoint.handleOps([userOp], user.address))
 
       expect(await erc20Token.balanceOf(safe.address)).to.equal(0)
     })
@@ -304,34 +262,17 @@ describe('Gas Metering', () => {
     it('Safe with 4337 Module ERC721 Token Minting', async () => {
       const { user, entryPoint, validator, safe, erc721Token } = await setupTests()
 
+      await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
+
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
 
-      let safeOp = buildSafeUserOpTransaction(
-        safe.address,
-        safe.address, // No functions are called.
-        0,
-        '0x',
-        await entryPoint.getNonce(safe.address, 0),
-        await entryPoint.getAddress(),
-        false,
-        false,
-        {
-          initCode: safe.getInitCode(),
-        },
-      )
-      let signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      let userOp = buildUserOperationFromSafeUserOperation({
-        safeOp,
-        signature,
-      })
-
-      await entryPoint.executeUserOp(userOp, 0)
+      await safe.deploy(user)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
 
       // Now ERC721 Token Transfer
       const tokenID = 1
 
-      safeOp = buildSafeUserOpTransaction(
+      const safeOp = buildSafeUserOpTransaction(
         safe.address,
         await erc721Token.getAddress(),
         0,
@@ -340,18 +281,15 @@ describe('Gas Metering', () => {
         await entryPoint.getAddress(),
         false,
         false,
-        {
-          initCode: safe.getInitCode(),
-        },
       )
-      signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-      userOp = buildUserOperationFromSafeUserOperation({
+      const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+      const userOp = buildUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
-      await logGas('Safe with 4337 Module ERC721 Transfer', entryPoint.executeUserOp(userOp, 0))
+      await logGas('Safe with 4337 Module ERC721 Transfer', entryPoint.handleOps([userOp], user.address))
       expect(await erc721Token.balanceOf(safe.address)).to.equal(1)
       expect(await erc721Token.ownerOf(tokenID)).to.equal(safe.address)
     })
