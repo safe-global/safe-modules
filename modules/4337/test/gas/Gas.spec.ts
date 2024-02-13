@@ -79,7 +79,7 @@ describe('Gas Metering', () => {
     it('Safe with 4337 Module Deployment + Native Transfer', async () => {
       const { user, entryPoint, validator, safe } = await setupTests()
       const amount = ethers.parseEther('0.00001')
-      const randomAddress = ethers.Wallet.createRandom().address
+      const receiver = ethers.Wallet.createRandom().address
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
       await user.sendTransaction({
@@ -89,7 +89,7 @@ describe('Gas Metering', () => {
 
       const safeOp = buildSafeUserOpTransaction(
         safe.address,
-        randomAddress,
+        receiver,
         amount,
         '0x',
         await entryPoint.getNonce(safe.address, 0),
@@ -110,7 +110,7 @@ describe('Gas Metering', () => {
 
       await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.handleOps([userOp], user.address))
 
-      const recipientBalAfter = await ethers.provider.getBalance(randomAddress)
+      const recipientBalAfter = await ethers.provider.getBalance(receiver)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
       expect(recipientBalAfter).to.equal(amount)
     })
@@ -145,10 +145,10 @@ describe('Gas Metering', () => {
 
       // Now Native Transfer
       const amount = ethers.parseEther('0.00001')
-      const randomAddress = ethers.Wallet.createRandom().address
+      const receiver = ethers.Wallet.createRandom().address
       safeOp = buildSafeUserOpTransaction(
         safe.address,
-        randomAddress,
+        receiver,
         amount,
         '0x',
         await entryPoint.getNonce(safe.address, 0),
@@ -164,7 +164,7 @@ describe('Gas Metering', () => {
 
       await logGas('Safe with 4337 Module Native Transfer', entryPoint.handleOps([userOp], user.address))
 
-      expect(await ethers.provider.getBalance(randomAddress)).to.equal(amount)
+      expect(await ethers.provider.getBalance(receiver)).to.equal(amount)
     })
   })
 

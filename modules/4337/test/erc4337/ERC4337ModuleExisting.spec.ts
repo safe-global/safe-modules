@@ -29,7 +29,6 @@ describe('Safe4337Module - Existing Safe', () => {
       const { user1, safe, entryPoint } = await setupTests()
 
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
       const safeOp = buildSafeUserOpTransaction(
         await safe.getAddress(),
         user1.address,
@@ -47,11 +46,12 @@ describe('Safe4337Module - Existing Safe', () => {
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
     })
 
-    it('should execute contract calls without fee', async () => {
+    it('should execute contract calls without a prefund required', async () => {
       const { user1, safe, validator, entryPoint, relayer } = await setupTests()
 
-      await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
+      await entryPoint.depositTo(await safe.getAddress(), { value: ethers.parseEther('1.0') })
+
+      await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('0.5') })
       const safeOp = buildSafeUserOpTransaction(
         await safe.getAddress(),
         user1.address,
@@ -61,21 +61,44 @@ describe('Safe4337Module - Existing Safe', () => {
         await entryPoint.getAddress(),
         false,
         false,
-        {
-          maxFeePerGas: '0',
-        },
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
-      await logGas('Execute UserOp without fee payment', entryPoint.handleOps([userOp], relayer))
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
+      await logGas('Execute UserOp without a prefund payment', entryPoint.handleOps([userOp], relayer))
+      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0'))
     })
 
     it('should not be able to execute contract calls twice', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()
+      const receiver = ethers.Wallet.createRandom().address
+
+      await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
+      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
+      const safeOp = buildSafeUserOpTransaction(
+        await safe.getAddress(),
+        receiver,
+        ethers.parseEther('0.5'),
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+      )
+      const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
+      const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
+      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      await entryPoint.handleOps([userOp], user1.address)
+      expect(await ethers.provider.getBalance(receiver)).to.be.eq(ethers.parseEther('0.5'))
+      await expect(entryPoint.handleOps([userOp], user1.address))
+        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+        .withArgs(0, 'AA25 invalid account nonce')
+    })
+
+    it('should execute contract calls with fee', async () => {
+      const { user1, safe, validator, entryPoint } = await setupTests()
+      const feeBeneficiary = ethers.Wallet.createRandom().address
       const randomAddress = ethers.Wallet.createRandom().address
 
+      expect(await ethers.provider.getBalance(feeBeneficiary)).to.be.eq(0)
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
       const safeOp = buildSafeUserOpTransaction(
@@ -89,46 +112,19 @@ describe('Safe4337Module - Existing Safe', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
-      await entryPoint.handleOps([userOp], user1.address)
-      expect(await ethers.provider.getBalance(randomAddress)).to.be.eq(ethers.parseEther('0.5'))
-      await expect(entryPoint.handleOps([userOp], user1.address))
-        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
-        .withArgs(0, 'AA25 invalid account nonce')
-    })
-
-    it('should execute contract calls with fee', async () => {
-      const { user1, safe, validator, entryPoint } = await setupTests()
-      const randomAddress = ethers.Wallet.createRandom().address
-      const randomAddress2 = ethers.Wallet.createRandom().address
-
-      expect(await ethers.provider.getBalance(randomAddress)).to.be.eq(0)
-      await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
-      const safeOp = buildSafeUserOpTransaction(
-        await safe.getAddress(),
-        randomAddress2,
-        ethers.parseEther('0.5'),
-        '0x',
-        '0',
-        await entryPoint.getAddress(),
-      )
-      const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
-      const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
-      await logGas('Execute UserOp with fee payment', entryPoint.handleOps([userOp], randomAddress))
+      await logGas('Execute UserOp with fee payment', entryPoint.handleOps([userOp], feeBeneficiary))
 
       // checking that the fee was paid
-      expect(await ethers.provider.getBalance(randomAddress)).to.be.gt(0)
+      expect(await ethers.provider.getBalance(feeBeneficiary)).to.be.gt(0)
       // check that the call was executed
-      expect(await ethers.provider.getBalance(randomAddress2)).to.be.eq(ethers.parseEther('0.5'))
+      expect(await ethers.provider.getBalance(randomAddress)).to.be.eq(ethers.parseEther('0.5'))
     })
 
     it('reverts on failure', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()
 
       // Make sure to send enough ETH for the pre-fund but less than the transaction
-      await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('0.4') })
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.4'))
+      await entryPoint.depositTo(await safe.getAddress(), { value: ethers.parseEther('1.0') })
       const safeOp = buildSafeUserOpTransaction(
         await safe.getAddress(),
         user1.address,
@@ -141,9 +137,7 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
       const userOpHash = await entryPoint.getUserOpHash(userOp)
-      // Error('Execution failed')
-      const expectedReturnData =
-        '0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010457865637574696f6e206661696c656400000000000000000000000000000000'
+      const expectedReturnData = validator.interface.encodeErrorResult('Error(string)', ['Execution failed'])
 
       await expect(entryPoint.handleOps([userOp], user1.address))
         .to.emit(entryPoint, 'UserOperationRevertReason')
@@ -196,9 +190,7 @@ describe('Safe4337Module - Existing Safe', () => {
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
 
-      // Error('You called a function that always reverts')
-      const expectedRevertReason =
-        '0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000029596f752063616c6c656420612066756e6374696f6e207468617420616c7761797320726576657274730000000000000000000000000000000000000000000000'
+      const expectedRevertReason = validator.interface.encodeErrorResult('Error(string)', ['You called a function that always reverts'])
 
       await expect(entryPoint.handleOps([userOp], user1.address))
         .to.emit(entryPoint, 'UserOperationRevertReason')
