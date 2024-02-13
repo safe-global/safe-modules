@@ -1,15 +1,19 @@
 import { BigNumberish, BytesLike, Contract, Signer, ethers } from 'ethers'
 import { PackedUserOperationStruct as UserOperation } from '../../typechain-types/contracts/Safe4337Module'
 import { SafeSignature } from './execution'
+
 export { UserOperation }
 
 type OptionalExceptFor<T, TRequired extends keyof T = keyof T> = Partial<Pick<T, Exclude<keyof T, TRequired>>> &
   Required<Pick<T, TRequired>>
 
-type SafeUserOperation = { safe: string; entryPoint: string; validAfter: BigNumberish; validUntil: BigNumberish } & Omit<
-  UserOperation,
-  'sender' | 'signature'
->
+type SafeUserOperation = {
+  safe: string
+  entryPoint: string
+  validAfter: BigNumberish
+  validUntil: BigNumberish
+} & GasParameters &
+  Omit<UserOperation, 'sender' | 'signature' | keyof PackedGasParameters>
 
 export const EIP712_SAFE_OPERATION_TYPE = {
   SafeOp: [
@@ -17,10 +21,11 @@ export const EIP712_SAFE_OPERATION_TYPE = {
     { type: 'uint256', name: 'nonce' },
     { type: 'bytes', name: 'initCode' },
     { type: 'bytes', name: 'callData' },
-    { type: 'bytes32', name: 'accountGasLimits' },
+    { type: 'uint128', name: 'verificationGasLimit' },
+    { type: 'uint128', name: 'callGasLimit' },
     { type: 'uint256', name: 'preVerificationGas' },
-    { type: 'uint256', name: 'maxFeePerGas' },
-    { type: 'uint256', name: 'maxPriorityFeePerGas' },
+    { type: 'uint128', name: 'maxPriorityFeePerGas' },
+    { type: 'uint128', name: 'maxFeePerGas' },
     { type: 'bytes', name: 'paymasterAndData' },
     { type: 'uint48', name: 'validAfter' },
     { type: 'uint48', name: 'validUntil' },
@@ -57,7 +62,8 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
     nonce: template.nonce,
     initCode: template.initCode || '0x',
     callData: template.callData || '0x',
-    accountGasLimits: template.accountGasLimits || packAccountGasLimits(500000, 2000000),
+    verificationGasLimit: template.verificationGasLimit || 500000,
+    callGasLimit: template.callGasLimit || 2000000,
     preVerificationGas: template.preVerificationGas || 60000,
     // use same maxFeePerGas and maxPriorityFeePerGas to ease testing prefund validation
     // otherwise it's tricky to calculate the prefund because of dynamic parameters like block.basefee
@@ -141,10 +147,8 @@ export const buildUserOperationFromSafeUserOperation = ({
     nonce: ethers.toBeHex(safeOp.nonce),
     initCode: ethers.hexlify(safeOp.initCode),
     callData: ethers.hexlify(safeOp.callData),
-    accountGasLimits: safeOp.accountGasLimits,
     preVerificationGas: ethers.toBeHex(safeOp.preVerificationGas),
-    maxFeePerGas: ethers.toBeHex(safeOp.maxFeePerGas),
-    maxPriorityFeePerGas: ethers.toBeHex(safeOp.maxPriorityFeePerGas),
+    ...packGasParameters(safeOp),
     paymasterAndData: ethers.hexlify(safeOp.paymasterAndData),
     signature: ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]),
   }
@@ -155,14 +159,15 @@ export const getRequiredGas = (userOp: UserOperation): string => {
   if (userOp.paymasterAndData === '0x') {
     multiplier = 1n
   }
-  const { validationGasLimit, callGasLimit } = unpackAccountGasLimits(userOp.accountGasLimits)
+  const { verificationGasLimit, callGasLimit } = unpackGasParameters(userOp)
 
-  return (BigInt(callGasLimit) + BigInt(validationGasLimit) * multiplier + BigInt(userOp.preVerificationGas)).toString()
+  return (BigInt(callGasLimit) + BigInt(verificationGasLimit) * multiplier + BigInt(userOp.preVerificationGas)).toString()
 }
 
 export const getRequiredPrefund = (userOp: UserOperation): string => {
   const requiredGas = getRequiredGas(userOp)
-  const requiredPrefund = (BigInt(requiredGas) * BigInt(userOp.maxFeePerGas)).toString()
+  const { maxFeePerGas } = unpackGasParameters(userOp)
+  const requiredPrefund = (BigInt(requiredGas) * BigInt(maxFeePerGas)).toString()
   console.log({ requiredGas, requiredPrefund })
 
   return requiredPrefund
@@ -192,6 +197,18 @@ export const packValidationData = (authorizer: BigNumberish, validUntil: BigNumb
   return result
 }
 
+export interface GasParameters {
+  verificationGasLimit: BigNumberish
+  callGasLimit: BigNumberish
+  maxPriorityFeePerGas: BigNumberish
+  maxFeePerGas: BigNumberish
+}
+
+export interface PackedGasParameters {
+  accountGasLimits: BytesLike
+  gasFees: BytesLike
+}
+
 /**
  * Packs two 128uint gas limit values (validationGasLimit and callGasLimit) into a hex-encoded bytes32 string.
  *
@@ -199,8 +216,12 @@ export const packValidationData = (authorizer: BigNumberish, validUntil: BigNumb
  * @param callGasLimit - The call gas limit.
  * @returns The packed gas limits as a string.
  */
-export const packAccountGasLimits = (validationGasLimit: BigNumberish, callGasLimit: BigNumberish): string => {
-  return ethers.solidityPacked(['uint128', 'uint128'], [validationGasLimit, callGasLimit])
+export const packGasParameters = (unpacked: GasParameters): PackedGasParameters => {
+  const pack = (hi: BigNumberish, lo: BigNumberish) => ethers.solidityPacked(['uint128', 'uint128'], [hi, lo])
+  return {
+    accountGasLimits: pack(unpacked.verificationGasLimit, unpacked.callGasLimit),
+    gasFees: pack(unpacked.maxPriorityFeePerGas, unpacked.maxFeePerGas),
+  }
 }
 
 /**
@@ -209,19 +230,15 @@ export const packAccountGasLimits = (validationGasLimit: BigNumberish, callGasLi
  * @param accountGasLimits - The account gas limits as a bytes32 hex-encoded string.
  * @returns An object containing the validation gas limit and the call gas limit.
  */
-export const unpackAccountGasLimits = (accountGasLimits: BytesLike): { validationGasLimit: bigint; callGasLimit: bigint } => {
-  // Ensure the bytes have the expected length.
-  if (ethers.dataLength(accountGasLimits) !== 32) {
-    throw new Error('Invalid input: account gas limits must be 32-bytes long')
+export const unpackGasParameters = (packed: PackedGasParameters): GasParameters => {
+  const unpack = (word: BytesLike) => {
+    if (ethers.dataLength(word) !== 32) {
+      throw new Error('Invalid input: packed gas parameter value must be 32-bytes')
+    }
+    return [BigInt(ethers.dataSlice(word, 0, 16)), ethers.dataSlice(word, 16, 32)] as const
   }
+  const [verificationGasLimit, callGasLimit] = unpack(packed.accountGasLimits)
+  const [maxPriorityFeePerGas, maxFeePerGas] = unpack(packed.gasFees)
 
-  // Split the hex string into two parts (32 characters each)
-  const validationGasHex = ethers.dataSlice(accountGasLimits, 0, 16)
-  const callGasHex = ethers.dataSlice(accountGasLimits, 16, 32)
-
-  // Convert hex values to BigInts
-  const validationGasLimit = BigInt(validationGasHex)
-  const callGasLimit = BigInt(callGasHex)
-
-  return { validationGasLimit, callGasLimit }
+  return { verificationGasLimit, callGasLimit, maxPriorityFeePerGas, maxFeePerGas }
 }

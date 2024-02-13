@@ -1,7 +1,7 @@
-import { BigNumberish, Result } from 'ethers'
+import { Result } from 'ethers'
 import { ethers } from 'hardhat'
 
-import { getRequiredPrefund, getSupportedEntryPoints } from '../src/utils/userOp'
+import { UserOperation, getRequiredPrefund, getSupportedEntryPoints } from '../src/utils/userOp'
 import { chainId } from '../test/utils/encoding'
 import { getSafe4337Module } from '../test/utils/setup'
 import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
@@ -114,7 +114,7 @@ const runOp = async () => {
       {
         from: entryPoint,
         to: safe.address,
-        data: buildData('validateUserOp((address,uint256,bytes,bytes,bytes32,uint256,uint256,uint256,bytes,bytes),bytes32,uint256)', [
+        data: buildData('validateUserOp((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),bytes32,uint256)', [
           [
             userOp.sender,
             userOp.nonce,
@@ -122,8 +122,7 @@ const runOp = async () => {
             userOp.callData,
             userOp.accountGasLimits,
             userOp.preVerificationGas,
-            userOp.maxFeePerGas,
-            userOp.maxPriorityFeePerGas,
+            userOp.gasFees,
             userOp.paymasterAndData,
             userOp.signature,
           ],
