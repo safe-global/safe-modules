@@ -60,19 +60,19 @@ export const buildSafeUserOp = (template: OptionalExceptFor<SafeUserOperation, '
   return {
     safe: template.safe,
     nonce: template.nonce,
-    initCode: template.initCode || '0x',
-    callData: template.callData || '0x',
-    verificationGasLimit: template.verificationGasLimit || 500000,
-    callGasLimit: template.callGasLimit || 2000000,
-    preVerificationGas: template.preVerificationGas || 60000,
+    initCode: template.initCode ?? '0x',
+    callData: template.callData ?? '0x',
+    callGasLimit: template.callGasLimit ?? 2000000,
+    verificationGasLimit: template.verificationGasLimit ?? 500000,
+    preVerificationGas: template.preVerificationGas ?? 60000,
     // use same maxFeePerGas and maxPriorityFeePerGas to ease testing prefund validation
     // otherwise it's tricky to calculate the prefund because of dynamic parameters like block.basefee
     // check UserOperation.sol#gasPrice()
-    maxFeePerGas: template.maxFeePerGas || 10000000000,
-    maxPriorityFeePerGas: template.maxPriorityFeePerGas || 10000000000,
-    paymasterAndData: template.paymasterAndData || '0x',
-    validAfter: template.validAfter || 0,
-    validUntil: template.validUntil || 0,
+    maxFeePerGas: template.maxFeePerGas ?? 10000000000,
+    maxPriorityFeePerGas: template.maxPriorityFeePerGas ?? 10000000000,
+    paymasterAndData: template.paymasterAndData ?? '0x',
+    validAfter: template.validAfter ?? 0,
+    validUntil: template.validUntil ?? 0,
     entryPoint: template.entryPoint,
   }
 }
