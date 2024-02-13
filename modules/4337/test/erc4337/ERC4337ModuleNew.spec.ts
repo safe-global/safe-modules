@@ -103,6 +103,8 @@ describe('Safe4337Module - Newly deployed safe', () => {
 
       await user1.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('1.0'))
+      await safe.deploy(user1)
+
       const safeOp = buildSafeUserOpTransaction(
         safe.address,
         user1.address,
@@ -110,34 +112,15 @@ describe('Safe4337Module - Newly deployed safe', () => {
         '0x',
         '0',
         await entryPoint.getAddress(),
-        false,
-        false,
-        {
-          initCode: safe.getInitCode(),
-        },
       )
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
-
-      const newSafeOp = buildSafeUserOpTransaction(
-        safe.address,
-        user1.address,
-        ethers.parseEther('0.5'),
-        '0x',
-        '0',
-        await entryPoint.getAddress(),
-      )
       await entryPoint.handleOps([userOp], user1.address)
-      const newSignature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), newSafeOp, await chainId())])
-      const newUserOp = buildUserOperationFromSafeUserOperation({
-        safeOp: newSafeOp,
-        signature: newSignature,
-      })
 
-      await expect(entryPoint.handleOps([newUserOp], user1.address))
+      await expect(entryPoint.handleOps([userOp], user1.address))
         .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
         .withArgs(0, 'AA25 invalid account nonce')
     })
