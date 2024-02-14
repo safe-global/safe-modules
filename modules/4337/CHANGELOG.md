@@ -2,6 +2,44 @@
 
 This changelog only contains changes starting from version 0.2.0
 
+# Version 0.3.0
+
+## Compiler settings
+
+Solidity compiler: [0.8.23](https://github.com/ethereum/solidity/releases/tag/v0.8.23)
+
+Solidity optimizer: enabled with 10.000.000 runs
+
+## Supported EntryPoint
+
+TBD
+
+## Expected addresses
+
+- `SafeModuleSetup` at `TBD`
+- `Safe4337Module` at `TBD`
+
+## Changes
+
+### Security Fixes
+
+None
+
+### Compatibility Fixes
+
+None
+
+### General
+
+- Use the new `PackedUserOperation` struct from EntryPoint v0.7.0 ((#225)[https://github.com/safe-global/safe-modules/issues/225])
+- The `AddModulesLib` implementation was optimized, got missing NatSpecs and was renamed to `SafeModuleSetup` ((#241)[https://github.com/safe-global/safe-modules/pull/241])
+- Use hardcoded constants for type hashes and domain separators in `Safe4337Module` ((#179)[https://github.com/safe-global/safe-modules/issues/179])
+- Pinned Solidity version to 0.8.23 ((#239)[https://github.com/safe-global/safe-modules/pull/239]
+- Fixed misleading comments in the contract ((#240)[https://github.com/safe-global/safe-modules/pull/240]
+- Added a security contact to the `Safe4337Module` ((#244)[https://github.com/safe-global/safe-modules/pull/244])
+- Improved consistency of named returns in the `Safe4337Module` ((#242)[https://github.com/safe-global/safe-modules/pull/242])
+
+
 # Version 0.2.0
 
 ## Compiler settings
