@@ -39,7 +39,6 @@ None
 - Added a security contact to the `Safe4337Module` ((#244)[https://github.com/safe-global/safe-modules/pull/244])
 - Improved consistency of named returns in the `Safe4337Module` ((#242)[https://github.com/safe-global/safe-modules/pull/242])
 
-
 # Version 0.2.0
 
 ## Compiler settings
