@@ -31,13 +31,13 @@ None
 
 ### General
 
-- Use the new `PackedUserOperation` struct from EntryPoint v0.7.0 ((#225)[https://github.com/safe-global/safe-modules/issues/225])
-- The `AddModulesLib` implementation was optimized, got missing NatSpecs and was renamed to `SafeModuleSetup` ((#241)[https://github.com/safe-global/safe-modules/pull/241])
-- Use hardcoded constants for type hashes and domain separators in `Safe4337Module` ((#179)[https://github.com/safe-global/safe-modules/issues/179])
-- Pinned Solidity version to 0.8.23 ((#239)[https://github.com/safe-global/safe-modules/pull/239]
-- Fixed misleading comments in the contract ((#240)[https://github.com/safe-global/safe-modules/pull/240]
-- Added a security contact to the `Safe4337Module` ((#244)[https://github.com/safe-global/safe-modules/pull/244])
-- Improved consistency of named returns in the `Safe4337Module` ((#242)[https://github.com/safe-global/safe-modules/pull/242])
+- Use the new `PackedUserOperation` struct from EntryPoint v0.7.0 ([#225](https://github.com/safe-global/safe-modules/issues/225))
+- The `AddModulesLib` implementation was optimized, got missing NatSpecs and was renamed to `SafeModuleSetup` ([#241](https://github.com/safe-global/safe-modules/pull/241]))
+- Use hardcoded constants for type hashes and domain separators in `Safe4337Module` ([#179](https://github.com/safe-global/safe-modules/issues/179]))
+- Pinned Solidity version to 0.8.23 ([#239](https://github.com/safe-global/safe-modules/pull/239))
+- Fixed misleading comments in the contract ([#240](https://github.com/safe-global/safe-modules/pull/240))
+- Added a security contact to the `Safe4337Module` ([#244](https://github.com/safe-global/safe-modules/pull/244))
+- Improved consistency of named returns in the `Safe4337Module` ([#242](https://github.com/safe-global/safe-modules/pull/242))
 
 # Version 0.2.0
 
