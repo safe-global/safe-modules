@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 import { getAccountNonce } from 'permissionless'
 import { Network, Alchemy } from 'alchemy-sdk'
 import { setTimeout } from 'timers/promises'
-import { Client, Hash, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
+import { PublicClient, Hash, Transport, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { goerli, sepolia } from 'viem/chains'
 import { SAFE_ADDRESSES_MAP, getAccountAddress, getAccountInitCode } from '../utils/safe'
@@ -75,7 +75,7 @@ if (!privateKey) {
 const signer = privateKeyToAccount(privateKey as Hash)
 console.log('Signer Extracted from Private Key.')
 
-let publicClient
+let publicClient: PublicClient<Transport<'http'>, typeof goerli | typeof sepolia>
 let settings
 if (chain == 'sepolia') {
   publicClient = createPublicClient({
@@ -140,7 +140,7 @@ if (contractCode) {
   console.log('\nDeploying a new Safe and executing calldata passed with it (if any).')
 }
 
-const newNonce = await getAccountNonce(publicClient as Client, {
+const newNonce = await getAccountNonce(publicClient, {
   entryPoint: entryPointAddress,
   sender: senderAddress,
 })
