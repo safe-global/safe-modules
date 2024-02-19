@@ -52,6 +52,7 @@
     "@noble/curves": "^1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts-v4": "npm:@openzeppelin/contracts@4.4.0",
     "@simplewebauthn/server": "9.0.0",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.6",
