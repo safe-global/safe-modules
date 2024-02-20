@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
 import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSignerFactory.json'
-import { abi as AddModulesLibAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/AddModulesLib.sol/AddModulesLib.json'
+import { abi as SetupModulesAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import {
   abi as WebAuthnSignerAbi,
   bytecode as WebAuthSignerBytecode,
@@ -14,7 +14,7 @@ import type {
   SafeProxyFactory,
   WebAuthnSigner,
   WebAuthnSignerFactory,
-  AddModulesLib,
+  SafeModuleSetup,
 } from '@safe-global/safe-erc4337/typechain-types/'
 
 import {
@@ -162,7 +162,7 @@ function getSafeAddress(
  * @returns The encoded function call data.
  */
 function encodeAddModuleLibCall(modules: string[]): string {
-  const addModulesLibInterface = new ethers.Interface(AddModulesLibAbi) as unknown as AddModulesLib['interface']
+  const addModulesLibInterface = new ethers.Interface(SetupModulesAbi) as unknown as SafeModuleSetup['interface']
   return addModulesLibInterface.encodeFunctionData('enableModules', [modules])
 }
 
