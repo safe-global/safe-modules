@@ -8,6 +8,7 @@ import {
   SAFE_PROXY_FACTORY_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
+  WEBAUTHN_VERIFIER_ADDRESS,
 } from '../config'
 import { PasskeyLocalStorageFormat } from '../logic/passkeys'
 import { UnsignedUserOperation, getRequiredPrefund, prepareUserOperationWithInitialisation, signAndSendUserOp } from '../logic/userOp'
@@ -24,7 +25,10 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
       singleton: SAFE_SINGLETON_ADDRESS,
       fallbackHandler: SAFE_4337_MODULE_ADDRESS,
       signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-      signerData: ethers.solidityPacked(['uint256', 'uint256'], [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y]),
+      signerData: ethers.solidityPacked(
+        ['uint256', 'uint256', 'uint256'],
+        [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y, WEBAUTHN_VERIFIER_ADDRESS],
+      ),
       setupTo: ADD_MODULES_LIB_ADDRESS,
       setupData: encodeAddModuleLibCall([SAFE_4337_MODULE_ADDRESS]),
     }),
@@ -51,7 +55,7 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
 
   const deployed = safeCodeStatus === RequestStatus.SUCCESS && safeCode !== '0x'
   const requiredPrefund = gasParametersReady ? getRequiredPrefund(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
-  const needsPrefund = !deployed && safeBalanceStatus === RequestStatus.SUCCESS && safeBalance < requiredPrefund
+  const needsPrefund = !deployed && safeBalanceStatus === RequestStatus.SUCCESS && safeBalance === 0n
   const readyToDeploy = !userOpHash && !deployed && gasParametersReady && !needsPrefund
 
   const gasParametersError = feeDataStatus === RequestStatus.ERROR || estimationStatus === RequestStatus.ERROR

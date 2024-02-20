@@ -22,6 +22,7 @@ import {
   SAFE_4337_MODULE_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
+  WEBAUTHN_VERIFIER_ADDRESS,
 } from '../config'
 import { UserOperation } from './userOp'
 
@@ -77,7 +78,10 @@ function getWebAuthnSignerContract(provider: ethers.JsonRpcProvider, address: st
  * @returns The signer address.
  */
 function getSignerAddressFromPubkeyCoords(x: string, y: string): string {
-  const deploymentCode = ethers.solidityPacked(['bytes', 'uint256', 'uint256'], [WebAuthSignerBytecode, x, y])
+  const deploymentCode = ethers.solidityPacked(
+    ['bytes', 'uint256', 'uint256', 'uint256'],
+    [WebAuthSignerBytecode, x, y, WEBAUTHN_VERIFIER_ADDRESS],
+  )
   const salt = ethers.ZeroHash
   return ethers.getCreate2Address(WEBAUTHN_SIGNER_FACTORY_ADDRESS, salt, ethers.keccak256(deploymentCode))
 }

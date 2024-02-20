@@ -19,7 +19,7 @@ function PasskeyCard({ passkey, handleCreatePasskeyClick }: { passkey?: PasskeyL
         <br />
         Passkey Y: {passkey.pubkeyCoordinates.y}
         <br />
-        Predicted Signer Address: {predictedSignerAddress}
+        Counterfactual Signer Address: {predictedSignerAddress}
       </p>
     </div>
   ) : (
