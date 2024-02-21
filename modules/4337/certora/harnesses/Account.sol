@@ -53,6 +53,25 @@ contract Account is Safe {
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
     }
+
+    // CVL uses uint32 instead of bytes4 for the selector
+    function getSelectorFromData(bytes calldata data) external pure returns (uint32) {
+        return uint32(bytes4(data[:4]));
+    }
+
+    function getFallbackHandler() external view returns (address) {
+        bytes32 slot = FALLBACK_HANDLER_STORAGE_SLOT;
+        address handler;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            handler := sload(slot)
+        }
+        return handler;
+    }
+
+    function getNonceKey(uint256 nonce) external returns (uint192 key) {
+        key = uint192(nonce >> 64);
+    }
 }
 
 // @notice This is a harness contract for the rule that verfies the validation data
