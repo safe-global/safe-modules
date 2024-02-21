@@ -25,8 +25,8 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
       singleton: SAFE_SINGLETON_ADDRESS,
       fallbackHandler: SAFE_4337_MODULE_ADDRESS,
       signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-      signerData: ethers.solidityPacked(
-        ['uint256', 'uint256', 'uint256'],
+      signerData: ethers.AbiCoder.defaultAbiCoder().encode(
+        ['uint256', 'uint256', 'address'],
         [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y, WEBAUTHN_VERIFIER_ADDRESS],
       ),
       setupTo: ADD_MODULES_LIB_ADDRESS,
