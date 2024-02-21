@@ -39,7 +39,7 @@ type UnsignedUserOperation = Omit<UserOperation, 'signature'>
 // Dummy signature for gas estimation. We require it so the estimation doesn't revert
 // if the signature is absent
 const DUMMY_SIGNATURE =
-  '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000024477cb92524a5d417b4edc79893c0da534a2b68c3b52deaa57bd4161affa208ed071c2d0a26244371f0cd58f3fbafcb25cc5df74951aeddb5d7d089e95f417ce30000000000000000000000000000000000000000000000000000000000000025a24f744b28d73f066bf3203d145765a7bc735e6328168c8b03e476da3ad0d8fe010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000707b2274797065223a22776562617574686e2e676574222c226368616c6c656e6765223a225a66395945647573433059726a55756a457673423145493253356b63797a5770616d6c7367734b666a4d41222c226f726967696e223a2268747470733a2f2f736166652e676c6f62616c227d00000000000000000000000000000000'
+  '0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e043aa8d1b19ca9387bdf05124650baec5c7ed57c04135f915b7a5fac9feeb29783063924cb9712ab0dd42f880317626ea82b4149f81f4e60d8ddeff9109d4619f0000000000000000000000000000000000000000000000000000000000000025a24f744b28d73f066bf3203d145765a7bc735e6328168c8b03e476da3ad0d8fe0400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e226f726967696e223a2268747470733a2f2f736166652e676c6f62616c220000'
 
 /**
  * Generates the user operation initialization code.
@@ -216,35 +216,22 @@ function getUserOpHash(
 }
 
 /**
- * Encode bytes using the Base64 URL encoding.
+ * Compute the additional client data JSON fields. This is the fields other than `type` and
+ * `challenge` (including `origin` and any other additional client data fields that may be
+ * added by the authenticator).
  *
- * See <https://www.rfc-editor.org/rfc/rfc4648#section-5>
- *
- * @param data data to encode to `base64url`
- * @returns the `base64url` encoded data as a string.
+ * See <https://w3c.github.io/webauthn/#clientdatajson-serialization>
  */
-function base64UrlEncode(data: ethers.BytesLike | ArrayBufferLike): string {
-  const bytes = ethers.isBytesLike(data) ? data : new Uint8Array(data)
-  return ethers.encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
-}
-
-/**
- * Extracts the offset of the challenge within the client data JSON.
- * @param response - The AuthenticatorAssertionResponse object.
- * @param challenge - The challenge string.
- * @returns The offset of the challenge within the client data JSON.
- * @throws Error if the challenge is not found in the client data JSON.
- */
-function extractChallengeOffset(response: AuthenticatorAssertionResponse, challenge: string): number {
+function extractClientDataFields(response: AuthenticatorAssertionResponse): string {
   const clientDataJSON = new TextDecoder('utf-8').decode(response.clientDataJSON)
+  const match = clientDataJSON.match(/^\{"type":"webauthn.get","challenge":"[A-Za-z0-9\-_]{43}",(.*)\}$/)
 
-  const encodedChallenge = base64UrlEncode(challenge)
-  const offset = clientDataJSON.indexOf(encodedChallenge)
-  if (offset < 0) {
+  if (!match) {
     throw new Error('challenge not found in client data JSON')
   }
 
-  return offset
+  const [, fields] = match
+  return ethers.hexlify(ethers.toUtf8Bytes(fields))
 }
 
 /**
@@ -331,6 +318,7 @@ async function signAndSendUserOp(
     publicKey: {
       challenge: ethers.getBytes(safeInitOpHash),
       allowCredentials: [{ type: 'public-key', id: hexStringToUint8Array(passkey.rawId) }],
+      userVerification: 'required',
     },
   })) as Assertion | null
 
@@ -344,11 +332,10 @@ async function signAndSendUserOp(
       safeInitOp.validAfter,
       safeInitOp.validUntil,
       ethers.AbiCoder.defaultAbiCoder().encode(
-        ['bytes', 'bytes', 'uint256', 'uint256[2]'],
+        ['bytes', 'bytes', 'uint256[2]'],
         [
           new Uint8Array(assertion.response.authenticatorData),
-          new Uint8Array(assertion.response.clientDataJSON),
-          extractChallengeOffset(assertion.response, safeInitOpHash),
+          extractClientDataFields(assertion.response),
           extractSignature(assertion.response),
         ],
       ),

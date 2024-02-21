@@ -1,0 +1,24 @@
+name: safe-modules-examples
+on: [push]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: |
+          npm ci
+          # Build the 4337 module so the app can use the artifacts
+          npm run build -w modules/4337
+          # Reinstall the dependencies so the 4337 dependency includes artifacts
+          npm ci
+          npm run lint -w examples/safe-4337-passkeys
+          npm run build -w examples/safe-4337-passkeys
+        env:
+          VITE_WC_CLOUD_PROJECT_ID: ${{ secrets.VITE_WC_CLOUD_PROJECT_ID }}
+          VITE_WC_4337_BUNDLER_URL: ${{ secrets.VITE_WC_4337_BUNDLER_URL }}
