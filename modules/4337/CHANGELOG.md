@@ -12,7 +12,7 @@ Solidity optimizer: enabled with 10.000.000 runs
 
 ## Supported EntryPoint
 
-TBD
+The official deployments support the EntryPoint v0.7.0 with the canonical deployment at `0x0000000071727De22E5E9d8BAf0edAc6f37da032`.
 
 ## Expected addresses
 
