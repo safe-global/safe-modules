@@ -16,8 +16,8 @@ The official deployments support the EntryPoint v0.7.0 with the canonical deploy
 
 ## Expected addresses
 
-- `SafeModuleSetup` at `TBD`
-- `Safe4337Module` at `TBD`
+- `SafeModuleSetup` at `0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47`
+- `Safe4337Module` at `0x9531909b0AF228B1deBdd310B40833A18bFf1152`
 
 ## Changes
 
