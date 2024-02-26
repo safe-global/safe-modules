@@ -9,7 +9,7 @@ import {
   extractSignature,
 } from '../utils/webauthn'
 import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation } from '../../src/utils/userOp'
-import { buildContractSignatureBytes } from '../../src/utils/execution'
+import { buildSignatureBytes } from '../../src/utils/execution'
 
 describe('E2E - WebAuthn Singleton Signers', () => {
   before(function () {
@@ -152,7 +152,7 @@ describe('E2E - WebAuthn Singleton Signers', () => {
         userVerification: UserVerificationRequirement.required,
       },
     })
-    const signature = buildContractSignatureBytes([
+    const signature = buildSignatureBytes([
       {
         signer: signer.target as string,
         data: ethers.AbiCoder.defaultAbiCoder().encode(
@@ -163,6 +163,7 @@ describe('E2E - WebAuthn Singleton Signers', () => {
             extractSignature(assertion.response),
           ],
         ),
+        dynamic: true,
       },
     ])
     const userOp = buildUserOperationFromSafeUserOperation({

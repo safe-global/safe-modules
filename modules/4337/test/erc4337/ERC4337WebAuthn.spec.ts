@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getEntryPoint } from '../utils/setup'
-import { buildContractSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation, calculateSafeOperationHash } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import {
@@ -274,7 +274,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           userVerification: UserVerificationRequirement.required,
         },
       })
-      const signature = buildContractSignatureBytes([
+      const signature = buildSignatureBytes([
         {
           signer: signer.target as string,
           data: ethers.AbiCoder.defaultAbiCoder().encode(
@@ -285,6 +285,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
               extractSignature(assertion.response),
             ],
           ),
+          dynamic: true,
         },
       ])
 

@@ -1,12 +1,12 @@
 import { deployments, ethers } from 'hardhat'
 import { MultiProvider4337 } from '../../src/utils/safe'
 import { UserOperation } from '../../src/utils/userOp'
-import { AddressLike, BigNumberish, BytesLike } from 'ethers'
+import { AddressLike, BigNumberish, BytesLike, HDNodeWallet } from 'ethers'
 
 export const BUNDLER_URL = process.env.TEST_BUNLDER_URL || 'http://localhost:3000/rpc'
 export const BUNDLER_MNEMONIC = process.env.TEST_BUNDLER_MNEMONIC || 'test test test test test test test test test test test junk'
 
-export async function prepareAccounts(mnemonic = BUNDLER_MNEMONIC, count = 1) {
+export async function prepareAccounts(mnemonic = BUNDLER_MNEMONIC, count = 1): Promise<HDNodeWallet[]> {
   const bundler = ethers.HDNodeWallet.fromPhrase(mnemonic).connect(ethers.provider)
   const accounts = [...Array(count)].map(() => ethers.Wallet.createRandom(ethers.provider))
 

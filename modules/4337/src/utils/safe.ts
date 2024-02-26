@@ -1,7 +1,7 @@
 import { AddressLike, JsonRpcProvider, Provider, Signer, ethers } from 'ethers'
 
-// Import from Safe contracts repo once fixed
-import { MetaTransaction, SafeSignature, buildSignatureBytes } from './execution'
+// Import from Safe contracts repo once it is upgraded to ethers v6 and can be installed via npm
+import { MetaTransaction, SafeSignature, SignedSafeTransaction, buildSignatureBytes } from './execution'
 import { UserOperation, EIP712_SAFE_OPERATION_TYPE } from './userOp'
 
 const AddressOne = '0x0000000000000000000000000000000000000001'
@@ -13,6 +13,7 @@ const INTERFACES = new ethers.Interface([
   'function proxyCreationCode() returns (bytes)',
   'function enableModules(address[])',
   'function execTransactionFromModule(address to, uint256 value, bytes calldata data, uint8 operation) external payable returns (bool success)',
+  'function execTransaction(address to, uint256 value, bytes calldata data, uint8 operation, uint256 safeTxGas, uint256 baseGas, uint256 gasPrice, address gasToken, address payable refundReceiver, bytes memory signatures) external payable returns (bool success)',
   'function executeUserOp(address to, uint256 value, bytes calldata data, uint8 operation)',
   'function getNonce(address,uint192) returns (uint256 nonce)',
   'function supportedEntryPoint() returns (address)',
@@ -326,17 +327,69 @@ export class Safe4337 {
     return Safe4337Operation.build(this.provider, this, action, this.globalConfig)
   }
 
-  static async withSigner(signer: string, globalConfig: GlobalConfig): Promise<Safe4337> {
+  /**
+   * Creates a new instance of Safe4337 with the specified signer and global configuration.
+   *
+   * @param {string} signer - A signer address.
+   * @param {GlobalConfig} globalConfig - The global configuration for the Safe4337 instance.
+   * @returns {Safe4337} A new instance of Safe4337.
+   */
+  static withSigner(signer: string, globalConfig: GlobalConfig): Safe4337 {
     const safeConfig: SafeConfig = {
       signers: [signer],
       threshold: 1,
       nonce: 0,
     }
+
     return Safe4337.withConfigs(safeConfig, globalConfig)
   }
 
-  static async withConfigs(safeConfig: SafeConfig, globalConfig: GlobalConfig): Promise<Safe4337> {
+  /**
+   * Creates a new instance of Safe4337 with the specified signers, threshold, and global configuration.
+   *
+   * @param {string[]} signers - An array of signer addresses.
+   * @param {number} threshold - The number of signatures required to execute a transaction.
+   * @param {GlobalConfig} globalConfig - The global configuration for the Safe4337 instance.
+   * @returns {Safe4337} A new instance of Safe4337.
+   */
+  static withSigners(signers: string[], threshold: number, globalConfig: GlobalConfig): Safe4337 {
+    const safeConfig: SafeConfig = {
+      signers,
+      threshold,
+      nonce: 0,
+    }
+
+    return Safe4337.withConfigs(safeConfig, globalConfig)
+  }
+
+  /**
+   * Creates a new instance of Safe4337 with the provided SafeConfig and GlobalConfig.
+   * @param {SafeConfig} safeConfig - The SafeConfig object containing the configuration for the Safe4337 instance.
+   * @param {GlobalConfig} globalConfig - The GlobalConfig object containing the global configuration for the Safe4337 instance.
+   * @returns {Safe4337} A new instance of Safe4337.
+   */
+  static withConfigs(safeConfig: SafeConfig, globalConfig: GlobalConfig): Safe4337 {
     const initParams = buildInitParamsForConfig(safeConfig, globalConfig)
     return new Safe4337(initParams.safeAddress, globalConfig, safeConfig)
+  }
+
+  /**
+   * Encodes the transaction data for executing a safe transaction.
+   * @param {SignedSafeTransaction} transaction - The signed safe transaction object.
+   * @returns {string} The encoded transaction data.
+   */
+  static getExecTransactionData(transaction: SignedSafeTransaction): string {
+    return INTERFACES.encodeFunctionData('execTransaction', [
+      transaction.to,
+      transaction.value,
+      transaction.data,
+      transaction.operation,
+      transaction.safeTxGas,
+      transaction.baseGas,
+      transaction.gasPrice,
+      transaction.gasToken,
+      transaction.refundReceiver,
+      buildSignatureBytes(transaction.signatures),
+    ])
   }
 }
