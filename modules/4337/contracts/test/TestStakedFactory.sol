@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IEntryPoint} from "@account-abstraction/contracts/contracts/interfaces/IEntryPoint.sol";
+import {IEntryPoint} from "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 contract TestStakedFactory {
     address public immutable FACTORY;

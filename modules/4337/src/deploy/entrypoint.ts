@@ -1,4 +1,4 @@
-import EntryPoint from '@account-abstraction/contracts/artifacts/contracts/core/EntryPoint.sol/EntryPoint.json'
+import EntryPoint from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 const ENTRY_POINT = process.env.DEPLOYMENT_ENTRY_POINT_ADDRESS
@@ -13,7 +13,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
       contract: EntryPoint,
       args: [],
       log: true,
-      deterministicDeployment: true,
+      deterministicDeployment: '0x90d8084deab30c2a37c45e8d47f49f2f7965183cb6990a98943ef94940681de3',
     })
   } else if (!ENTRY_POINT) {
     throw new Error('DEPLOYMENT_ENTRY_POINT_ADDRESS must be set')

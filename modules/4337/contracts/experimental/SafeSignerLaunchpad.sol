@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
-import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
-import {_packValidationData} from "@account-abstraction/contracts/contracts/core/Helpers.sol";
+import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
+import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 

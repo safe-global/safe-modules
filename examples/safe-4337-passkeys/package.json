@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@web3modal/ethers": "^4.0.5",
-    "@safe-global/safe-erc4337": "^0.2.0",
+    "@safe-global/safe-erc4337": "^0.3.0",
     "ethers": "^6.11.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

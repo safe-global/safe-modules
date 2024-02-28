@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {CompatibilityFallbackHandler} from "@safe-global/safe-contracts/contracts/handler/CompatibilityFallbackHandler.sol";
-import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
-import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
-import {_packValidationData} from "@account-abstraction/contracts/contracts/core/Helpers.sol";
-import {UserOperationLib} from "@account-abstraction/contracts/contracts/core/UserOperationLib.sol";
+import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
+import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
+import {UserOperationLib} from "@account-abstraction/contracts/core/UserOperationLib.sol";
 import {ISafe} from "./interfaces/Safe.sol";
 
 /**

@@ -2,10 +2,10 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {IAccount} from "@account-abstraction/contracts/contracts/interfaces/IAccount.sol";
-import {UserOperationLib} from "@account-abstraction/contracts/contracts/core/UserOperationLib.sol";
-import {PackedUserOperation} from "@account-abstraction/contracts/contracts/interfaces/PackedUserOperation.sol";
-import {_packValidationData} from "@account-abstraction/contracts/contracts/core/Helpers.sol";
+import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
+import {UserOperationLib} from "@account-abstraction/contracts/core/UserOperationLib.sol";
+import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 
 contract SafeMock {
     address public singleton;
