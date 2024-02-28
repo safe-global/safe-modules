@@ -7,7 +7,7 @@ export { UserOperation }
 type OptionalExceptFor<T, TRequired extends keyof T = keyof T> = Partial<Pick<T, Exclude<keyof T, TRequired>>> &
   Required<Pick<T, TRequired>>
 
-type SafeUserOperation = {
+export type SafeUserOperation = {
   safe: string
   entryPoint: string
   validAfter: BigNumberish
