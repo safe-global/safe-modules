@@ -30,7 +30,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@nomicfoundation/hardhat-verify": "^2.0.4",
-    "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts": "^5.0.2",
     "@safe-global/safe-deployments": "^1.32.0",
     "@safe-global/safe-singleton-factory": "^1.0.19",
     "@typechain/ethers-v6": "^0.5.1",
