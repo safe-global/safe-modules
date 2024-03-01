@@ -3,7 +3,7 @@ import { deployments, ethers } from 'hardhat'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { EventLog, Log } from 'ethers'
 import { getEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
-import { buildContractSignatureBytes, buildSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
   buildUserOperationFromSafeUserOperation,
@@ -168,7 +168,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       },
     )
     const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
-    const signature = buildContractSignatureBytes([
+    const signature = buildSignatureBytes([
       {
         signer: parentSafe.address,
         data: await user.signTypedData(
@@ -183,6 +183,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
             message: opData,
           },
         ),
+        dynamic: true,
       },
     ])
     const userOp = buildUserOperationFromSafeUserOperation({

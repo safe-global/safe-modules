@@ -39,7 +39,10 @@ contract SafeMock {
         bytes32 s;
         (v, r, s) = _signatureSplit(signature);
         require(
-            owner == ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v, r, s),
+            // The original safe contract requires the V value to be > 30 for EIP-191 signed messages
+            // The canonical eth V value is 27 or 28, so by adding 4 to it we get a value > 30
+            // And when we verify the signature we subtract 4 from it
+            owner == ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v - 4, r, s),
             "Invalid signature"
         );
     }

@@ -7,6 +7,22 @@ export const EIP_DOMAIN = {
   ],
 }
 
+export const EIP712_SAFE_TX_TYPE = {
+  // "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
+  SafeTx: [
+    { type: 'address', name: 'to' },
+    { type: 'uint256', name: 'value' },
+    { type: 'bytes', name: 'data' },
+    { type: 'uint8', name: 'operation' },
+    { type: 'uint256', name: 'safeTxGas' },
+    { type: 'uint256', name: 'baseGas' },
+    { type: 'uint256', name: 'gasPrice' },
+    { type: 'address', name: 'gasToken' },
+    { type: 'address', name: 'refundReceiver' },
+    { type: 'uint256', name: 'nonce' },
+  ],
+}
+
 export const EIP712_SAFE_MESSAGE_TYPE = {
   // "SafeMessage(bytes message)"
   SafeMessage: [{ type: 'bytes', name: 'message' }],
@@ -28,44 +44,94 @@ export interface SafeTransaction extends MetaTransaction {
   nonce: string | number
 }
 
+export interface SignedSafeTransaction extends SafeTransaction {
+  signatures: SafeSignature[]
+}
+
 export interface SafeSignature {
   signer: string
   data: string
+  // a flag to indicate if the signature is a contract signature and the data has to be appended to the dynamic part of signature bytes
+  dynamic?: true
+}
+
+export const calculateSafeDomainSeparator = (safeAddress: string, chainId: BigNumberish): string => {
+  return ethers.TypedDataEncoder.hashDomain({ verifyingContract: safeAddress, chainId })
+}
+
+export const preimageSafeTransactionHash = (safeAddress: string, safeTx: SafeTransaction, chainId: BigNumberish): string => {
+  return ethers.TypedDataEncoder.encode({ verifyingContract: safeAddress, chainId }, EIP712_SAFE_TX_TYPE, safeTx)
+}
+
+export const calculateSafeTransactionHash = (safeAddress: string, safeTx: SafeTransaction, chainId: BigNumberish): string => {
+  return ethers.TypedDataEncoder.hash({ verifyingContract: safeAddress, chainId }, EIP712_SAFE_TX_TYPE, safeTx)
+}
+
+export const preimageSafeMessageHash = (safeAddress: string, message: string, chainId: BigNumberish): string => {
+  return ethers.TypedDataEncoder.encode({ verifyingContract: safeAddress, chainId }, EIP712_SAFE_MESSAGE_TYPE, { message })
+}
+
+export const calculateSafeMessageHash = (safeAddress: string, message: string, chainId: BigNumberish): string => {
+  return ethers.TypedDataEncoder.hash({ verifyingContract: safeAddress, chainId }, EIP712_SAFE_MESSAGE_TYPE, { message })
 }
 
 export const signHash = async (signer: Signer, hash: string): Promise<SafeSignature> => {
   const typedDataHash = ethers.getBytes(hash)
+  const signerAddress = await signer.getAddress()
+  const signature = await signer.signMessage(typedDataHash)
+
   return {
-    signer: await signer.getAddress(),
-    data: await signer.signMessage(typedDataHash),
+    signer: signerAddress,
+    data: signature.replace(/1b$/, '1f').replace(/1c$/, '20'),
   }
 }
 
-const sortSignatures = (signatures: SafeSignature[]) => {
-  signatures.sort((left, right) => left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()))
+export const getPrevalidatedSignature = (signerAddress: string): SafeSignature => {
+  return {
+    signer: signerAddress,
+    data: '0x000000000000000000000000' + signerAddress.slice(2) + '0000000000000000000000000000000000000000000000000000000000000000' + '01',
+  }
+}
+
+export const buildContractSignature = (signerAddress: string, signature: string): SafeSignature => {
+  return {
+    signer: signerAddress,
+    data: signature,
+    dynamic: true,
+  }
 }
 
 export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
-  sortSignatures(signatures)
-  return ethers.concat(signatures.map((signature) => signature.data))
-}
+  const SIGNATURE_LENGTH_BYTES = 65
+  signatures.sort((left, right) => left.signer.toLowerCase().localeCompare(right.signer.toLowerCase()))
 
-export const buildContractSignatureBytes = (signatures: SafeSignature[]): string => {
-  sortSignatures(signatures)
-  const start = 65 * signatures.length
-  const { segments } = signatures.reduce(
-    ({ segments, offset }, { signer, data }) => {
-      return {
-        segments: [...segments, ethers.solidityPacked(['uint256', 'uint256', 'uint8'], [signer, start + offset, 0])],
-        offset: offset + 32 + ethers.dataLength(data),
-      }
-    },
-    { segments: [] as string[], offset: 0 },
-  )
-  return ethers.concat([
-    ...segments,
-    ...signatures.map(({ data }) => ethers.solidityPacked(['uint256', 'bytes'], [ethers.dataLength(data), data])),
-  ])
+  let signatureBytes = '0x'
+  let dynamicBytes = ''
+  for (const sig of signatures) {
+    if (sig.dynamic) {
+      /* 
+              A contract signature has a static part of 65 bytes and the dynamic part that needs to be appended 
+              at the end of signature bytes.
+              The signature format is
+              Signature type == 0
+              Constant part: 65 bytes
+              {32-bytes signature verifier}{32-bytes dynamic data position}{1-byte signature type}
+              Dynamic part (solidity bytes): 32 bytes + signature data length
+              {32-bytes signature length}{bytes signature data}
+          */
+      const dynamicPartPosition = (signatures.length * SIGNATURE_LENGTH_BYTES + dynamicBytes.length / 2).toString(16).padStart(64, '0')
+      const dynamicPartLength = (sig.data.slice(2).length / 2).toString(16).padStart(64, '0')
+      const staticSignature = `${sig.signer.slice(2).padStart(64, '0')}${dynamicPartPosition}00`
+      const dynamicPartWithLength = `${dynamicPartLength}${sig.data.slice(2)}`
+
+      signatureBytes += staticSignature
+      dynamicBytes += dynamicPartWithLength
+    } else {
+      signatureBytes += sig.data.slice(2)
+    }
+  }
+
+  return signatureBytes + dynamicBytes
 }
 
 export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {

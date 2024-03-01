@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
-import { buildContractSignatureBytes } from '../../src/utils/execution'
+import { buildSignatureBytes } from '../../src/utils/execution'
 import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction } from '../../src/utils/userOp'
 import { bundlerRpc, encodeMultiSendTransactions, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
@@ -110,10 +110,11 @@ describe('E2E - Singleton Signers', () => {
         signature: '0x',
       }),
     )
-    const signature = buildContractSignatureBytes(
+    const signature = buildSignatureBytes(
       customSigners.map(({ signer, key }) => ({
         signer: signer.target as string,
         data: ethers.toBeHex(BigInt(opHash) ^ key, 32),
+        dynamic: true,
       })),
     )
     const userOp = buildUserOperationFromSafeUserOperation({
