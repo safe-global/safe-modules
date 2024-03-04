@@ -1,5 +1,9 @@
 name: safe-modules-4337-gas-metering
-on: [push]
+on:
+  push:
+    paths:
+      - 'modules/4337/**'
+      - 'modules/4337-gas-metering/**'
 
 jobs:
   checks:

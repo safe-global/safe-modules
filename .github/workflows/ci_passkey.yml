@@ -1,0 +1,35 @@
+name: safe-modules-passkey
+on:
+  push:
+    paths:
+      - 'modules/passkey/**'
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run coverage -w modules/passkey
+      - uses: coverallsapp/github-action@master
+        with:
+          path-to-lcov: modules/passkey/coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - run: npm run lint -w modules/passkey
+      - run: npm run fmt:check -w modules/passkey
+      - run: npm run build -w modules/passkey

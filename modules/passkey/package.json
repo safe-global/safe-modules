@@ -1,0 +1,47 @@
+{
+  "name": "@safe-global/safe-passkey",
+  "version": "0.1.0",
+  "author": "@safe-global",
+  "description": "Safe Passkey Owner",
+  "homepage": "https://github.com/safe-global/safe-modules/tree/main/modules/passkey",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/safe-global/safe-modules.git"
+  },
+  "bugs": {
+    "url": "https://github.com/safe-global/safe-modules/issues"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe",
+    "Safe module"
+  ],
+  "license": "GPL-3.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "contracts",
+    "dist",
+    "src",
+    "build"
+  ],
+  "scripts": {
+    "build": "npm run build:sol && npm run build:ts",
+    "build:sol": "hardhat compile",
+    "build:ts": "npx rimraf dist && tsc",
+    "coverage": "hardhat coverage",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
+    "lint": "npm run lint:sol && npm run lint:ts",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "lint:ts": "eslint ./src && eslint ./test",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.20.1",
+    "hardhat-deploy": "^0.12.1",
+    "solhint": "^4.1.1"
+  }
+}

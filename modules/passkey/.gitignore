@@ -1,0 +1,12 @@
+node_modules
+.env
+
+# Hardhat files
+/build
+/typechain
+/typechain-types
+/coverage
+/coverage.json
+
+# TypeScript files
+/dist
