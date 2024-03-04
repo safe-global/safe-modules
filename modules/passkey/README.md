@@ -1,13 +1,3 @@
-# Sample Hardhat Project
+# Passkey
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+This package contains a passkey signature verifier, that can be used as an owner for a Safe, compatible with versions 1.3.0+.

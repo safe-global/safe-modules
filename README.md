@@ -6,6 +6,7 @@ This repository contains a collection of modules for the [Safe Smart Account](ht
 
 - [4337 Module](./modules/4337)
 - [Allowance Module](./modules/allowances)
+- [Passkey](./modules/passkey)
 
 ## Examples
 
