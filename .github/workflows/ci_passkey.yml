@@ -1,5 +1,8 @@
 name: safe-modules-passkey
-on: [push]
+on:
+  push:
+    paths:
+      - 'modules/passkey/**'
 
 jobs:
   tests:

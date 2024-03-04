@@ -1,5 +1,8 @@
 name: safe-modules-4337
-on: [push]
+on:
+  push:
+    paths:
+      - 'modules/4337/**'
 
 jobs:
   tests:
