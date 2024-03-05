@@ -2,7 +2,7 @@ import { AddressLike, JsonRpcProvider, Provider, Signer, ethers } from 'ethers'
 
 // Import from Safe contracts repo once it is upgraded to ethers v6 and can be installed via npm
 import { MetaTransaction, SafeSignature, SignedSafeTransaction, buildSignatureBytes } from './execution'
-import { UserOperation, EIP712_SAFE_OPERATION_TYPE, packGasParameters } from './userOp'
+import { PackedUserOperation, UserOperation, EIP712_SAFE_OPERATION_TYPE, packGasParameters, unpackUserOperation } from './userOp'
 
 const AddressOne = '0x0000000000000000000000000000000000000001'
 
@@ -31,7 +31,6 @@ export interface OperationParams {
   preVerificationGas: bigint
   maxPriorityFeePerGas: bigint
   maxFeePerGas: bigint
-  paymasterAndData: string
   validAfter: bigint
   validUntil: bigint
 }
@@ -122,7 +121,28 @@ export class MultiProvider4337 extends JsonRpcProvider {
   }
 
   public async sendUserOperation(userOp: UserOperation, entryPoint: AddressLike): Promise<string> {
-    return await super.send('eth_sendUserOperation', [userOp, await ethers.resolveAddress(entryPoint, this)])
+    const jsonUserOp = {
+      sender: ethers.getAddress(userOp.sender),
+      nonce: ethers.toBeHex(userOp.nonce),
+      callData: ethers.hexlify(userOp.callData),
+      callGasLimit: ethers.toBeHex(userOp.callGasLimit),
+      verificationGasLimit: ethers.toBeHex(userOp.verificationGasLimit),
+      preVerificationGas: ethers.toBeHex(userOp.preVerificationGas),
+      maxFeePerGas: ethers.toBeHex(userOp.maxFeePerGas),
+      maxPriorityFeePerGas: ethers.toBeHex(userOp.maxPriorityFeePerGas),
+      signature: ethers.hexlify(userOp.signature),
+    } as Record<string, unknown>
+    if (userOp.factory) {
+      jsonUserOp.factory = ethers.getAddress(userOp.factory)
+      jsonUserOp.factoryData = ethers.hexlify(userOp.factoryData!)
+    }
+    if (userOp.paymaster) {
+      jsonUserOp.paymaster = ethers.getAddress(userOp.paymaster)
+      jsonUserOp.paymasterVerificationGasLimit = ethers.toBeHex(userOp.paymasterVerificationGasLimit!)
+      jsonUserOp.paymasterPostOpGasLimit = ethers.toBeHex(userOp.paymasterPostOpGasLimit!)
+      jsonUserOp.paymasterData = ethers.hexlify(userOp.paymasterData!)
+    }
+    return await super.send('eth_sendUserOperation', [jsonUserOp, await ethers.resolveAddress(entryPoint, this)])
   }
 }
 
@@ -157,7 +177,7 @@ export class Safe4337Operation {
     return buildSignatureBytes(this.signatures)
   }
 
-  async userOperation(paymasterAndData = '0x'): Promise<UserOperation> {
+  async packedUserOperation(paymasterAndData = '0x'): Promise<PackedUserOperation> {
     const { accountGasLimits, gasFees } = packGasParameters(this.params)
     return {
       nonce: ethers.toBeHex(this.params.nonce),
@@ -173,6 +193,10 @@ export class Safe4337Operation {
         [this.params.validAfter, this.params.validUntil, await this.encodedSignatures()],
       ),
     }
+  }
+
+  async userOperation(paymasterAndData = '0x'): Promise<UserOperation> {
+    return await unpackUserOperation(await this.packedUserOperation(paymasterAndData))
   }
 
   async authorize(signer: ethers.Signer) {
@@ -243,7 +267,6 @@ export class Safe4337Operation {
       callGasLimit: (BigInt(estimates.callGasLimit) * 12n) / 10n,
       validAfter: 0n,
       validUntil: 0n,
-      paymasterAndData: '0x',
     }
     return new Safe4337Operation(safe, action, params, globalConfig)
   }

@@ -12,7 +12,12 @@ import {
   preimageSafeTransactionHash,
   signHash,
 } from '../../src/utils/execution'
-import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp, SafeUserOperation } from '../../src/utils/userOp'
+import {
+  buildRpcUserOperationFromSafeUserOperation,
+  buildSafeUserOpTransaction,
+  signSafeOp,
+  SafeUserOperation,
+} from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 import { BUNDLER_MNEMONIC, bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
@@ -403,7 +408,7 @@ describe('E2E - Nested Safes With An Execution Initiated by a Leaf 4337 Safe', (
     const executorSigner = executor.owners[0].value as Signer
     const safeOp = await buildNestedSafeOp(safeTransaction, tree.root, executionPath, await entryPoint.getAddress())
     const signature = buildSignatureBytes([await signSafeOp(executorSigner, await validator.getAddress(), safeOp, await chainId())])
-    const userOp = buildUserOperationFromSafeUserOperation({
+    const userOp = await buildRpcUserOperationFromSafeUserOperation({
       safeOp,
       signature,
     })

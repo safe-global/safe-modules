@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
-import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
+import { buildRpcUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId, timestamp } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
@@ -71,7 +71,7 @@ describe('E2E - Local Bundler', () => {
       },
     )
     const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-    const userOp = buildUserOperationFromSafeUserOperation({
+    const userOp = await buildRpcUserOperationFromSafeUserOperation({
       safeOp,
       signature,
     })
@@ -103,7 +103,7 @@ describe('E2E - Local Bundler', () => {
       await entryPoint.getAddress(),
     )
     const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-    const userOp = buildUserOperationFromSafeUserOperation({
+    const userOp = await buildRpcUserOperationFromSafeUserOperation({
       safeOp,
       signature,
     })

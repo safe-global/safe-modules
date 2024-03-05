@@ -6,7 +6,7 @@ import { getEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
-  buildUserOperationFromSafeUserOperation,
+  buildPackedUserOperationFromSafeUserOperation,
   calculateSafeOperationData,
   signSafeOp,
 } from '../../src/utils/userOp'
@@ -71,7 +71,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
           },
         )
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-        return buildUserOperationFromSafeUserOperation({
+        return buildPackedUserOperationFromSafeUserOperation({
           safeOp,
           signature,
         })
@@ -120,7 +120,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
           },
         )
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-        return buildUserOperationFromSafeUserOperation({
+        return buildPackedUserOperationFromSafeUserOperation({
           safeOp,
           signature,
         })
@@ -186,7 +186,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
         dynamic: true,
       },
     ])
-    const userOp = buildUserOperationFromSafeUserOperation({
+    const userOp = buildPackedUserOperationFromSafeUserOperation({
       safeOp,
       signature,
     })
