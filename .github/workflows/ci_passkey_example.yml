@@ -1,5 +1,10 @@
-name: safe-modules-examples
-on: [push]
+name: safe-modules-4337-passkey-example
+on:
+  push:
+    paths:
+      - 'modules/4337/**'
+      - 'modules/passkey/**'
+      - 'examples/safe-4337-passkeys/**'
 
 jobs:
   checks:
