@@ -17,7 +17,7 @@ describe('P256VerifierLib', function () {
     return { verifier, verifierLib, account }
   })
 
-  it('Should return success on valid signature', async function () {
+  it('Should return true on valid signature', async function () {
     const { verifier, verifierLib, account } = await setupTests()
 
     const message = ethers.id('hello world')
@@ -25,6 +25,12 @@ describe('P256VerifierLib', function () {
     const { x, y } = account.publicKey
 
     expect(await verifierLib.verifySignature(verifier, message, r, s, x, y)).to.be.true
+  })
+
+  it('Should return false on invalid signature', async function () {
+    const { verifier, verifierLib } = await setupTests()
+
+    expect(await verifierLib.verifySignature(verifier, ethers.ZeroHash, 1, 2, 3, 4)).to.be.false
   })
 
   it('Should check for signature signature malleability', async function () {
