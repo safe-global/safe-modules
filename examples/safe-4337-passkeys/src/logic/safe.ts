@@ -1,7 +1,7 @@
 import { ethers } from 'ethers'
 import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
 import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSignerFactory.json'
-import { abi as SetupModulesAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
+import { abi as SetupModuleSetupAbi } from '@safe-global/safe-erc4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import {
   abi as WebAuthnSignerAbi,
   bytecode as WebAuthSignerBytecode,
@@ -24,7 +24,7 @@ import {
   SAFE_PROXY_FACTORY_ADDRESS,
   WEBAUTHN_VERIFIER_ADDRESS,
 } from '../config'
-import { UserOperation } from './userOp'
+import { PackedUserOperation } from './userOp'
 
 // Hardcoded because we cannot easily install @safe-global/safe-contracts because of conflicting ethers.js versions
 const SafeProxyBytecode =
@@ -160,14 +160,14 @@ function getSafeAddress(
 }
 
 /**
- * Encodes the function call to enable modules in the AddModulesLib contract.
+ * Encodes the function call to enable modules in the SafeModuleSetup contract.
  *
  * @param modules - An array of module addresses.
  * @returns The encoded function call data.
  */
-function encodeAddModuleLibCall(modules: string[]): string {
-  const addModulesLibInterface = new ethers.Interface(SetupModulesAbi) as unknown as SafeModuleSetup['interface']
-  return addModulesLibInterface.encodeFunctionData('enableModules', [modules])
+function encodeSafeModuleSetupCall(modules: string[]): string {
+  const safeModuleSetupInterface = new ethers.Interface(SetupModuleSetupAbi) as unknown as SafeModuleSetup['interface']
+  return safeModuleSetupInterface.encodeFunctionData('enableModules', [modules])
 }
 
 /**
@@ -210,12 +210,12 @@ function getExecuteUserOpData(to: string, value: ethers.BigNumberish, data: stri
 
 /**
  * Encodes the user operation data for validating a user operation.
- * @param userOp The user operation to be validated.
+ * @param userOp The packed user operation to be validated.
  * @param userOpHash The hash of the user operation.
  * @param missingAccountFunds The amount of missing account funds.
  * @returns The encoded data for validating the user operation.
  */
-function getValidateUserOpData(userOp: UserOperation, userOpHash: string, missingAccountFunds: ethers.BigNumberish): string {
+function getValidateUserOpData(userOp: PackedUserOperation, userOpHash: string, missingAccountFunds: ethers.BigNumberish): string {
   const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
 
   const validateUserOpData = safe4337ModuleInterface.encodeFunctionData('validateUserOp', [userOp, userOpHash, missingAccountFunds])
@@ -238,5 +238,5 @@ export {
   getValidateUserOpData,
   getInitHash,
   getLaunchpadInitializer,
-  encodeAddModuleLibCall,
+  encodeSafeModuleSetupCall,
 }

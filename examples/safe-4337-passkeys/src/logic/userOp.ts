@@ -20,21 +20,37 @@ import { encodeSafeMintData } from './erc721'
 import { PasskeyLocalStorageFormat } from './passkeys'
 import { hexStringToUint8Array } from '../utils'
 
+type PackedUserOperation = {
+  sender: string
+  nonce: ethers.BigNumberish
+  initCode: ethers.BytesLike
+  callData: ethers.BytesLike
+  accountGasLimits: ethers.BytesLike
+  preVerificationGas: ethers.BigNumberish
+  gasFees: ethers.BytesLike
+  paymasterAndData: ethers.BytesLike
+  signature: ethers.BytesLike
+}
+
+type UnsignedPackedUserOperation = Omit<PackedUserOperation, 'signature'>
+
 type UserOperation = {
   sender: string
-  nonce: string
-  initCode: string
-  callData: string
+  nonce: ethers.BigNumberish
+  factory?: string
+  factoryData?: ethers.BytesLike
+  callData: ethers.BytesLike
   callGasLimit: ethers.BigNumberish
   verificationGasLimit: ethers.BigNumberish
   preVerificationGas: ethers.BigNumberish
   maxFeePerGas: ethers.BigNumberish
   maxPriorityFeePerGas: ethers.BigNumberish
-  paymasterAndData: string
-  signature: string
+  paymaster?: string
+  paymasterVerificationGasLimit?: ethers.BigNumberish
+  paymasterPostOpGasLimit?: ethers.BigNumberish
+  paymasterData?: ethers.BytesLike
+  signature: ethers.BytesLike
 }
-
-type UnsignedUserOperation = Omit<UserOperation, 'signature'>
 
 // Dummy signature for gas estimation. We require it so the estimation doesn't revert
 // if the signature is absent
@@ -73,7 +89,7 @@ function prepareUserOperationWithInitialisation(
   initializer: SafeInitializer,
   afterInitializationOpCall?: UserOpCall,
   saltNonce = ethers.ZeroHash,
-): UnsignedUserOperation {
+): UnsignedPackedUserOperation {
   const initHash = getInitHash(initializer, APP_CHAIN_ID)
   const launchpadInitializer = getLaunchpadInitializer(initHash)
   const predictedSafeAddress = getSafeAddress(launchpadInitializer, SAFE_PROXY_FACTORY_ADDRESS, SAFE_SIGNER_LAUNCHPAD_ADDRESS, saltNonce)
@@ -93,11 +109,13 @@ function prepareUserOperationWithInitialisation(
       initializer,
       getExecuteUserOpData(userOpCall.to, userOpCall.value, userOpCall.data, userOpCall.operation),
     ),
-    callGasLimit: ethers.toBeHex(2000000),
-    verificationGasLimit: ethers.toBeHex(2000000),
+    ...packGasParameters({
+      callGasLimit: ethers.toBeHex(2000000),
+      verificationGasLimit: ethers.toBeHex(2000000),
+      maxFeePerGas: ethers.toBeHex(10000000000),
+      maxPriorityFeePerGas: ethers.toBeHex(10000000000),
+    }),
     preVerificationGas: ethers.toBeHex(2000000),
-    maxFeePerGas: ethers.toBeHex(10000000000),
-    maxPriorityFeePerGas: ethers.toBeHex(10000000000),
     paymasterAndData: '0x',
   }
 
@@ -135,13 +153,53 @@ type UserOpGasLimitEstimation = {
  * @param entryPointAddress - The entry point address. Default value is ENTRYPOINT_ADDRESS.
  * @returns A promise that resolves to the estimated gas limit for the user operation.
  */
-function estimateUserOpGasLimit(userOp: UnsignedUserOperation, entryPointAddress = ENTRYPOINT_ADDRESS): Promise<UserOpGasLimitEstimation> {
-  ;(userOp as UserOperation).signature = DUMMY_SIGNATURE
-
+function estimateUserOpGasLimit(
+  userOp: UnsignedPackedUserOperation,
+  entryPointAddress = ENTRYPOINT_ADDRESS,
+): Promise<UserOpGasLimitEstimation> {
   const provider = getEip4337BundlerProvider()
-  const estimation = provider.send('eth_estimateUserOperationGas', [userOp, entryPointAddress])
+  const rpcUserOp = unpackUserOperationForRpc(userOp, DUMMY_SIGNATURE)
+  const estimation = provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
 
   return estimation
+}
+
+/**
+ * Unpacks a user operation for use over the bundler RPC.
+ * @param userOp The user operation to unpack.
+ * @param signature The signature bytes for the user operation.
+ * @returns An unpacked `UserOperation` that can be used over bunlder RPC.
+ */
+function unpackUserOperationForRpc(userOp: UnsignedPackedUserOperation, signature: ethers.BytesLike): UserOperation {
+  const initFields =
+    ethers.dataLength(userOp.initCode) > 0
+      ? {
+          factory: ethers.getAddress(ethers.dataSlice(userOp.initCode, 0, 20)),
+          factoryData: ethers.dataSlice(userOp.initCode, 20),
+        }
+      : {}
+  const paymasterFields =
+    ethers.dataLength(userOp.paymasterAndData) > 0
+      ? {
+          paymaster: ethers.getAddress(ethers.dataSlice(userOp.initCode, 0, 20)),
+          paymasterVerificationGasLimit: ethers.toBeHex(ethers.dataSlice(userOp.paymasterAndData, 20, 36)),
+          paymasterPostOpGasLimit: ethers.toBeHex(ethers.dataSlice(userOp.paymasterAndData, 36, 52)),
+          paymasterData: ethers.dataSlice(userOp.paymasterAndData, 52),
+        }
+      : {}
+  return {
+    sender: ethers.getAddress(userOp.sender),
+    nonce: ethers.toBeHex(userOp.nonce),
+    ...initFields,
+    callData: ethers.hexlify(userOp.callData),
+    callGasLimit: ethers.toBeHex(ethers.dataSlice(userOp.accountGasLimits, 16, 32)),
+    verificationGasLimit: ethers.toBeHex(ethers.dataSlice(userOp.accountGasLimits, 0, 16)),
+    preVerificationGas: ethers.toBeHex(userOp.preVerificationGas),
+    maxFeePerGas: ethers.toBeHex(ethers.dataSlice(userOp.gasFees, 16, 32)),
+    maxPriorityFeePerGas: ethers.toBeHex(ethers.dataSlice(userOp.gasFees, 0, 16)),
+    ...paymasterFields,
+    signature: ethers.hexlify(signature),
+  }
 }
 
 /**
@@ -165,22 +223,34 @@ function getRequiredPrefund(maxFeePerGas: bigint, userOpGasLimitEstimation: User
 }
 
 /**
+ * Pasks a user operation gas parameters.
+ * @param op The UserOperation gas parameters to pack.
+ * @returns The packed UserOperation parameters.
+ */
+function packGasParameters(
+  op: Pick<UserOperation, 'verificationGasLimit' | 'callGasLimit' | 'maxPriorityFeePerGas' | 'maxFeePerGas'>,
+): Pick<PackedUserOperation, 'accountGasLimits' | 'gasFees'> {
+  return {
+    accountGasLimits: ethers.solidityPacked(['uint128', 'uint128'], [op.verificationGasLimit, op.callGasLimit]),
+    gasFees: ethers.solidityPacked(['uint128', 'uint128'], [op.maxPriorityFeePerGas, op.maxFeePerGas]),
+  }
+}
+
+/**
  * Packs a UserOperation object into a string using the defaultAbiCoder.
  * @param op The UserOperation object to pack.
  * @returns The packed UserOperation as a string.
  */
-function packUserOp(op: UnsignedUserOperation): string {
+function packUserOpData(op: UnsignedPackedUserOperation): string {
   return ethers.AbiCoder.defaultAbiCoder().encode(
     [
       'address', // sender
       'uint256', // nonce
       'bytes32', // initCode
       'bytes32', // callData
-      'uint256', // callGasLimit
-      'uint256', // verificationGasLimit
+      'bytes32', // accountGasLimits
       'uint256', // preVerificationGas
-      'uint256', // maxFeePerGas
-      'uint256', // maxPriorityFeePerGas
+      'bytes32', // gasFees
       'bytes32', // paymasterAndData
     ],
     [
@@ -188,11 +258,9 @@ function packUserOp(op: UnsignedUserOperation): string {
       op.nonce,
       ethers.keccak256(op.initCode),
       ethers.keccak256(op.callData),
-      op.callGasLimit,
-      op.verificationGasLimit,
+      op.accountGasLimits,
       op.preVerificationGas,
-      op.maxFeePerGas,
-      op.maxPriorityFeePerGas,
+      op.gasFees,
       ethers.keccak256(op.paymasterAndData),
     ],
   )
@@ -206,11 +274,11 @@ function packUserOp(op: UnsignedUserOperation): string {
  * @returns The hash of the user operation.
  */
 function getUserOpHash(
-  op: UnsignedUserOperation,
+  op: UnsignedPackedUserOperation,
   entryPoint: string = ENTRYPOINT_ADDRESS,
   chainId: ethers.BigNumberish = APP_CHAIN_ID,
 ): string {
-  const userOpHash = ethers.keccak256(packUserOp(op))
+  const userOpHash = ethers.keccak256(packUserOpData(op))
   const enc = ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'address', 'uint256'], [userOpHash, entryPoint, chainId])
   return ethers.keccak256(enc)
 }
@@ -287,7 +355,7 @@ type Assertion = {
  * @throws An error if signing the user operation fails.
  */
 async function signAndSendUserOp(
-  userOp: UnsignedUserOperation,
+  userOp: UnsignedPackedUserOperation,
   passkey: PasskeyLocalStorageFormat,
   entryPoint: string = ENTRYPOINT_ADDRESS,
   chainId: ethers.BigNumberish = APP_CHAIN_ID,
@@ -342,15 +410,15 @@ async function signAndSendUserOp(
     ],
   )
 
-  const userOpWithSignature = { ...userOp, signature }
-
-  return await getEip4337BundlerProvider().send('eth_sendUserOperation', [userOpWithSignature, entryPoint])
+  const rpcUserOp = unpackUserOperationForRpc(userOp, signature)
+  return await getEip4337BundlerProvider().send('eth_sendUserOperation', [rpcUserOp, entryPoint])
 }
 
-export type { UserOperation, UnsignedUserOperation, UserOpGasLimitEstimation }
+export type { PackedUserOperation, UnsignedPackedUserOperation, UserOperation, UserOpGasLimitEstimation }
 
 export {
   prepareUserOperationWithInitialisation,
+  packGasParameters,
   getEip4337BundlerProvider,
   estimateUserOpGasLimit,
   getRequiredPrefund,

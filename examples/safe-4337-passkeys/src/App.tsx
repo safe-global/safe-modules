@@ -6,7 +6,7 @@ import ConnectButton from './components/ConnectButton.tsx'
 import { useState } from 'react'
 import { useWeb3ModalProvider, useWeb3ModalAccount } from '@web3modal/ethers/react'
 import { APP_CHAIN_ID } from './config.ts'
-import { switchToMumbai } from './logic/wallets.ts'
+import { switchToSepolia } from './logic/wallets.ts'
 import { PasskeyCard } from './components/PasskeyCard.tsx'
 import { SafeCard } from './components/SafeCard.tsx'
 
@@ -34,17 +34,17 @@ function App() {
     }
   }
 
-  const handleSwitchToMumbaiClick = () => {
+  const handleSwitchToSepoliaClick = () => {
     if (!walletProvider) return
 
     setError(undefined)
     try {
-      switchToMumbai(walletProvider)
+      switchToSepolia(walletProvider)
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message)
       } else {
-        setError('Unknown error when switching to Mumbai network')
+        setError('Unknown error when switching to Ethereum Sepolia test network')
       }
     }
   }
@@ -72,8 +72,8 @@ function App() {
   if (connectedToWrongChain) {
     content = (
       <div className="card">
-        <p>Please switch to Mumbai network to continue</p>
-        <button onClick={handleSwitchToMumbaiClick}>Switch to Mumbai</button>
+        <p>Please switch to Ethereum Sepolia test network to continue</p>
+        <button onClick={handleSwitchToSepoliaClick}>Switch to Sepolia</button>
       </div>
     )
   }
