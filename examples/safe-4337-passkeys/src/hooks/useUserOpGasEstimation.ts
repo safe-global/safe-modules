@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { UnsignedUserOperation, UserOpGasLimitEstimation, estimateUserOpGasLimit } from '../logic/userOp'
+import { UnsignedPackedUserOperation, UserOpGasLimitEstimation, estimateUserOpGasLimit } from '../logic/userOp'
 import { RequestStatus } from '../utils'
 
 /**
@@ -7,7 +7,7 @@ import { RequestStatus } from '../utils'
  * @param userOp The unsigned user operation.
  * @returns An object containing the user operation gas limit estimation and the request status.
  */
-function useUserOpGasLimitEstimation(userOp: UnsignedUserOperation) {
+function useUserOpGasLimitEstimation(userOp: UnsignedPackedUserOperation) {
   const [userOpGasLimitEstimation, setUserOpGasLimitEstimation] = useState<UserOpGasLimitEstimation | undefined>(undefined)
   const [status, setStatus] = useState<RequestStatus>(RequestStatus.NOT_REQUESTED)
 

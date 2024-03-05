@@ -1,17 +1,23 @@
 import { useMemo, useState } from 'react'
 import { ethers } from 'ethers'
-import { encodeAddModuleLibCall } from '../logic/safe'
+import { encodeSafeModuleSetupCall } from '../logic/safe'
 import type { SafeInitializer } from '../logic/safe'
 import {
-  ADD_MODULES_LIB_ADDRESS,
   SAFE_4337_MODULE_ADDRESS,
+  SAFE_MODULE_SETUP_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   WEBAUTHN_VERIFIER_ADDRESS,
 } from '../config'
 import { PasskeyLocalStorageFormat } from '../logic/passkeys'
-import { UnsignedUserOperation, getRequiredPrefund, prepareUserOperationWithInitialisation, signAndSendUserOp } from '../logic/userOp'
+import {
+  UnsignedPackedUserOperation,
+  getRequiredPrefund,
+  packGasParameters,
+  prepareUserOperationWithInitialisation,
+  signAndSendUserOp,
+} from '../logic/userOp'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation'
 import { RequestStatus } from '../utils'
 import { PrefundCard } from './OpPrefundCard'
@@ -29,8 +35,8 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
         ['uint256', 'uint256', 'address'],
         [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y, WEBAUTHN_VERIFIER_ADDRESS],
       ),
-      setupTo: ADD_MODULES_LIB_ADDRESS,
-      setupData: encodeAddModuleLibCall([SAFE_4337_MODULE_ADDRESS]),
+      setupTo: SAFE_MODULE_SETUP_ADDRESS,
+      setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
     }),
     [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y],
   )
@@ -64,13 +70,15 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
   const handleDeploySafeClick = async () => {
     if (!gasParametersReady) return
 
-    const userOpToSign: UnsignedUserOperation = {
+    const userOpToSign: UnsignedPackedUserOperation = {
       ...unsignedUserOperation,
-      verificationGasLimit: userOpGasLimitEstimation.verificationGasLimit,
+      ...packGasParameters({
+        verificationGasLimit: userOpGasLimitEstimation.verificationGasLimit,
+        callGasLimit: userOpGasLimitEstimation.callGasLimit,
+        maxPriorityFeePerGas: feeData?.maxPriorityFeePerGas,
+        maxFeePerGas: feeData?.maxFeePerGas,
+      }),
       preVerificationGas: userOpGasLimitEstimation.preVerificationGas,
-      callGasLimit: userOpGasLimitEstimation.callGasLimit,
-      maxFeePerGas: '0x' + feeData?.maxFeePerGas.toString(16),
-      maxPriorityFeePerGas: '0x' + feeData?.maxPriorityFeePerGas.toString(16),
     }
 
     const bundlerUserOpHash = await signAndSendUserOp(userOpToSign, passkey)
@@ -84,14 +92,14 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
       {userOpHash && (
         <p>
           Your Safe is being deployed. Track the user operation on{' '}
-          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=mumbai`}>jiffyscan</a>
+          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=sepolia`}>jiffyscan</a>
         </p>
       )}
 
       {deployed && (
         <p>
           Your Safe has been deployed. More info on{' '}
-          <a href={`https://jiffyscan.xyz/account/${unsignedUserOperation.sender}?network=mumbai`}>jiffyscan</a>
+          <a href={`https://jiffyscan.xyz/account/${unsignedUserOperation.sender}?network=sepolia`}>jiffyscan</a>
         </p>
       )}
 
