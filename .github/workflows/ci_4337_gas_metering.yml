@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - 'modules/4337/**'
-      - 'modules/4337-gas-metering/**'
+      - 'examples/4337-gas-metering/**'
 
 jobs:
   checks:
@@ -16,6 +16,6 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
       - run: npm ci
-      - run: npm run fmt:check -w modules/4337-gas-metering
-      - run: npm run lint -w modules/4337-gas-metering
-      - run: npm run build -w modules/4337-gas-metering
+      - run: npm run fmt:check -w examples/4337-gas-metering
+      - run: npm run lint -w examples/4337-gas-metering
+      - run: npm run build -w examples/4337-gas-metering
