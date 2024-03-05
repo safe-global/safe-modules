@@ -4,12 +4,12 @@ import { numberToUnpaddedHex } from '../utils'
 
 const projectId = import.meta.env.VITE_WC_CLOUD_PROJECT_ID
 
-const mumbai = {
-  chainId: 80001,
-  name: 'Polygon Mumbai',
-  currency: 'MATIC',
-  explorerUrl: 'https://mumbai.polygonscan.com',
-  rpcUrl: 'https://rpc-mumbai.maticvigil.com',
+const sepolia = {
+  chainId: 11155111,
+  name: 'Sepolia test network',
+  currency: 'ETH',
+  explorerUrl: 'https://sepolia.etherscan.io',
+  rpcUrl: 'https://sepolia.gateway.tenderly.co',
 }
 
 const metadata = {
@@ -21,38 +21,37 @@ const metadata = {
 
 createWeb3Modal({
   ethersConfig: defaultConfig({ metadata }),
-  // defaultChain: mumbai,
-  chains: [mumbai],
+  chains: [sepolia],
   projectId,
 })
 
 /**
- * Switches the Ethereum provider to the Mumbai network.
+ * Switches the Ethereum provider to the Ethereum Sepolia test network.
  * @param provider The Ethereum provider.
  * @returns A promise that resolves to an unknown value.
  */
-async function switchToMumbai(provider: ethers.Eip1193Provider): Promise<unknown> {
+async function switchToSepolia(provider: ethers.Eip1193Provider): Promise<unknown> {
   return provider
     .request({
       method: 'wallet_addEthereumChain',
       params: [
         {
-          chainId: numberToUnpaddedHex(mumbai.chainId),
-          blockExplorerUrls: [mumbai.explorerUrl],
-          chainName: mumbai.name,
+          chainId: numberToUnpaddedHex(sepolia.chainId),
+          blockExplorerUrls: [sepolia.explorerUrl],
+          chainName: sepolia.name,
           nativeCurrency: {
-            name: mumbai.currency,
-            symbol: mumbai.currency,
+            name: sepolia.currency,
+            symbol: sepolia.currency,
             decimals: 18,
           },
-          rpcUrls: [mumbai.rpcUrl],
+          rpcUrls: [sepolia.rpcUrl],
         },
       ],
     })
     .catch(() =>
       provider.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: numberToUnpaddedHex(mumbai.chainId) }],
+        params: [{ chainId: numberToUnpaddedHex(sepolia.chainId) }],
       }),
     )
 }
@@ -66,4 +65,4 @@ function getJsonRpcProviderFromEip1193Provider(provider: ethers.Eip1193Provider)
   return new ethers.BrowserProvider(provider)
 }
 
-export { switchToMumbai, getJsonRpcProviderFromEip1193Provider }
+export { switchToSepolia, getJsonRpcProviderFromEip1193Provider }

@@ -25,7 +25,7 @@ if (PK) {
   }
 }
 
-if (['mainnet', 'goerli', 'mumbai', 'polygon'].includes(argv.network) && INFURA_KEY === undefined) {
+if (['mainnet', 'sepolia', 'polygon', 'amoy'].includes(argv.network) && INFURA_KEY === undefined) {
   throw new Error(`Could not find Infura key in env, unable to connect to network ${argv.network}`)
 }
 
@@ -87,19 +87,14 @@ const userConfig: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
     },
-    goerli: {
-      ...sharedNetworkConfig,
-      url: `https://goerli.infura.io/v3/${INFURA_KEY}`,
-      tags: ['dev'],
-    },
     sepolia: {
       ...sharedNetworkConfig,
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
       tags: ['dev'],
     },
-    mumbai: {
+    amoy: {
       ...sharedNetworkConfig,
-      url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
+      url: `https://polygon-amoy.infura.io/v3/${INFURA_KEY}`,
       tags: ['dev'],
     },
     ...customNetwork,

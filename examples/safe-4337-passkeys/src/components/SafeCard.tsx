@@ -92,14 +92,14 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
       {userOpHash && (
         <p>
           Your Safe is being deployed. Track the user operation on{' '}
-          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=mumbai`}>jiffyscan</a>
+          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=sepolia`}>jiffyscan</a>
         </p>
       )}
 
       {deployed && (
         <p>
           Your Safe has been deployed. More info on{' '}
-          <a href={`https://jiffyscan.xyz/account/${unsignedUserOperation.sender}?network=mumbai`}>jiffyscan</a>
+          <a href={`https://jiffyscan.xyz/account/${unsignedUserOperation.sender}?network=sepolia`}>jiffyscan</a>
         </p>
       )}
 

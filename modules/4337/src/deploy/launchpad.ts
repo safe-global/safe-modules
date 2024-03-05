@@ -18,4 +18,6 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
   })
 }
 
+deploy.dependencies = ['entrypoint']
+
 export default deploy
