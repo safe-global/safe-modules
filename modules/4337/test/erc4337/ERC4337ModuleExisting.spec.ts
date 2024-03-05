@@ -2,7 +2,11 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getTestSafe, getSafe4337Module, getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
-import { calculateSafeOperationHash, buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction } from '../../src/utils/userOp'
+import {
+  calculateSafeOperationHash,
+  buildPackedUserOperationFromSafeUserOperation,
+  buildSafeUserOpTransaction,
+} from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 
 describe('Safe4337Module - Existing Safe', () => {
@@ -38,7 +42,7 @@ describe('Safe4337Module - Existing Safe', () => {
         await entryPoint.getAddress(),
       )
       const signature = buildSignatureBytes([await signHash(user1, ethers.keccak256('0xbaddad42'))])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await expect(entryPoint.handleOps([userOp], user1.address))
         .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
         .withArgs(0, 'AA24 signature error')
@@ -64,7 +68,7 @@ describe('Safe4337Module - Existing Safe', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('Execute UserOp without a prefund payment', entryPoint.handleOps([userOp], relayer))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0'))
     })
@@ -85,7 +89,7 @@ describe('Safe4337Module - Existing Safe', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await entryPoint.handleOps([userOp], user1.address)
       expect(await ethers.provider.getBalance(receiver)).to.be.eq(ethers.parseEther('0.5'))
       await expect(entryPoint.handleOps([userOp], user1.address))
@@ -111,7 +115,7 @@ describe('Safe4337Module - Existing Safe', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('Execute UserOp with fee payment', entryPoint.handleOps([userOp], feeBeneficiary))
 
       // checking that the fee was paid
@@ -135,7 +139,7 @@ describe('Safe4337Module - Existing Safe', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       const userOpHash = await entryPoint.getUserOpHash(userOp)
       const expectedReturnData = validator.interface.encodeErrorResult('ExecutionFailed()', [])
 
@@ -164,7 +168,7 @@ describe('Safe4337Module - Existing Safe', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('Execute UserOp without fee payment and bubble up error string', entryPoint.handleOps([userOp], relayer))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
     })
@@ -188,7 +192,7 @@ describe('Safe4337Module - Existing Safe', () => {
       )
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
 
       const expectedRevertReason = validator.interface.encodeErrorResult('Error(string)', ['You called a function that always reverts'])
 

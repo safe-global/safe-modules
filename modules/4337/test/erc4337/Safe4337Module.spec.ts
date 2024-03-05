@@ -7,7 +7,7 @@ import {
   GasParameters,
   buildSafeUserOp,
   buildSafeUserOpTransaction,
-  buildUserOperationFromSafeUserOperation,
+  buildPackedUserOperationFromSafeUserOperation,
   calculateSafeOperationHash,
   packGasParameters,
   packValidationData,
@@ -160,7 +160,7 @@ describe('Safe4337Module', () => {
         validAfter,
         validUntil,
       })
-      const userOp = buildUserOperationFromSafeUserOperation({
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature: '0x',
       })
@@ -178,7 +178,7 @@ describe('Safe4337Module', () => {
       const safeOp = buildSafeUserOpTransaction(await safeModule.getAddress(), user.address, 0, '0x', '0', await entryPoint.getAddress())
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
@@ -207,7 +207,7 @@ describe('Safe4337Module', () => {
       })
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
@@ -224,7 +224,7 @@ describe('Safe4337Module', () => {
       const safeOp = buildSafeUserOpTransaction(await safeModule.getAddress(), user.address, 0, '0x', '0', await entryPoint.getAddress())
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })
@@ -258,7 +258,7 @@ describe('Safe4337Module', () => {
 
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user, safeOpHash)])
-      const userOp = buildUserOperationFromSafeUserOperation({
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature,
       })

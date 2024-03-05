@@ -1,7 +1,7 @@
 import { Result } from 'ethers'
 import { ethers } from 'hardhat'
 
-import { UserOperation, getRequiredPrefund, getSupportedEntryPoints } from '../src/utils/userOp'
+import { getRequiredPrefund, getSupportedEntryPoints } from '../src/utils/userOp'
 import { chainId } from '../test/utils/encoding'
 import { getSafe4337Module } from '../test/utils/setup'
 import { GlobalConfig, MultiProvider4337, Safe4337 } from '../src/utils/safe'
@@ -108,6 +108,7 @@ const runOp = async () => {
     ]),
   )
 
+  const packedUserOp = await operation.packedUserOperation()
   console.log(
     'validateUserOp',
     await ethers.provider.send('eth_call', [
@@ -116,18 +117,18 @@ const runOp = async () => {
         to: safe.address,
         data: buildData('validateUserOp((address,uint256,bytes,bytes,bytes32,uint256,bytes32,bytes,bytes),bytes32,uint256)', [
           [
-            userOp.sender,
-            userOp.nonce,
-            userOp.initCode,
-            userOp.callData,
-            userOp.accountGasLimits,
-            userOp.preVerificationGas,
-            userOp.gasFees,
-            userOp.paymasterAndData,
-            userOp.signature,
+            packedUserOp.sender,
+            packedUserOp.nonce,
+            packedUserOp.initCode,
+            packedUserOp.callData,
+            packedUserOp.accountGasLimits,
+            packedUserOp.preVerificationGas,
+            packedUserOp.gasFees,
+            packedUserOp.paymasterAndData,
+            packedUserOp.signature,
           ],
           '0x0000000000000000000000000000000000000000000000000000000000000000',
-          getRequiredPrefund(userOp),
+          getRequiredPrefund(packedUserOp),
         ]),
       },
       'latest',

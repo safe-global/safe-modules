@@ -8,7 +8,11 @@ import {
   extractPublicKey,
   extractSignature,
 } from '../utils/webauthn'
-import { buildSafeUserOpTransaction, buildUserOperationFromSafeUserOperation } from '../../src/utils/userOp'
+import {
+  buildSafeUserOpTransaction,
+  buildPackedUserOperationFromSafeUserOperation,
+  buildRpcUserOperationFromSafeUserOperation,
+} from '../../src/utils/userOp'
 import { buildSignatureBytes } from '../../src/utils/execution'
 
 describe('E2E - WebAuthn Singleton Signers', () => {
@@ -139,7 +143,7 @@ describe('E2E - WebAuthn Singleton Signers', () => {
       },
     )
     const opHash = await module.getOperationHash(
-      buildUserOperationFromSafeUserOperation({
+      buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature: '0x',
       }),
@@ -166,7 +170,7 @@ describe('E2E - WebAuthn Singleton Signers', () => {
         dynamic: true,
       },
     ])
-    const userOp = buildUserOperationFromSafeUserOperation({
+    const userOp = await buildRpcUserOperationFromSafeUserOperation({
       safeOp,
       signature,
     })

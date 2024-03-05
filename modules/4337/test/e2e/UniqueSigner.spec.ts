@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
-import { packGasParameters } from '../../src/utils/userOp'
+import { packGasParameters, unpackUserOperation } from '../../src/utils/userOp'
 
 describe('E2E - Unique Signers', () => {
   before(function () {
@@ -92,7 +92,7 @@ describe('E2E - Unique Signers', () => {
     const safeSalt = Date.now()
     const safe = await proxyFactory.createProxyWithNonce.staticCall(signerLaunchpad.target, launchpadInitializer, safeSalt)
 
-    const userOp = {
+    const packedUserOp = {
       sender: safe,
       nonce: ethers.toBeHex(await entryPoint.getNonce(safe, 0)),
       initCode: ethers.solidityPacked(
@@ -122,7 +122,7 @@ describe('E2E - Unique Signers', () => {
     }
 
     const safeInitOp = {
-      userOpHash: await entryPoint.getUserOpHash({ ...userOp, signature: '0x' }),
+      userOpHash: await entryPoint.getUserOpHash({ ...packedUserOp, signature: '0x' }),
       validAfter: 0,
       validUntil: 0,
       entryPoint: entryPoint.target,
@@ -149,7 +149,8 @@ describe('E2E - Unique Signers', () => {
     expect(await ethers.provider.getBalance(safe)).to.equal(ethers.parseEther('1'))
     expect(await ethers.provider.getCode(safe)).to.equal('0x')
 
-    await bundler.sendUserOperation({ ...userOp, signature }, await entryPoint.getAddress())
+    const userOp = await unpackUserOperation({ ...packedUserOp, signature })
+    await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
     await waitForUserOp(userOp)
     expect(await ethers.provider.getBalance(safe)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
