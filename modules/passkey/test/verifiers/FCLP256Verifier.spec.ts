@@ -1,7 +1,8 @@
-import { p256 } from '@noble/curves/p256'
 import { expect } from 'chai'
 import { BigNumberish, BytesLike } from 'ethers'
 import { deployments, ethers } from 'hardhat'
+
+import { Account } from '../utils/p256'
 
 describe('FCLP256Verifier', function () {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -20,43 +21,29 @@ describe('FCLP256Verifier', function () {
       return success
     }
 
-    const privateKey = p256.utils.normPrivateKeyToScalar(ethers.toBeArray(ethers.id('secret')))
-    function sign(message: BytesLike) {
-      const hex = ethers.hexlify(message).slice(2)
-      return p256.sign(hex, privateKey, {
-        lowS: false,
-        prehash: false,
-      })
-    }
+    const account = new Account()
 
-    const encodedPublicKey = p256.getPublicKey(privateKey, false)
-    const publicKey = {
-      x: BigInt(ethers.hexlify(encodedPublicKey.subarray(1, 33))),
-      y: BigInt(ethers.hexlify(encodedPublicKey.subarray(33, 65))),
-    }
-
-    return { verifier, verifySignature, privateKey, sign, publicKey }
+    return { verifier, verifySignature, account }
   })
 
   it('Should return 1 on valid signature', async function () {
-    const { verifySignature, sign, publicKey } = await setupTests()
+    const { verifySignature, account } = await setupTests()
 
     const message = ethers.id('hello world')
-    const signature = sign(message)
+    const { r, s } = account.sign(message)
+    const { x, y } = account.publicKey
 
-    expect(await verifySignature(message, signature.r, signature.s, publicKey.x, publicKey.y)).to.be.true
+    expect(await verifySignature(message, r, s, x, y)).to.be.true
   })
 
   it('Should ignore signature malleability', async function () {
-    const { verifySignature, sign, publicKey } = await setupTests()
+    const { verifySignature, account } = await setupTests()
 
     const message = ethers.id('hello world')
-    const signature = sign(message)
+    const { r, highS } = account.sign(message)
+    const { x, y } = account.publicKey
 
-    const minusS = p256.CURVE.n - signature.s
-    expect(minusS > p256.CURVE.n / 2n).to.be.true
-
-    expect(await verifySignature(message, signature.r, minusS, publicKey.x, publicKey.y)).to.be.true
+    expect(await verifySignature(message, r, highS, x, y)).to.be.true
   })
 
   it('Should return 0 on invalid signature', async function () {

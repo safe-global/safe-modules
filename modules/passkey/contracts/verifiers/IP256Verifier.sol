@@ -108,14 +108,18 @@ library P256VerifierLib {
             mstore(add(input, 96), x)
             mstore(add(input, 128), y)
 
-            // Perform staticcall
-            success := staticcall(gas(), verifier, input, 160, 0, 32)
-
-            // Check for success and return value
-            if iszero(and(success, eq(returndatasize(), 32))) {
-                revert(0, 0)
-            }
-            success := mload(0)
+            // Perform staticcall and check result, note that Yul evaluates expressions from right
+            // to left. See <https://docs.soliditylang.org/en/v0.8.24/yul.html#function-calls>
+            success := and(
+                and(
+                    // Return data is exactly 32-bytes long
+                    eq(returndatasize(), 32),
+                    // Return data is exactly the value 0x00..01
+                    eq(mload(0), 1)
+                ),
+                // Call does not revert
+                staticcall(gas(), verifier, input, 160, 0, 32)
+            )
         }
     }
 }
