@@ -1,7 +1,11 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
-import { buildUserOperationFromSafeUserOperation, buildSafeUserOpTransaction } from '../../src/utils/userOp'
+import {
+  buildPackedUserOperationFromSafeUserOperation,
+  buildRpcUserOperationFromSafeUserOperation,
+  buildSafeUserOpTransaction,
+} from '../../src/utils/userOp'
 import { bundlerRpc, encodeMultiSendTransactions, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
 describe('E2E - Singleton Signers', () => {
@@ -105,7 +109,7 @@ describe('E2E - Singleton Signers', () => {
       { initCode },
     )
     const opHash = await validator.getOperationHash(
-      buildUserOperationFromSafeUserOperation({
+      buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature: '0x',
       }),
@@ -117,7 +121,7 @@ describe('E2E - Singleton Signers', () => {
         dynamic: true,
       })),
     )
-    const userOp = buildUserOperationFromSafeUserOperation({
+    const userOp = await buildRpcUserOperationFromSafeUserOperation({
       safeOp,
       signature,
     })

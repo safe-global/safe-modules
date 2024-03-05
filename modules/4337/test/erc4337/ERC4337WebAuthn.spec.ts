@@ -4,7 +4,7 @@ import { getEntryPoint } from '../utils/setup'
 import { buildSignatureBytes, logGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
-  buildUserOperationFromSafeUserOperation,
+  buildPackedUserOperationFromSafeUserOperation,
   calculateSafeOperationHash,
   packGasParameters,
 } from '../../src/utils/userOp'
@@ -299,7 +299,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1') }).then((tx) => tx.wait())
       expect(await ethers.provider.getBalance(safe.address)).to.equal(ethers.parseEther('1'))
 
-      const userOp = buildUserOperationFromSafeUserOperation({ safeOp, signature })
+      const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await logGas('WebAuthn signer Safe operation', entryPoint.handleOps([userOp], user.address))
 
       expect(await ethers.provider.getBalance(safe.address)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
