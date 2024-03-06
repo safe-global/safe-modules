@@ -52,7 +52,7 @@ describe('E2E - WebAuthn Signers', () => {
       signerFactory,
       navigator,
       webAuthnVerifier,
-      SafeL2
+      SafeL2,
     }
   })
 
