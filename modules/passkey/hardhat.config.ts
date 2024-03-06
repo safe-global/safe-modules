@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
             enabled: true,
             runs: 10_000_000,
           },
-          viaIR: true,
+          viaIR: false,
           evmVersion: 'paris',
         },
       },
