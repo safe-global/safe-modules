@@ -18,8 +18,6 @@ services:
     build:
       context: .
       dockerfile: docker/bundler/Dockerfile
-      args:
-        TAG: 26e4f4c433916a6a2ea8ecc91ba8a56cd904f27f
     restart: always
     command: ['--auto', '--network=http://geth:8545']
     ports:
@@ -30,7 +28,7 @@ services:
       context: .
       dockerfile: docker/bundler/Dockerfile
       args:
-        TAG: 26e4f4c433916a6a2ea8ecc91ba8a56cd904f27f
+        TAG: main
     restart: always
     command: ['--auto', '--network=http://geth:8545']
     ports:

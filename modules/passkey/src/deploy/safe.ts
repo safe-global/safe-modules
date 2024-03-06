@@ -7,17 +7,14 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS } from '../constants'
 
 const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }) => {
-  if (!network.tags.safe && !network.tags.test) {
+  if (!network.tags.dev && !network.tags.test) {
     return
-  }
-
-  const entryPoint = (await deployments.getOrNull('EntryPoint').then((d) => d?.address)) || LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS
-  if (!entryPoint) {
-    throw new Error('Entry point contract should be deployed or set in LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS')
   }
 
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
+
+  const entryPoint = await deployments.get('EntryPoint')
 
   await deploy('MultiSend', {
     from: deployer,
@@ -50,12 +47,13 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
   await deploy('Safe4337Module', {
     from: deployer,
     contract: Safe4337Module,
-    args: [entryPoint],
+    args: [entryPoint.address],
     log: true,
     deterministicDeployment: true,
   })
 }
 
+deploy.dependencies = ['entrypoint']
 deploy.tags = ['safe']
 
 export default deploy

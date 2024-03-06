@@ -35,15 +35,16 @@
     "fmt:check": "prettier --check .",
     "lint": "npm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint:ts": "eslint --fix ./src && eslint --fix ./test",
+    "lint:ts": "eslint .",
     "test": "hardhat test",
-    "test:e2e": "./test/4337-e2e/run.sh"
+    "test:4337": "./test/4337/run.sh"
   },
   "devDependencies": {
+    "@account-abstraction/contracts": "^0.7.0",
     "@noble/curves": "^1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "@account-abstraction/contracts": "^0.7.0",
     "@safe-global/safe-erc4337": "^0.3.0",
+    "@simplewebauthn/server": "^9.0.3",
     "cbor": "^9.0.2",
     "dotenv": "^16.4.5",
     "hardhat": "^2.21.0",
