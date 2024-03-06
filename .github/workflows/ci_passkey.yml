@@ -14,8 +14,9 @@ jobs:
           node-version: 20.x
           cache: npm
           cache-dependency-path: package-lock.json
-      - run: npm ci
-      - run: npm run coverage -w modules/passkey
+      - run: |
+          npm ci
+          npm run coverage -w modules/passkey
       - uses: coverallsapp/github-action@master
         with:
           path-to-lcov: modules/passkey/coverage/lcov.info
@@ -29,7 +30,20 @@ jobs:
           node-version: 20.x
           cache: npm
           cache-dependency-path: package-lock.json
-      - run: npm ci
-      - run: npm run lint -w modules/passkey
-      - run: npm run fmt:check -w modules/passkey
-      - run: npm run build -w modules/passkey
+      - run: |
+          npm ci
+          npm run lint -w modules/passkey
+          npm run fmt:check -w modules/passkey
+          npm run build -w modules/passkey
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: |
+          npm ci
+          npm run test:e2e -w modules/passkey

@@ -70,8 +70,6 @@ const userConfig: HardhatUserConfig = {
       tags: ['dev', 'safe'],
     },
     hardhat: {
-      blockGasLimit: 100000000,
-      gas: 100000000,
       gasPrice: 10000000000,
       tags: ['test'],
     },
