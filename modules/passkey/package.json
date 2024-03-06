@@ -43,6 +43,7 @@
     "@noble/curves": "^1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@account-abstraction/contracts": "^0.7.0",
+    "@safe-global/safe-erc4337": "^0.3.0",
     "cbor": "^9.0.2",
     "dotenv": "^16.4.5",
     "hardhat": "^2.21.0",
@@ -55,7 +56,6 @@
     }
   },
   "dependencies": {
-    "@safe-global/safe-erc4337": "^0.3.0",
     "@safe-global/safe-contracts": "^1.4.1-build.0"
   }
 }

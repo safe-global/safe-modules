@@ -26,11 +26,11 @@ describe('E2E - WebAuthn Signers', () => {
     const bundler = bundlerRpc()
 
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
-    const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
-    const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
-    const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
+    const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
+    const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
+    const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const signerLaunchpad = await ethers.getContractAt('Safe256BitECSignerLaunchpad', Safe256BitECSignerLaunchpad.address)
-    const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
+    const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
@@ -52,6 +52,7 @@ describe('E2E - WebAuthn Signers', () => {
       signerFactory,
       navigator,
       webAuthnVerifier,
+      SafeL2
     }
   })
 
@@ -68,6 +69,7 @@ describe('E2E - WebAuthn Signers', () => {
       signerFactory,
       navigator,
       webAuthnVerifier,
+      SafeL2,
     } = await setupTests()
     const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
 
@@ -231,7 +233,7 @@ describe('E2E - WebAuthn Signers', () => {
     const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))
     expect(implementation).to.equal(singleton.target)
 
-    const safeInstance = await ethers.getContractAt('SafeL2', safe)
+    const safeInstance = await ethers.getContractAt(SafeL2.abi, safe)
     expect(await safeInstance.getOwners()).to.deep.equal([signerAddress])
   })
 })
