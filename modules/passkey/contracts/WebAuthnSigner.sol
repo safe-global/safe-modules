@@ -3,7 +3,7 @@
 pragma solidity >=0.8.0;
 
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
-import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import {ICustom256BitECSignerFactory} from "./interfaces/ICustomSignerFactory.sol";
 import {SignatureValidator} from "./SignatureValidator.sol";
 import {IWebAuthnVerifier, WebAuthnConstants} from "./verifiers/WebAuthnVerifier.sol";
 
@@ -24,13 +24,13 @@ contract WebAuthnSigner is SignatureValidator {
 
     /**
      * @dev Constructor function.
-     * @param x The X coordinate of the signer's public key.
-     * @param y The Y coordinate of the signer's public key.
+     * @param qx The X coordinate of the signer's public key.
+     * @param qy The Y coordinate of the signer's public key.
      * @param webAuthnVerifier The address of the P256Verifier contract.
      */
-    constructor(uint256 x, uint256 y, address webAuthnVerifier) {
-        X = x;
-        Y = y;
+    constructor(uint256 qx, uint256 qy, address webAuthnVerifier) {
+        X = qx;
+        Y = qy;
         WEBAUTHN_SIG_VERIFIER = IWebAuthnVerifier(webAuthnVerifier);
     }
 
@@ -61,28 +61,19 @@ contract WebAuthnSigner is SignatureValidator {
  * @title WebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn signers.
  */
-contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants {
-    /**
-     * @dev Retrieves the signer address based on the provided data.
-     * @param data Concatenated X and Y coordinates of the signer as bytes.
-     * @return signer The address of the signer.
-     */
-    function getSigner(bytes calldata data) public view returns (address signer) {
-        (uint256 x, uint256 y, address verifier) = abi.decode(data, (uint256, uint256, address));
-        signer = _getSigner(x, y, verifier);
+contract WebAuthnSignerFactory is ICustom256BitECSignerFactory, SignatureValidatorConstants {
+    // @inheritdoc ICustom256BitECSignerFactory
+    function getSigner(uint256 qx, uint256 qy, address verifier) public view override returns (address signer) {
+        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, qx, qy, uint256(uint160(verifier))));
+        signer = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
-    /**
-     * @dev Creates a new signer based on the provided data.
-     * @param data Concatenated X and Y coordinates of the signer as bytes.
-     * @return signer The address of the newly created signer.
-     */
-    function createSigner(bytes calldata data) external returns (address signer) {
-        (uint256 x, uint256 y, address verifier) = abi.decode(data, (uint256, uint256, address));
-        signer = _getSigner(x, y, verifier);
+    // @inheritdoc ICustom256BitECSignerFactory
+    function createSigner(uint256 qx, uint256 qy, address verifier) external returns (address signer) {
+        signer = getSigner(qx, qy, verifier);
 
         if (_hasNoCode(signer) && _validVerifier(verifier)) {
-            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
+            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(qx, qy, verifier);
             require(address(created) == signer);
         }
     }
@@ -97,34 +88,17 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
         return !_hasNoCode(verifier);
     }
 
-    /**
-     * @dev Checks if the provided signature is valid for the given signer.
-     * @param message The signed message.
-     * @param signature The signature to be verified.
-     * @param signerData The data used to identify the signer. In this case, the X and Y coordinates of the signer.
-     * @return magicValue The magic value indicating the validity of the signature.
-     */
+    // @inheritdoc ICustom256BitECSignerFactory
     function isValidSignatureForSigner(
+        uint256 qx,
+        uint256 qy,
+        address verifier,
         bytes32 message,
-        bytes calldata signature,
-        bytes calldata signerData
+        bytes calldata signature
     ) external view override returns (bytes4 magicValue) {
-        (uint256 x, uint256 y, address verifier) = abi.decode(signerData, (uint256, uint256, address));
-        if (checkSignature(verifier, message, signature, x, y)) {
+        if (checkSignature(verifier, message, signature, qx, qy)) {
             magicValue = EIP1271_MAGIC_VALUE;
         }
-    }
-
-    /**
-     * @dev Retrieves the signer address based on the provided coordinates.
-     * @param x The x-coordinate of the signer.
-     * @param y The y-coordinate of the signer.
-     * @return The address of the signer.
-     */
-    function _getSigner(uint256 x, uint256 y, address verifier) internal view returns (address) {
-        // We need to convert the address to uint256, so it is padded to 32 bytes
-        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, uint256(uint160(verifier))));
-        return address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
     /**
@@ -146,16 +120,16 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
      * @param verifier The address of the WebAuthnVerifier contract.
      * @param dataHash The hash of the data being signed.
      * @param signature The signature to be verified.
-     * @param x The x-coordinate of the public key.
-     * @param y The y-coordinate of the public key.
+     * @param qx The x-coordinate of the public key.
+     * @param qy The y-coordinate of the public key.
      * @return A boolean indicating whether the signature is valid or not.
      */
     function checkSignature(
         address verifier,
         bytes32 dataHash,
         bytes calldata signature,
-        uint256 x,
-        uint256 y
+        uint256 qx,
+        uint256 qy
     ) internal view returns (bool) {
         SignatureData calldata signaturePointer;
         // solhint-disable-next-line no-inline-assembly
@@ -170,8 +144,8 @@ contract WebAuthnSignerFactory is IUniqueSignerFactory, SignatureValidatorConsta
                 dataHash,
                 signaturePointer.clientDataFields,
                 signaturePointer.rs,
-                x,
-                y
+                qx,
+                qy
             );
     }
 }
