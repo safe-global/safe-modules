@@ -46,4 +46,4 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: |
           npm ci
-          npm run test:e2e -w modules/passkey
+          npm run test:4337 -w modules/passkey
