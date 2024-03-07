@@ -37,13 +37,15 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint .",
     "test": "hardhat test",
-    "test:4337": "./test/4337/run.sh"
+    "test:4337": "4337-local-bundler-test",
+    "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test"
   },
   "devDependencies": {
     "@account-abstraction/contracts": "^0.7.0",
     "@noble/curves": "^1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@safe-global/safe-4337": "^0.3.0",
+    "@safe-global/safe-4337-local-bundler": "^0.0.0",
     "@simplewebauthn/server": "^9.0.3",
     "cbor": "^9.0.2",
     "dotenv": "^16.4.5",

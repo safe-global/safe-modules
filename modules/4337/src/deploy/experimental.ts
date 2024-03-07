@@ -8,6 +8,8 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
+  const entryPoint = await deployments.get('EntryPoint')
+
   const p256Verifier = await deploy('P256Verifier', {
     from: deployer,
     args: [],
@@ -28,6 +30,15 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
     log: true,
     deterministicDeployment: true,
   })
+
+  await deploy('SafeSignerLaunchpad', {
+    from: deployer,
+    args: [entryPoint.address],
+    log: true,
+    deterministicDeployment: true,
+  })
 }
+
+deploy.dependencies = ['entrypoint']
 
 export default deploy

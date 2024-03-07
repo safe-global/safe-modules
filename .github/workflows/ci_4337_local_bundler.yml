@@ -1,12 +1,11 @@
-name: safe-modules-4337-gas-metering
+name: safe-modules-4337-local-bundler
 on:
   push:
     paths:
-      - 'modules/4337/**'
-      - 'examples/4337-gas-metering/**'
+      - 'packages/4337-local-bundler/**'
 
 jobs:
-  checks:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +16,4 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: |
           npm ci
-          npm run fmt:check -w examples/4337-gas-metering
-          npm run lint -w examples/4337-gas-metering
-          npm run build -w examples/4337-gas-metering
+          npm run lint -w packages/4337-local-bundler

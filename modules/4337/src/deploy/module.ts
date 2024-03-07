@@ -17,6 +17,5 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
 }
 
 deploy.dependencies = ['entrypoint']
-deploy.tags = ['modules']
 
 export default deploy

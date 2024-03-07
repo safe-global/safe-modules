@@ -11,7 +11,7 @@ import {
 } from '../utils/webauthn'
 import { packGasParameters, unpackUserOperation } from '../../src/utils/userOp'
 
-describe('E2E - WebAuthn Signers', () => {
+describe('WebAuthn Signers [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()

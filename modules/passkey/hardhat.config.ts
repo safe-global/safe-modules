@@ -15,10 +15,10 @@ const config: HardhatUserConfig = {
   networks: {
     localhost: {
       url: 'http://localhost:8545',
-      tags: ['dev'],
+      tags: ['dev', 'entrypoint', 'safe'],
     },
     hardhat: {
-      tags: ['test'],
+      tags: ['test', 'entrypoint', 'safe'],
     },
   },
   solidity: {

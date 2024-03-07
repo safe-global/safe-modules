@@ -290,7 +290,7 @@ const buildNestedSafeOp = async (
   )
 }
 
-describe('E2E - Nested Safes With An Execution Initiated by a Leaf 4337 Safe', () => {
+describe('Nested Safes With An Execution Initiated by a Leaf 4337 Safe [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()
