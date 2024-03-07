@@ -10,7 +10,8 @@ This repository contains a collection of modules for the [Safe Smart Account](ht
 
 ## Examples
 
-- [Safe + 4337 + Passkeys](./examples/safe-4337-passkeys)
+- [Safe + 4337 + Passkeys](./examples/4337-passkeys)
+- [4337 Gas Metering](./examples/4337-gas-metering)
 
 ## Security and Liability
 

@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
-import { packGasParameters, unpackUserOperation } from '@safe-global/safe-erc4337/dist/src/utils/userOp'
+import { packGasParameters, unpackUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'

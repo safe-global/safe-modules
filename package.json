@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "workspaces": [
     "modules/*",
+    "packages/*",
     "examples/*"
   ],
   "scripts": {
