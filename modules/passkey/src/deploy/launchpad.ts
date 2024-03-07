@@ -1,25 +1,19 @@
 import { DeployFunction } from 'hardhat-deploy/types'
-import { LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS } from '../constants'
 
-const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }) => {
-  if (!network.tags.dev && !network.tags.test) {
-    return
-  }
-
+const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  const entryPoint = (await deployments.getOrNull('EntryPoint').then((d) => d?.address)) || LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS
-  if (!entryPoint) {
-    throw new Error('Entry point contract should be deployed or set in LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS')
-  }
+  const entryPoint = await deployments.get('EntryPoint')
 
   await deploy('Safe256BitECSignerLaunchpad', {
     from: deployer,
-    args: [entryPoint],
+    args: [entryPoint.address],
     log: true,
     deterministicDeployment: true,
   })
 }
+
+deploy.dependencies = ['entrypoint']
 
 export default deploy

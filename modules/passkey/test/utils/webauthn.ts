@@ -15,11 +15,7 @@ export interface CredentialCreationOptions {
   publicKey: PublicKeyCredentialCreationOptions
 }
 
-export enum UserVerificationRequirement {
-  'required',
-  'preferred',
-  'discouraged',
-}
+export type UserVerificationRequirement = 'required' | 'preferred' | 'discouraged'
 
 /**
  * Public key credetial creation options, restricted to a subset of options that this module supports.
@@ -34,7 +30,7 @@ export interface PublicKeyCredentialCreationOptions {
     alg: number
   }[]
   attestation?: 'none'
-  userVerification?: Exclude<UserVerificationRequirement, UserVerificationRequirement.discouraged>
+  userVerification?: Exclude<UserVerificationRequirement, 'discouraged'>
 }
 
 export interface CredentialRequestOptions {
@@ -52,8 +48,7 @@ export interface PublicKeyCredentialRequestOptions {
     type: 'public-key'
     id: Uint8Array
   }[]
-  // we don't support discouraged user verification
-  userVerification?: Exclude<UserVerificationRequirement, UserVerificationRequirement.discouraged>
+  userVerification?: Exclude<UserVerificationRequirement, 'discouraged'>
   attestation?: 'none'
 }
 
@@ -145,27 +140,26 @@ export class WebAuthnCredentials {
     // <https://w3c.github.io/webauthn/#dictionary-client-data>
     const clientData = {
       type: 'webauthn.create',
-      challenge: base64UrlEncode(publicKey.challenge).replace(/=*$/, ''),
+      challenge: base64UrlEncode(publicKey.challenge),
       origin: `https://${publicKey.rp.id}`,
     }
 
-    const userVerification = publicKey.userVerification ?? 'preferred'
-    const userVerificationFlag = userVerification === UserVerificationRequirement.required ? 0x04 : 0x01
-
     // <https://w3c.github.io/webauthn/#sctn-attestation>
     const attestationObject = {
-      authData: ethers.getBytes(
-        ethers.solidityPacked(
-          ['bytes32', 'uint8', 'uint32', 'bytes16', 'uint16', 'bytes', 'bytes'],
-          [
-            ethers.sha256(ethers.toUtf8Bytes(publicKey.rp.id)),
-            0x40 + userVerificationFlag, // flags = attested_data + user_present
-            0, // signCount
-            `0x${'42'.repeat(16)}`, // aaguid
-            ethers.dataLength(credential.id),
-            credential.id,
-            credential.cosePublicKey(),
-          ],
+      authData: b2ab(
+        ethers.getBytes(
+          ethers.solidityPacked(
+            ['bytes32', 'uint8', 'uint32', 'bytes16', 'uint16', 'bytes', 'bytes'],
+            [
+              ethers.sha256(ethers.toUtf8Bytes(publicKey.rp.id)),
+              0x40 + userVerificationFlag(publicKey.userVerification), // flags = attested_data + user_present
+              0, // signCount
+              `0x${'42'.repeat(16)}`, // aaguid
+              ethers.dataLength(credential.id),
+              credential.id,
+              credential.cosePublicKey(),
+            ],
+          ),
         ),
       ),
       fmt: 'none',
@@ -201,12 +195,10 @@ export class WebAuthnCredentials {
     // <https://w3c.github.io/webauthn/#dictionary-client-data>
     const clientData = {
       type: 'webauthn.get',
-      challenge: base64UrlEncode(publicKey.challenge).replace(/=*$/, ''),
+      challenge: base64UrlEncode(publicKey.challenge),
       origin: `https://${publicKey.rpId}`,
     }
 
-    const userVerification = publicKey.userVerification ?? 'preferred'
-    const userVerificationFlag = userVerification === UserVerificationRequirement.required ? 0x04 : 0x01
     // <https://w3c.github.io/webauthn/#sctn-authenticator-data>
     // Note that we use a constant 0 value for signCount to simplify things:
     // > If the authenticator does not implement a signature counter, let the signature counter
@@ -215,7 +207,7 @@ export class WebAuthnCredentials {
       ['bytes32', 'uint8', 'uint32'],
       [
         ethers.sha256(ethers.toUtf8Bytes(publicKey.rpId)),
-        userVerificationFlag, // flags = user_present
+        userVerificationFlag(publicKey.userVerification), // flags = user_present
         0, // signCount
       ],
     )
@@ -245,6 +237,21 @@ export class WebAuthnCredentials {
   }
 }
 
+function userVerificationFlag(userVerification: UserVerificationRequirement = 'preferred'): number {
+  switch (userVerification) {
+    case 'preferred':
+      return 0x01
+    case 'required':
+      return 0x04
+    default:
+      throw new Error(`user verification requirement ${userVerification} not supported`)
+  }
+}
+
+function b2ab(buf: Uint8Array): ArrayBuffer {
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+}
+
 /**
  * Encode bytes using the Base64 URL encoding.
  *
@@ -258,18 +265,18 @@ export function base64UrlEncode(data: BytesLike | ArrayBufferLike): string {
   return ethers.encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
 }
 
-function b2ab(buf: Uint8Array): ArrayBuffer {
-  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
-}
-
 /**
- * Extract the x and y coordinates of the public key from a created public key credential.
+ * Decodes the x and y coordinates of the public key from a created public key credential response.
  * Inspired from <https://webauthn.guide/#registration>.
  */
-export function extractPublicKey(response: AuthenticatorAttestationResponse): { x: bigint; y: bigint } {
+export function decodePublicKey(response: Pick<AuthenticatorAttestationResponse, 'attestationObject'>): { x: bigint; y: bigint } {
   const attestationObject = CBOR.decode(response.attestationObject)
-  const authDataView = new DataView(attestationObject.authData.buffer)
-  const credentialIdLength = authDataView.getUint16(53)
+  const authData = new DataView(
+    attestationObject.authData.buffer,
+    attestationObject.authData.byteOffset,
+    attestationObject.authData.byteLength,
+  )
+  const credentialIdLength = authData.getUint16(53)
   const cosePublicKey = attestationObject.authData.slice(55 + credentialIdLength)
   const key: Map<number, unknown> = CBOR.decode(cosePublicKey)
   const bn = (bytes: Uint8Array) => BigInt(ethers.hexlify(bytes))
@@ -280,13 +287,13 @@ export function extractPublicKey(response: AuthenticatorAttestationResponse): { 
 }
 
 /**
- * Compute the additional client data JSON fields. This is the fields other than `type` and
- * `challenge` (including `origin` and any other additional client data fields that may be
- * added by the authenticator).
+ * Decode the additional client data JSON fields. This is the fields other than `type` and
+ * `challenge` (including `origin` and any other additional client data fields that may be added by
+ * the authenticator).
  *
  * See <https://w3c.github.io/webauthn/#clientdatajson-serialization>
  */
-export function extractClientDataFields(response: AuthenticatorAssertionResponse): string {
+export function decodeClientDataFields(response: Pick<AuthenticatorAssertionResponse, 'clientDataJSON'>): string {
   const clientDataJSON = new TextDecoder('utf-8').decode(response.clientDataJSON)
   const match = clientDataJSON.match(/^\{"type":"webauthn.get","challenge":"[A-Za-z0-9\-_]{43}",(.*)\}$/)
 
@@ -299,29 +306,24 @@ export function extractClientDataFields(response: AuthenticatorAssertionResponse
 }
 
 /**
- * Extracts the signature into R and S values from the authenticator response.
+ * Decode the signature R and S values from the authenticator response's DER-encoded signature.
+ *
+ * Note that this implementation assumes that all lengths in the DER encoding fit into 8-bit
+ * integers, which is true for the kinds of signatures we are decoding but generally false. I.e.
+ * **this code should not be used in any serious application**.
  *
  * See:
  * - <https://datatracker.ietf.org/doc/html/rfc3279#section-2.2.3>
  * - <https://en.wikipedia.org/wiki/X.690#BER_encoding>
  */
-export function extractSignature(response: AuthenticatorAssertionResponse): [bigint, bigint] {
+export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, 'signature'>): { r: bigint; s: bigint } {
+  const view = new DataView(response.signature)
+
   const check = (x: boolean) => {
     if (!x) {
       throw new Error('invalid signature encoding')
     }
   }
-
-  // Decode the DER signature. Note that we assume that all lengths fit into 8-bit integers,
-  // which is true for the kinds of signatures we are decoding but generally false. I.e. this
-  // code should not be used in any serious application.
-  const view = new DataView(response.signature)
-
-  // check that the sequence header is valid
-  check(view.getUint8(0) === 0x30)
-  check(view.getUint8(1) === view.byteLength - 2)
-
-  // read r and s
   const readInt = (offset: number) => {
     check(view.getUint8(offset) === 0x02)
     const len = view.getUint8(offset + 1)
@@ -331,8 +333,27 @@ export function extractSignature(response: AuthenticatorAssertionResponse): [big
     check(n < ethers.MaxUint256)
     return [n, end] as const
   }
+
+  // check that the sequence header is valid
+  check(view.getUint8(0) === 0x30)
+  check(view.getUint8(1) === view.byteLength - 2)
+
+  // read R and S
   const [r, sOffset] = readInt(2)
   const [s] = readInt(sOffset)
 
-  return [r, s]
+  return { r, s }
+}
+
+/**
+ * Encodes the signature bytes for a WebAuthn signer.
+ */
+export function encodeWebAuthnSignature(response: AuthenticatorAssertionResponse): string {
+  const clientDataFields = decodeClientDataFields(response)
+  const { r, s } = decodeSignature(response)
+
+  return ethers.AbiCoder.defaultAbiCoder().encode(
+    ['bytes', 'bytes', 'uint256', 'uint256'],
+    [new Uint8Array(response.authenticatorData), clientDataFields, r, s],
+  )
 }

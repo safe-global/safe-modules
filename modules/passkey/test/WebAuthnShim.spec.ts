@@ -11,7 +11,7 @@ import {
 import { expect } from 'chai'
 import CBOR from 'cbor'
 import { ethers } from 'ethers'
-import { WebAuthnCredentials, base64UrlEncode } from '../utils/webauthn'
+import { WebAuthnCredentials, base64UrlEncode } from './utils/webauthn'
 
 describe('WebAuthn Shim', () => {
   const navigator = {
@@ -90,8 +90,12 @@ describe('WebAuthn Shim', () => {
       })
 
       const attestationObject = CBOR.decode(credential.response.attestationObject)
-      const authDataView = new DataView(attestationObject.authData.buffer)
-      const credentialIdLength = authDataView.getUint16(53)
+      const authData = new DataView(
+        attestationObject.authData.buffer,
+        attestationObject.authData.byteOffset,
+        attestationObject.authData.byteLength,
+      )
+      const credentialIdLength = authData.getUint16(53)
       const credentialPublicKey = attestationObject.authData.slice(55 + credentialIdLength)
 
       const options = await generateAuthenticationOptions({

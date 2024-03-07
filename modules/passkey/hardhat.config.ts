@@ -3,7 +3,6 @@ import dotenv from 'dotenv'
 import type { HardhatUserConfig } from 'hardhat/config'
 import 'hardhat-deploy'
 
-// Load environment variables.
 dotenv.config()
 
 const config: HardhatUserConfig = {
@@ -16,10 +15,9 @@ const config: HardhatUserConfig = {
   networks: {
     localhost: {
       url: 'http://localhost:8545',
-      tags: ['dev', 'safe'],
+      tags: ['dev'],
     },
     hardhat: {
-      gasPrice: 10000000000,
       tags: ['test'],
     },
   },

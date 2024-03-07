@@ -20,7 +20,7 @@ until curl -fs http://localhost:8545 >/dev/null && curl -fs http://localhost:300
     sleep 1
 done
 
-hardhat test --deploy-fixture --network localhost --grep '^E2E - '
+hardhat test --deploy-fixture --network localhost --grep '@4337'
 success=$?
 
 "$DOCKER" compose down
