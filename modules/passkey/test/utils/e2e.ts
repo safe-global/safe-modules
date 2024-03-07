@@ -1,5 +1,5 @@
 import { deployments, ethers } from 'hardhat'
-import { MultiProvider4337 } from '@safe-global/safe-erc4337/dist/src/utils/safe'
+import { MultiProvider4337 } from '@safe-global/safe-4337/dist/src/utils/safe'
 import { AddressLike, BigNumberish, BytesLike, HDNodeWallet } from 'ethers'
 import { PackedUserOperationStruct } from '../../typechain-types/@account-abstraction/contracts/interfaces/IAccount'
 

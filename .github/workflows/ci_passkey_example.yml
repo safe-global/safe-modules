@@ -4,7 +4,7 @@ on:
     paths:
       - 'modules/4337/**'
       - 'modules/passkey/**'
-      - 'examples/safe-4337-passkeys/**'
+      - 'examples/4337-passkeys/**'
 
 jobs:
   checks:
@@ -22,8 +22,8 @@ jobs:
           npm run build -w modules/4337
           # Reinstall the dependencies so the 4337 dependency includes artifacts
           npm ci
-          npm run lint -w examples/safe-4337-passkeys
-          npm run build -w examples/safe-4337-passkeys
+          npm run lint -w examples/4337-passkeys
+          npm run build -w examples/4337-passkeys
         env:
           VITE_WC_CLOUD_PROJECT_ID: ${{ secrets.VITE_WC_CLOUD_PROJECT_ID }}
           VITE_WC_4337_BUNDLER_URL: ${{ secrets.VITE_WC_4337_BUNDLER_URL }}
