@@ -4,7 +4,6 @@ import SafeL2 from '@safe-global/safe-contracts/build/artifacts/contracts/SafeL2
 import Safe4337Module from '@safe-global/safe-erc4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import SafeModuleSetup from '@safe-global/safe-erc4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import { DeployFunction } from 'hardhat-deploy/types'
-import { LAUNCHPAD_DEPLOYMENT_ENTRY_POINT_ADDRESS } from '../constants'
 
 const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }) => {
   if (!network.tags.dev && !network.tags.test) {
