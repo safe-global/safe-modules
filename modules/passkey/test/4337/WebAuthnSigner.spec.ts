@@ -1,8 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { packGasParameters, unpackUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp'
-import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
-import { chainId } from '../utils/encoding'
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 
 describe('WebAuthn Signers [@4337]', () => {
@@ -64,6 +63,8 @@ describe('WebAuthn Signers [@4337]', () => {
       webAuthnVerifier,
       SafeL2,
     } = await setupTests()
+
+    const { chainId } = await ethers.provider.getNetwork()
     const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
 
     const credential = navigator.credentials.create({
@@ -95,7 +96,7 @@ describe('WebAuthn Signers [@4337]', () => {
       fallbackHandler: module.target,
     }
     const safeInitHash = ethers.TypedDataEncoder.hash(
-      { verifyingContract: await signerLaunchpad.getAddress(), chainId: await chainId() },
+      { verifyingContract: await signerLaunchpad.getAddress(), chainId },
       {
         SafeInit: [
           { type: 'address', name: 'singleton' },
@@ -171,7 +172,7 @@ describe('WebAuthn Signers [@4337]', () => {
       entryPoint: entryPoint.target,
     }
     const safeInitOpHash = ethers.TypedDataEncoder.hash(
-      { verifyingContract: await signerLaunchpad.getAddress(), chainId: await chainId() },
+      { verifyingContract: await signerLaunchpad.getAddress(), chainId },
       {
         SafeInitOp: [
           { type: 'bytes32', name: 'userOpHash' },

@@ -28,8 +28,8 @@
   ],
   "scripts": {
     "build": "npm run build:sol && npm run build:ts",
-    "build:sol": "npx rimraf build && hardhat compile",
-    "build:ts": "npx rimraf dist && tsc",
+    "build:sol": "rimraf build typechain-types && hardhat compile",
+    "build:ts": "rimraf dist && tsc",
     "coverage": "hardhat coverage",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
@@ -38,7 +38,8 @@
     "lint:ts": "eslint .",
     "test": "hardhat test",
     "test:4337": "4337-local-bundler-test",
-    "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test"
+    "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test",
+    "prepare": "npm run build -w ../4337 && npm run build"
   },
   "devDependencies": {
     "@account-abstraction/contracts": "^0.7.0",
@@ -55,7 +56,7 @@
   },
   "overrides": {
     "@safe-global/safe-contracts": {
-      "ethers": "^6.11.0"
+      "ethers": "^6.11.1"
     }
   },
   "dependencies": {

@@ -1,12 +1,22 @@
+import { MultiProvider4337, UserOperation } from '@safe-global/safe-4337-provider'
+import { HDNodeWallet } from 'ethers'
 import { deployments, ethers } from 'hardhat'
-import { MultiProvider4337 } from '../../src/utils/safe'
-import { UserOperation } from '../../src/utils/userOp'
-import { AddressLike, BigNumberish, BytesLike, HDNodeWallet } from 'ethers'
 
 export const BUNDLER_URL = process.env.TEST_BUNLDER_URL || 'http://localhost:3000/rpc'
 export const BUNDLER_MNEMONIC = process.env.TEST_BUNDLER_MNEMONIC || 'test test test test test test test test test test test junk'
 
-export async function prepareAccounts(mnemonic = BUNDLER_MNEMONIC, count = 1): Promise<HDNodeWallet[]> {
+export type PrepareAccountOptions = {
+  mnemonic: string
+  count: number
+}
+
+export async function prepareAccounts(options: Partial<PrepareAccountOptions> = {}): Promise<HDNodeWallet[]> {
+  const { mnemonic, count } = {
+    mnemonic: BUNDLER_MNEMONIC,
+    count: 1,
+    ...options,
+  }
+
   const bundler = ethers.HDNodeWallet.fromPhrase(mnemonic).connect(ethers.provider)
   const accounts = [...Array(count)].map(() => ethers.Wallet.createRandom(ethers.provider))
 
@@ -38,19 +48,4 @@ export async function waitForUserOp({ sender, nonce }: Pick<UserOperation, 'send
     }
     await new Promise((resolve) => setTimeout(resolve, 10))
   }
-}
-
-export interface MultiSendTransaction {
-  op: 0 | 1
-  to: AddressLike
-  value?: BigNumberish
-  data: BytesLike
-}
-
-export function encodeMultiSendTransactions(transactions: MultiSendTransaction[]) {
-  return ethers.concat(
-    transactions.map(({ op, to, value, data }) =>
-      ethers.solidityPacked(['uint8', 'address', 'uint256', 'uint256', 'bytes'], [op, to, value ?? 0, ethers.dataLength(data), data]),
-    ),
-  )
 }

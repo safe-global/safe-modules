@@ -1,3 +1,4 @@
+import { AddressLike, BigNumberish, BytesLike } from 'ethers'
 import { ethers } from 'hardhat'
 
 export const Erc20 = [
@@ -24,4 +25,19 @@ export const timestamp = async () => {
     throw new Error('missing latest block???')
   }
   return block.timestamp
+}
+
+export interface MultiSendTransaction {
+  op: 0 | 1
+  to: AddressLike
+  value?: BigNumberish
+  data: BytesLike
+}
+
+export function encodeMultiSendTransactions(transactions: MultiSendTransaction[]) {
+  return ethers.concat(
+    transactions.map(({ op, to, value, data }) =>
+      ethers.solidityPacked(['uint8', 'address', 'uint256', 'uint256', 'bytes'], [op, to, value ?? 0, ethers.dataLength(data), data]),
+    ),
+  )
 }
