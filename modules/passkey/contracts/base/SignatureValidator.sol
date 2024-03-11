@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
+import {ERC1271} from "../libraries/ERC1271.sol";
 
 /**
- * @title ISafeSigner
- * @dev A interface for smart contract Safe owners that supports multiple `isValidSignature` versions.
+ * @title Signature Validator Base Contract
+ * @dev A interface for smart contract Safe owners that supports multiple ERC-1271 `isValidSignature` versions.
+ * @custom:security-contact bounty@safe.global
  */
-abstract contract SignatureValidator is SignatureValidatorConstants {
+abstract contract SignatureValidator {
     /**
      * @dev Validates the signature for the given data.
      * @param data The signed data bytes.
@@ -16,7 +17,7 @@ abstract contract SignatureValidator is SignatureValidatorConstants {
      */
     function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
         if (_verifySignature(keccak256(data), signature)) {
-            magicValue = LEGACY_EIP1271_MAGIC_VALUE;
+            magicValue = ERC1271.LEGACY_MAGIC_VALUE;
         }
     }
 
@@ -28,7 +29,7 @@ abstract contract SignatureValidator is SignatureValidatorConstants {
      */
     function isValidSignature(bytes32 message, bytes calldata signature) external view returns (bytes4 magicValue) {
         if (_verifySignature(message, signature)) {
-            magicValue = EIP1271_MAGIC_VALUE;
+            magicValue = ERC1271.MAGIC_VALUE;
         }
     }
 

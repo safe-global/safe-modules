@@ -5,15 +5,16 @@ import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
-import {SignatureValidatorConstants} from "../SignatureValidatorConstants.sol";
+
 import {ICustom256BitECSignerFactory} from "../interfaces/ICustomSignerFactory.sol";
-import {ISafeSetup} from "../interfaces/ISafe.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
+import {ERC1271} from "../libraries/ERC1271.sol";
 
 /**
  * @title SafeOpLaunchpad - A contract for Safe initialization with custom unique signers that would violate ERC-4337 factory rules.
  * @dev The is intended to be set as a Safe proxy's implementation for ERC-4337 user operation that deploys the account.
  */
-contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstants {
+contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage {
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     // keccak256("SafeSignerLaunchpad.initHash") - 1
@@ -197,7 +198,7 @@ contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage, SignatureValidato
             )
         returns (bytes4 magicValue) {
             // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(magicValue != EIP1271_MAGIC_VALUE, validUntil, validAfter);
+            validationData = _packValidationData(magicValue != ERC1271.MAGIC_VALUE, validUntil, validAfter);
         } catch {
             validationData = _packValidationData(true, validUntil, validAfter);
         }
@@ -219,7 +220,7 @@ contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage, SignatureValidato
             address[] memory owners = new address[](1);
             owners[0] = ICustom256BitECSignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifier);
 
-            ISafeSetup(address(this)).setup(owners, 1, setupTo, setupData, fallbackHandler, address(0), 0, payable(address(0)));
+            ISafe(address(this)).setup(owners, 1, setupTo, setupData, fallbackHandler, address(0), 0, payable(address(0)));
         }
 
         (bool success, bytes memory returnData) = address(this).delegatecall(callData);
