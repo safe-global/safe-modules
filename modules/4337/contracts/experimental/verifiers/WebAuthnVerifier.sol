@@ -3,7 +3,6 @@
 pragma solidity >=0.8.0;
 
 import {P256Wrapper} from "./P256Wrapper.sol";
-import {Base64Url} from "../../vendor/FCL/utils/Base64Url.sol";
 
 /**
  * @title WebAuthnConstants
@@ -90,6 +89,9 @@ interface IWebAuthnVerifier {
 contract WebAuthnVerifier is IWebAuthnVerifier, P256Wrapper {
     constructor(address verifier) P256Wrapper(verifier) {}
 
+    string internal constant ENCODING_TABLE =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
     /**
      * @dev Generates a signing message based on the authenticator data, challenge, and client data fields.
      * @param authenticatorData Authenticator data.
@@ -102,7 +104,61 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256Wrapper {
         bytes32 challenge,
         bytes calldata clientDataFields
     ) internal pure returns (bytes32 message) {
-        string memory encodedChallenge = Base64Url.encode(abi.encodePacked(challenge));
+
+        // Result is 44 bytes long because the encoded challenge is 32 bytes long
+        // 4*(32 + 2)/3 = 44 after rounding.
+        string memory table = ENCODING_TABLE;
+        string memory encodedChallenge = new string(44);
+
+        assembly {
+            // Skip first 32 bytes of the table containing the length
+            let tablePtr := add(table, 1)
+            // Skip first 32 bytes of the encodedChallenge containing the length
+            let resultPtr := add(encodedChallenge, 32)
+
+            // Temporarily stores 3 bytes of challenge
+            let buffer
+            for{let i:= 0} lt(i, 10)
+            {
+                i := add(i, 1)
+            }{
+                // Calculate the shift value to get the 3 bytes of challenge
+                let shift := sub(256, mul(add(i, 1), 24))
+                buffer := and(shr(shift, challenge), 0xFFFFFF)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(18, buffer), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(12, buffer), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(6, buffer), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(buffer, 0x3F))))
+                resultPtr := add(resultPtr, 1)
+           }
+                
+                // As 32 bytes input is not divisible by 3, process last 2 bytes of challenge separately
+                buffer := shl(8, and(challenge, 0xFFFF))
+
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(18, buffer), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(12, buffer), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(6, buffer), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                mstore8(resultPtr, mload(add(tablePtr, and(buffer, 0x3F))))
+                resultPtr := add(resultPtr, 1)
+
+                // Because the input is fixed 32 bytes long
+                resultPtr := sub(resultPtr, 1)
+                mstore(encodedChallenge, sub(resultPtr, add(encodedChallenge, 32)))
+        }
+
         /* solhint-disable quotes */
         bytes memory clientDataJson = abi.encodePacked(
             '{"type":"webauthn.get","challenge":"',
