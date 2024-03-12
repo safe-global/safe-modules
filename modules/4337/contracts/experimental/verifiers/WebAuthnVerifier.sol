@@ -105,70 +105,46 @@ contract WebAuthnVerifier is IWebAuthnVerifier, P256Wrapper {
         bytes calldata clientDataFields
     ) internal pure returns (bytes32 message) {
 
-        // Result is 44 bytes long because the encoded challenge is 32 bytes long
-        // 4*(32 + 2)/3 = 44 after rounding.
-        string memory table = ENCODING_TABLE;
-        string memory encodedChallenge = new string(44);
-
-        assembly {
-            // Skip first 32 bytes of the table containing the length
-            let tablePtr := add(table, 1)
-            // Skip first 32 bytes of the encodedChallenge containing the length
-            let resultPtr := add(encodedChallenge, 32)
-
-            // Temporarily stores 3 bytes of challenge
-            let buffer
-            for{let i:= 0} lt(i, 10)
-            {
-                i := add(i, 1)
-            }{
-                // Calculate the shift value to get the 3 bytes of challenge
-                let shift := sub(256, mul(add(i, 1), 24))
-                buffer := and(shr(shift, challenge), 0xFFFFFF)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(shr(18, buffer), 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(shr(12, buffer), 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(shr(6, buffer), 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(buffer, 0x3F))))
-                resultPtr := add(resultPtr, 1)
-           }
-                
-                // As 32 bytes input is not divisible by 3, process last 2 bytes of challenge separately
-                buffer := shl(8, and(challenge, 0xFFFF))
-
-                mstore8(resultPtr, mload(add(tablePtr, and(shr(18, buffer), 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(shr(12, buffer), 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(shr(6, buffer), 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                mstore8(resultPtr, mload(add(tablePtr, and(buffer, 0x3F))))
-                resultPtr := add(resultPtr, 1)
-
-                // Because the input is fixed 32 bytes long
-                resultPtr := sub(resultPtr, 1)
-                mstore(encodedChallenge, sub(resultPtr, add(encodedChallenge, 32)))
-        }
-
         /* solhint-disable quotes */
+        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA is placeholder for the encoded challenge
         bytes memory clientDataJson = abi.encodePacked(
             '{"type":"webauthn.get","challenge":"',
-            encodedChallenge,
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
             '",',
             clientDataFields,
             "}"
         );
+
+        string memory table = ENCODING_TABLE;
+        
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // Skip first 32 bytes of the table containing the length
+            let tablePtr := add(table, 1)
+            // Skip first 36 bytes of the clientDataJson containing '{"type":"webauthn.get","challenge":"'
+            let resultPtr := add(clientDataJson, 68)
+
+            // Store group of 6 bits from the challenge to be encoded. Storing of 6 bits group can be removed but, kept here for readability.
+            let sixBitGroup
+
+            // Iterate over challenge in group of 6 bits, for each 6 bits lookup the ENCODING_TABLE, transform it and store it in the result
+            for {let i := 0} lt(i, 252)
+            {
+                i := add(i, 6)
+            } {
+                sixBitGroup := and(shr(sub(250, i), challenge), 0x3F)
+                mstore8(resultPtr, mload(add(tablePtr, sixBitGroup)))
+                resultPtr := add(resultPtr, 1)
+            }
+
+            // Load the remaining last 4 bits of challenge that are yet to be encoded and then shift left to add 2 bits at the end to make it a group of 6 bits.
+            sixBitGroup := shl(2, and(challenge, 0x0F))
+            mstore8(resultPtr, mload(add(tablePtr, sixBitGroup)))
+        }
+
         /* solhint-enable quotes */
         message = sha256(abi.encodePacked(authenticatorData, sha256(clientDataJson)));
+
     }
 
     /**
