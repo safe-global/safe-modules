@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IP256Verifier} from "../interfaces/IP256Verifier.sol";
-import {P256} from "../libraries/P256.sol";
+import {IP256Verifier, P256} from "../libraries/P256.sol";
 
 contract TestP256Lib {
     using P256 for IP256Verifier;

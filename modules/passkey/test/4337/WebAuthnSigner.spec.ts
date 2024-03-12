@@ -12,7 +12,7 @@ describe('WebAuthn Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, Safe256BitECSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, WebAuthnVerifier } =
+    const { EntryPoint, Safe4337Module, SafeECDSASignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } =
       await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
@@ -21,9 +21,9 @@ describe('WebAuthn Signers [@4337]', () => {
     const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
-    const signerLaunchpad = await ethers.getContractAt('Safe256BitECSignerLaunchpad', Safe256BitECSignerLaunchpad.address)
+    const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
-    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
+    const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
     const signerFactory = await WebAuthnSignerFactory.deploy()
@@ -43,7 +43,7 @@ describe('WebAuthn Signers [@4337]', () => {
       singleton,
       signerFactory,
       navigator,
-      webAuthnVerifier,
+      verifier,
       SafeL2,
     }
   })
@@ -60,12 +60,12 @@ describe('WebAuthn Signers [@4337]', () => {
       singleton,
       signerFactory,
       navigator,
-      webAuthnVerifier,
+      verifier,
       SafeL2,
     } = await setupTests()
 
     const { chainId } = await ethers.provider.getNetwork()
-    const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
+    const verifierAddress = await verifier.getAddress()
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -83,14 +83,14 @@ describe('WebAuthn Signers [@4337]', () => {
       },
     })
     const publicKey = decodePublicKey(credential.response)
-    const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, webAuthnVerifierAddress)
+    const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
 
     const safeInit = {
       singleton: singleton.target,
       signerFactory: signerFactory.target,
       signerX: publicKey.x,
       signerY: publicKey.y,
-      signerVerifier: webAuthnVerifierAddress,
+      signerVerifier: verifierAddress,
       setupTo: safeModuleSetup.target,
       setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
       fallbackHandler: module.target,

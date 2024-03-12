@@ -14,18 +14,11 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
     log: true,
   })
 
-  const FCLP256Verifier = await deploy('FCLP256Verifier', {
+  await deploy('FCLP256Verifier', {
     from: deployer,
     args: [],
     deterministicDeployment: true,
     log: true,
-  })
-
-  await deploy('WebAuthnVerifier', {
-    from: deployer,
-    args: [FCLP256Verifier.address],
-    log: true,
-    deterministicDeployment: true,
   })
 }
 
