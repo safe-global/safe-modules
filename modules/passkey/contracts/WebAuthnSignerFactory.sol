@@ -26,7 +26,7 @@ contract WebAuthnSignerFactory is ICustomECDSASignerFactory {
     function createSigner(uint256 x, uint256 y, address verifier) external returns (address signer) {
         signer = getSigner(x, y, verifier);
 
-        if (_hasNoCode(signer) && _validVerifier(verifier)) {
+        if (_hasNoCode(signer)) {
             WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
             require(address(created) == signer);
         }
@@ -45,16 +45,6 @@ contract WebAuthnSignerFactory is ICustomECDSASignerFactory {
         if (WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, IP256Verifier(verifier))) {
             magicValue = ERC1271.MAGIC_VALUE;
         }
-    }
-
-    /**
-     * @dev Checks if the given verifier address contains code.
-     * @param verifier The address of the verifier to check.
-     * @return A boolean indicating whether the verifier contains code or not.
-     */
-    function _validVerifier(address verifier) internal view returns (bool) {
-        // The verifier should contain code (The only way to implement a webauthn verifier is with a smart contract)
-        return !_hasNoCode(verifier);
     }
 
     /**
