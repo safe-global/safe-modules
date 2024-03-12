@@ -1,51 +1,54 @@
-import {
-  Address,
-  Hex,
-  PublicClient,
-  concatHex,
-  encodeFunctionData,
-  encodePacked,
-  getContractAddress,
-  hexToBigInt,
-  keccak256,
-  zeroAddress,
-} from 'viem'
+import { Address, Hex, PublicClient, encodeFunctionData, encodePacked, getContractAddress, hexToBigInt, keccak256, zeroAddress } from 'viem'
 import { InternalTx, encodeMultiSend } from './multisend'
 import { generateApproveCallData } from './erc20'
 
+// Safe Module Setup & Safe 4337 Module address: https://github.com/safe-global/safe-modules/blob/main/modules/4337/CHANGELOG.md#version-030
+// Safe Proxy: https://github.com/safe-global/safe-deployments/blob/main/src/assets/v1.4.1/safe_proxy_factory.json
+// Safe Singleton: https://github.com/safe-global/safe-deployments/blob/main/src/assets/v1.4.1/safe.json
 export const SAFE_ADDRESSES_MAP = {
   '1.4.1': {
-    '11155111': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
-      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
-      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
-    },
     '5': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
+      SAFE_MODULE_SETUP_ADDRESS: '0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47',
+      SAFE_4337_MODULE_ADDRESS: '0xfaa6F2eC82BdA7C22220522869E854a3446053A5',
       SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
       SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
     },
     '80001': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
+      SAFE_MODULE_SETUP_ADDRESS: '0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47',
+      SAFE_4337_MODULE_ADDRESS: '0xfaa6F2eC82BdA7C22220522869E854a3446053A5',
+      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
+      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
+    },
+    '84532': {
+      SAFE_MODULE_SETUP_ADDRESS: '0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47',
+      SAFE_4337_MODULE_ADDRESS: '0xfaa6F2eC82BdA7C22220522869E854a3446053A5',
+      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
+      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
+    },
+    '11155111': {
+      SAFE_MODULE_SETUP_ADDRESS: '0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47',
+      SAFE_4337_MODULE_ADDRESS: '0xfaa6F2eC82BdA7C22220522869E854a3446053A5',
       SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
       SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
     },
   },
 } as const
 
+// Dummy signature for gas estimation. We require it so the estimation doesn't revert
+// if the signature is absent
+export const DUMMY_SIGNATURE =
+  '0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e043aa8d1b19ca9387bdf05124650baec5c7ed57c04135f915b7a5fac9feeb29783063924cb9712ab0dd42f880317626ea82b4149f81f4e60d8ddeff9109d4619f0000000000000000000000000000000000000000000000000000000000000025a24f744b28d73f066bf3203d145765a7bc735e6328168c8b03e476da3ad0d8fe0400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e226f726967696e223a2268747470733a2f2f736166652e676c6f62616c220000'
+
 const getInitializerCode = async ({
   owner,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   multiSendAddress,
   erc20TokenAddress,
   paymasterAddress,
 }: {
   owner: Address
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   multiSendAddress: Address
   erc20TokenAddress: Address
@@ -53,7 +56,7 @@ const getInitializerCode = async ({
 }) => {
   const setupTxs: InternalTx[] = [
     {
-      to: addModuleLibAddress,
+      to: safeModuleSetupAddress,
       data: enableModuleCallData(safe4337ModuleAddress),
       value: 0n,
       operation: 1, // 1 = DelegateCall required for enabling the module
@@ -151,7 +154,7 @@ export const enableModuleCallData = (safe4337ModuleAddress: `0x${string}`) => {
 
 export const getAccountInitCode = async ({
   owner,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   safeProxyFactoryAddress,
   safeSingletonAddress,
@@ -161,7 +164,7 @@ export const getAccountInitCode = async ({
   paymasterAddress,
 }: {
   owner: Address
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   safeProxyFactoryAddress: Address
   safeSingletonAddress: Address
@@ -173,7 +176,7 @@ export const getAccountInitCode = async ({
   if (!owner) throw new Error('Owner account not found')
   const initializer = await getInitializerCode({
     owner,
-    addModuleLibAddress,
+    safeModuleSetupAddress,
     safe4337ModuleAddress,
     multiSendAddress,
     erc20TokenAddress,
@@ -216,7 +219,8 @@ export const getAccountInitCode = async ({
     args: [safeSingletonAddress, initializer, saltNonce],
   })
 
-  return concatHex([safeProxyFactoryAddress, initCodeCallData])
+  // return concatHex([safeProxyFactoryAddress, initCodeCallData])
+  return initCodeCallData
 }
 
 export const EIP712_SAFE_OPERATION_TYPE = {
@@ -225,11 +229,11 @@ export const EIP712_SAFE_OPERATION_TYPE = {
     { type: 'uint256', name: 'nonce' },
     { type: 'bytes', name: 'initCode' },
     { type: 'bytes', name: 'callData' },
-    { type: 'uint256', name: 'callGasLimit' },
-    { type: 'uint256', name: 'verificationGasLimit' },
+    { type: 'uint128', name: 'verificationGasLimit' },
+    { type: 'uint128', name: 'callGasLimit' },
     { type: 'uint256', name: 'preVerificationGas' },
-    { type: 'uint256', name: 'maxFeePerGas' },
-    { type: 'uint256', name: 'maxPriorityFeePerGas' },
+    { type: 'uint128', name: 'maxPriorityFeePerGas' },
+    { type: 'uint128', name: 'maxFeePerGas' },
     { type: 'bytes', name: 'paymasterAndData' },
     { type: 'uint48', name: 'validAfter' },
     { type: 'uint48', name: 'validUntil' },
@@ -277,7 +281,7 @@ export const encodeCallData = (params: { to: Address; value: bigint; data: `0x${
 export const getAccountAddress = async ({
   client,
   owner,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   safeProxyFactoryAddress,
   safeSingletonAddress,
@@ -288,7 +292,7 @@ export const getAccountAddress = async ({
 }: {
   client: PublicClient
   owner: Address
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   safeProxyFactoryAddress: Address
   safeSingletonAddress: Address
@@ -321,7 +325,7 @@ export const getAccountAddress = async ({
 
   const initializer = await getInitializerCode({
     owner,
-    addModuleLibAddress,
+    safeModuleSetupAddress,
     safe4337ModuleAddress,
     multiSendAddress,
     erc20TokenAddress,

@@ -17,7 +17,7 @@
     "alchemy:erc721:paymaster": "tsx ./alchemy/alchemy.ts erc721 paymaster=true",
     "alchemy": "tsx ./alchemy/alchemy.ts",
     "build": "npx rimraf dist && tsc",
-    "fmt": "prettier --ignore-path .gitignore --write .",
+    "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "eslint ./alchemy && eslint ./gelato && eslint ./pimlico && eslint ./utils",
     "gelato:account:1balance": "tsx ./gelato/gelato.ts account",
@@ -55,7 +55,7 @@
     "@alchemy/aa-core": "2.3.1",
     "alchemy-sdk": "3.1.2",
     "dotenv": "16.4.4",
-    "permissionless": "0.0.35",
+    "permissionless": "0.1.6",
     "viem": "2.7.9"
   },
   "devDependencies": {

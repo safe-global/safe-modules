@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { http, createWalletClient, PrivateKeyAccount } from 'viem'
-import { goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { sepolia, baseSepolia } from 'viem/chains'
 import { setTimeout } from 'timers/promises'
 
 dotenv.config()
@@ -18,16 +18,16 @@ export const transferETH = async (
 ) => {
   let walletClient
   if (paymaster == 'pimlico') {
-    if (chain == 'goerli') {
+    if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: goerli,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'base-sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: baseSepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {
@@ -40,12 +40,6 @@ export const transferETH = async (
       walletClient = createWalletClient({
         account: signer,
         chain: sepolia,
-        transport: http(alchemyRPCURL),
-      })
-    } else if (chain == 'goerli') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: goerli,
         transport: http(alchemyRPCURL),
       })
     } else {

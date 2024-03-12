@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import type { Address } from 'abitype'
-import { fromHex, parseEther, type Hex, type PrivateKeyAccount, formatEther } from 'viem'
+import { fromHex, parseEther, type PrivateKeyAccount, formatEther, Hex } from 'viem'
 import { EIP712_SAFE_OPERATION_TYPE, encodeCallData } from './safe'
 import { Alchemy } from 'alchemy-sdk'
 import { setTimeout } from 'timers/promises'
@@ -12,18 +12,38 @@ dotenv.config()
 
 export const txTypes = ['account', 'erc20', 'erc721', 'native-transfer']
 
+// type PackedUserOperation = {
+//   sender: string
+//   nonce: ethers.BigNumberish
+//   initCode: ethers.BytesLike
+//   callData: ethers.BytesLike
+//   accountGasLimits: ethers.BytesLike
+//   preVerificationGas: ethers.BigNumberish
+//   gasFees: ethers.BytesLike
+//   paymasterAndData: ethers.BytesLike
+//   signature: ethers.BytesLike
+// }
+
+// type UnsignedPackedUserOperation = Omit<PackedUserOperation, 'signature'>
+
 export type UserOperation = {
   sender: Address
   nonce: bigint
-  initCode: Hex
+  factory?: Address
+  factoryData?: Hex
   callData: Hex
   callGasLimit: bigint
   verificationGasLimit: bigint
   preVerificationGas: bigint
   maxFeePerGas: bigint
   maxPriorityFeePerGas: bigint
-  paymasterAndData: Hex
+  paymaster?: Address
+  paymasterVerificationGasLimit?: bigint
+  paymasterPostOpGasLimit?: bigint
+  paymasterData?: Hex
   signature: Hex
+  initCode?: never
+  paymasterAndData?: never
 }
 
 // Sponsored User Operation Data
@@ -56,15 +76,11 @@ export const submitUserOperationPimlico = async (
   console.log(`UserOp Link: https://jiffyscan.xyz/userOpHash/${userOperationHash}?network=` + chain + '\n')
 
   console.log('Querying for receipts...')
-  const receipt = await bundlerClient.waitForUserOperationReceipt({
+  const receipt = await bundlerClient.getUserOperationReceipt({
     hash: userOperationHash,
   })
   console.log(`Receipt found!\nTransaction hash: ${receipt.receipt.transactionHash}`)
-  if (chain == 'mumbai') {
-    console.log(`Transaction Link: https://mumbai.polygonscan.com/tx/${receipt.receipt.transactionHash}`)
-  } else {
-    console.log(`Transaction Link: https://` + chain + `.etherscan.io/tx/${receipt.receipt.transactionHash}`)
-  }
+  console.log(`Transaction Link: https://` + chain + `.etherscan.io/tx/${receipt.receipt.transactionHash}`)
   console.log(`\nGas Used (Account or Paymaster): ${receipt.actualGasUsed}`)
   console.log(`Gas Used (Transaction): ${receipt.receipt.gasUsed}\n`)
 }
@@ -89,14 +105,14 @@ export const signUserOperation = async (
         message: {
           safe: userOperation.sender,
           nonce: userOperation.nonce,
-          initCode: userOperation.initCode,
+          initCode: userOperation.factory + (userOperation.factoryData ?? '').slice(2),
           callData: userOperation.callData,
-          callGasLimit: userOperation.callGasLimit,
           verificationGasLimit: userOperation.verificationGasLimit,
+          callGasLimit: userOperation.callGasLimit,
           preVerificationGas: userOperation.preVerificationGas,
-          maxFeePerGas: userOperation.maxFeePerGas,
           maxPriorityFeePerGas: userOperation.maxPriorityFeePerGas,
-          paymasterAndData: userOperation.paymasterAndData,
+          maxFeePerGas: userOperation.maxFeePerGas,
+          paymasterAndData: userOperation.paymasterData,
           validAfter: '0x000000000000',
           validUntil: '0x000000000000',
           entryPoint: entryPointAddress,
@@ -137,7 +153,8 @@ export const getGasValuesFromAlchemyPaymaster = async (
           userOperation: {
             sender: sponsoredUserOperation.sender,
             nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-            initCode: sponsoredUserOperation.initCode,
+            factory: sponsoredUserOperation.factory,
+            factoryData: sponsoredUserOperation.factoryData,
             callData: sponsoredUserOperation.callData,
           },
         },
@@ -217,7 +234,8 @@ export const getGasValuesFromAlchemy = async (
         {
           sender: sponsoredUserOperation.sender,
           nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-          initCode: sponsoredUserOperation.initCode,
+          factory: sponsoredUserOperation.factory,
+          factoryData: sponsoredUserOperation.factoryData,
           callData: sponsoredUserOperation.callData,
           callGasLimit: '0x1',
           verificationGasLimit: '0x1',
@@ -264,7 +282,8 @@ export const submitUserOperationAlchemy = async (
         {
           sender: sponsoredUserOperation.sender,
           nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-          initCode: sponsoredUserOperation.initCode,
+          factory: sponsoredUserOperation.factory,
+          factoryData: sponsoredUserOperation.factoryData,
           callData: sponsoredUserOperation.callData,
           callGasLimit: sponsoredUserOperation.callGasLimit.toString(16),
           verificationGasLimit: sponsoredUserOperation.verificationGasLimit.toString(16),
@@ -272,7 +291,7 @@ export const submitUserOperationAlchemy = async (
           maxFeePerGas: sponsoredUserOperation.maxFeePerGas.toString(16),
           maxPriorityFeePerGas: sponsoredUserOperation.maxPriorityFeePerGas.toString(16),
           signature: sponsoredUserOperation.signature,
-          paymasterAndData: sponsoredUserOperation.paymasterAndData,
+          paymasterAndData: sponsoredUserOperation.paymasterData,
         },
         entryPointAddress,
       ],
@@ -421,7 +440,8 @@ export const getGasValuesFromGelato = async (
         {
           sender: sponsoredUserOperation.sender,
           nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-          initCode: sponsoredUserOperation.initCode,
+          factory: sponsoredUserOperation.factory,
+          factoryData: sponsoredUserOperation.factoryData,
           callData: sponsoredUserOperation.callData,
           signature: sponsoredUserOperation.signature,
           paymasterAndData: '0x',
@@ -464,10 +484,11 @@ export const submitUserOperationGelato = async (
         {
           sender: sponsoredUserOperation.sender,
           nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-          initCode: sponsoredUserOperation.initCode,
+          factory: sponsoredUserOperation.factory,
+          factoryData: sponsoredUserOperation.factoryData,
           callData: sponsoredUserOperation.callData,
           signature: sponsoredUserOperation.signature,
-          paymasterAndData: sponsoredUserOperation.paymasterAndData,
+          paymasterAndData: sponsoredUserOperation.paymasterData,
           callGasLimit: sponsoredUserOperation.callGasLimit,
           verificationGasLimit: sponsoredUserOperation.verificationGasLimit,
           preVerificationGas: sponsoredUserOperation.preVerificationGas,

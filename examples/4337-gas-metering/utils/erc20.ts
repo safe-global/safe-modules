@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount } from 'viem'
-import { goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { goerli, sepolia } from 'viem/chains'
 
 dotenv.config()
 const pimlicoRPCURL = process.env.PIMLICO_RPC_URL
@@ -103,10 +103,10 @@ export const mintERC20Token = async (
         chain: goerli,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {
@@ -179,10 +179,10 @@ export const transferERC20Token = async (
         chain: goerli,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {

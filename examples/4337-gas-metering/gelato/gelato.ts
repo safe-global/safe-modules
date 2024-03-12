@@ -81,7 +81,7 @@ if (chain == 'sepolia') {
 
 const initCode = await getAccountInitCode({
   owner: signer.address,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
@@ -95,7 +95,7 @@ console.log('\nInit Code Created.')
 const senderAddress = await getAccountAddress({
   client: publicClient,
   owner: signer.address,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
