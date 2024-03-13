@@ -130,12 +130,11 @@ contract WebAuthnVerifier is IWebAuthnVerifier {
             let sixBitGroup
 
             // Iterate over challenge in group of 6 bits, for each 6 bits lookup the ENCODING_TABLE, transform it and store it in the result
-            for {
-                let i := 0
-            } lt(i, 252) {
-                i := add(i, 6)
+            for {let i := 250} lt(i, 251)
+            {
+                i := sub(i, 6)
             } {
-                sixBitGroup := and(shr(sub(250, i), challenge), 0x3F)
+                sixBitGroup := and(shr(i, challenge), 0x3F)
                 mstore8(resultPtr, mload(add(tablePtr, sixBitGroup)))
                 resultPtr := add(resultPtr, 1)
             }
