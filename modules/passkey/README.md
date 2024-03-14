@@ -2,7 +2,7 @@
 
 This package contains a passkey signature verifier, that can be used as an owner for a Safe, compatible with versions 1.3.0+.
 
-## Execution flow
+## Setup and Execution flow
 
 ```mermaid
 sequenceDiagram
@@ -46,8 +46,17 @@ SP->>+WASF: Create Signer
 WASF-->>SP: Return owner address
 SP->>SP: Setup Safe
 SP-->>SP: delegatecall with calldata received in `initializeThenUserOp(...)`
+SP-->>S: Load Safe logic
+SP->>+M: Forward execution
+M->>SP: Execute From Module
+SP-->>S: Load Safe logic
 SP->>+T: Perform transaction
-SP-->>-EP: Call return data
+    opt Bubble up return data
+        T-->>-SP: Call Return Data
+        SP-->>M: Call Return Data
+        M-->>-SP: Call return data
+        SP-->>-EP: Call return data
+    end
 ```
 
 ## Security and Liability
