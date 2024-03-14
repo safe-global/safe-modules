@@ -59,10 +59,25 @@ SP->>+T: Perform transaction
     end
 ```
 
-ERC-4337 outlines specific storage access rules for the validation phase, which limit the deployment of SafeProxy for use with the passkey flow. To navigate this restriction, in the `initCode` of UserOp, a SafeProxy is deployed with SafeSignerLaunchpad as a singleton. The SafeSignerLaunchpad is used to validate the signature of the UserOp. The SafeSignerLaunchpad forwards the signature validation to the WebAuthnVerifier, which in turn forwards the signature validation to the P256Verifier. The P256Verifier is used to validate the signature.
+ERC-4337 outlines specific storage access rules for the validation phase, which limits the deployment of SafeProxy for use with the passkey flow. To navigate this restriction, in the `initCode` of UserOp, a SafeProxy is deployed with SafeSignerLaunchpad as a singleton. The SafeSignerLaunchpad is used to validate the signature of the UserOp. The SafeSignerLaunchpad forwards the signature validation to the WebAuthnVerifier, which in turn forwards the signature validation to the P256Verifier. The P256Verifier is used to validate the signature.
 
 During the execution phase, the implementation of the SafeProxy is set to the Safe Singleton along with the owner as signer contract deployed by SafeSignerLaunchpad.
- 
+
+## Usage
+
+### Install Requirements With NPM:
+
+```bash
+npm install
+```
+
+### Run Hardhat Tests:
+
+```bash
+npm test
+npm run test:4337
+```
+
 ## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
