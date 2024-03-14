@@ -23,9 +23,10 @@ CS->>U: Decode public key from the return value
 U->>+WASF: Get signer address (signer might not be deployed yet)
 WASF->>U: Signer address
 U->>+SPF: Submit Payload that calculates SafeProxy address with SafeSignerLaunchpad as singleton and corresponding initializer data
+
 B->>+EP: Submit User Operations
-EP->>SP: Validate UserOp
-SP-->>SSL: Load Safe logic
+EP->>+SP: Validate UserOp
+SP-->>SSL: Load SignerLaunchpad logic
 SSL-->>WASF: Forward validation
 WASF-->>WAV: call verifyWebAuthnSignatureAllowMalleability
 WAV->>+PV: Verify signature
@@ -35,6 +36,14 @@ WASF-->>SSL: Return magic value
     opt Pay required fee
         SP->>EP: Perform fee payment
     end
-SP-->>EP: Validation response
+SP-->>-EP: Validation response
 
+EP->>+SP: Execute User Operation with call to `initializeThenUserOp(...)`
+SP-->>SSL: Load SignerLaunchpad logic
+SP->>+WASF: Create Signer
+WASF-->>SP: Return owner address
+SP->>SP: Setup Safe
+SP-->>SP: delegatecall with calldata received in `initializeThenUserOp(...)`
+SP->>+T: Perform transaction
+SP-->>-EP: Call return data
 ```
