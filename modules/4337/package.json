@@ -1,5 +1,5 @@
 {
-  "name": "@safe-global/safe-erc4337",
+  "name": "@safe-global/safe-4337",
   "version": "0.3.0",
   "description": "Safe Module for ERC-4337 support",
   "homepage": "https://github.com/safe-global/safe-modules/tree/main/modules/4337",
@@ -14,8 +14,9 @@
     "build"
   ],
   "scripts": {
-    "build": "hardhat compile",
+    "build": "npm run build:sol && npm run build:ts",
     "build:ts": "npx rimraf dist && tsc",
+    "build:sol": "npx rimraf build && hardhat compile",
     "test": "hardhat test --deploy-fixture",
     "test:e2e": "./test/e2e/run.sh",
     "test:e2e:upstream": "USE_UPSTREAM_BUNDLER=1 ./test/e2e/run.sh",
@@ -31,7 +32,8 @@
     "fmt": "prettier --write ./contracts/**/*.sol",
     "fmt:check": "prettier --check ./**/*.sol",
     "prepack": "npm run build",
-    "prepublish": "npx rimraf build && npm run build && npm run build:ts"
+    "prepublish": "npm run build",
+    "postinstall": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -72,10 +74,10 @@
   },
   "overrides": {
     "@safe-global/safe-contracts": {
-      "ethers": "^6.8.0"
+      "ethers": "^6.11.0"
     }
   },
   "dependencies": {
-    "@safe-global/safe-contracts": "^1.4.1"
+    "@safe-global/safe-contracts": "^1.4.1-build.0"
   }
 }

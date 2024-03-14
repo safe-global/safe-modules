@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-/* solhint-disable payable-fallback */
 pragma solidity ^0.8.0;
 
 import {IP256Verifier, P256VerifierLib} from "../verifiers/IP256Verifier.sol";
