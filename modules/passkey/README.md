@@ -49,3 +49,11 @@ SP-->>SP: delegatecall with calldata received in `initializeThenUserOp(...)`
 SP->>+T: Perform transaction
 SP-->>-EP: Call return data
 ```
+
+## Security and Liability
+
+All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+## License
+
+All smart contracts are released under LGPL-3.0.
