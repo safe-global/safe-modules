@@ -14,6 +14,8 @@ participant SPF as SafeProxyFactory
 participant WASF as WebAuthnSignerFactory
 participant SP as SafeProxy
 participant SSL as SafeSignerLaunchpad
+participant S as Singleton
+participant M as Module
 participant WAV as WebAuthnVerifier
 participant PV as P256Verifier
 actor T as Target
@@ -22,7 +24,7 @@ U->>+CS: Create Credential (User calls `create(...)`)
 CS->>U: Decode public key from the return value
 U->>+WASF: Get signer address (signer might not be deployed yet)
 WASF->>U: Signer address
-U->>+SPF: Submit Payload that calculates SafeProxy address with SafeSignerLaunchpad as singleton and corresponding initializer data
+U->>+B: Submit UserOp payload that deploys SafeProxy address with SafeSignerLaunchpad as singleton in initCode and corresponding call data that calls `initializeThenUserOp(...)` ands sets implementation to Safe Singleton
 
 B->>+EP: Submit User Operations
 EP->>+SP: Validate UserOp
