@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { http, createWalletClient, PrivateKeyAccount } from 'viem'
-import { goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
 import { setTimeout } from 'timers/promises'
 
 dotenv.config()
@@ -56,6 +56,12 @@ export const transferETH = async (
       walletClient = createWalletClient({
         account: signer,
         chain: sepolia,
+        transport: http(gelatoRPCURL),
+      })
+    } else if (chain == 'base-sepolia') {
+      walletClient = createWalletClient({
+        account: signer,
+        chain: baseSepolia,
         transport: http(gelatoRPCURL),
       })
     } else {

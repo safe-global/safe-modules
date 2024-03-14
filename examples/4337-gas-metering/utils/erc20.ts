@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount } from 'viem'
-import { goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
 
 dotenv.config()
 const pimlicoRPCURL = process.env.PIMLICO_RPC_URL
@@ -135,6 +135,12 @@ export const mintERC20Token = async (
         chain: sepolia,
         transport: http(gelatoRPCURL),
       })
+    } else if (chain == 'base-sepolia') {
+      walletClient = createWalletClient({
+        account: signer,
+        chain: baseSepolia,
+        transport: http(gelatoRPCURL),
+      })
     } else {
       throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
     }
@@ -209,6 +215,12 @@ export const transferERC20Token = async (
       walletClient = createWalletClient({
         account: signer,
         chain: sepolia,
+        transport: http(gelatoRPCURL),
+      })
+    } else if (chain == 'base-sepolia') {
+      walletClient = createWalletClient({
+        account: signer,
+        chain: baseSepolia,
         transport: http(gelatoRPCURL),
       })
     } else {
