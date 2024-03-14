@@ -727,7 +727,7 @@ export const getAccountAddress = async ({
 }: {
   owner: Address
   client: any
-  txType: string
+  txType?: string
   addModuleLibAddress: Address
   safe4337ModuleAddress: Address
   safeProxyFactoryAddress: Address
