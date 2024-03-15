@@ -69,14 +69,6 @@ export interface MetaTransaction {
   value: bigint
   data: `0x${string}`
   operation: number
-}
-
-export interface SafeTransaction extends MetaTransaction {
-  safeTxGas: bigint
-  baseGas: bigint
-  gasPrice: bigint
-  gasToken: string
-  refundReceiver: string
   nonce: bigint
 }
 
@@ -95,7 +87,7 @@ export const getGelatoCallData = async ({
   erc20TokenAddress: Address
   erc721TokenAddress: Address
 }) => {
-  let setupTxs: SafeTransaction
+  let setupTxs: MetaTransaction
 
   const nonce = await publicClient.readContract({
     abi: [
@@ -121,11 +113,6 @@ export const getGelatoCallData = async ({
       value: 0n,
       data: generateTransferCallData(owner.address, erc20Amount), // transfer() function call with corresponding data.
       operation: 0, // 0 = Call
-      safeTxGas: 0n,
-      baseGas: 0n,
-      gasPrice: 0n,
-      gasToken: zeroAddress,
-      refundReceiver: zeroAddress,
       nonce: nonce,
     }
   } else if (txType == 'erc721') {
@@ -134,11 +121,6 @@ export const getGelatoCallData = async ({
       data: generateMintingCallData(owner.address), // safeMint() function call with corresponding data.
       value: 0n,
       operation: 0,
-      safeTxGas: 0n,
-      baseGas: 0n,
-      gasPrice: 0n,
-      gasToken: zeroAddress,
-      refundReceiver: zeroAddress,
       nonce: nonce,
     }
   } else if (txType == 'native-transfer') {
@@ -149,11 +131,6 @@ export const getGelatoCallData = async ({
       data: '0x', // No data required for native transfer.
       value: weiToSend,
       operation: 0,
-      safeTxGas: 0n,
-      baseGas: 0n,
-      gasPrice: 0n,
-      gasToken: zeroAddress,
-      refundReceiver: zeroAddress,
       nonce: nonce,
     }
   } else {
@@ -176,11 +153,11 @@ export const getGelatoCallData = async ({
           data: setupTxs.data,
           value: setupTxs.value,
           operation: setupTxs.operation,
-          safeTxGas: setupTxs.safeTxGas,
-          baseGas: setupTxs.baseGas,
-          gasPrice: setupTxs.gasPrice,
-          gasToken: setupTxs.gasToken,
-          refundReceiver: setupTxs.refundReceiver,
+          safeTxGas: 0n,
+          baseGas: 0n,
+          gasPrice: 0n,
+          gasToken: zeroAddress,
+          refundReceiver: zeroAddress,
           nonce: setupTxs.nonce,
         },
       }),
@@ -217,11 +194,11 @@ export const getGelatoCallData = async ({
       setupTxs.value,
       setupTxs.data,
       setupTxs.operation,
-      setupTxs.safeTxGas,
-      setupTxs.baseGas,
-      setupTxs.gasPrice,
-      setupTxs.gasToken,
-      setupTxs.refundReceiver,
+      0n,
+      0n,
+      0n,
+      zeroAddress,
+      zeroAddress,
       signature[0].data,
     ],
   })
