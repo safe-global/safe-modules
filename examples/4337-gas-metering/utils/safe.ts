@@ -18,51 +18,8 @@ import { generateApproveCallData, generateTransferCallData, getERC20Balance, get
 import { setTimeout } from 'timers/promises'
 import { generateMintingCallData } from './erc721'
 import { transferETH } from './nativeTransfer'
-
-export const SAFE_ADDRESSES_MAP = {
-  '1.4.1': {
-    '5': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
-      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
-      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
-    },
-    '80001': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
-      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
-      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
-    },
-    '84532': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
-      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
-      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
-    },
-    '11155111': {
-      ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
-      SAFE_4337_MODULE_ADDRESS: '0xa581c4A4DB7175302464fF3C06380BC3270b4037',
-      SAFE_PROXY_FACTORY_ADDRESS: '0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67',
-      SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
-    },
-  },
-} as const
-
-export const EIP712_SAFE_TX_TYPE = {
-  // "SafeTx(address to,uint256 value,bytes data,uint8 operation,uint256 safeTxGas,uint256 baseGas,uint256 gasPrice,address gasToken,address refundReceiver,uint256 nonce)"
-  SafeTx: [
-    { type: 'address', name: 'to' },
-    { type: 'uint256', name: 'value' },
-    { type: 'bytes', name: 'data' },
-    { type: 'uint8', name: 'operation' },
-    { type: 'uint256', name: 'safeTxGas' },
-    { type: 'uint256', name: 'baseGas' },
-    { type: 'uint256', name: 'gasPrice' },
-    { type: 'address', name: 'gasToken' },
-    { type: 'address', name: 'refundReceiver' },
-    { type: 'uint256', name: 'nonce' },
-  ],
-}
+import { SAFE_4337_EXECUTE_USEROP_ABI, SAFE_ENABLE_MODULES_ABI, SAFE_EXECTRANSACTION_ABI, SAFE_FACTORY_CREATE_PROXY_WITH_NONCE_ABI, SAFE_FACTORY_PROXY_CREATION_CODE_ABI, SAFE_NONCE_ABI, SAFE_SETUP_ABI } from './abi'
+import { EIP712_SAFE_TX_TYPE } from './type'
 
 export interface MetaTransaction {
   to: `0x${string}`
@@ -90,15 +47,7 @@ export const getGelatoCallData = async ({
   let setupTxs: MetaTransaction
 
   const nonce = await publicClient.readContract({
-    abi: [
-      {
-        inputs: [],
-        name: 'nonce',
-        outputs: [{ type: 'uint256' }],
-        type: 'function',
-        stateMutability: 'view',
-      },
-    ],
+    abi: SAFE_NONCE_ABI,
     address: safe,
     functionName: 'nonce',
   })
@@ -167,27 +116,7 @@ export const getGelatoCallData = async ({
   console.log('\nSignature for Call Data created.')
 
   const callData = encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          { internalType: 'address', name: 'to', type: 'address' },
-          { internalType: 'uint256', name: 'value', type: 'uint256' },
-          { internalType: 'bytes', name: 'data', type: 'bytes' },
-          { internalType: 'uint8', name: 'operation', type: 'uint8' },
-          { internalType: 'uint256', name: 'safeTxGas', type: 'uint256' },
-          { internalType: 'uint256', name: 'baseGas', type: 'uint256' },
-          { internalType: 'uint256', name: 'gasPrice', type: 'uint256' },
-          { internalType: 'address', name: 'gasToken', type: 'address' },
-          { internalType: 'address', name: 'refundReceiver', type: 'address' },
-          { internalType: 'bytes', name: 'signatures', type: 'bytes' },
-        ],
-        name: 'execTransaction',
-        outputs: [{ name: 'success', type: 'bool' }],
-        payable: true,
-        stateMutability: 'external',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_EXECTRANSACTION_ABI,
     functionName: 'execTransaction',
     args: [setupTxs.to, setupTxs.value, setupTxs.data, setupTxs.operation, 0n, 0n, 0n, zeroAddress, zeroAddress, signature[0].data],
   })
@@ -231,56 +160,7 @@ const getInitializerCode = async ({
   const multiSendCallData = encodeMultiSend(setupTxs)
 
   return encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: 'address[]',
-            name: '_owners',
-            type: 'address[]',
-          },
-          {
-            internalType: 'uint256',
-            name: '_threshold',
-            type: 'uint256',
-          },
-          {
-            internalType: 'address',
-            name: 'to',
-            type: 'address',
-          },
-          {
-            internalType: 'bytes',
-            name: 'data',
-            type: 'bytes',
-          },
-          {
-            internalType: 'address',
-            name: 'fallbackHandler',
-            type: 'address',
-          },
-          {
-            internalType: 'address',
-            name: 'paymentToken',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'payment',
-            type: 'uint256',
-          },
-          {
-            internalType: 'address payable',
-            name: 'paymentReceiver',
-            type: 'address',
-          },
-        ],
-        name: 'setup',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_SETUP_ABI,
     functionName: 'setup',
     args: [[owner], 1n, multiSendAddress, multiSendCallData, safe4337ModuleAddress, zeroAddress, 0n, zeroAddress],
   })
@@ -347,56 +227,7 @@ const getGelatoInitializerCode = async ({
   const multiSendCallData = encodeMultiSend(setupTxs)
 
   return encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: 'address[]',
-            name: '_owners',
-            type: 'address[]',
-          },
-          {
-            internalType: 'uint256',
-            name: '_threshold',
-            type: 'uint256',
-          },
-          {
-            internalType: 'address',
-            name: 'to',
-            type: 'address',
-          },
-          {
-            internalType: 'bytes',
-            name: 'data',
-            type: 'bytes',
-          },
-          {
-            internalType: 'address',
-            name: 'fallbackHandler',
-            type: 'address',
-          },
-          {
-            internalType: 'address',
-            name: 'paymentToken',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'payment',
-            type: 'uint256',
-          },
-          {
-            internalType: 'address payable',
-            name: 'paymentReceiver',
-            type: 'address',
-          },
-        ],
-        name: 'setup',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_SETUP_ABI,
     functionName: 'setup',
     args: [[owner], 1n, multiSendAddress, multiSendCallData, safe4337ModuleAddress, zeroAddress, 0n, zeroAddress],
   })
@@ -457,21 +288,7 @@ export const prepareForGelatoTx = async ({
 
 export const enableModuleCallData = (safe4337ModuleAddress: `0x${string}`) => {
   return encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: 'address[]',
-            name: 'modules',
-            type: 'address[]',
-          },
-        ],
-        name: 'enableModules',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_ENABLE_MODULES_ABI,
     functionName: 'enableModules',
     args: [[safe4337ModuleAddress]],
   })
@@ -509,37 +326,7 @@ export const getAccountInitCode = async ({
   })
 
   const initCodeCallData = encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: 'address',
-            name: '_singleton',
-            type: 'address',
-          },
-          {
-            internalType: 'bytes',
-            name: 'initializer',
-            type: 'bytes',
-          },
-          {
-            internalType: 'uint256',
-            name: 'saltNonce',
-            type: 'uint256',
-          },
-        ],
-        name: 'createProxyWithNonce',
-        outputs: [
-          {
-            internalType: 'contract SafeProxy',
-            name: 'proxy',
-            type: 'address',
-          },
-        ],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_FACTORY_CREATE_PROXY_WITH_NONCE_ABI,
     functionName: 'createProxyWithNonce',
     args: [safeSingletonAddress, initializer, saltNonce],
   })
@@ -583,37 +370,7 @@ export const getGelatoAccountInitCode = async ({
   })
 
   const initCodeCallData = encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: 'address',
-            name: '_singleton',
-            type: 'address',
-          },
-          {
-            internalType: 'bytes',
-            name: 'initializer',
-            type: 'bytes',
-          },
-          {
-            internalType: 'uint256',
-            name: 'saltNonce',
-            type: 'uint256',
-          },
-        ],
-        name: 'createProxyWithNonce',
-        outputs: [
-          {
-            internalType: 'contract SafeProxy',
-            name: 'proxy',
-            type: 'address',
-          },
-        ],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_FACTORY_CREATE_PROXY_WITH_NONCE_ABI,
     functionName: 'createProxyWithNonce',
     args: [safeSingletonAddress, initializer, saltNonce],
   })
@@ -621,56 +378,9 @@ export const getGelatoAccountInitCode = async ({
   return initCodeCallData
 }
 
-export const EIP712_SAFE_OPERATION_TYPE = {
-  SafeOp: [
-    { type: 'address', name: 'safe' },
-    { type: 'uint256', name: 'nonce' },
-    { type: 'bytes', name: 'initCode' },
-    { type: 'bytes', name: 'callData' },
-    { type: 'uint256', name: 'callGasLimit' },
-    { type: 'uint256', name: 'verificationGasLimit' },
-    { type: 'uint256', name: 'preVerificationGas' },
-    { type: 'uint256', name: 'maxFeePerGas' },
-    { type: 'uint256', name: 'maxPriorityFeePerGas' },
-    { type: 'bytes', name: 'paymasterAndData' },
-    { type: 'uint48', name: 'validAfter' },
-    { type: 'uint48', name: 'validUntil' },
-    { type: 'address', name: 'entryPoint' },
-  ],
-}
-
 export const encodeCallData = (params: { to: Address; value: bigint; data: `0x${string}` }) => {
   return encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          {
-            internalType: 'address',
-            name: 'to',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'value',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes',
-            name: 'data',
-            type: 'bytes',
-          },
-          {
-            internalType: 'uint8',
-            name: 'operation',
-            type: 'uint8',
-          },
-        ],
-        name: 'executeUserOp',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_4337_EXECUTE_USEROP_ABI,
     functionName: 'executeUserOp',
     args: [params.to, params.value, params.data, 0],
   })
@@ -706,21 +416,7 @@ export const getAccountAddress = async ({
   isGelato?: boolean
 }): Promise<Address> => {
   const proxyCreationCode = await client.readContract({
-    abi: [
-      {
-        inputs: [],
-        name: 'proxyCreationCode',
-        outputs: [
-          {
-            internalType: 'bytes',
-            name: '',
-            type: 'bytes',
-          },
-        ],
-        stateMutability: 'pure',
-        type: 'function',
-      },
-    ],
+    abi: SAFE_FACTORY_PROXY_CREATION_CODE_ABI,
     address: safeProxyFactoryAddress,
     functionName: 'proxyCreationCode',
   })

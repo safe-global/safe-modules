@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 import { http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount } from 'viem'
 import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { ERC20_TOKEN_APPROVE_ABI, ERC20_TOKEN_BALANCE_OF_ABI, ERC20_TOKEN_DECIMALS_ABI, ERC20_TOKEN_MINT_ABI, ERC20_TOKEN_TRANSFER_ABI } from './abi'
 
 dotenv.config()
 const pimlicoRPCURL = process.env.PIMLICO_RPC_URL
@@ -9,19 +10,7 @@ const gelatoRPCURL = process.env.GELATO_RPC_URL
 
 export const generateApproveCallData = (paymasterAddress: Address) => {
   const approveData = encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          { name: '_spender', type: 'address' },
-          { name: '_value', type: 'uint256' },
-        ],
-        name: 'approve',
-        outputs: [{ name: '', type: 'bool' }],
-        payable: false,
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: ERC20_TOKEN_APPROVE_ABI,
     args: [paymasterAddress, 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn],
   })
 
@@ -30,19 +19,7 @@ export const generateApproveCallData = (paymasterAddress: Address) => {
 
 export const generateTransferCallData = (to: Address, value: bigint) => {
   const transferData = encodeFunctionData({
-    abi: [
-      {
-        inputs: [
-          { name: '_to', type: 'address' },
-          { name: '_value', type: 'uint256' },
-        ],
-        name: 'transfer',
-        outputs: [{ name: '', type: 'bool' }],
-        payable: false,
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: ERC20_TOKEN_TRANSFER_ABI,
     args: [to, value],
   })
 
@@ -51,15 +28,7 @@ export const generateTransferCallData = (to: Address, value: bigint) => {
 
 export const getERC20Decimals = async (erc20TokenAddress: string, publicClient: any) => {
   const erc20Decimals = await publicClient.readContract({
-    abi: [
-      {
-        inputs: [],
-        name: 'decimals',
-        outputs: [{ type: 'uint8' }],
-        type: 'function',
-        stateMutability: 'view',
-      },
-    ],
+    abi: ERC20_TOKEN_DECIMALS_ABI,
     address: erc20TokenAddress,
     functionName: 'decimals',
   })
@@ -69,15 +38,7 @@ export const getERC20Decimals = async (erc20TokenAddress: string, publicClient: 
 
 export const getERC20Balance = async (erc20TokenAddress: string, publicClient: any, owner: string) => {
   const senderERC20Balance = await publicClient.readContract({
-    abi: [
-      {
-        inputs: [{ name: '_owner', type: 'address' }],
-        name: 'balanceOf',
-        outputs: [{ name: 'balance', type: 'uint256' }],
-        type: 'function',
-        stateMutability: 'view',
-      },
-    ],
+    abi: ERC20_TOKEN_BALANCE_OF_ABI,
     address: erc20TokenAddress,
     functionName: 'balanceOf',
     args: [owner],
@@ -149,18 +110,7 @@ export const mintERC20Token = async (
   }
   const { request } = await publicClient.simulateContract({
     address: erc20TokenAddress,
-    abi: [
-      {
-        inputs: [
-          { name: 'to', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-        ],
-        name: 'mint',
-        outputs: [],
-        type: 'function',
-        stateMutability: 'public',
-      },
-    ],
+    abi: ERC20_TOKEN_MINT_ABI,
     functionName: 'mint',
     args: [to, amount],
     account: signer,
@@ -238,18 +188,7 @@ export const transferERC20Token = async (
 
   const { request } = await publicClient.simulateContract({
     address: erc20TokenAddress,
-    abi: [
-      {
-        inputs: [
-          { name: 'recipient', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-        ],
-        name: 'transfer',
-        outputs: [{ name: '', type: 'bool' }],
-        type: 'function',
-        stateMutability: 'public',
-      },
-    ],
+    abi: ERC20_TOKEN_TRANSFER_ABI,
     functionName: 'transfer',
     args: [to, amount],
     account: signer,

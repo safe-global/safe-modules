@@ -1,4 +1,5 @@
 import { encodePacked, encodeFunctionData } from 'viem'
+import { MULTISEND_ABI } from './abi'
 
 export type InternalTx = {
   to: `0x${string}`
@@ -19,15 +20,7 @@ export const encodeMultiSend = (txs: InternalTx[]): `0x${string}` => {
   const data: `0x${string}` = `0x${txs.map((tx) => encodeInternalTransaction(tx)).join('')}`
 
   return encodeFunctionData({
-    abi: [
-      {
-        inputs: [{ internalType: 'bytes', name: 'transactions', type: 'bytes' }],
-        name: 'multiSend',
-        outputs: [],
-        stateMutability: 'payable',
-        type: 'function',
-      },
-    ],
+    abi: MULTISEND_ABI,
     functionName: 'multiSend',
     args: [data],
   })

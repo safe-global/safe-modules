@@ -1,17 +1,9 @@
 import { Address, encodeFunctionData } from 'viem'
+import { ERC721_TOKEN_SAFEMINT_ABI } from './abi'
 
 export const generateMintingCallData = (to: Address) => {
   const transferData = encodeFunctionData({
-    abi: [
-      {
-        inputs: [{ name: '_to', type: 'address' }],
-        name: 'safeMint',
-        outputs: [],
-        payable: false,
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ],
+    abi: ERC721_TOKEN_SAFEMINT_ABI,
     args: [to],
   })
 
