@@ -189,18 +189,7 @@ export const getGelatoCallData = async ({
       },
     ],
     functionName: 'execTransaction',
-    args: [
-      setupTxs.to,
-      setupTxs.value,
-      setupTxs.data,
-      setupTxs.operation,
-      0n,
-      0n,
-      0n,
-      zeroAddress,
-      zeroAddress,
-      signature[0].data,
-    ],
+    args: [setupTxs.to, setupTxs.value, setupTxs.data, setupTxs.operation, 0n, 0n, 0n, zeroAddress, zeroAddress, signature[0].data],
   })
 
   return callData
