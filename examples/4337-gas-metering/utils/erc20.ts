@@ -1,7 +1,13 @@
 import dotenv from 'dotenv'
 import { http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount } from 'viem'
 import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
-import { ERC20_TOKEN_APPROVE_ABI, ERC20_TOKEN_BALANCE_OF_ABI, ERC20_TOKEN_DECIMALS_ABI, ERC20_TOKEN_MINT_ABI, ERC20_TOKEN_TRANSFER_ABI } from './abi'
+import {
+  ERC20_TOKEN_APPROVE_ABI,
+  ERC20_TOKEN_BALANCE_OF_ABI,
+  ERC20_TOKEN_DECIMALS_ABI,
+  ERC20_TOKEN_MINT_ABI,
+  ERC20_TOKEN_TRANSFER_ABI,
+} from './abi'
 
 dotenv.config()
 const pimlicoRPCURL = process.env.PIMLICO_RPC_URL
