@@ -1,3 +1,4 @@
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import {
@@ -20,7 +21,6 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
-import { BUNDLER_MNEMONIC, bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { BigNumberish, Signer } from 'ethers'
 import { assert } from 'console'
 
@@ -299,7 +299,7 @@ describe('Nested Safes With An Execution Initiated by a Leaf 4337 Safe [@4337]',
 
   const setupTests = async () => {
     const { SafeModuleSetup, EntryPoint, HariWillibaldToken, Safe4337Module, SafeL2, SafeProxyFactory } = await deployments.run()
-    const [user, user2, user3] = await prepareAccounts(BUNDLER_MNEMONIC, 3)
+    const [user, user2, user3] = await prepareAccounts({ count: 3 })
     const bundler = bundlerRpc()
 
     const entryPoint = new ethers.Contract(EntryPoint.address, EntryPoint.abi, ethers.provider)

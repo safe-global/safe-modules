@@ -9,14 +9,15 @@
     "4337-local-bundler-test": "dist/bin/test.js"
   },
   "scripts": {
-    "build": "npx rimraf dist && tsc && chmod +x dist/bin/*.js",
+    "build": "rimraf dist && tsc && chmod +x dist/bin/*.js",
     "lint": "eslint .",
-    "prepack": "npm run build",
-    "prepublish": "npm run build",
-    "postinstall": "npm run build"
+    "prepare": "npm run build -w ../4337-provider && npm run build"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@safe-global/safe-4337-provider": "^0.0.0",
     "hardhat-deploy": "^0.12.1",
+    "ethers": "^6.11.1",
     "node-fetch": "^2.7.0"
   }
 }

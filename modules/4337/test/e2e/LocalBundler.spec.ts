@@ -1,10 +1,10 @@
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
 import { buildRpcUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId, timestamp } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
-import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
 describe('Local Bundler [@4337]', () => {
   before(function () {
