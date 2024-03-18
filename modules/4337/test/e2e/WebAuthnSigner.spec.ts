@@ -1,6 +1,6 @@
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
-import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
 import {
   UserVerificationRequirement,
@@ -11,7 +11,7 @@ import {
 } from '../utils/webauthn'
 import { packGasParameters, unpackUserOperation } from '../../src/utils/userOp'
 
-describe('E2E - WebAuthn Signers', () => {
+describe('WebAuthn Signers [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()

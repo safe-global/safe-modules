@@ -28,6 +28,5 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
 }
 
 deploy.dependencies = ['entrypoint']
-deploy.tags = ['mock']
 
 export default deploy

@@ -1,4 +1,4 @@
-name: 4337 Module End-to-End Tests With Upstream Bundler
+name: 4337 End-to-End Tests With Upstream Bundler
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
@@ -7,6 +7,8 @@ on:
   push:
     paths:
       - 'modules/4337/**'
+      - 'modules/passkey/**'
+      - 'packages/4337-local-bundler/**'
 
 jobs:
   e2e-upstream-bundler:
@@ -20,4 +22,5 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: |
           npm ci
-          npm run test:e2e:upstream -w modules/4337
+          npm run test:4337:upstream -w modules/4337
+          npm run test:4337:upstream -w modules/passkey

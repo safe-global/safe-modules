@@ -4,7 +4,8 @@ pragma solidity >=0.8.0 <0.9.0;
 /**
  * @title ICustomECSignerFactory
  * @dev Interface for creating and verifying ECDSA signers. This is a generalized interface that should be
- *  compatible with curves of any order size. Currently not used in the project and exists here for reference.
+ * compatible with curves of any order size. Currently not used in the project and exists here for reference.
+ * @custom:security-contact bounty@safe.global
  */
 interface ICustomECSignerFactory {
     /**
@@ -42,6 +43,7 @@ interface ICustomECSignerFactory {
 /**
  * @title ICustom256BitECSignerFactory
  * @dev Interface for creating and verifying ECDSA signers using 256-bit elliptic curves.
+ * @custom:security-contact bounty@safe.global
  */
 interface ICustom256BitECSignerFactory {
     /**

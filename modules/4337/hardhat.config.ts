@@ -67,11 +67,11 @@ const userConfig: HardhatUserConfig = {
   networks: {
     localhost: {
       url: 'http://localhost:8545',
-      tags: ['dev', 'safe'],
+      tags: ['dev', 'entrypoint', 'safe'],
     },
     hardhat: {
       gasPrice: 10000000000,
-      tags: ['test'],
+      tags: ['test', 'entrypoint', 'safe'],
     },
     mainnet: {
       ...sharedNetworkConfig,
@@ -88,12 +88,12 @@ const userConfig: HardhatUserConfig = {
     sepolia: {
       ...sharedNetworkConfig,
       url: `https://sepolia.infura.io/v3/${INFURA_KEY}`,
-      tags: ['dev'],
+      tags: ['dev', 'entrypoint'],
     },
     amoy: {
       ...sharedNetworkConfig,
       url: `https://polygon-amoy.infura.io/v3/${INFURA_KEY}`,
-      tags: ['dev'],
+      tags: ['dev', 'entrypoint'],
     },
     ...customNetwork,
   },

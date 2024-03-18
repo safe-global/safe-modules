@@ -1,0 +1,16 @@
+{
+  "name": "@safe-global/safe-4337-provider",
+  "version": "0.0.0",
+  "private": true,
+  "license": "LGPL-3.0-only",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "lint": "eslint .",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "ethers": "^6.11.1"
+  }
+}

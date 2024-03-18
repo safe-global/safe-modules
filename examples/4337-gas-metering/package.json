@@ -16,7 +16,7 @@
     "alchemy:erc721": "tsx ./alchemy/alchemy.ts erc721",
     "alchemy:erc721:paymaster": "tsx ./alchemy/alchemy.ts erc721 paymaster=true",
     "alchemy": "tsx ./alchemy/alchemy.ts",
-    "build": "npx rimraf dist && tsc",
+    "build": "rimraf dist && tsc",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "eslint ./alchemy && eslint ./gelato && eslint ./pimlico && eslint ./utils",
@@ -60,7 +60,6 @@
   "devDependencies": {
     "@gelatonetwork/relay-sdk": "^5.5.6",
     "@types/node": "20.11.18",
-    "rimraf": "^5.0.5",
     "tsx": "4.7.1",
     "typescript": "^5.3.3"
   }
