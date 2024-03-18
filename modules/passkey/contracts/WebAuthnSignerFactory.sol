@@ -1,61 +1,48 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {ICustom256BitECSignerFactory} from "./interfaces/ICustomSignerFactory.sol";
-import {IWebAuthnVerifier} from "./interfaces/IWebAuthnVerifier.sol";
+import {ICustomECDSASignerFactory} from "./interfaces/ICustomECDSASignerFactory.sol";
+import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
 import {ERC1271} from "./libraries/ERC1271.sol";
-import {WebAuthnFlags} from "./libraries/WebAuthnFlags.sol";
-import {WebAuthnSignature} from "./libraries/WebAuthnSignature.sol";
+import {WebAuthn} from "./libraries/WebAuthn.sol";
 import {WebAuthnSigner} from "./WebAuthnSigner.sol";
 
 /**
  * @title WebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn signers.
  */
-contract WebAuthnSignerFactory is ICustom256BitECSignerFactory {
-    // @inheritdoc ICustom256BitECSignerFactory
-    function getSigner(uint256 qx, uint256 qy, address verifier) public view override returns (address signer) {
-        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, qx, qy, uint256(uint160(verifier))));
+contract WebAuthnSignerFactory is ICustomECDSASignerFactory {
+    /**
+     * @inheritdoc ICustomECDSASignerFactory
+     */
+    function getSigner(uint256 x, uint256 y, address verifier) public view override returns (address signer) {
+        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, uint256(uint160(verifier))));
         signer = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
-    // @inheritdoc ICustom256BitECSignerFactory
-    function createSigner(uint256 qx, uint256 qy, address verifier) external returns (address signer) {
-        signer = getSigner(qx, qy, verifier);
+    /**
+     * @inheritdoc ICustomECDSASignerFactory
+     */
+    function createSigner(uint256 x, uint256 y, address verifier) external returns (address signer) {
+        signer = getSigner(x, y, verifier);
 
         if (_hasNoCode(signer) && _validVerifier(verifier)) {
-            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(qx, qy, verifier);
+            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
             require(address(created) == signer);
         }
     }
 
-    // @inheritdoc ICustom256BitECSignerFactory
+    /**
+     * @inheritdoc ICustomECDSASignerFactory
+     */
     function isValidSignatureForSigner(
-        uint256 qx,
-        uint256 qy,
-        address verifier,
         bytes32 message,
-        bytes calldata signature
+        bytes calldata signature,
+        uint256 x,
+        uint256 y,
+        address verifier
     ) external view override returns (bytes4 magicValue) {
-        WebAuthnSignature.Data calldata data = WebAuthnSignature.cast(signature);
-
-        // Work around stack-too-deep issues by helping out the compiler figure out how to re-order
-        // the stack.
-        uint256 x = qx;
-        uint256 y = qy;
-
-        if (
-            IWebAuthnVerifier(verifier).verifyWebAuthnSignatureAllowMalleability(
-                data.authenticatorData,
-                WebAuthnFlags.USER_VERIFICATION,
-                message,
-                data.clientDataFields,
-                data.r,
-                data.s,
-                x,
-                y
-            )
-        ) {
+        if (WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, IP256Verifier(verifier))) {
             magicValue = ERC1271.MAGIC_VALUE;
         }
     }

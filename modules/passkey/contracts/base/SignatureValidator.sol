@@ -37,7 +37,7 @@ abstract contract SignatureValidator {
      * @dev Verifies a signature.
      * @param message The signed message.
      * @param signature The signature to be validated.
-     * @return isValid Whether or not the signature is valid.
+     * @return success Whether the signature is valid.
      */
-    function _verifySignature(bytes32 message, bytes calldata signature) internal view virtual returns (bool isValid);
+    function _verifySignature(bytes32 message, bytes calldata signature) internal view virtual returns (bool success);
 }

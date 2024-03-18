@@ -2,9 +2,8 @@
 pragma solidity >=0.8.0;
 
 import {SignatureValidator} from "./base/SignatureValidator.sol";
-import {IWebAuthnVerifier} from "./interfaces/IWebAuthnVerifier.sol";
-import {WebAuthnFlags} from "./libraries/WebAuthnFlags.sol";
-import {WebAuthnSignature} from "./libraries/WebAuthnSignature.sol";
+import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
+import {WebAuthn} from "./libraries/WebAuthn.sol";
 
 /**
  * @title WebAuthn Safe Signature Validator
@@ -14,36 +13,25 @@ import {WebAuthnSignature} from "./libraries/WebAuthnSignature.sol";
 contract WebAuthnSigner is SignatureValidator {
     uint256 public immutable X;
     uint256 public immutable Y;
-    IWebAuthnVerifier public immutable WEBAUTHN_SIG_VERIFIER;
+    IP256Verifier public immutable VERIFIER;
 
     /**
      * @dev Constructor function.
-     * @param qx The X coordinate of the signer's public key.
-     * @param qy The Y coordinate of the signer's public key.
-     * @param webAuthnVerifier The address of the P256Verifier contract.
+     * @param x The X coordinate of the signer's public key.
+     * @param y The Y coordinate of the signer's public key.
+     * @param verifier The P-256 verifier to use for signature validation. It MUST implement the
+     * same interface as the EIP-7212 precompile.
      */
-    constructor(uint256 qx, uint256 qy, address webAuthnVerifier) {
-        X = qx;
-        Y = qy;
-        WEBAUTHN_SIG_VERIFIER = IWebAuthnVerifier(webAuthnVerifier);
+    constructor(uint256 x, uint256 y, address verifier) {
+        X = x;
+        Y = y;
+        VERIFIER = IP256Verifier(verifier);
     }
 
     /**
      * @inheritdoc SignatureValidator
      */
-    function _verifySignature(bytes32 message, bytes calldata signature) internal view virtual override returns (bool isValid) {
-        WebAuthnSignature.Data calldata data = WebAuthnSignature.cast(signature);
-
-        return
-            WEBAUTHN_SIG_VERIFIER.verifyWebAuthnSignatureAllowMalleability(
-                data.authenticatorData,
-                WebAuthnFlags.USER_VERIFICATION,
-                message,
-                data.clientDataFields,
-                data.r,
-                data.s,
-                X,
-                Y
-            );
+    function _verifySignature(bytes32 message, bytes calldata signature) internal view virtual override returns (bool success) {
+        success = WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, X, Y, VERIFIER);
     }
 }

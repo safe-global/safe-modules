@@ -6,15 +6,17 @@ import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/Pac
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
 
-import {ICustom256BitECSignerFactory} from "../interfaces/ICustomSignerFactory.sol";
+import {ICustomECDSASignerFactory} from "../interfaces/ICustomECDSASignerFactory.sol";
 import {ISafe} from "../interfaces/ISafe.sol";
 import {ERC1271} from "../libraries/ERC1271.sol";
 
 /**
- * @title SafeOpLaunchpad - A contract for Safe initialization with custom unique signers that would violate ERC-4337 factory rules.
- * @dev The is intended to be set as a Safe proxy's implementation for ERC-4337 user operation that deploys the account.
+ * @title Safe Launchpad for Custom ECDSA Signing Schemes.
+ * @dev A launchpad account implementation that enables the creation of Safes that use custom ECDSA
+ * signing schemes that require additional contract deployments over ERC-4337.
+ * @custom:security-contact bounty@safe.global
  */
-contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage {
+contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     // keccak256("SafeSignerLaunchpad.initHash") - 1
@@ -189,13 +191,7 @@ contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage {
         bytes memory operationData = _getOperationData(userOpHash, validAfter, validUntil);
         bytes32 operationHash = keccak256(operationData);
         try
-            ICustom256BitECSignerFactory(signerFactory).isValidSignatureForSigner(
-                signerX,
-                signerY,
-                signerVerifier,
-                operationHash,
-                signature
-            )
+            ICustomECDSASignerFactory(signerFactory).isValidSignatureForSigner(operationHash, signature, signerX, signerY, signerVerifier)
         returns (bytes4 magicValue) {
             // The timestamps are validated by the entry point, therefore we will not check them again
             validationData = _packValidationData(magicValue != ERC1271.MAGIC_VALUE, validUntil, validAfter);
@@ -218,7 +214,7 @@ contract Safe256BitECSignerLaunchpad is IAccount, SafeStorage {
         SafeStorage.singleton = singleton;
         {
             address[] memory owners = new address[](1);
-            owners[0] = ICustom256BitECSignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifier);
+            owners[0] = ICustomECDSASignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifier);
 
             ISafe(address(this)).setup(owners, 1, setupTo, setupData, fallbackHandler, address(0), 0, payable(address(0)));
         }

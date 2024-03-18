@@ -6,7 +6,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
 
   const entryPoint = await deployments.get('EntryPoint')
 
-  await deploy('Safe256BitECSignerLaunchpad', {
+  await deploy('SafeECDSASignerLaunchpad', {
     from: deployer,
     args: [entryPoint.address],
     log: true,
