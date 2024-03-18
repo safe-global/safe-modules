@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "fmt:global": "prettier --write .",
-    "fmt:global-check": "prettier --check ."
+    "fmt:global-check": "prettier --check .",
+    "postinstall": "npm rebuild --skip-scripts @safe-global/safe-4337-local-bundler"
   },
   "repository": {
     "type": "git",

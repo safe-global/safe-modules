@@ -12,6 +12,4 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
   })
 }
 
-deploy.tags = ['libraries']
-
 export default deploy

@@ -8,7 +8,7 @@ import {
 } from '../../src/utils/userOp'
 import { bundlerRpc, encodeMultiSendTransactions, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
-describe('E2E - Singleton Signers', () => {
+describe('Singleton Signers [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()

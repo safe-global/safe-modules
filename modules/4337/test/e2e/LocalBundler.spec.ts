@@ -6,7 +6,7 @@ import { chainId, timestamp } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 
-describe('E2E - Local Bundler', () => {
+describe('Local Bundler [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()

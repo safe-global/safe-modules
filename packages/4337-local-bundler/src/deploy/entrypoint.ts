@@ -1,7 +1,11 @@
 import EntryPoint from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { DeployFunction } from 'hardhat-deploy/types'
 
-const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
+const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }) => {
+  if (!network.tags.entrypoint) {
+    return
+  }
+
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
