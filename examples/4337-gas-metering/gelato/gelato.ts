@@ -61,10 +61,10 @@ if (chain == 'sepolia') {
     chain: sepolia,
   })
 } else if (chain == 'base-sepolia') {
-  publicClient = (createPublicClient({
+  publicClient = createPublicClient({
     transport: http(rpcURL),
     chain: baseSepolia,
-  })) as PublicClient
+  }) as PublicClient
 } else {
   throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
 }
