@@ -116,7 +116,7 @@ const initCode = await getAccountInitCode({
 console.log('\nInit Code Created.')
 
 const senderAddress = await getAccountAddress({
-  client: publicClient,
+  publicClient: publicClient,
   owner: signer.address,
   addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
