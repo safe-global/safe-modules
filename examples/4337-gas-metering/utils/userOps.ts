@@ -351,7 +351,7 @@ export const createCallData = async (
   } else if (txType == 'erc20') {
     // Token Configurations
     const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10 ** erc20Decimals)
+    const erc20Amount = BigInt(10n ** erc20Decimals)
     let senderERC20Balance = await getERC20Balance(erc20TokenAddress, publicClient, senderAddress)
     console.log('\nSafe Wallet ERC20 Balance:', Number(senderERC20Balance / erc20Amount))
 

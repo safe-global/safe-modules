@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { http, createWalletClient, PrivateKeyAccount } from 'viem'
+import { http, createWalletClient, PrivateKeyAccount, PublicClient, Address } from 'viem'
 import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
 import { setTimeout } from 'timers/promises'
 
@@ -9,9 +9,9 @@ const alchemyRPCURL = process.env.ALCHEMY_RPC_URL
 const gelatoRPCURL = process.env.GELATO_RPC_URL
 
 export const transferETH = async (
-  publicClient: any,
+  publicClient: PublicClient,
   signer: PrivateKeyAccount,
-  receiver: `0x${string}`,
+  receiver: Address,
   amount: bigint,
   chain: string,
   paymaster: string,

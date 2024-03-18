@@ -1,8 +1,8 @@
-import { encodePacked, encodeFunctionData } from 'viem'
+import { encodePacked, encodeFunctionData, Address } from 'viem'
 import { MULTISEND_ABI } from './abi'
 
 export type InternalTx = {
-  to: `0x${string}`
+  to: Address
   data: `0x${string}`
   value: bigint
   operation: 0 | 1

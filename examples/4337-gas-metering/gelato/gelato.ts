@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { Hash, createPublicClient, http, zeroAddress } from 'viem'
+import { Address, Hash, PublicClient, createPublicClient, http, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getGelatoAccountInitCode, getGelatoCallData, prepareForGelatoTx } from '../utils/safe'
@@ -24,8 +24,8 @@ const safeVersion = process.env.SAFE_VERSION as string
 const rpcURL = process.env.GELATO_RPC_URL
 const apiKey = process.env.GELATO_API_KEY
 
-const erc20TokenAddress = process.env.GELATO_ERC20_TOKEN_CONTRACT as `0x${string}`
-const erc721TokenAddress = process.env.GELATO_ERC721_TOKEN_CONTRACT as `0x${string}`
+const erc20TokenAddress = process.env.GELATO_ERC20_TOKEN_CONTRACT as Address
+const erc721TokenAddress = process.env.GELATO_ERC721_TOKEN_CONTRACT as Address
 
 const argv = process.argv.slice(2)
 if (argv.length != 1) {
@@ -61,10 +61,10 @@ if (chain == 'sepolia') {
     chain: sepolia,
   })
 } else if (chain == 'base-sepolia') {
-  publicClient = createPublicClient({
+  publicClient = (createPublicClient({
     transport: http(rpcURL),
     chain: baseSepolia,
-  })
+  })) as PublicClient
 } else {
   throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
 }
@@ -87,7 +87,7 @@ console.log('\nInit Code Created.')
 // Creating the Counterfactual Safe Address.
 const senderAddress = await getAccountAddress({
   owner: signer.address,
-  client: publicClient,
+  publicClient: publicClient,
   txType: txType,
   addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
@@ -101,7 +101,11 @@ const senderAddress = await getAccountAddress({
   isGelato: true,
 })
 console.log('\nCounterfactual Sender Address Created:', senderAddress)
-console.log('Address Link: https://' + chain + '.etherscan.io/address/' + senderAddress)
+if (chain == 'base-sepolia') {
+  console.log('Address Link: https://sepolia.basescan.org/address/' + senderAddress)
+} else {
+  console.log('Address Link: https://' + chain + '.etherscan.io/address/' + senderAddress)
+}
 
 // Preparing the Safe Account based on the Transaction.
 await prepareForGelatoTx({

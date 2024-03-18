@@ -30,7 +30,7 @@ import {
 import { EIP712_SAFE_TX_TYPE } from './type'
 
 export interface MetaTransaction {
-  to: `0x${string}`
+  to: Address
   value: bigint
   data: `0x${string}`
   operation: number
@@ -47,23 +47,23 @@ export const getGelatoCallData = async ({
 }: {
   safe: Address
   owner: PrivateKeyAccount
-  publicClient: any
+  publicClient: PublicClient
   txType: string
   erc20TokenAddress: Address
   erc721TokenAddress: Address
 }) => {
   let setupTxs: MetaTransaction
 
-  const nonce = await publicClient.readContract({
+  const nonce = (await publicClient.readContract({
     abi: SAFE_NONCE_ABI,
     address: safe,
     functionName: 'nonce',
-  })
+  })) as bigint
 
   if (txType == 'erc20') {
     // Token Configurations
-    const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10 ** erc20Decimals)
+    const erc20Decimals = BigInt(await getERC20Decimals(erc20TokenAddress, publicClient))
+    const erc20Amount = 10n ** erc20Decimals
 
     setupTxs = {
       to: erc20TokenAddress,
@@ -201,11 +201,10 @@ const getGelatoInitializerCode = async ({
       operation: 1, // 1 = DelegateCall required for enabling the module
     },
   ]
-
   if (txType == 'erc20') {
     // Token Configurations
-    const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10 ** erc20Decimals)
+    const erc20Decimals = BigInt(await getERC20Decimals(erc20TokenAddress, publicClient))
+    const erc20Amount = 10n ** erc20Decimals
 
     setupTxs.push({
       to: erc20TokenAddress,
@@ -251,15 +250,15 @@ export const prepareForGelatoTx = async ({
 }: {
   signer: PrivateKeyAccount
   chain: string
-  publicClient: any
+  publicClient: PublicClient
   txType: string
   senderAddress: Address
   erc20TokenAddress: Address
 }) => {
   if (txType == 'erc20') {
     // Token Configurations
-    const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10 ** erc20Decimals)
+    const erc20Decimals = BigInt(await getERC20Decimals(erc20TokenAddress, publicClient))
+    const erc20Amount = 10n ** erc20Decimals
     let senderERC20Balance = await getERC20Balance(erc20TokenAddress, publicClient, senderAddress)
     console.log('\nSafe Wallet ERC20 Balance:', Number(senderERC20Balance / erc20Amount))
 
@@ -355,7 +354,7 @@ export const getGelatoAccountInitCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  publicClient: any
+  publicClient: PublicClient
   txType: string
   addModuleLibAddress: Address
   safe4337ModuleAddress: Address
@@ -396,7 +395,7 @@ export const encodeCallData = (params: { to: Address; value: bigint; data: `0x${
 
 export const getAccountAddress = async ({
   owner,
-  client,
+  publicClient,
   txType = '',
   addModuleLibAddress,
   safe4337ModuleAddress,
@@ -410,7 +409,7 @@ export const getAccountAddress = async ({
   isGelato = false,
 }: {
   owner: Address
-  client: any
+  publicClient: PublicClient
   txType?: string
   addModuleLibAddress: Address
   safe4337ModuleAddress: Address
@@ -423,11 +422,11 @@ export const getAccountAddress = async ({
   paymasterAddress: Address
   isGelato?: boolean
 }): Promise<Address> => {
-  const proxyCreationCode = await client.readContract({
+  const proxyCreationCode = (await publicClient.readContract({
     abi: SAFE_FACTORY_PROXY_CREATION_CODE_ABI,
     address: safeProxyFactoryAddress,
     functionName: 'proxyCreationCode',
-  })
+  })) as `0x${string}`
 
   const deploymentCode = encodePacked(['bytes', 'uint256'], [proxyCreationCode, hexToBigInt(safeSingletonAddress)])
 
@@ -435,7 +434,7 @@ export const getAccountAddress = async ({
   if (isGelato) {
     initializer = await getGelatoInitializerCode({
       owner,
-      publicClient: client,
+      publicClient,
       txType,
       addModuleLibAddress,
       safe4337ModuleAddress,
