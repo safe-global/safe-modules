@@ -31,7 +31,7 @@ describe('WebAuthn Shim', () => {
   }
 
   describe('navigator.credentials.create()', () => {
-    it('creates and verifies a new credential', async () => {
+    it('Should create and verify a new credential', async () => {
       const options = await generateRegistrationOptions({
         rpName: rp.name,
         rpID: rp.id,
@@ -79,7 +79,7 @@ describe('WebAuthn Shim', () => {
   })
 
   describe('navigator.credentials.get()', () => {
-    it('authorises and verifies an existing credential', async () => {
+    it('Should authorise and verify an existing credential', async () => {
       const credential = navigator.credentials.create({
         publicKey: {
           rp,
