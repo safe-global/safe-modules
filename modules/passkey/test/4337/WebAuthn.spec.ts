@@ -19,7 +19,8 @@ import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { SafeModuleSetup, SafeL2, SafeProxyFactory, FCLP256Verifier, Safe4337Module, SafeECDSASignerLaunchpad, EntryPoint } = await deployments.fixture()
+    const { SafeModuleSetup, SafeL2, SafeProxyFactory, FCLP256Verifier, Safe4337Module, SafeECDSASignerLaunchpad, EntryPoint } =
+      await deployments.fixture()
 
     const [user] = await ethers.getSigners()
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
@@ -53,18 +54,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - new account', () => {
     it('should execute user operation', async () => {
-      const {
-        user,
-        proxyFactory,
-        safeModuleSetup,
-        module,
-        entryPoint,
-        signerLaunchpad,
-        singleton,
-        signerFactory,
-        navigator,
-        verifier,
-      } = await setupTests()
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, verifier } =
+        await setupTests()
       const verifierAddress = await verifier.getAddress()
 
       const credential = navigator.credentials.create({
@@ -228,8 +219,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifier } =
-        await setupTests()
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifier } = await setupTests()
       const verifierAddress = await verifier.getAddress()
       const credential = navigator.credentials.create({
         publicKey: {

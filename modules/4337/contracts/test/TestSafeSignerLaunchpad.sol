@@ -203,7 +203,11 @@ contract TestSafeSignerLaunchpad is IAccount, SafeStorage {
             bytes4 magicValue
         ) {
             // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(magicValue != IUniqueSignerFactory.isValidSignatureForSigner.selector, validUntil, validAfter);
+            validationData = _packValidationData(
+                magicValue != IUniqueSignerFactory.isValidSignatureForSigner.selector,
+                validUntil,
+                validAfter
+            );
         } catch {
             validationData = _packValidationData(true, validUntil, validAfter);
         }
