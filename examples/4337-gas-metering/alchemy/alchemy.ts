@@ -5,7 +5,8 @@ import { setTimeout } from 'timers/promises'
 import { PublicClient, Hash, Transport, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { goerli, sepolia } from 'viem/chains'
-import { SAFE_ADDRESSES_MAP, getAccountAddress, getAccountInitCode } from '../utils/safe'
+import { getAccountAddress, getAccountInitCode } from '../utils/safe'
+import { SAFE_ADDRESSES_MAP } from '../utils/address'
 import {
   UserOperation,
   signUserOperation,
@@ -115,7 +116,7 @@ const initCode = await getAccountInitCode({
 console.log('\nInit Code Created.')
 
 const senderAddress = await getAccountAddress({
-  client: publicClient,
+  publicClient: publicClient,
   owner: signer.address,
   addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,

@@ -17,14 +17,13 @@
     "alchemy:erc721:paymaster": "tsx ./alchemy/alchemy.ts erc721 paymaster=true",
     "alchemy": "tsx ./alchemy/alchemy.ts",
     "build": "rimraf dist && tsc",
-    "fmt": "prettier --ignore-path .gitignore --write .",
+    "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "eslint ./alchemy && eslint ./gelato && eslint ./pimlico && eslint ./utils",
     "gelato:account:1balance": "tsx ./gelato/gelato.ts account",
     "gelato:native-transfer:1balance": "tsx ./gelato/gelato.ts native-transfer",
     "gelato:erc20:1balance": "tsx ./gelato/gelato.ts erc20",
     "gelato:erc721:1balance": "tsx ./gelato/gelato.ts erc721",
-    "gelato": "tsx ./gelato/gelato.ts",
     "pimlico:account": "tsx ./pimlico/pimlico.ts account",
     "pimlico:account:paymaster": "tsx ./pimlico/pimlico.ts account paymaster=true",
     "pimlico:native-transfer": "tsx ./pimlico/pimlico.ts native-transfer",
@@ -59,6 +58,7 @@
     "viem": "2.7.9"
   },
   "devDependencies": {
+    "@gelatonetwork/relay-sdk": "^5.5.6",
     "@types/node": "20.11.18",
     "tsx": "4.7.1",
     "typescript": "^5.3.3"
