@@ -9,7 +9,7 @@ import {
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
 import type {
-  SafeSignerLaunchpad,
+  TestSafeSignerLaunchpad as SafeSignerLaunchpad,
   Safe4337Module,
   SafeProxyFactory,
   WebAuthnSigner,
