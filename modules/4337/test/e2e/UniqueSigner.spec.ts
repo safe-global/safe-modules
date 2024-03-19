@@ -12,7 +12,7 @@ describe('Unique Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, MultiSend } =
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, MultiSend } =
       await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
@@ -21,9 +21,11 @@ describe('Unique Signers [@4337]', () => {
     const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
-    const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
     const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
+
+    const TestSafeSignerLaunchpad = await ethers.getContractFactory('TestSafeSignerLaunchpad')
+    const signerLaunchpad = await TestSafeSignerLaunchpad.deploy(entryPoint)
 
     const TestUniqueSignerFactory = await ethers.getContractFactory('TestUniqueSignerFactory')
     const signerFactory = await TestUniqueSignerFactory.deploy()

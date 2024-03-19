@@ -5,7 +5,6 @@ import {IAccount} from "@account-abstraction/contracts/interfaces/IAccount.sol";
 import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
-import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
 
 interface IUniqueSignerFactory {
     /**
@@ -44,7 +43,7 @@ interface IUniqueSignerFactory {
  * @title SafeOpLaunchpad - A contract for Safe initialization with custom unique signers that would violate ERC-4337 factory rules.
  * @dev The is intended to be set as a Safe proxy's implementation for ERC-4337 user operation that deploys the account.
  */
-contract SafeSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstants {
+contract TestSafeSignerLaunchpad is IAccount, SafeStorage {
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = keccak256("EIP712Domain(uint256 chainId,address verifyingContract)");
 
     // keccak256("SafeSignerLaunchpad.initHash") - 1
@@ -204,7 +203,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage, SignatureValidatorConstan
             bytes4 magicValue
         ) {
             // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(magicValue != EIP1271_MAGIC_VALUE, validUntil, validAfter);
+            validationData = _packValidationData(magicValue != IUniqueSignerFactory.isValidSignatureForSigner.selector, validUntil, validAfter);
         } catch {
             validationData = _packValidationData(true, validUntil, validAfter);
         }
