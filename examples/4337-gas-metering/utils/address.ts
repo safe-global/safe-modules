@@ -1,4 +1,13 @@
-export const SAFE_ADDRESSES_MAP = {
+import { Address } from 'viem'
+
+export interface SafeAddresses {
+  ADD_MODULES_LIB_ADDRESS: Address
+  SAFE_4337_MODULE_ADDRESS: Address
+  SAFE_PROXY_FACTORY_ADDRESS: Address
+  SAFE_SINGLETON_ADDRESS: Address
+}
+
+export const SAFE_ADDRESSES_MAP: Record<string, Record<string, SafeAddresses | undefined> | undefined> = {
   '1.4.1': {
     '5': {
       ADD_MODULES_LIB_ADDRESS: '0x8EcD4ec46D4D2a6B64fE960B3D64e8B94B2234eb',
@@ -25,4 +34,4 @@ export const SAFE_ADDRESSES_MAP = {
       SAFE_SINGLETON_ADDRESS: '0x41675C099F32341bf84BFc5382aF534df5C7461a',
     },
   },
-} as const
+}

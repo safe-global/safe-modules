@@ -59,10 +59,9 @@ if (!txTypes.includes(txType)) {
   throw new Error('TX Type Argument Invalid')
 }
 
-const safeAddresses = (SAFE_ADDRESSES_MAP as Record<string, Record<string, any>>)[safeVersion]
-let chainAddresses
-if (safeAddresses) {
-  chainAddresses = safeAddresses[chainID]
+const chainAddresses = SAFE_ADDRESSES_MAP[safeVersion]?.[chainID]
+if (!chainAddresses) {
+  throw new Error('Missing deployment information for the passed Safe Version & chainID.')
 }
 
 if (apiKey === undefined) {
