@@ -16,7 +16,7 @@ contract FCLP256Verifier is IP256Verifier {
      */
     fallback(bytes calldata input) external returns (bytes memory output) {
         if (input.length != 160) {
-            return abi.encodePacked(uint256(0));
+            return "";
         }
 
         bytes32 message;
@@ -34,6 +34,10 @@ contract FCLP256Verifier is IP256Verifier {
             y := calldataload(128)
         }
 
-        output = abi.encode(FCL_ecdsa.ecdsa_verify(message, r, s, x, y));
+        if (!FCL_ecdsa.ecdsa_verify(message, r, s, x, y)) {
+            return "";
+        }
+
+        output = abi.encode(1);
     }
 }

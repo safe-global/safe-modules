@@ -18,9 +18,9 @@ interface IP256Verifier {
      * - `input[ 96:128]`: public key x
      * - `input[128:160]`: public key y
      *
-     * The output is a Solidity ABI encoded boolean value indicating whether or not the signature is
-     * valid. Specifically, it returns 32 bytes with a value of `0x00..00` or `0x00..01` for an
-     * invalid or valid signature respectively.
+     * The output is either:
+     * - `abi.encode(1)` bytes for a valid signature.
+     * - `""` empty bytes for an invalid signature or error.
      *
      * Note that this function does not follow the Solidity ABI format (in particular, it does not
      * have a 4-byte selector), which is why it requires a fallback function and not regular
