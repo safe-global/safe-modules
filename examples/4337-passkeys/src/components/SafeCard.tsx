@@ -8,7 +8,7 @@ import {
   SAFE_PROXY_FACTORY_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-  WEBAUTHN_VERIFIER_ADDRESS,
+  P256_VERIFIER_ADDRESS,
 } from '../config'
 import { PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
@@ -31,10 +31,9 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
       singleton: SAFE_SINGLETON_ADDRESS,
       fallbackHandler: SAFE_4337_MODULE_ADDRESS,
       signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-      signerData: ethers.AbiCoder.defaultAbiCoder().encode(
-        ['uint256', 'uint256', 'address'],
-        [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y, WEBAUTHN_VERIFIER_ADDRESS],
-      ),
+      signerX: passkey.pubkeyCoordinates.x,
+      signerY: passkey.pubkeyCoordinates.y,
+      signerVerifier: P256_VERIFIER_ADDRESS,
       setupTo: SAFE_MODULE_SETUP_ADDRESS,
       setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
     }),
