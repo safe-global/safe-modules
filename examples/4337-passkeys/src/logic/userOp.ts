@@ -52,10 +52,31 @@ type UserOperation = {
   signature: ethers.BytesLike
 }
 
-// Dummy signature for gas estimation. We require it so the estimation doesn't revert
-// if the signature is absent
-const DUMMY_SIGNATURE =
-  '0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e043aa8d1b19ca9387bdf05124650baec5c7ed57c04135f915b7a5fac9feeb29783063924cb9712ab0dd42f880317626ea82b4149f81f4e60d8ddeff9109d4619f0000000000000000000000000000000000000000000000000000000000000025a24f744b28d73f066bf3203d145765a7bc735e6328168c8b03e476da3ad0d8fe0400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001e226f726967696e223a2268747470733a2f2f736166652e676c6f62616c220000'
+// Dummy signature for gas estimation. We require the 12 bytes of validity timestamp data
+// so that the estimation doesn't revert. But we also want to use a dummy signature for
+// more accurate `verificationGasLimit` (We want to run the P256 signature verification
+// code) & `preVerificationGas` (The signature length in bytes should be accurate) estimate.
+// The challenge is neither P256 Verification Gas or signature length are stable, so we make
+// a calculated guess.
+const DUMMY_SIGNATURE = ethers.solidityPacked(
+  ['uint48', 'uint48', 'bytes'],
+  [
+    0,
+    0,
+    ethers.AbiCoder.defaultAbiCoder().encode(
+      ['bytes', 'string', 'uint256', 'uint256'],
+      [
+        `0x${'a0'.repeat(37)}`, // authenticatorData without any extensions/attestated credential data is always 37 bytes long.
+        [
+          `"origin":"${location.origin}"`,
+          `"padding":"This paddes the clientDataJSON so that we can leave room for additional callData (if any) for the preVerificationGas estimate."`,
+        ].join(','),
+        `0x${'ec'.repeat(32)}`,
+        `0x${'d5a'.repeat(21)}f`,
+      ],
+    ),
+  ],
+)
 
 /**
  * Generates the user operation initialization code.
@@ -153,15 +174,13 @@ type UserOpGasLimitEstimation = {
  * @param entryPointAddress - The entry point address. Default value is ENTRYPOINT_ADDRESS.
  * @returns A promise that resolves to the estimated gas limit for the user operation.
  */
-async function estimateUserOpGasLimit(
+function estimateUserOpGasLimit(
   userOp: UnsignedPackedUserOperation,
   entryPointAddress = ENTRYPOINT_ADDRESS,
 ): Promise<UserOpGasLimitEstimation> {
   const provider = getEip4337BundlerProvider()
   const rpcUserOp = unpackUserOperationForRpc(userOp, DUMMY_SIGNATURE)
-  const estimation = await provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
-  // This is needed due to Pimlico Gas Estimation Issue. Remove this once the issue is resolved.
-  estimation.preVerificationGas = ethers.toBeHex(BigInt(estimation.preVerificationGas) + 2500n)
+  const estimation = provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
 
   return estimation
 }
