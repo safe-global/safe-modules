@@ -1,28 +1,22 @@
 import { ethers } from 'ethers'
-import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-4337/build/artifacts/contracts/test/TestSafeSignerLaunchpad.sol/TestSafeSignerLaunchpad.json'
-import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSignerFactory.json'
+import { abi as SafeECDSASignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeECDSASignerLaunchpad.sol/SafeECDSASignerLaunchpad.json'
+import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/WebAuthnSignerFactory.sol/WebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import {
   abi as WebAuthnSignerAbi,
   bytecode as WebAuthSignerBytecode,
-} from '@safe-global/safe-4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSigner.json'
+} from '@safe-global/safe-passkey/build/artifacts/contracts/WebAuthnSigner.sol/WebAuthnSigner.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
-import type {
-  TestSafeSignerLaunchpad as SafeSignerLaunchpad,
-  Safe4337Module,
-  SafeProxyFactory,
-  WebAuthnSigner,
-  WebAuthnSignerFactory,
-  SafeModuleSetup,
-} from '@safe-global/safe-4337/typechain-types/'
+import type { Safe4337Module, SafeProxyFactory, SafeModuleSetup } from '@safe-global/safe-4337/typechain-types/'
+import type { SafeECDSASignerLaunchpad, WebAuthnSigner, WebAuthnSignerFactory } from '@safe-global/safe-passkey/typechain-types/'
 
 import {
   SAFE_SIGNER_LAUNCHPAD_ADDRESS,
   SAFE_4337_MODULE_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
-  WEBAUTHN_VERIFIER_ADDRESS,
+  P256_VERIFIER_ADDRESS,
 } from '../config'
 import { PackedUserOperation } from './userOp'
 
@@ -36,8 +30,10 @@ const SafeProxyBytecode =
  * @param provider The JSON-RPC provider used to interact with the blockchain.
  * @returns An instance of SafeSignerLaunchpad contract.
  */
-function getSafeSignerLaunchpadContract(provider: ethers.JsonRpcProvider): SafeSignerLaunchpad {
-  return new ethers.Contract(SAFE_SIGNER_LAUNCHPAD_ADDRESS, SafeSignerLaunchpadAbi, { provider }) as unknown as SafeSignerLaunchpad
+function getSafeSignerLaunchpadContract(provider: ethers.JsonRpcProvider): SafeECDSASignerLaunchpad {
+  return new ethers.Contract(SAFE_SIGNER_LAUNCHPAD_ADDRESS, SafeECDSASignerLaunchpadAbi, {
+    provider,
+  }) as unknown as SafeECDSASignerLaunchpad
 }
 
 /**
@@ -80,7 +76,7 @@ function getWebAuthnSignerContract(provider: ethers.JsonRpcProvider, address: st
 function getSignerAddressFromPubkeyCoords(x: string, y: string): string {
   const deploymentCode = ethers.solidityPacked(
     ['bytes', 'uint256', 'uint256', 'uint256'],
-    [WebAuthSignerBytecode, x, y, WEBAUTHN_VERIFIER_ADDRESS],
+    [WebAuthSignerBytecode, x, y, P256_VERIFIER_ADDRESS],
   )
   const salt = ethers.ZeroHash
   return ethers.getCreate2Address(WEBAUTHN_SIGNER_FACTORY_ADDRESS, salt, ethers.keccak256(deploymentCode))
@@ -89,7 +85,9 @@ function getSignerAddressFromPubkeyCoords(x: string, y: string): string {
 type SafeInitializer = {
   singleton: string
   signerFactory: string
-  signerData: string
+  signerX: string
+  signerY: string
+  signerVerifier: string
   setupTo: string
   setupData: string
   fallbackHandler: string
@@ -102,7 +100,9 @@ function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumber
       SafeInit: [
         { type: 'address', name: 'singleton' },
         { type: 'address', name: 'signerFactory' },
-        { type: 'bytes', name: 'signerData' },
+        { type: 'uint256', name: 'signerX' },
+        { type: 'uint256', name: 'signerY' },
+        { type: 'address', name: 'signerVerifier' },
         { type: 'address', name: 'setupTo' },
         { type: 'bytes', name: 'setupData' },
         { type: 'address', name: 'fallbackHandler' },
@@ -115,7 +115,7 @@ function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumber
 }
 
 function getLaunchpadInitializer(safeInitHash: string, optionalCallAddress = ethers.ZeroAddress, optionalCalldata = '0x'): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
+  const safeSignerLaunchpadInterface = new ethers.Interface(SafeECDSASignerLaunchpadAbi) as unknown as SafeECDSASignerLaunchpad['interface']
 
   const launchpadInitializer = safeSignerLaunchpadInterface.encodeFunctionData('preValidationSetup', [
     safeInitHash,
@@ -177,12 +177,14 @@ function encodeSafeModuleSetupCall(modules: string[]): string {
  * @returns The encoded data for initializing the Safe contract and performing the user operation.
  */
 function getLaunchpadInitializeThenUserOpData(initializer: SafeInitializer, encodedUserOp: string): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
+  const safeSignerLaunchpadInterface = new ethers.Interface(SafeECDSASignerLaunchpadAbi) as unknown as SafeECDSASignerLaunchpad['interface']
 
   const initializeThenUserOpData = safeSignerLaunchpadInterface.encodeFunctionData('initializeThenUserOp', [
     initializer.singleton,
     initializer.signerFactory,
-    initializer.signerData,
+    initializer.signerX,
+    initializer.signerY,
+    initializer.signerVerifier,
     initializer.setupTo,
     initializer.setupData,
     initializer.fallbackHandler,

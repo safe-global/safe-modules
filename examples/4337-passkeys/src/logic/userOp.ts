@@ -153,13 +153,15 @@ type UserOpGasLimitEstimation = {
  * @param entryPointAddress - The entry point address. Default value is ENTRYPOINT_ADDRESS.
  * @returns A promise that resolves to the estimated gas limit for the user operation.
  */
-function estimateUserOpGasLimit(
+async function estimateUserOpGasLimit(
   userOp: UnsignedPackedUserOperation,
   entryPointAddress = ENTRYPOINT_ADDRESS,
 ): Promise<UserOpGasLimitEstimation> {
   const provider = getEip4337BundlerProvider()
   const rpcUserOp = unpackUserOperationForRpc(userOp, DUMMY_SIGNATURE)
-  const estimation = provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
+  const estimation = await provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
+  // This is needed due to Pimlico Gas Estimation Issue. Remove this once the issue is resolved.
+  estimation.preVerificationGas = ethers.toBeHex(BigInt(estimation.preVerificationGas) + 2500n)
 
   return estimation
 }
