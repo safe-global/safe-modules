@@ -69,7 +69,7 @@ const DUMMY_SIGNATURE = ethers.solidityPacked(
         `0x${'a0'.repeat(37)}`, // authenticatorData without any extensions/attestated credential data is always 37 bytes long.
         [
           `"origin":"${location.origin}"`,
-          `"padding":"This paddes the clientDataJSON so that we can leave room for additional callData (if any) for the preVerificationGas estimate."`,
+          `"padding":"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate."`,
         ].join(','),
         `0x${'ec'.repeat(32)}`,
         `0x${'d5a'.repeat(21)}f`,
