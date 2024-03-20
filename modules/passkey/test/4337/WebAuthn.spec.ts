@@ -1,37 +1,35 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { getEntryPoint } from '../utils/setup'
-import { buildSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, logGas } from '@safe-global/safe-4337/src/utils/execution'
 import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
   calculateSafeOperationHash,
   packGasParameters,
-} from '../../src/utils/userOp'
-import { chainId } from '../utils/encoding'
+} from '@safe-global/safe-4337/src/utils/userOp'
+import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
 import {
   UserVerificationRequirement,
   WebAuthnCredentials,
   extractClientDataFields,
   extractPublicKey,
   extractSignature,
-} from '../utils/webauthn'
-import { Safe4337 } from '../../src/utils/safe'
+} from '@safe-global/safe-4337/test/utils/webauthn'
+import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { SafeModuleSetup, SafeL2, SafeProxyFactory, WebAuthnVerifier } = await deployments.fixture()
+    const { SafeModuleSetup, SafeL2, SafeProxyFactory, FCLP256Verifier, Safe4337Module, SafeECDSASignerLaunchpad, EntryPoint } =
+      await deployments.fixture()
 
     const [user] = await ethers.getSigners()
-    const entryPoint = await getEntryPoint()
-    const moduleFactory = await ethers.getContractFactory('Safe4337Module')
-    const module = await moduleFactory.deploy(entryPoint.target)
-    const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
-    const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
-    const signerLaunchpadFactory = await ethers.getContractFactory('SafeSignerLaunchpad')
-    const signerLaunchpad = await signerLaunchpadFactory.deploy(entryPoint.target)
-    const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
-    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
+    const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
+    const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
+    const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
+    const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
+    const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
+    const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
+    const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
     const signerFactory = await WebAuthnSignerFactory.deploy()
@@ -50,25 +48,15 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       singleton,
       signerFactory,
       navigator,
-      webAuthnVerifier,
+      verifier,
     }
   })
 
   describe('executeUserOp - new account', () => {
     it('should execute user operation', async () => {
-      const {
-        user,
-        proxyFactory,
-        safeModuleSetup,
-        module,
-        entryPoint,
-        signerLaunchpad,
-        singleton,
-        signerFactory,
-        navigator,
-        webAuthnVerifier,
-      } = await setupTests()
-      const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, verifier } =
+        await setupTests()
+      const verifierAddress = await verifier.getAddress()
 
       const credential = navigator.credentials.create({
         publicKey: {
@@ -86,16 +74,14 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = extractPublicKey(credential.response)
-      const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
-        ['uint256', 'uint256', 'address'],
-        [publicKey.x, publicKey.y, webAuthnVerifierAddress],
-      )
-      const signerAddress = await signerFactory.getSigner(signerData)
+      const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
 
       const safeInit = {
         singleton: singleton.target,
         signerFactory: signerFactory.target,
-        signerData,
+        signerX: publicKey.x,
+        signerY: publicKey.y,
+        signerVerifier: verifierAddress,
         setupTo: safeModuleSetup.target,
         setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
         fallbackHandler: module.target,
@@ -106,7 +92,9 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           SafeInit: [
             { type: 'address', name: 'singleton' },
             { type: 'address', name: 'signerFactory' },
-            { type: 'bytes', name: 'signerData' },
+            { type: 'uint256', name: 'signerX' },
+            { type: 'uint256', name: 'signerY' },
+            { type: 'address', name: 'signerVerifier' },
             { type: 'address', name: 'setupTo' },
             { type: 'bytes', name: 'setupData' },
             { type: 'address', name: 'fallbackHandler' },
@@ -119,7 +107,9 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         await signerLaunchpad.getInitHash(
           safeInit.singleton,
           safeInit.signerFactory,
-          safeInit.signerData,
+          safeInit.signerX,
+          safeInit.signerY,
+          safeInit.signerVerifier,
           safeInit.setupTo,
           safeInit.setupData,
           safeInit.fallbackHandler,
@@ -147,7 +137,9 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         callData: signerLaunchpad.interface.encodeFunctionData('initializeThenUserOp', [
           safeInit.singleton,
           safeInit.signerFactory,
-          safeInit.signerData,
+          safeInit.signerX,
+          safeInit.signerY,
+          safeInit.signerVerifier,
           safeInit.setupTo,
           safeInit.setupData,
           safeInit.fallbackHandler,
@@ -220,16 +212,15 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))
       expect(implementation).to.equal(singleton.target)
 
-      const safeInstance = await ethers.getContractAt('SafeL2', safe)
+      const safeInstance = singleton.attach(safe) as typeof singleton
       expect(await safeInstance.getOwners()).to.deep.equal([signerAddress])
     })
   })
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, webAuthnVerifier } =
-        await setupTests()
-      const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifier } = await setupTests()
+      const verifierAddress = await verifier.getAddress()
       const credential = navigator.credentials.create({
         publicKey: {
           rp: {
@@ -246,12 +237,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = extractPublicKey(credential.response)
-      const signerData = ethers.AbiCoder.defaultAbiCoder().encode(
-        ['uint256', 'uint256', 'address'],
-        [publicKey.x, publicKey.y, webAuthnVerifierAddress],
-      )
-      await signerFactory.createSigner(signerData)
-      const signer = await ethers.getContractAt('WebAuthnSigner', await signerFactory.getSigner(signerData))
+      await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
+      const signer = await ethers.getContractAt('WebAuthnSigner', await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress))
 
       const safe = await Safe4337.withSigner(await signer.getAddress(), {
         safeSingleton: await singleton.getAddress(),

@@ -1,20 +1,20 @@
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
-import { encodeMultiSendTransactions } from '../utils/encoding'
+import { encodeMultiSendTransactions } from '@safe-global/safe-4337/test/utils/encoding'
 import {
   UserVerificationRequirement,
   WebAuthnCredentials,
   extractClientDataFields,
   extractPublicKey,
   extractSignature,
-} from '../utils/webauthn'
+} from '@safe-global/safe-4337/test/utils/webauthn'
 import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
   buildRpcUserOperationFromSafeUserOperation,
-} from '../../src/utils/userOp'
-import { buildSignatureBytes } from '../../src/utils/execution'
+} from '@safe-global/safe-4337/src/utils/userOp'
+import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 
 describe('WebAuthn Singleton Signers [@4337]', () => {
   before(function () {
@@ -24,17 +24,17 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, MultiSend, SafeL2, WebAuthnVerifier } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, MultiSend, SafeL2, FCLP256Verifier } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
-    const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
-    const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
-    const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
-    const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
-    const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
-    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
+    const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
+    const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
+    const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
+    const multiSend = await ethers.getContractAt(MultiSend.abi, MultiSend.address)
+    const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
+    const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
 
     const TestStakedFactory = await ethers.getContractFactory('TestStakedFactory')
     const stakedFactory = await TestStakedFactory.deploy(proxyFactory.target)
@@ -45,7 +45,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
       })
       .then((tx) => tx.wait())
 
-    const WebAuthnSingletonSigner = await ethers.getContractFactory('WebAuthnSingletonSigner')
+    const WebAuthnSingletonSigner = await ethers.getContractFactory('TestWebAuthnSingletonSigner')
     const signer = await WebAuthnSingletonSigner.deploy()
 
     const navigator = {
@@ -61,7 +61,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
       entryPoint,
       multiSend,
       singleton,
-      webAuthnVerifier,
+      verifier,
       stakedFactory,
       signer,
       navigator,
@@ -78,7 +78,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
       entryPoint,
       multiSend,
       singleton,
-      webAuthnVerifier,
+      verifier,
       stakedFactory,
       signer,
       navigator,
@@ -115,7 +115,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
           {
             op: 0 as const,
             to: signer.target,
-            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifier: webAuthnVerifier.target }]),
+            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifier: verifier.target }]),
           },
         ]),
       ]),
@@ -186,6 +186,6 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
 
     expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.not.equal(0)
     expect(await ethers.provider.getBalance(safeAddress)).to.be.lessThan(ethers.parseEther('0.4'))
-    expect(await signer.getOwner(safeAddress)).to.deep.equal([publicKey.x, publicKey.y, webAuthnVerifier.target])
+    expect(await signer.getOwner(safeAddress)).to.deep.equal([publicKey.x, publicKey.y, verifier.target])
   })
 })

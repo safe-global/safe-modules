@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-4337/build/artifacts/contracts/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
+import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-4337/build/artifacts/contracts/test/TestSafeSignerLaunchpad.sol/TestSafeSignerLaunchpad.json'
 import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-4337/build/artifacts/contracts/experimental/WebAuthnSigner.sol/WebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import {
@@ -9,7 +9,7 @@ import {
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
 import type {
-  SafeSignerLaunchpad,
+  TestSafeSignerLaunchpad as SafeSignerLaunchpad,
   Safe4337Module,
   SafeProxyFactory,
   WebAuthnSigner,

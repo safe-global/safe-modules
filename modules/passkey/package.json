@@ -39,6 +39,7 @@
     "test": "hardhat test",
     "test:4337": "4337-local-bundler-test",
     "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test",
+    "test:all": "npm run test && npm run test:4337",
     "prepare": "npm run build -w ../4337 && npm run build"
   },
   "devDependencies": {
