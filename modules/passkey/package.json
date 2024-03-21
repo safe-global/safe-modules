@@ -28,8 +28,8 @@
   ],
   "scripts": {
     "build": "npm run build:sol && npm run build:ts",
-    "build:sol": "npx rimraf build && hardhat compile",
-    "build:ts": "npx rimraf dist && tsc",
+    "build:sol": "rimraf build typechain-types && hardhat compile",
+    "build:ts": "rimraf dist && tsc",
     "coverage": "hardhat coverage",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
@@ -37,7 +37,10 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint .",
     "test": "hardhat test",
-    "test:4337": "./test/4337/run.sh"
+    "test:4337": "4337-local-bundler-test",
+    "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test",
+    "test:all": "npm run test && npm run test:4337",
+    "prepare": "npm run build -w ../4337 && npm run build"
   },
   "devDependencies": {
     "@account-abstraction/contracts": "^0.7.0",
@@ -45,6 +48,7 @@
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "^0.3.0",
+    "@safe-global/safe-4337-local-bundler": "^0.0.0",
     "@simplewebauthn/server": "^9.0.3",
     "cbor": "^9.0.2",
     "dotenv": "^16.4.5",
@@ -54,7 +58,7 @@
   },
   "overrides": {
     "@safe-global/safe-contracts": {
-      "ethers": "^6.11.0"
+      "ethers": "^6.11.1"
     }
   },
   "dependencies": {

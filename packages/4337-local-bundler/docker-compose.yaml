@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  geth:
+    image: docker.io/ethereum/client-go:stable
+    restart: always
+    environment:
+      GETH_DEV: 'true'
+      GETH_HTTP: 'true'
+      GETH_HTTP_ADDR: '0.0.0.0'
+      GETH_HTTP_API: 'personal,eth,net,web3,debug'
+      GETH_HTTP_VHOSTS: '*'
+      GETH_RPC_ALLOW_UNPROTECTED_TXS: 'true'
+    ports:
+      - 8545:8545
+
+  bundler:
+    build:
+      context: .
+      dockerfile: docker/bundler/Dockerfile
+    restart: always
+    command: ['--auto', '--network=http://geth:8545']
+    environment:
+      DEBUG: 'aa.exec,aa.exec.cron,aa.events,aa.mempool'
+    ports:
+      - 3000:3000
+
+  bundler-upstream:
+    build:
+      context: .
+      dockerfile: docker/bundler/Dockerfile
+      args:
+        TAG: main
+    restart: always
+    command: ['--auto', '--network=http://geth:8545']
+    environment:
+      DEBUG: 'aa.exec,aa.exec.cron,aa.events,aa.mempool'
+    ports:
+      - 3000:3000

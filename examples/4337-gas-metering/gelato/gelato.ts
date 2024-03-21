@@ -1,24 +1,17 @@
 import dotenv from 'dotenv'
-import { getAccountNonce } from 'permissionless'
-import { Client, Hash, createPublicClient, http, zeroAddress } from 'viem'
+import { Address, Hash, PublicClient, createPublicClient, http, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
-import { sepolia } from 'viem/chains'
-import { SAFE_ADDRESSES_MAP, getAccountAddress, getAccountInitCode } from '../utils/safe'
-import {
-  UserOperation,
-  signUserOperation,
-  txTypes,
-  getGasValuesFromGelato,
-  submitUserOperationGelato,
-  createCallData,
-} from '../utils/userOps'
+import { baseSepolia, sepolia } from 'viem/chains'
+import { getAccountAddress, getGelatoAccountInitCode, getGelatoCallData, prepareForGelatoTx } from '../utils/safe'
+import { SAFE_ADDRESSES_MAP } from '../utils/address'
+import { txTypes } from '../utils/userOps'
+import { GelatoRelay } from '@gelatonetwork/relay-sdk'
+import { setTimeout } from 'timers/promises'
 
 dotenv.config()
-const paymaster = 'gelato'
 
 const privateKey = process.env.PRIVATE_KEY
 
-const entryPointAddress = process.env.GELATO_ENTRYPOINT_ADDRESS as `0x${string}`
 const multiSendAddress = process.env.GELATO_MULTISEND_ADDRESS as `0x${string}`
 
 const saltNonce = BigInt(process.env.GELATO_NONCE as string)
@@ -29,22 +22,14 @@ const chainID = Number(process.env.GELATO_CHAIN_ID)
 const safeVersion = process.env.SAFE_VERSION as string
 
 const rpcURL = process.env.GELATO_RPC_URL
-const policyID = process.env.GELATO_GAS_POLICY
 const apiKey = process.env.GELATO_API_KEY
 
-const erc20TokenAddress = process.env.GELATO_ERC20_TOKEN_CONTRACT as `0x${string}`
-const erc721TokenAddress = process.env.GELATO_ERC721_TOKEN_CONTRACT as `0x${string}`
+const erc20TokenAddress = process.env.GELATO_ERC20_TOKEN_CONTRACT as Address
+const erc721TokenAddress = process.env.GELATO_ERC721_TOKEN_CONTRACT as Address
 
 const argv = process.argv.slice(2)
-let usePaymaster!: boolean
-if (argv.length < 1 || argv.length > 2) {
+if (argv.length != 1) {
   throw new Error('TX Type Argument not passed.')
-} else if (argv.length == 2 && argv[1] == 'paymaster=true') {
-  if (policyID) {
-    usePaymaster = true
-  } else {
-    throw new Error('Paymaster requires policyID to be set.')
-  }
 }
 
 const txType: string = argv[0]
@@ -52,10 +37,9 @@ if (!txTypes.includes(txType)) {
   throw new Error('TX Type Argument Invalid')
 }
 
-const safeAddresses = (SAFE_ADDRESSES_MAP as Record<string, Record<string, any>>)[safeVersion]
-let chainAddresses
-if (safeAddresses) {
-  chainAddresses = safeAddresses[chainID]
+const chainAddresses = SAFE_ADDRESSES_MAP[safeVersion]?.[chainID]
+if (!chainAddresses) {
+  throw new Error('Missing deployment information for the passed Safe Version & chainID.')
 }
 
 if (apiKey === undefined) {
@@ -75,110 +59,127 @@ if (chain == 'sepolia') {
     transport: http(rpcURL),
     chain: sepolia,
   })
+} else if (chain == 'base-sepolia') {
+  publicClient = createPublicClient({
+    transport: http(rpcURL),
+    chain: baseSepolia,
+  }) as PublicClient
 } else {
   throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
 }
 
-const initCode = await getAccountInitCode({
+// Creating the Account Init Code.
+let requestData = await getGelatoAccountInitCode({
   owner: signer.address,
+  publicClient: publicClient,
+  txType: txType,
   addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
-  safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
-  erc20TokenAddress: zeroAddress,
-  paymasterAddress: zeroAddress,
+  erc20TokenAddress: erc20TokenAddress,
+  erc721TokenAddress: erc721TokenAddress,
 })
 console.log('\nInit Code Created.')
 
+// Creating the Counterfactual Safe Address.
 const senderAddress = await getAccountAddress({
-  client: publicClient,
   owner: signer.address,
+  publicClient: publicClient,
+  txType: txType,
   addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
-  erc20TokenAddress: zeroAddress,
+  erc20TokenAddress: erc20TokenAddress,
+  erc721TokenAddress: erc721TokenAddress,
   paymasterAddress: zeroAddress,
+  isGelato: true,
 })
 console.log('\nCounterfactual Sender Address Created:', senderAddress)
-console.log('Address Link: https://' + chain + '.etherscan.io/address/' + senderAddress)
+if (chain == 'base-sepolia') {
+  console.log('Address Link: https://sepolia.basescan.org/address/' + senderAddress)
+} else {
+  console.log('Address Link: https://' + chain + '.etherscan.io/address/' + senderAddress)
+}
+
+// Preparing the Safe Account based on the Transaction.
+await prepareForGelatoTx({
+  signer,
+  chain,
+  publicClient,
+  txType,
+  senderAddress,
+  erc20TokenAddress,
+})
+
+// Creating the request object for the Gelato Task.
+let request
 
 const contractCode = await publicClient.getBytecode({ address: senderAddress })
-
+// Checking if the Safe is already deployed.
 if (contractCode) {
   console.log('\nThe Safe is already deployed.')
   if (txType == 'account') {
     process.exit(0)
   }
+
+  // Creating the Call Data if account is already created.
+  console.log('\nExecuting calldata passed with the Safe.')
+  requestData = await getGelatoCallData({
+    safe: senderAddress,
+    owner: signer,
+    publicClient: publicClient,
+    txType: txType,
+    erc20TokenAddress: erc20TokenAddress,
+    erc721TokenAddress: erc721TokenAddress,
+  })
+  console.log('\nSigned Calldata Created.')
+
+  // Creating the Gelato Task Request Object.
+  request = {
+    chainId: BigInt(chainID),
+    target: senderAddress,
+    data: requestData,
+  }
 } else {
   console.log('\nDeploying a new Safe and executing calldata passed with it (if any).')
+
+  // Creating the Gelato Task Request Object.
+  request = {
+    chainId: BigInt(chainID),
+    target: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
+    data: requestData,
+  }
 }
 
-const newNonce = await getAccountNonce(publicClient as Client, {
-  entryPoint: entryPointAddress,
-  sender: senderAddress,
-})
-console.log('\nNonce for the sender received from EntryPoint.')
+// Creating the Gelato Relay Object.
+const relay = new GelatoRelay()
 
-const txCallData: `0x${string}` = await createCallData(
-  chain,
-  publicClient,
-  signer,
-  txType,
-  senderAddress,
-  erc20TokenAddress,
-  erc721TokenAddress,
-  paymaster,
-)
+// Executing the Gelato Task.
+const relayResponse = await relay.sponsoredCall(request, apiKey)
 
-const sponsoredUserOperation: UserOperation = {
-  sender: senderAddress,
-  nonce: newNonce,
-  initCode: contractCode ? '0x' : initCode,
-  callData: txCallData,
-  callGasLimit: 1n, // All Gas Values will be filled by Estimation Response Data.
-  verificationGasLimit: 1n,
-  preVerificationGas: 1n,
-  maxFeePerGas: 1n,
-  maxPriorityFeePerGas: 1n,
-  paymasterAndData: '0x',
-  signature: '0x',
+// Logging the Gelato Task ID Link.
+console.log('\nGelato Relay Task Link: https://api.gelato.digital/tasks/status/' + relayResponse['taskId'])
+
+let taskStatus = await relay.getTaskStatus(relayResponse.taskId)
+// Checking the Gelato Task Status.
+while (taskStatus?.taskState !== 'ExecSuccess') {
+  await setTimeout(25000)
+  taskStatus = await relay.getTaskStatus(relayResponse.taskId)
 }
 
-sponsoredUserOperation.signature = await signUserOperation(
-  sponsoredUserOperation,
-  signer,
-  chainID,
-  entryPointAddress,
-  chainAddresses.SAFE_4337_MODULE_ADDRESS,
-)
-console.log('\nSigned Dummy Data for Gelato.')
-
-if (usePaymaster) {
-  throw new Error('Currently paymaster is not supported for Gelato.')
+// Based on the chain, logging the transaction link and tenderly gas detail.
+if (chain == 'base-sepolia') {
+  console.log('\nTransaction Link: https://sepolia.basescan.org/tx/' + (taskStatus.transactionHash ?? ''))
+  console.log('\nGas Used: https://dashboard.tenderly.co/tx/' + chain + '/' + (taskStatus.transactionHash ?? '') + '/gas-usage')
 } else {
-  sponsoredUserOperation.maxPriorityFeePerGas = 0n // Gelato prefers to keep it to zero.
-  sponsoredUserOperation.maxFeePerGas = 0n
-
-  const rvGas = await getGasValuesFromGelato(entryPointAddress, sponsoredUserOperation, chainID, apiKey)
-
-  sponsoredUserOperation.preVerificationGas = rvGas?.preVerificationGas
-  sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
-  // sponsoredUserOperation.callGasLimit = "0x186a0" as any;
-  sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
+  console.log('\nTransaction Link: https://' + chain + '.etherscan.io/tx/' + (taskStatus.transactionHash ?? ''))
+  console.log('\nGas Used: https://dashboard.tenderly.co/tx/' + chain + '/' + (taskStatus.transactionHash ?? '') + '/gas-usage')
 }
 
-sponsoredUserOperation.signature = await signUserOperation(
-  sponsoredUserOperation,
-  signer,
-  chainID,
-  entryPointAddress,
-  chainAddresses.SAFE_4337_MODULE_ADDRESS,
-)
-console.log('\nSigned Real Data for Gelato.')
-
-await submitUserOperationGelato(entryPointAddress, sponsoredUserOperation, chain, chainID, apiKey)
+// Logging the Gas Used.
+console.log('\nGas Used:', taskStatus.gasUsed)

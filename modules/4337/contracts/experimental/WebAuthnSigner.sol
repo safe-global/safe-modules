@@ -3,7 +3,7 @@
 pragma solidity >=0.8.0;
 
 import {SignatureValidatorConstants} from "./SignatureValidatorConstants.sol";
-import {IUniqueSignerFactory} from "./SafeSignerLaunchpad.sol";
+import {IUniqueSignerFactory} from "../test/TestSafeSignerLaunchpad.sol";
 import {SignatureValidator} from "./SignatureValidator.sol";
 import {IWebAuthnVerifier, WebAuthnConstants} from "./verifiers/WebAuthnVerifier.sol";
 

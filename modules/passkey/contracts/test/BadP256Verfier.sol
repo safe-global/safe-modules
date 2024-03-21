@@ -3,7 +3,7 @@
 /* solhint-disable payable-fallback */
 pragma solidity ^0.8.0;
 
-import {IP256Verifier} from "../verifiers/IP256Verifier.sol";
+import {IP256Verifier} from "../interfaces/IP256Verifier.sol";
 
 contract BadP256Verifier is IP256Verifier {
     enum Behaviour {

@@ -12,19 +12,18 @@ describe('FCLP256Verifier', function () {
 
     async function verifySignature(message: BytesLike, r: BigNumberish, s: BigNumberish, x: BigNumberish, y: BigNumberish) {
       const coder = ethers.AbiCoder.defaultAbiCoder()
-      const [success] = coder.decode(
-        ['bool'],
-        await verifier.fallback!.staticCall({
-          data: coder.encode(['bytes32', 'uint256', 'uint256', 'uint256', 'uint256'], [message, r, s, x, y]),
-        }),
-      )
-      return success
+      return await verifier.fallback!.staticCall({
+        data: coder.encode(['bytes32', 'uint256', 'uint256', 'uint256', 'uint256'], [message, r, s, x, y]),
+      })
     }
 
     const account = new Account()
 
     return { verifier, verifySignature, account }
   })
+
+  const SUCCESS = `0x${'00'.repeat(31)}01`
+  const FAILURE = '0x'
 
   it('Should return 1 on valid signature', async function () {
     const { verifySignature, account } = await setupTests()
@@ -33,7 +32,7 @@ describe('FCLP256Verifier', function () {
     const { r, s } = account.sign(message)
     const { x, y } = account.publicKey
 
-    expect(await verifySignature(message, r, s, x, y)).to.be.true
+    expect(await verifySignature(message, r, s, x, y)).to.equal(SUCCESS)
   })
 
   it('Should ignore signature malleability', async function () {
@@ -43,18 +42,45 @@ describe('FCLP256Verifier', function () {
     const { r, highS } = account.sign(message)
     const { x, y } = account.publicKey
 
-    expect(await verifySignature(message, r, highS, x, y)).to.be.true
+    expect(await verifySignature(message, r, highS, x, y)).to.equal(SUCCESS)
   })
 
-  it('Should return 0 on invalid signature', async function () {
-    const { verifySignature } = await setupTests()
+  it('Should return empty on unverified signature', async function () {
+    const { verifySignature, account } = await setupTests()
 
-    expect(await verifySignature(ethers.ZeroHash, 1, 2, 3, 4)).to.be.false
+    const { x, y } = account.publicKey
+
+    expect(await verifySignature(ethers.ZeroHash, 1, 2, x, y)).to.equal(FAILURE)
   })
 
-  it('Should return 0 on invalid input', async function () {
+  it('Should return empty on invalid signature parameters', async function () {
+    const { verifySignature, account } = await setupTests()
+
+    const message = ethers.id('hello world')
+    const { r, s } = account.sign(message)
+    const { x, y } = account.publicKey
+
+    // `r` and `s` must be in the range `[1, n)`, where `n` is the order of the curve.
+    expect(await verifySignature(message, 0, s, x, y)).to.equal(FAILURE)
+    expect(await verifySignature(message, r, 0, x, y)).to.equal(FAILURE)
+    expect(await verifySignature(message, ethers.MaxUint256, s, x, y)).to.equal(FAILURE)
+    expect(await verifySignature(message, r, ethers.MaxUint256, x, y)).to.equal(FAILURE)
+  })
+
+  it('Should return empty on invalid public key', async function () {
+    const { verifySignature, account } = await setupTests()
+
+    const message = ethers.id('hello world')
+    const { r, s } = account.sign(message)
+    const { x, y } = account.publicKey
+
+    expect(await verifySignature(message, r, s, 0, y)).to.equal(FAILURE)
+    expect(await verifySignature(message, r, s, x, 0)).to.equal(FAILURE)
+  })
+
+  it('Should return empty on invalid input', async function () {
     const { verifier } = await setupTests()
 
-    expect(await verifier.fallback!.staticCall({ data: ethers.hexlify(ethers.toUtf8Bytes('invalid input')) })).to.equal(ethers.ZeroHash)
+    expect(await verifier.fallback!.staticCall({ data: ethers.hexlify(ethers.toUtf8Bytes('invalid input')) })).to.equal(FAILURE)
   })
 })

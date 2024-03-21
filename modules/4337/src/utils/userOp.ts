@@ -1,8 +1,9 @@
+import { UserOperation } from '@safe-global/safe-4337-provider'
 import { BigNumberish, BytesLike, Contract, Signer, ethers } from 'ethers'
 import { PackedUserOperationStruct as PackedUserOperation } from '../../typechain-types/contracts/Safe4337Module'
 import { SafeSignature } from './execution'
 
-export { PackedUserOperation }
+export { PackedUserOperation, UserOperation }
 
 type OptionalExceptFor<T, TRequired extends keyof T = keyof T> = Partial<Pick<T, Exclude<keyof T, TRequired>>> &
   Required<Pick<T, TRequired>>
@@ -14,24 +15,6 @@ export type SafeUserOperation = {
   validUntil: BigNumberish
 } & GasParameters &
   Omit<PackedUserOperation, 'sender' | 'signature' | keyof PackedGasParameters>
-
-export type UserOperation = {
-  sender: string
-  nonce: BigNumberish
-  factory?: string
-  factoryData?: BytesLike
-  callData: BytesLike
-  callGasLimit: BigNumberish
-  verificationGasLimit: BigNumberish
-  preVerificationGas: BigNumberish
-  maxFeePerGas: BigNumberish
-  maxPriorityFeePerGas: BigNumberish
-  paymaster?: string
-  paymasterVerificationGasLimit?: BigNumberish
-  paymasterPostOpGasLimit?: BigNumberish
-  paymasterData?: BytesLike
-  signature: BytesLike
-}
 
 export const EIP712_SAFE_OPERATION_TYPE = {
   SafeOp: [

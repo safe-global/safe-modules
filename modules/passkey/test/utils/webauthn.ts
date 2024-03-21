@@ -357,3 +357,34 @@ export function encodeWebAuthnSignature(response: AuthenticatorAssertionResponse
     [new Uint8Array(response.authenticatorData), clientDataFields, r, s],
   )
 }
+
+export const DUMMY_CLIENT_DATA_FIELDS = [
+  `"origin":"http://safe.global"`,
+  `"padding":"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate."`,
+].join(',')
+
+/**
+ * Dummy signature bytes for testing purposes.
+ */
+export const DUMMY_SIGNATURE_BYTES = ethers.AbiCoder.defaultAbiCoder().encode(
+  ['bytes', 'string', 'uint256', 'uint256'],
+  [
+    `0x${'a0'.repeat(37)}`, // authenticatorData without any extensions/attestated credential data is always 37 bytes long.
+    DUMMY_CLIENT_DATA_FIELDS,
+    `0x${'ec'.repeat(32)}`,
+    `0x${'d5a'.repeat(21)}f`,
+  ],
+)
+
+/**
+ * Encodes the given WebAuthn signature into a string. Used for testing purposes.
+ *
+ * @param authenticatorData - The authenticator data as a Uint8Array.
+ * @param clientDataFields - The client data fields as a string.
+ * @param r - The value of r as a bigint.
+ * @param s - The value of s as a bigint.
+ * @returns The encoded string.
+ */
+export function getSignatureBytes(authenticatorData: Uint8Array, clientDataFields: string, r: bigint, s: bigint): string {
+  return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
+}

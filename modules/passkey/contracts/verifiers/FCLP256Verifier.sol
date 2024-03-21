@@ -3,8 +3,8 @@
 /* solhint-disable payable-fallback */
 pragma solidity 0.8.24;
 
+import {IP256Verifier} from "../interfaces/IP256Verifier.sol";
 import {FCL_ecdsa} from "../vendor/FCL/FCL_ecdsa.sol";
-import {IP256Verifier} from "./IP256Verifier.sol";
 
 /**
  * @title P-256 Elliptic Curve Verifier Based on The FreshCryptoLib P-256 Implementation.
@@ -14,9 +14,9 @@ contract FCLP256Verifier is IP256Verifier {
     /**
      * @inheritdoc IP256Verifier
      */
-    fallback(bytes calldata input) external returns (bytes memory) {
+    fallback(bytes calldata input) external returns (bytes memory output) {
         if (input.length != 160) {
-            return abi.encodePacked(uint256(0));
+            return "";
         }
 
         bytes32 message;
@@ -34,6 +34,10 @@ contract FCLP256Verifier is IP256Verifier {
             y := calldataload(128)
         }
 
-        return abi.encode(FCL_ecdsa.ecdsa_verify(message, r, s, x, y));
+        if (!FCL_ecdsa.ecdsa_verify(message, r, s, x, y)) {
+            return "";
+        }
+
+        output = abi.encode(1);
     }
 }

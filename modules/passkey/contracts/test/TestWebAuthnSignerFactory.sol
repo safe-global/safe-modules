@@ -2,7 +2,7 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity ^0.8.0;
 
-import {IP256Verifier, P256VerifierLib} from "../verifiers/IP256Verifier.sol";
+import {IP256Verifier, P256} from "../libraries/P256.sol";
 
 contract TestWebAuthnSignerFactory {
     function createSigner(address verifier, uint256 x, uint256 y) external returns (TestWebAuthnSigner signer) {
@@ -11,7 +11,7 @@ contract TestWebAuthnSignerFactory {
 }
 
 contract TestWebAuthnSigner {
-    using P256VerifierLib for IP256Verifier;
+    using P256 for IP256Verifier;
 
     struct SignatureData {
         bytes authenticatorData;

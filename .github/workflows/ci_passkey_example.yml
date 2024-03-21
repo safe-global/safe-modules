@@ -18,10 +18,6 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: |
           npm ci
-          # Build the 4337 module so the app can use the artifacts
-          npm run build -w modules/4337
-          # Reinstall the dependencies so the 4337 dependency includes artifacts
-          npm ci
           npm run lint -w examples/4337-passkeys
           npm run build -w examples/4337-passkeys
         env:
