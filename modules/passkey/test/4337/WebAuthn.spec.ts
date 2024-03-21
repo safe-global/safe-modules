@@ -19,8 +19,16 @@ import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { SafeModuleSetup, SafeL2, SafeProxyFactory, FCLP256Verifier, Safe4337Module, SafeECDSASignerLaunchpad, EntryPoint } =
-      await deployments.fixture()
+    const {
+      SafeModuleSetup,
+      SafeL2,
+      SafeProxyFactory,
+      FCLP256Verifier,
+      Safe4337Module,
+      SafeECDSASignerLaunchpad,
+      EntryPoint,
+      WebAuthnSignerFactory,
+    } = await deployments.fixture()
 
     const [user] = await ethers.getSigners()
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
@@ -30,9 +38,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-
-    const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
-    const signerFactory = await WebAuthnSignerFactory.deploy()
+    const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
