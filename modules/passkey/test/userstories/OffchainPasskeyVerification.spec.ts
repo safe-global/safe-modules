@@ -28,7 +28,7 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
     }
   })
 
-  it.only('should be possible to verify offchain passkey signature', async () => {
+  it('should be possible to verify offchain passkey signature', async () => {
     const { proxyFactory, singleton, signerFactory, navigator, verifier, SafeL2 } = await setupTests()
 
     const verifierAddress = await verifier.getAddress()
