@@ -80,7 +80,8 @@ library P256 {
             mstore(add(input, 128), y)
 
             // Perform staticcall and check result, note that Yul evaluates expressions from right
-            // to left. See <https://docs.soliditylang.org/en/v0.8.24/yul.html#function-calls>
+            // to left. See <https://docs.soliditylang.org/en/v0.8.24/yul.html#function-calls>.
+            mstore(0, 0)
             success := and(
                 and(
                     // Return data is exactly 32-bytes long
