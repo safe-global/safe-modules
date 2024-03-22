@@ -354,7 +354,7 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
  * @param s - The value of s as a bigint.
  * @returns The encoded string.
  */
-export function getSignatureBytes(authenticatorData: Uint8Array, clientDataFields: string, r: bigint, s: bigint): string {
+export function getSignatureBytes(signature: { authenticatorData: BytesLike, clientDataFields: string, r: BigNumberish, s: BigNumberish }): string {
   return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
 }
 
