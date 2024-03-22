@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import hre from 'hardhat'
-import { DUMMY_CLIENT_DATA_FIELDS, DUMMY_SIGNATURE_BYTES, base64UrlEncode, getSignatureBytes } from '../utils/webauthn'
+import { DUMMY_CLIENT_DATA_FIELDS, base64UrlEncode, getSignatureBytes } from '../utils/webauthn'
 
 describe('WebAuthn Library', () => {
   const setupTests = deployments.createFixture(async () => {
@@ -27,10 +27,11 @@ describe('WebAuthn Library', () => {
       r: 0n,
       s: 0n,
     }
+    const signatureBytes = getSignatureBytes(signature.authenticatorData, signature.clientDataFields, signature.r, signature.s)
 
     expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
 
-    expect(await webAuthnLib.verifySignatureCastSig(challenge, DUMMY_SIGNATURE_BYTES, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
+    expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
   })
 
   it('Should return false on non-matching authenticator flags', async () => {
@@ -49,10 +50,11 @@ describe('WebAuthn Library', () => {
       r: 0n,
       s: 0n,
     }
+    const signatureBytes = getSignatureBytes(signature.authenticatorData, signature.clientDataFields, signature.r, signature.s)
 
     expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
 
-    expect(await webAuthnLib.verifySignatureCastSig(challenge, DUMMY_SIGNATURE_BYTES, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
+    expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
   })
 
   it('Should return true when the verifier returns true', async () => {
