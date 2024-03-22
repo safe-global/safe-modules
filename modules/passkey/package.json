@@ -46,6 +46,7 @@
     "@account-abstraction/contracts": "^0.7.0",
     "@noble/curves": "^1.3.0",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "^0.3.0",
     "@safe-global/safe-4337-local-bundler": "^0.0.0",
     "@simplewebauthn/server": "^9.0.3",

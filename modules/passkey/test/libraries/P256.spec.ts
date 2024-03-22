@@ -20,7 +20,7 @@ describe('P256', function () {
   it('Should return true on valid signature', async function () {
     const { verifier, p256Lib, account } = await setupTests()
 
-    const message = ethers.id('hello world')
+    const message = ethers.id('hello passkeys')
     const { r, s } = account.sign(message)
     const { x, y } = account.publicKey
 
@@ -36,7 +36,7 @@ describe('P256', function () {
   it('Should check for signature signature malleability', async function () {
     const { verifier, p256Lib, account } = await setupTests()
 
-    const message = ethers.id('hello world')
+    const message = ethers.id('hello passkeys')
     const { r, highS } = account.sign(message)
     const { x, y } = account.publicKey
 
@@ -47,7 +47,7 @@ describe('P256', function () {
   it('Should return false for misbehaving verifiers', async function () {
     const { p256Lib, account } = await setupTests()
 
-    const message = ethers.id('hello world')
+    const message = ethers.id('hello passkeys')
     const { r, s } = account.sign(message)
     const { x, y } = account.publicKey
 
