@@ -3,18 +3,12 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { encodeMultiSendTransactions } from '@safe-global/safe-4337/test/utils/encoding'
 import {
-  UserVerificationRequirement,
-  WebAuthnCredentials,
-  extractClientDataFields,
-  extractPublicKey,
-  extractSignature,
-} from '@safe-global/safe-4337/test/utils/webauthn'
-import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
   buildRpcUserOperationFromSafeUserOperation,
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
+import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 
 describe('WebAuthn Singleton Signers [@4337]', () => {
   before(function () {
@@ -99,7 +93,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
       },
     })
-    const publicKey = extractPublicKey(credential.response)
+    const publicKey = decodePublicKey(credential.response)
 
     const initializer = singleton.interface.encodeFunctionData('setup', [
       [signer.target],
@@ -154,20 +148,13 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
         challenge: ethers.getBytes(opHash),
         rpId: 'safe.global',
         allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
-        userVerification: UserVerificationRequirement.required,
+        userVerification: 'required',
       },
     })
     const signature = buildSignatureBytes([
       {
         signer: signer.target as string,
-        data: ethers.AbiCoder.defaultAbiCoder().encode(
-          ['bytes', 'bytes', 'uint256[2]'],
-          [
-            new Uint8Array(assertion.response.authenticatorData),
-            extractClientDataFields(assertion.response),
-            extractSignature(assertion.response),
-          ],
-        ),
+        data: encodeWebAuthnSignature(assertion.response),
         dynamic: true,
       },
     ])
