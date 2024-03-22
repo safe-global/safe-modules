@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import hre from 'hardhat'
-import { DUMMY_CLIENT_DATA_FIELDS, DUMMY_SIGNATURE_BYTES, getSignatureBytes } from '../utils/webauthn'
+import { DUMMY_CLIENT_DATA_FIELDS, DUMMY_SIGNATURE_BYTES, base64UrlEncode, getSignatureBytes } from '../utils/webauthn'
 
 describe('WebAuthn Library', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -16,7 +16,7 @@ describe('WebAuthn Library', () => {
     return { webAuthnLib, verifier, mockP256Verifier }
   })
 
-  it('Should return false when invalid signature', async () => {
+  it('Should return false when the verifier returns false', async () => {
     const { webAuthnLib, verifier } = await setupTests()
 
     const authenticatorData = ethers.randomBytes(100)
@@ -38,6 +38,7 @@ describe('WebAuthn Library', () => {
 
   it('Should return false on non-matching authenticator flags', async () => {
     const { webAuthnLib, verifier, mockP256Verifier } = await setupTests()
+    // The authenticator check happens on the library level, therefore the verifier shouldn't be called
     await mockP256Verifier.givenAnyRevert()
 
     const authenticatorData = ethers.randomBytes(100)
@@ -57,7 +58,7 @@ describe('WebAuthn Library', () => {
     expect(await webAuthnLib.verifySignatureCastSig(challenge, DUMMY_SIGNATURE_BYTES, '0x01', 0n, 0n, verifier.target)).to.be.false
   })
 
-  it('Should return true on successful signature checks', async () => {
+  it('Should return true when the verifier returns true', async () => {
     const { webAuthnLib, mockP256Verifier } = await setupTests()
     await mockP256Verifier.givenAnyReturnBool(true)
 
@@ -76,5 +77,24 @@ describe('WebAuthn Library', () => {
     expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.true
 
     expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.true
+  })
+
+  it('Should correctly compute a signing message', async () => {
+    const { webAuthnLib } = await setupTests()
+
+    const authenticatorData = ethers.randomBytes(100)
+    authenticatorData[32] = 0x01
+    const challenge = ethers.randomBytes(32)
+    const encodedChallenge = base64UrlEncode(ethers.solidityPacked(['bytes32'], [challenge]))
+
+    const clientData = {
+      type: 'webauthn.get',
+      challenge: encodedChallenge,
+      origin: 'http://safe.global',
+    }
+    const clientDataHash = ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))
+    const message = ethers.sha256(ethers.concat([authenticatorData, clientDataHash]))
+
+    expect(await webAuthnLib.signingMessage(challenge, authenticatorData, `"origin":"http://safe.global"`)).to.equal(message)
   })
 })

@@ -6,6 +6,25 @@ import {IP256Verifier} from "../libraries/P256.sol";
 
 contract TestWebAuthnLib {
     /**
+     * @notice Generate a signing message based on the authenticator data, challenge, and client
+     * data fields.
+     * @dev The signing message are the 32-bytes that are actually signed by the P-256 private key
+     * when doing a WebAuthn credential assertion. Note that we verify that the challenge is indeed
+     * signed by using its value to compute the signing message on-chain.
+     * @param challenge The WebAuthn challenge used for the credential assertion.
+     * @param authenticatorData Authenticator data.
+     * @param clientDataFields Client data fields.
+     * @return message Signing message.
+     */
+    function signingMessage(
+        bytes32 challenge,
+        bytes calldata authenticatorData,
+        string calldata clientDataFields
+    ) public pure returns (bytes32 message) {
+        message = WebAuthn.signingMessage(challenge, authenticatorData, clientDataFields);
+    }
+
+    /**
      * @notice Verifies a WebAuthn signature.
      * @param challenge The WebAuthn challenge used in the credential assertion.
      * @param signature The encoded WebAuthn signature bytes.
