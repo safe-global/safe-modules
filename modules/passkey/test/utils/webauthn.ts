@@ -346,16 +346,26 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
 }
 
 /**
+ * Encodes the given WebAuthn signature into a string. Used for testing purposes.
+ *
+ * @param authenticatorData - The authenticator data as a Uint8Array.
+ * @param clientDataFields - The client data fields as a string.
+ * @param r - The value of r as a bigint.
+ * @param s - The value of s as a bigint.
+ * @returns The encoded string.
+ */
+export function getSignatureBytes(authenticatorData: Uint8Array, clientDataFields: string, r: bigint, s: bigint): string {
+  return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
+}
+
+/**
  * Encodes the signature bytes for a WebAuthn signer.
  */
 export function encodeWebAuthnSignature(response: AuthenticatorAssertionResponse): string {
   const clientDataFields = decodeClientDataFields(response)
   const { r, s } = decodeSignature(response)
 
-  return ethers.AbiCoder.defaultAbiCoder().encode(
-    ['bytes', 'bytes', 'uint256', 'uint256'],
-    [new Uint8Array(response.authenticatorData), clientDataFields, r, s],
-  )
+  return getSignatureBytes(new Uint8Array(response.authenticatorData), clientDataFields, r, s)
 }
 
 export const DUMMY_CLIENT_DATA_FIELDS = [
@@ -375,16 +385,3 @@ export const DUMMY_SIGNATURE_BYTES = ethers.AbiCoder.defaultAbiCoder().encode(
     `0x${'d5a'.repeat(21)}f`,
   ],
 )
-
-/**
- * Encodes the given WebAuthn signature into a string. Used for testing purposes.
- *
- * @param authenticatorData - The authenticator data as a Uint8Array.
- * @param clientDataFields - The client data fields as a string.
- * @param r - The value of r as a bigint.
- * @param s - The value of s as a bigint.
- * @returns The encoded string.
- */
-export function getSignatureBytes(authenticatorData: Uint8Array, clientDataFields: string, r: bigint, s: bigint): string {
-  return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
-}

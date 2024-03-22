@@ -4,20 +4,17 @@ import hre from 'hardhat'
 import { DUMMY_CLIENT_DATA_FIELDS, DUMMY_SIGNATURE_BYTES, base64UrlEncode, getSignatureBytes } from '../utils/webauthn'
 
 describe('WebAuthn Library', () => {
-  const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { FCLP256Verifier } = await deployments.fixture()
-    const verifier = await ethers.getContractAt('FCLP256Verifier', FCLP256Verifier.address)
-
+  const setupTests = deployments.createFixture(async () => {
     const WebAuthnLibFactory = await ethers.getContractFactory('TestWebAuthnLib')
-    const deployedWebAuthnLib = await WebAuthnLibFactory.deploy()
-    const webAuthnLib = await ethers.getContractAt('TestWebAuthnLib', await deployedWebAuthnLib.getAddress())
+    const webAuthnLib = await WebAuthnLibFactory.deploy()
     const mockP256Verifier = await (await hre.ethers.getContractFactory('MockContract')).deploy()
 
-    return { webAuthnLib, verifier, mockP256Verifier }
+    return { webAuthnLib, mockP256Verifier }
   })
 
   it('Should return false when the verifier returns false', async () => {
-    const { webAuthnLib, verifier } = await setupTests()
+    const { webAuthnLib, mockP256Verifier } = await setupTests()
+    await mockP256Verifier.givenAnyReturnBool(false)
 
     const authenticatorData = ethers.randomBytes(100)
     authenticatorData[32] = 0x01
@@ -31,9 +28,9 @@ describe('WebAuthn Library', () => {
       s: 0n,
     }
 
-    expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, verifier.target)).to.be.false
+    expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
 
-    expect(await webAuthnLib.verifySignatureCastSig(challenge, DUMMY_SIGNATURE_BYTES, '0x01', 0n, 0n, verifier.target)).to.be.false
+    expect(await webAuthnLib.verifySignatureCastSig(challenge, DUMMY_SIGNATURE_BYTES, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
   })
 
   it('Should return false on non-matching authenticator flags', async () => {
