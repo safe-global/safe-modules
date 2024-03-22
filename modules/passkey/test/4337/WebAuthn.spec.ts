@@ -8,14 +8,8 @@ import {
   packGasParameters,
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
-import {
-  UserVerificationRequirement,
-  WebAuthnCredentials,
-  extractClientDataFields,
-  extractPublicKey,
-  extractSignature,
-} from '@safe-global/safe-4337/test/utils/webauthn'
 import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
+import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -73,7 +67,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
         },
       })
-      const publicKey = extractPublicKey(credential.response)
+      const publicKey = decodePublicKey(credential.response)
       const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
 
       const safeInit = {
@@ -179,23 +173,12 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           challenge: ethers.getBytes(safeInitOpHash),
           rpId: 'safe.global',
           allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
-          userVerification: UserVerificationRequirement.required,
+          userVerification: 'required',
         },
       })
       const signature = ethers.solidityPacked(
         ['uint48', 'uint48', 'bytes'],
-        [
-          safeInitOp.validAfter,
-          safeInitOp.validUntil,
-          ethers.AbiCoder.defaultAbiCoder().encode(
-            ['bytes', 'bytes', 'uint256[2]'],
-            [
-              new Uint8Array(assertion.response.authenticatorData),
-              extractClientDataFields(assertion.response),
-              extractSignature(assertion.response),
-            ],
-          ),
-        ],
+        [safeInitOp.validAfter, safeInitOp.validUntil, encodeWebAuthnSignature(assertion.response)],
       )
 
       await user.sendTransaction({ to: safe, value: ethers.parseEther('1') }).then((tx) => tx.wait())
@@ -236,7 +219,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
         },
       })
-      const publicKey = extractPublicKey(credential.response)
+      const publicKey = decodePublicKey(credential.response)
       await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
       const signer = await ethers.getContractAt('WebAuthnSigner', await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress))
 
@@ -265,20 +248,13 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           challenge: ethers.getBytes(safeOpHash),
           rpId: 'safe.global',
           allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
-          userVerification: UserVerificationRequirement.required,
+          userVerification: 'required',
         },
       })
       const signature = buildSignatureBytes([
         {
           signer: signer.target as string,
-          data: ethers.AbiCoder.defaultAbiCoder().encode(
-            ['bytes', 'bytes', 'uint256[2]'],
-            [
-              new Uint8Array(assertion.response.authenticatorData),
-              extractClientDataFields(assertion.response),
-              extractSignature(assertion.response),
-            ],
-          ),
+          data: encodeWebAuthnSignature(assertion.response),
           dynamic: true,
         },
       ])

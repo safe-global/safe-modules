@@ -12,8 +12,7 @@ describe('Unique Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, MultiSend } =
-      await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, MultiSend } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
