@@ -1,13 +1,12 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import hre from 'hardhat'
 import { DUMMY_CLIENT_DATA_FIELDS, base64UrlEncode, getSignatureBytes } from '../utils/webauthn'
 
 describe('WebAuthn Library', () => {
   const setupTests = deployments.createFixture(async () => {
     const WebAuthnLibFactory = await ethers.getContractFactory('TestWebAuthnLib')
     const webAuthnLib = await WebAuthnLibFactory.deploy()
-    const mockP256Verifier = await (await hre.ethers.getContractFactory('MockContract')).deploy()
+    const mockP256Verifier = await (await ethers.getContractFactory('MockContract')).deploy()
 
     return { webAuthnLib, mockP256Verifier }
   })

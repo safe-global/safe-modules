@@ -8,8 +8,8 @@
  */
 
 import { p256 } from '@noble/curves/p256'
-import { ethers, BytesLike } from 'ethers'
-import type { BigNumberish } from 'ethers'
+import { ethers } from 'ethers'
+import type { BigNumberish, BytesLike } from 'ethers'
 import CBOR from 'cbor'
 
 export interface CredentialCreationOptions {
@@ -384,6 +384,10 @@ export function encodeWebAuthnSignature(response: AuthenticatorAssertionResponse
   })
 }
 
+/**
+ * Dummy client data JSON fields. This can be used for gas estimations, as it pads the fields enough
+ * to account for variations in WebAuthn implementations.
+ */
 export const DUMMY_CLIENT_DATA_FIELDS = [
   `"origin":"http://safe.global"`,
   `"padding":"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate."`,

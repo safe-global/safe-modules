@@ -51,15 +51,20 @@ describe('P256', function () {
     const { r, s } = account.sign(message)
     const { x, y } = account.publicKey
 
-    const BadP256Verifier = await ethers.getContractFactory('BadP256Verifier')
-    const WRONG_RETURNDATA_LENGTH = 0
-    const INVALID_BOOLEAN_VALUE = 1
-    const REVERT = 2
+    const MockContract = await ethers.getContractFactory('MockContract')
+    const mockVerifier = await MockContract.deploy()
 
-    for (const behaviour of [WRONG_RETURNDATA_LENGTH, INVALID_BOOLEAN_VALUE, REVERT]) {
-      const verifier = await BadP256Verifier.deploy(behaviour)
-      expect(await p256Lib.verifySignature(verifier, message, r, s, x, y)).to.be.false
-      expect(await p256Lib.verifySignatureAllowMalleability(verifier, message, r, s, x, y)).to.be.false
+    for (const configureMock of [
+      // wrong return data length
+      () => mockVerifier.givenAnyReturn(ethers.AbiCoder.defaultAbiCoder().encode(['bool', 'uint256'], [true, 42])),
+      // invalid boolean value
+      () => mockVerifier.givenAnyReturnUint(ethers.MaxUint256),
+      // revert
+      () => mockVerifier.givenAnyRevert(),
+    ]) {
+      await configureMock()
+      expect(await p256Lib.verifySignature(mockVerifier, message, r, s, x, y)).to.be.false
+      expect(await p256Lib.verifySignatureAllowMalleability(mockVerifier, message, r, s, x, y)).to.be.false
     }
   })
 })
