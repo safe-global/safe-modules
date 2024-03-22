@@ -15,8 +15,8 @@
   ],
   "scripts": {
     "build": "npm run build:sol && npm run build:ts",
-    "build:ts": "rimraf dist && tsc",
     "build:sol": "rimraf build typechain-types && hardhat compile",
+    "build:ts": "rimraf dist && tsc",
     "test": "hardhat test --deploy-fixture",
     "test:4337": "4337-local-bundler-test",
     "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test",
