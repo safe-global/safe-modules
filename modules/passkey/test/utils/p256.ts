@@ -21,7 +21,7 @@ export class Account {
   public sign(message: BytesLike) {
     const hex = ethers.hexlify(message).slice(2)
     const { r, s } = p256.sign(hex, this.privateKey, {
-      lowS: false,
+      lowS: true,
       prehash: false,
     })
 
