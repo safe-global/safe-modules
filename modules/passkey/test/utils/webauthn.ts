@@ -372,16 +372,3 @@ export const DUMMY_CLIENT_DATA_FIELDS = [
   `"origin":"http://safe.global"`,
   `"padding":"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate."`,
 ].join(',')
-
-/**
- * Dummy signature bytes for testing purposes.
- */
-export const DUMMY_SIGNATURE_BYTES = ethers.AbiCoder.defaultAbiCoder().encode(
-  ['bytes', 'string', 'uint256', 'uint256'],
-  [
-    `0x${'a0'.repeat(37)}`, // authenticatorData without any extensions/attestated credential data is always 37 bytes long.
-    DUMMY_CLIENT_DATA_FIELDS,
-    `0x${'ec'.repeat(32)}`,
-    `0x${'d5a'.repeat(21)}f`,
-  ],
-)
