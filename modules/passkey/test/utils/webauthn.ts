@@ -9,6 +9,7 @@
 
 import { p256 } from '@noble/curves/p256'
 import { ethers, BytesLike } from 'ethers'
+import type { BigNumberish } from 'ethers'
 import CBOR from 'cbor'
 
 export interface CredentialCreationOptions {
@@ -302,7 +303,7 @@ export function decodeClientDataFields(response: Pick<AuthenticatorAssertionResp
   }
 
   const [, fields] = match
-  return ethers.hexlify(ethers.toUtf8Bytes(fields))
+  return fields
 }
 
 /**
@@ -354,7 +355,17 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
  * @param s - The value of s as a bigint.
  * @returns The encoded string.
  */
-export function getSignatureBytes(signature: { authenticatorData: BytesLike, clientDataFields: string, r: BigNumberish, s: BigNumberish }): string {
+export function getSignatureBytes({
+  authenticatorData,
+  clientDataFields,
+  r,
+  s,
+}: {
+  authenticatorData: BytesLike
+  clientDataFields: string
+  r: BigNumberish
+  s: BigNumberish
+}): string {
   return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
 }
 
@@ -365,7 +376,12 @@ export function encodeWebAuthnSignature(response: AuthenticatorAssertionResponse
   const clientDataFields = decodeClientDataFields(response)
   const { r, s } = decodeSignature(response)
 
-  return getSignatureBytes(new Uint8Array(response.authenticatorData), clientDataFields, r, s)
+  return getSignatureBytes({
+    authenticatorData: new Uint8Array(response.authenticatorData),
+    clientDataFields,
+    r,
+    s,
+  })
 }
 
 export const DUMMY_CLIENT_DATA_FIELDS = [

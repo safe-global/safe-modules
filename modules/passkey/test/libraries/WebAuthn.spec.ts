@@ -27,7 +27,7 @@ describe('WebAuthn Library', () => {
       r: 0n,
       s: 0n,
     }
-    const signatureBytes = getSignatureBytes(signature.authenticatorData, signature.clientDataFields, signature.r, signature.s)
+    const signatureBytes = getSignatureBytes(signature)
 
     expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
 
@@ -50,7 +50,7 @@ describe('WebAuthn Library', () => {
       r: 0n,
       s: 0n,
     }
-    const signatureBytes = getSignatureBytes(signature.authenticatorData, signature.clientDataFields, signature.r, signature.s)
+    const signatureBytes = getSignatureBytes(signature)
 
     expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
 
@@ -71,7 +71,7 @@ describe('WebAuthn Library', () => {
       r: 0n,
       s: 0n,
     }
-    const signatureBytes = getSignatureBytes(signature.authenticatorData, signature.clientDataFields, signature.r, signature.s)
+    const signatureBytes = getSignatureBytes(signature)
 
     expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.true
 
