@@ -1,8 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { packGasParameters, unpackUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp'
-import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
-import { chainId } from '../utils/encoding'
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 
 describe('WebAuthn Signers [@4337]', () => {
@@ -13,7 +12,7 @@ describe('WebAuthn Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, Safe256BitECSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, WebAuthnVerifier } =
+    const { EntryPoint, Safe4337Module, SafeECDSASignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } =
       await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
@@ -22,9 +21,9 @@ describe('WebAuthn Signers [@4337]', () => {
     const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
-    const signerLaunchpad = await ethers.getContractAt('Safe256BitECSignerLaunchpad', Safe256BitECSignerLaunchpad.address)
+    const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
-    const webAuthnVerifier = await ethers.getContractAt('WebAuthnVerifier', WebAuthnVerifier.address)
+    const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
 
     const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
     const signerFactory = await WebAuthnSignerFactory.deploy()
@@ -44,7 +43,7 @@ describe('WebAuthn Signers [@4337]', () => {
       singleton,
       signerFactory,
       navigator,
-      webAuthnVerifier,
+      verifier,
       SafeL2,
     }
   })
@@ -61,10 +60,12 @@ describe('WebAuthn Signers [@4337]', () => {
       singleton,
       signerFactory,
       navigator,
-      webAuthnVerifier,
+      verifier,
       SafeL2,
     } = await setupTests()
-    const webAuthnVerifierAddress = await webAuthnVerifier.getAddress()
+
+    const { chainId } = await ethers.provider.getNetwork()
+    const verifierAddress = await verifier.getAddress()
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -82,20 +83,20 @@ describe('WebAuthn Signers [@4337]', () => {
       },
     })
     const publicKey = decodePublicKey(credential.response)
-    const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, webAuthnVerifierAddress)
+    const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
 
     const safeInit = {
       singleton: singleton.target,
       signerFactory: signerFactory.target,
       signerX: publicKey.x,
       signerY: publicKey.y,
-      signerVerifier: webAuthnVerifierAddress,
+      signerVerifier: verifierAddress,
       setupTo: safeModuleSetup.target,
       setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
       fallbackHandler: module.target,
     }
     const safeInitHash = ethers.TypedDataEncoder.hash(
-      { verifyingContract: await signerLaunchpad.getAddress(), chainId: await chainId() },
+      { verifyingContract: await signerLaunchpad.getAddress(), chainId },
       {
         SafeInit: [
           { type: 'address', name: 'singleton' },
@@ -171,7 +172,7 @@ describe('WebAuthn Signers [@4337]', () => {
       entryPoint: entryPoint.target,
     }
     const safeInitOpHash = ethers.TypedDataEncoder.hash(
-      { verifyingContract: await signerLaunchpad.getAddress(), chainId: await chainId() },
+      { verifyingContract: await signerLaunchpad.getAddress(), chainId },
       {
         SafeInitOp: [
           { type: 'bytes32', name: 'userOpHash' },

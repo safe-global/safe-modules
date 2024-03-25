@@ -15,7 +15,8 @@ jobs:
           node-version: 20.x
           cache: npm
           cache-dependency-path: package-lock.json
-      - run: npm ci
-      - run: npm run fmt:check -w examples/4337-gas-metering
-      - run: npm run lint -w examples/4337-gas-metering
-      - run: npm run build -w examples/4337-gas-metering
+      - run: |
+          npm ci
+          npm run fmt:check -w examples/4337-gas-metering
+          npm run lint -w examples/4337-gas-metering
+          npm run build -w examples/4337-gas-metering

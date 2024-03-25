@@ -280,7 +280,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
                 // Since the `encodedSafeOp` value's memory layout is identical to the result of `abi.encode`-ing the
-                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 13
+                // individual `SafeOp` fields, we can pass it directly to `keccak256`. Additionally, there are 14
                 // 32-byte fields to hash, for a length of `14 * 32 = 448` bytes.
                 safeOpStructHash := keccak256(encodedSafeOp, 448)
             }

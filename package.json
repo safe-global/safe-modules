@@ -4,13 +4,14 @@
   "description": "A monorepo for Safe modules",
   "main": "dist/index.js",
   "workspaces": [
-    "modules/*",
     "packages/*",
+    "modules/*",
     "examples/*"
   ],
   "scripts": {
     "fmt:global": "prettier --write .",
-    "fmt:global-check": "prettier --check ."
+    "fmt:global-check": "prettier --check .",
+    "postinstall": "npm rebuild --skip-scripts @safe-global/safe-4337-local-bundler"
   },
   "repository": {
     "type": "git",
@@ -38,6 +39,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "prettier": "^3.2.5",
-    "prettier-plugin-solidity": "^1.3.1"
+    "prettier-plugin-solidity": "^1.3.1",
+    "rimraf": "^5.0.5"
   }
 }

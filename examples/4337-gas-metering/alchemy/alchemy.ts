@@ -5,7 +5,8 @@ import { setTimeout } from 'timers/promises'
 import { PublicClient, Hash, Transport, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { goerli, sepolia } from 'viem/chains'
-import { SAFE_ADDRESSES_MAP, getAccountAddress, getAccountInitCode } from '../utils/safe'
+import { getAccountAddress, getAccountInitCode } from '../utils/safe'
+import { SAFE_ADDRESSES_MAP } from '../utils/address'
 import {
   UserOperation,
   signUserOperation,
@@ -58,10 +59,9 @@ if (!txTypes.includes(txType)) {
   throw new Error('TX Type Argument Invalid')
 }
 
-const safeAddresses = (SAFE_ADDRESSES_MAP as Record<string, Record<string, any>>)[safeVersion]
-let chainAddresses
-if (safeAddresses) {
-  chainAddresses = safeAddresses[chainID]
+const chainAddresses = SAFE_ADDRESSES_MAP[safeVersion]?.[chainID]
+if (!chainAddresses) {
+  throw new Error('Missing deployment information for the passed Safe Version & chainID.')
 }
 
 if (apiKey === undefined) {
@@ -115,7 +115,7 @@ const initCode = await getAccountInitCode({
 console.log('\nInit Code Created.')
 
 const senderAddress = await getAccountAddress({
-  client: publicClient,
+  publicClient: publicClient,
   owner: signer.address,
   addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,

@@ -1,7 +1,8 @@
 import dotenv from 'dotenv'
 import type { Address } from 'abitype'
 import { fromHex, parseEther, type Hex, type PrivateKeyAccount, formatEther } from 'viem'
-import { EIP712_SAFE_OPERATION_TYPE, encodeCallData } from './safe'
+import { encodeCallData } from './safe'
+import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { Alchemy } from 'alchemy-sdk'
 import { setTimeout } from 'timers/promises'
 import { generateTransferCallData, getERC20Balance, getERC20Decimals, mintERC20Token } from './erc20'
@@ -350,7 +351,7 @@ export const createCallData = async (
   } else if (txType == 'erc20') {
     // Token Configurations
     const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10 ** erc20Decimals)
+    const erc20Amount = BigInt(10n ** erc20Decimals)
     let senderERC20Balance = await getERC20Balance(erc20TokenAddress, publicClient, senderAddress)
     console.log('\nSafe Wallet ERC20 Balance:', Number(senderERC20Balance / erc20Amount))
 
@@ -402,136 +403,4 @@ export const createCallData = async (
   }
   console.log('\nAppropriate calldata created.')
   return txCallData
-}
-
-export const getGasValuesFromGelato = async (
-  entryPointAddress: `0x${string}`,
-  sponsoredUserOperation: UserOperation,
-  chainID: number,
-  apiKey: string,
-) => {
-  const gasOptions = {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/json' },
-    body: JSON.stringify({
-      id: 0,
-      jsonrpc: '2.0',
-      method: 'eth_estimateUserOperationGas',
-      params: [
-        {
-          sender: sponsoredUserOperation.sender,
-          nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-          initCode: sponsoredUserOperation.initCode,
-          callData: sponsoredUserOperation.callData,
-          signature: sponsoredUserOperation.signature,
-          paymasterAndData: '0x',
-        },
-        entryPointAddress,
-      ],
-    }),
-  }
-
-  let responseValues
-  await fetch(`https://api.gelato.digital//bundlers/${chainID}/rpc?sponsorApiKey=${apiKey}`, gasOptions)
-    .then((response) => response.json())
-    .then((response) => (responseValues = response))
-    .catch((err) => console.error(err))
-  console.log('\nReceived Gas Data from Gelato.')
-
-  let rvGas
-  if (responseValues && responseValues['result']) {
-    rvGas = responseValues['result'] as gasData
-  }
-
-  return rvGas
-}
-
-export const submitUserOperationGelato = async (
-  entryPointAddress: `0x${string}`,
-  sponsoredUserOperation: UserOperation,
-  chain: string,
-  chainID: number,
-  apiKey: string,
-) => {
-  const options = {
-    method: 'POST',
-    headers: { accept: 'application/json', 'content-type': 'application/json' },
-    body: JSON.stringify({
-      id: 0,
-      jsonrpc: '2.0',
-      method: 'eth_sendUserOperation',
-      params: [
-        {
-          sender: sponsoredUserOperation.sender,
-          nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-          initCode: sponsoredUserOperation.initCode,
-          callData: sponsoredUserOperation.callData,
-          signature: sponsoredUserOperation.signature,
-          paymasterAndData: sponsoredUserOperation.paymasterAndData,
-          callGasLimit: sponsoredUserOperation.callGasLimit,
-          verificationGasLimit: sponsoredUserOperation.verificationGasLimit,
-          preVerificationGas: sponsoredUserOperation.preVerificationGas,
-          maxFeePerGas: '0x' + sponsoredUserOperation.maxFeePerGas.toString(16),
-          maxPriorityFeePerGas: '0x' + sponsoredUserOperation.maxPriorityFeePerGas.toString(16),
-        },
-        entryPointAddress,
-      ],
-    }),
-  }
-
-  let responseValues: any
-  await fetch(`https://api.gelato.digital//bundlers/${chainID}/rpc?sponsorApiKey=${apiKey}`, options)
-    .then((response) => response.json())
-    .then((response) => (responseValues = response))
-    .catch((err) => console.error(err))
-
-  if (responseValues && responseValues['result']) {
-    console.log('\nUserOperation submitted.\n\nGelato Relay Task ID:', responseValues['result'])
-    console.log('Gelato Relay Task Link: https://api.gelato.digital/tasks/status/' + responseValues['result'])
-
-    const hashOptions = {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: 0,
-        jsonrpc: '2.0',
-        method: 'eth_getUserOperationReceipt',
-        params: [responseValues['result']],
-      }),
-    }
-
-    let runOnce = true
-
-    while (responseValues['result'] == null || runOnce) {
-      await setTimeout(25000)
-      await fetch(`https://api.gelato.digital//bundlers/${chainID}/rpc?sponsorApiKey=${apiKey}`, hashOptions)
-        .then((response) => response.json())
-        .then((response) => (responseValues = response))
-        .catch((err) => console.error(err))
-      runOnce = false
-    }
-
-    if (responseValues['result'] && responseValues['result']['receipt']['transactionHash']) {
-      const rvEntryPoint = responseValues['result']['logs'][responseValues['result']['logs'].length - 2]['address']
-
-      if (rvEntryPoint == entryPointAddress) {
-        const userOpHash = responseValues['result']['logs'][responseValues['result']['logs'].length - 2]['topics'][1]
-        console.log('\nUser OP Hash: ' + userOpHash + '\nUserOp Link: https://jiffyscan.xyz/userOpHash/' + userOpHash + '?network=' + chain)
-      }
-      console.log('\nTransaction Link: https://' + chain + '.etherscan.io/tx/' + responseValues['result']['receipt']['transactionHash'])
-      const actualGasUsed = fromHex(responseValues['result']['actualGasUsed'], 'number')
-      const gasUsed = fromHex(responseValues['result']['receipt']['gasUsed'], 'number')
-      console.log(`\nGas Used (Account or Paymaster): ${actualGasUsed}`)
-      console.log(`Gas Used (Transaction): ${gasUsed}\n`)
-    } else {
-      console.log('\n' + responseValues['error'])
-    }
-  } else {
-    if (responseValues && responseValues['message']) {
-      console.log('\n' + responseValues['message'])
-    }
-  }
 }

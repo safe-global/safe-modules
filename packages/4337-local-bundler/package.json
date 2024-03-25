@@ -1,0 +1,23 @@
+{
+  "name": "@safe-global/safe-4337-local-bundler",
+  "version": "0.0.0",
+  "private": true,
+  "license": "LGPL-3.0-only",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "4337-local-bundler-test": "dist/bin/test.js"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc && chmod +x dist/bin/*.js",
+    "lint": "eslint .",
+    "prepare": "npm run build -w ../4337-provider && npm run build"
+  },
+  "dependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@safe-global/safe-4337-provider": "^0.0.0",
+    "hardhat-deploy": "^0.12.1",
+    "ethers": "^6.11.1",
+    "node-fetch": "^2.7.0"
+  }
+}

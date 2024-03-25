@@ -8,7 +8,8 @@
  */
 
 import { p256 } from '@noble/curves/p256'
-import { ethers, BytesLike } from 'ethers'
+import { ethers } from 'ethers'
+import type { BigNumberish, BytesLike } from 'ethers'
 import CBOR from 'cbor'
 
 export interface CredentialCreationOptions {
@@ -302,7 +303,7 @@ export function decodeClientDataFields(response: Pick<AuthenticatorAssertionResp
   }
 
   const [, fields] = match
-  return ethers.hexlify(ethers.toUtf8Bytes(fields))
+  return fields
 }
 
 /**
@@ -346,14 +347,48 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
 }
 
 /**
+ * Encodes the given WebAuthn signature into a string. Used for testing purposes.
+ *
+ * @param authenticatorData - The authenticator data as a Uint8Array.
+ * @param clientDataFields - The client data fields as a string.
+ * @param r - The value of r as a bigint.
+ * @param s - The value of s as a bigint.
+ * @returns The encoded string.
+ */
+export function getSignatureBytes({
+  authenticatorData,
+  clientDataFields,
+  r,
+  s,
+}: {
+  authenticatorData: BytesLike
+  clientDataFields: string
+  r: BigNumberish
+  s: BigNumberish
+}): string {
+  return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
+}
+
+/**
  * Encodes the signature bytes for a WebAuthn signer.
  */
 export function encodeWebAuthnSignature(response: AuthenticatorAssertionResponse): string {
   const clientDataFields = decodeClientDataFields(response)
   const { r, s } = decodeSignature(response)
 
-  return ethers.AbiCoder.defaultAbiCoder().encode(
-    ['bytes', 'bytes', 'uint256', 'uint256'],
-    [new Uint8Array(response.authenticatorData), clientDataFields, r, s],
-  )
+  return getSignatureBytes({
+    authenticatorData: new Uint8Array(response.authenticatorData),
+    clientDataFields,
+    r,
+    s,
+  })
 }
+
+/**
+ * Dummy client data JSON fields. This can be used for gas estimations, as it pads the fields enough
+ * to account for variations in WebAuthn implementations.
+ */
+export const DUMMY_CLIENT_DATA_FIELDS = [
+  `"origin":"http://safe.global"`,
+  `"padding":"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate."`,
+].join(',')

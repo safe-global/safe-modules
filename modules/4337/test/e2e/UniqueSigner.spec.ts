@@ -1,10 +1,10 @@
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
-import { bundlerRpc, prepareAccounts, waitForUserOp } from '../utils/e2e'
 import { chainId } from '../utils/encoding'
 import { packGasParameters, unpackUserOperation } from '../../src/utils/userOp'
 
-describe('E2E - Unique Signers', () => {
+describe('Unique Signers [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()
@@ -12,8 +12,7 @@ describe('E2E - Unique Signers', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeSignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, MultiSend } =
-      await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, MultiSend } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -21,9 +20,11 @@ describe('E2E - Unique Signers', () => {
     const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt('SafeModuleSetup', SafeModuleSetup.address)
-    const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt('SafeL2', SafeL2.address)
     const multiSend = await ethers.getContractAt('MultiSend', MultiSend.address)
+
+    const TestSafeSignerLaunchpad = await ethers.getContractFactory('TestSafeSignerLaunchpad')
+    const signerLaunchpad = await TestSafeSignerLaunchpad.deploy(entryPoint)
 
     const TestUniqueSignerFactory = await ethers.getContractFactory('TestUniqueSignerFactory')
     const signerFactory = await TestUniqueSignerFactory.deploy()

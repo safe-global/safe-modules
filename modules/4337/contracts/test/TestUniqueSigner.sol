@@ -2,29 +2,32 @@
 /* solhint-disable one-contract-per-file */
 pragma solidity >=0.8.0;
 
-import {IUniqueSignerFactory} from "../experimental/SafeSignerLaunchpad.sol";
-import {SignatureValidator} from "../experimental/SignatureValidator.sol";
-import {SignatureValidatorConstants} from "../experimental/SignatureValidatorConstants.sol";
+import {ISignatureValidator} from "@safe-global/safe-contracts/contracts/interfaces/ISignatureValidator.sol";
+import {IUniqueSignerFactory} from "./TestSafeSignerLaunchpad.sol";
 
 function checkSignature(bytes32 message, uint256 signature, uint256 key) pure returns (bool isValid) {
     // A very silly signing scheme where the `message = signature ^ key`
     isValid = uint256(message) == signature ^ key;
 }
 
-contract TestUniqueSigner is SignatureValidator {
+contract TestUniqueSigner is ISignatureValidator {
     uint256 public immutable KEY;
 
     constructor(uint256 key) {
         KEY = key;
     }
 
-    function _verifySignature(bytes32 message, bytes calldata signatureData) internal view virtual override returns (bool isValid) {
+    function isValidSignature(bytes memory data, bytes memory signatureData) public view virtual override returns (bytes4 magicValue) {
         uint256 signature = abi.decode(signatureData, (uint256));
-        isValid = checkSignature(message, signature, KEY);
+
+        // A very silly signing scheme where the `message = signature ^ key`
+        if (checkSignature(keccak256(data), signature, KEY)) {
+            magicValue = this.isValidSignature.selector;
+        }
     }
 }
 
-contract TestUniqueSignerFactory is IUniqueSignerFactory, SignatureValidatorConstants {
+contract TestUniqueSignerFactory is IUniqueSignerFactory {
     function getSigner(bytes calldata data) public view returns (address signer) {
         uint256 key = abi.decode(data, (uint256));
         signer = _getSigner(key);
@@ -47,7 +50,7 @@ contract TestUniqueSignerFactory is IUniqueSignerFactory, SignatureValidatorCons
         uint256 key = abi.decode(signerData, (uint256));
         uint256 signature = abi.decode(signatureData, (uint256));
         if (checkSignature(message, signature, key)) {
-            magicValue = EIP1271_MAGIC_VALUE;
+            magicValue = this.isValidSignatureForSigner.selector;
         }
     }
 

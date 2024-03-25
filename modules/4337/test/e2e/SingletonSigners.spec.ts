@@ -1,3 +1,4 @@
+import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
 import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { buildSignatureBytes } from '../../src/utils/execution'
@@ -6,9 +7,9 @@ import {
   buildRpcUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
 } from '../../src/utils/userOp'
-import { bundlerRpc, encodeMultiSendTransactions, prepareAccounts, waitForUserOp } from '../utils/e2e'
+import { encodeMultiSendTransactions } from '../utils/encoding'
 
-describe('E2E - Singleton Signers', () => {
+describe('Singleton Signers [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()

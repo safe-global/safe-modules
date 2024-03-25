@@ -34,6 +34,8 @@ The final audit was performed on commit [3853f34f31837e0a0aee47a4452564278f8c62b
 
 No issues were reported related to the module's business logic, but we have implemented some of the suggested optimisations from the audit report into the codebase. These changes will be included in the next release of the 4337 module. For more information about the audit findings, please refer to the report.
 
+Changes from the audit were implemented in commit [c2bdf0059770916ad178a45c2ad6f2cb88f85ff7](https://github.com/safe-global/safe-modules/tree/c2bdf0059770916ad178a45c2ad6f2cb88f85ff7).
+
 ### Files
 
 - [Final audit report](audit-report-openzeppelin.pdf)
