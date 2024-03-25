@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {Base64Url} from "../vendor/FCL/utils/Base64Url.sol";
 import {IP256Verifier, P256} from "./P256.sol";
 
 /**
