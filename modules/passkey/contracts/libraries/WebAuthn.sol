@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+import {Base64Url} from "../libraries/Base64Url.sol";
 import {IP256Verifier, P256} from "./P256.sol";
 
 /**
@@ -11,8 +12,6 @@ import {IP256Verifier, P256} from "./P256.sol";
  */
 library WebAuthn {
     using P256 for IP256Verifier;
-
-    string internal constant ENCODING_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     /**
      * @notice The WebAuthn signature data format.
@@ -103,45 +102,18 @@ library WebAuthn {
         bytes calldata authenticatorData,
         string calldata clientDataFields
     ) internal pure returns (bytes32 message) {
+        string memory encodedChallenge = Base64Url.encode(challenge);
+
         /* solhint-disable quotes */
-        // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA is placeholder for the encoded challenge
         bytes memory clientDataJson = abi.encodePacked(
             '{"type":"webauthn.get","challenge":"',
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            encodedChallenge,
             '",',
             clientDataFields,
             "}"
         );
-
-        string memory table = ENCODING_TABLE;
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Skip first 32 bytes of the table containing the length
-            let tablePtr := add(table, 1)
-            // Skip first 36 bytes of the clientDataJson containing '{"type":"webauthn.get","challenge":"'
-            let resultPtr := add(clientDataJson, 68)
-
-            // Store group of 6 bits from the challenge to be encoded. Storing of 6 bits group can be removed but, kept here for readability.
-            let sixBitGroup
-
-            // Iterate over challenge in group of 6 bits, for each 6 bits lookup the ENCODING_TABLE, transform it and store it in the result
-            for {
-                let i := 250
-            } lt(i, 251) {
-                i := sub(i, 6)
-            } {
-                sixBitGroup := and(shr(i, challenge), 0x3F)
-                mstore8(resultPtr, mload(add(tablePtr, sixBitGroup)))
-                resultPtr := add(resultPtr, 1)
-            }
-
-            // Load the remaining last 4 bits of challenge that are yet to be encoded and then shift left to add 2 bits at the end to make it a group of 6 bits.
-            sixBitGroup := shl(2, and(challenge, 0x0F))
-            mstore8(resultPtr, mload(add(tablePtr, sixBitGroup)))
-        }
-
         /* solhint-enable quotes */
+
         message = sha256(abi.encodePacked(authenticatorData, sha256(clientDataJson)));
     }
 
