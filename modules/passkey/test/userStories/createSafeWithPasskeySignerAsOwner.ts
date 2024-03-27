@@ -1,10 +1,9 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from './utils/webauthn'
+import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { Safe4337Module } from '@safe-global/safe-4337/typechain-types/contracts/Safe4337Module'
 import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import EntryPoint from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 
 describe.only('User story', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
