@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { http, createWalletClient, PrivateKeyAccount, PublicClient, Address } from 'viem'
+import { http, createWalletClient, PrivateKeyAccount, PublicClient, Address, WalletClient, HttpTransport, Chain, Account } from 'viem'
 import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
 import { setTimeout } from 'timers/promises'
 
@@ -16,7 +16,7 @@ export const transferETH = async (
   chain: string,
   paymaster: string,
 ) => {
-  let walletClient
+  let walletClient: WalletClient<HttpTransport, Chain, Account>
   if (paymaster == 'pimlico') {
     if (chain == 'goerli') {
       walletClient = createWalletClient({
