@@ -80,7 +80,7 @@ library Base64Url {
             // 0x0F is a mask to get the last 4 bits.
             // The encoded character is stored at memory location 74 (result + 74):
             // <32byte string length><43byte encoded string>. 74 is the penultimate byte.
-            mstore8(add(result, 74), mload(add(0, shl(2, and(data, 0x0F)))))
+            mstore8(add(result, 74), mload(shl(2, and(data, 0x0F))))
 
             // Update the free memory pointer to point to the end of the encoded string.
             // Store the length of the encoded string at the beginning of `result`.
