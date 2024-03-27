@@ -14,10 +14,10 @@
     "prepare": "npm run build -w ../4337-provider && npm run build"
   },
   "dependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/safe-4337-provider": "^0.0.0",
-    "hardhat-deploy": "^0.12.1",
+    "hardhat-deploy": "^0.12.2",
     "ethers": "^6.11.1",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^3.3.2"
   }
 }

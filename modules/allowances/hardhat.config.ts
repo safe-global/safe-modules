@@ -1,5 +1,4 @@
 import '@nomicfoundation/hardhat-toolbox'
-import 'hardhat-gas-reporter'
 import 'hardhat-deploy'
 
 import './tasks/deploy_verify'
