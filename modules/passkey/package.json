@@ -31,6 +31,7 @@
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
     "coverage": "hardhat coverage",
+    "codesize": "hardhat codesize",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "npm run lint:sol && npm run lint:ts",
