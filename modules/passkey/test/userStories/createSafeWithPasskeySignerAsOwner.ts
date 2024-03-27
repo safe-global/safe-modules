@@ -92,7 +92,7 @@ describe.only('User story', () => {
 
     const safe = await proxyFactory.createProxyWithNonce.staticCall(singleton, setupData, safeSalt)
 
-    const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, initializer, safeSalt])
+    const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, setupData, safeSalt])
     const initCode = ethers.solidityPacked(['address', 'bytes'], [stakedFactory.target, deployData])
 
     const safeOp = buildSafeUserOpTransaction(
