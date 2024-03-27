@@ -46,15 +46,6 @@ describe.only('User story', () => {
     await (await signerFactory.createSigner(publicKey.x, publicKey.y, await verifier.getAddress())).wait()
     const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, await verifier.getAddress())
 
-    const TestStakedFactory = await ethers.getContractFactory('TestStakedFactory')
-    const stakedFactory = await TestStakedFactory.deploy(proxyFactory.target)
-    const stake = ethers.parseEther('1.0')
-    await stakedFactory
-      .stakeEntryPoint(await entryPoint.getAddress(), 0xffffffffn, {
-        value: stake,
-      })
-      .then((tx) => tx.wait())
-
     return {
       user,
       proxyFactory,
@@ -68,12 +59,11 @@ describe.only('User story', () => {
       SafeL2,
       signer,
       credential,
-      stakedFactory,
     }
   })
 
   it('should execute a userOp with WebAuthn signer as owner', async () => {
-    const { user, proxyFactory, stakedFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } =
+    const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } =
       await setupTests()
 
     const safeSalt = Date.now()
@@ -93,7 +83,7 @@ describe.only('User story', () => {
     const safe = await proxyFactory.createProxyWithNonce.staticCall(singleton, setupData, safeSalt)
 
     const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, setupData, safeSalt])
-    const initCode = ethers.solidityPacked(['address', 'bytes'], [stakedFactory.target, deployData])
+    const initCode = ethers.solidityPacked(['address', 'bytes'], [proxyFactory.target, deployData])
 
     const safeOp = buildSafeUserOpTransaction(
       safe,
