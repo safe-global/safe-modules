@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {Base64Url} from "../vendor/FCL/utils/Base64Url.sol";
+import {Base64Url} from "../libraries/Base64Url.sol";
 import {IP256Verifier, P256} from "./P256.sol";
 
 /**
@@ -102,7 +102,8 @@ library WebAuthn {
         bytes calldata authenticatorData,
         string calldata clientDataFields
     ) internal pure returns (bytes32 message) {
-        string memory encodedChallenge = Base64Url.encode(abi.encodePacked(challenge));
+        string memory encodedChallenge = Base64Url.encode(challenge);
+
         /* solhint-disable quotes */
         bytes memory clientDataJson = abi.encodePacked(
             '{"type":"webauthn.get","challenge":"',
