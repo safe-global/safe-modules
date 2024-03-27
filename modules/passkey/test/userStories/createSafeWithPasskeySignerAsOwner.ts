@@ -8,7 +8,6 @@ import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 describe.only('User story', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } = await deployments.run()
-    console.log('entrypoint address', EntryPoint.address)
 
     const [user] = await ethers.getSigners()
 
@@ -63,8 +62,7 @@ describe.only('User story', () => {
   })
 
   it('should execute a userOp with WebAuthn signer as owner', async () => {
-    const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } =
-      await setupTests()
+    const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } = await setupTests()
 
     const safeSalt = Date.now()
     const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
@@ -109,7 +107,6 @@ describe.only('User story', () => {
     })
 
     const opHash = await module.getOperationHash(packedUserOp)
-
     const assertion = navigator.credentials.get({
       publicKey: {
         challenge: ethers.getBytes(opHash),
