@@ -5,7 +5,7 @@ import { Safe4337Module } from '@safe-global/safe-4337/typechain-types/contracts
 import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 
-describe.only('User story', () => {
+describe('User story', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } = await deployments.run()
 
@@ -64,7 +64,7 @@ describe.only('User story', () => {
   it('should execute a userOp with WebAuthn signer as owner', async () => {
     const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } = await setupTests()
 
-    const safeSalt = Date.now()
+    const safeSalt = 1n
     const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
 
     const setupData = singleton.interface.encodeFunctionData('setup', [
@@ -107,6 +107,7 @@ describe.only('User story', () => {
     })
 
     const opHash = await module.getOperationHash(packedUserOp)
+
     const assertion = navigator.credentials.get({
       publicKey: {
         challenge: ethers.getBytes(opHash),
@@ -118,7 +119,7 @@ describe.only('User story', () => {
 
     const signature = buildSignatureBytes([
       {
-        signer: signer,
+        signer: signer as string,
         data: encodeWebAuthnSignature(assertion.response),
         dynamic: true,
       },
@@ -130,7 +131,10 @@ describe.only('User story', () => {
     expect(await ethers.provider.getBalance(safe)).to.equal(ethers.parseEther('1'))
     expect(await ethers.provider.getCode(safe)).to.equal('0x')
 
-    await (await entryPoint.handleOps([{ ...packedUserOp, signature }], user.address)).wait()
+    // Prepend the signature with 0x000000000000000000000000 to indicate validUntil and validAfter fields
+    await (
+      await entryPoint.handleOps([{ ...packedUserOp, signature: '0x000000000000000000000000' + signature.slice(2) }], user.address)
+    ).wait()
     expect(await ethers.provider.getBalance(safe)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
     expect(await ethers.provider.getCode(safe)).to.not.equal('0x')
 
