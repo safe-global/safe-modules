@@ -131,10 +131,18 @@ describe('User story', () => {
     expect(await ethers.provider.getBalance(safe)).to.equal(ethers.parseEther('1'))
     expect(await ethers.provider.getCode(safe)).to.equal('0x')
 
-    // Prepend the signature with 0x000000000000000000000000 to indicate validUntil and validAfter fields
     await (
-      await entryPoint.handleOps([{ ...packedUserOp, signature: '0x000000000000000000000000' + signature.slice(2) }], user.address)
+      await entryPoint.handleOps(
+        [
+          {
+            ...packedUserOp,
+            signature: ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]),
+          },
+        ],
+        user.address,
+      )
     ).wait()
+
     expect(await ethers.provider.getBalance(safe)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
     expect(await ethers.provider.getCode(safe)).to.not.equal('0x')
 
