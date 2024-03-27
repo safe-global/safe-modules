@@ -70,7 +70,8 @@ library Base64Url {
                 // 42 = 6 bits * 7 (number of groups processed in each iteration).
                 i := sub(i, 42)
 
-                // Break the loop when the end of the encoded string is reached.
+                // We want to exit when all full 6 bits groups are encoded. After 6 iterations,
+                // I will be -2 and we need to make a signed(!) comparison with 0 to break the loop.
                 if iszero(sgt(i, 0)) {
                     break
                 }
