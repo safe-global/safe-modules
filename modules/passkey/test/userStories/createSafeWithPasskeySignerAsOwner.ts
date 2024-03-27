@@ -72,7 +72,7 @@ describe.only('User story', () => {
     }
   })
 
-  it('should execute a user op and deploy a WebAuthn signer', async () => {
+  it('should execute a userOp with WebAuthn signer as owner', async () => {
     const { user, proxyFactory, stakedFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } =
       await setupTests()
 
