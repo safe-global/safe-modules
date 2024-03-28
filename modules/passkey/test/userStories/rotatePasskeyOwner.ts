@@ -10,18 +10,17 @@ import {
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
+import { Log } from 'hardhat-deploy/types'
 
 /**
  * User story: Rotate passkey owner
- * The test case here deploys a Safe with an EOA and a passkey signer as owners with threshold 1.
- * The EOA then executes a userOp to swap the passkey signer with a new passkey signer.
+ * In the setup, deploy a Safe with an EOA and a passkey signer as owners with threshold 1.
+ * In the test, the EOA executes a userOp to swap the passkey signer with a new passkey signer.
  *
  * The flow can be summarized as follows:
  * Step 1: Setup the contracts
- * Step 2: Create a userOp, sign it with EOA wallet
- * Step 3: Execute the userOp that deploys a safe with EOA and passkey signer as owners
- * Step 4: Create a userOp to swap the passkey signer, sign it with EOA wallet
- * Step 5: Execute the userOp to swap the passkey signer
+ * Step 2: Create a userOp to swap the passkey signer, sign it with EOA wallet
+ * Step 3: Execute the userOp to swap the passkey signer
  */
 describe('Rotate passkey owner [@User story]', () => {
   // Create a fixture to setup the contracts and signer(s)
@@ -66,29 +65,6 @@ describe('Rotate passkey owner [@User story]', () => {
     await (await signerFactory.createSigner(publicKey.x, publicKey.y, verifier.target)).wait()
     const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, verifier.target)
 
-    return {
-      user,
-      proxyFactory,
-      safeModuleSetup,
-      module,
-      entryPoint,
-      singleton,
-      signerFactory,
-      navigator,
-      verifier,
-      SafeL2,
-      signer,
-      credential,
-    }
-  })
-
-  it('should execute a userOp with replaced WebAuthn signer as Safe owner', async () => {
-    // Step 1: Setup the contracts
-    const { user, proxyFactory, safeModuleSetup, module, entryPoint, verifier, singleton, navigator, SafeL2, signer, signerFactory } =
-      await setupTests()
-
-    // Step 2: Create a userOp, sign it with EOA wallet
-
     // The initializer data to enable the Safe4337Module as a module on a Safe
     const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
 
@@ -104,67 +80,38 @@ describe('Rotate passkey owner [@User story]', () => {
       ethers.ZeroAddress,
     ])
 
-    // Predict the Safe address to construct the userOp, generate
+    // Deploy a Safe with EOA and passkey signer as owners
     const safeSalt = Date.now()
-    const safe = await proxyFactory.createProxyWithNonce.staticCall(singleton, setupData, safeSalt)
+    const txReceipt = await (await proxyFactory.createProxyWithNonce(singleton, setupData, safeSalt)).wait()
+    // Get Safe address from the event logs
+    const safeAddress = txReceipt.logs.filter((log: Log) => log.address === proxyFactory.target)[0].args[0]
 
-    // Deploy data required in the initCode of the userOp
-    const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, setupData, safeSalt])
+    return {
+      user,
+      proxyFactory,
+      safeModuleSetup,
+      module,
+      entryPoint,
+      singleton,
+      signerFactory,
+      navigator,
+      verifier,
+      SafeL2,
+      signer,
+      credential,
+      safeAddress,
+    }
+  })
 
-    const safeOp = buildSafeUserOpTransaction(
-      safe,
-      ethers.ZeroAddress,
-      0n,
-      '0x',
-      await entryPoint.getNonce(safe, 0),
-      await entryPoint.getAddress(),
-      false,
-      true,
-      {
-        initCode: ethers.solidityPacked(['address', 'bytes'], [proxyFactory.target, deployData]),
-      },
-    )
-
-    const packedUserOp = buildPackedUserOperationFromSafeUserOperation({
-      safeOp,
-      signature: '0x',
-    })
-
-    // Build the signature that a Safe can decode and verify
-    const signature = buildSignatureBytes([
-      {
-        signer: signer as string,
-        data: buildSignatureBytes([await signSafeOp(user, await module.getAddress(), safeOp, await chainId())]),
-      },
-    ])
-
-    // Send 1 ETH to the Safe
-    await user.sendTransaction({ to: safe, value: ethers.parseEther('1') }).then((tx) => tx.wait())
-    // Check if Safe is not already created
-    expect(await ethers.provider.getCode(safe)).to.equal('0x')
-
-    // Step 3: Execute the userOp that deploys a safe with EOA and passkey signer as owners
-    await (
-      await entryPoint.handleOps(
-        [
-          {
-            ...packedUserOp,
-            signature: ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]),
-          },
-        ],
-        user.address,
-      )
-    ).wait()
-
-    // Check if Safe is created and uses the expected Singleton
-    const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))
-    expect(implementation).to.equal(singleton.target)
+  it('should execute a userOp with replaced WebAuthn signer as Safe owner', async () => {
+    // Step 1: Setup the contracts
+    const { user, module, entryPoint, verifier, navigator, SafeL2, signer, signerFactory, safeAddress } = await setupTests()
 
     // Check the owners of the created Safe
-    const safeInstance = await ethers.getContractAt(SafeL2.abi, safe)
+    const safeInstance = await ethers.getContractAt(SafeL2.abi, safeAddress)
     expect(await safeInstance.getOwners()).to.deep.equal([user.address, signer])
 
-    // Step 4: Create a userOp to swap the passkey signer, sign it with EOA wallet
+    // Step 2: Create a userOp to swap the passkey signer, sign it with EOA wallet
 
     // Create a new WebAuthn credential for the new signer
     const credentialNew = navigator.credentials.create({
@@ -192,11 +139,11 @@ describe('Rotate passkey owner [@User story]', () => {
 
     // Build SafeOp
     const safeOpSwapSigner = buildSafeUserOpTransaction(
-      safe,
-      safe,
+      safeAddress,
+      safeAddress,
       0,
       data,
-      await entryPoint.getNonce(safe, 0),
+      await entryPoint.getNonce(safeAddress, 0),
       await entryPoint.getAddress(),
       false,
       true,
@@ -208,11 +155,6 @@ describe('Rotate passkey owner [@User story]', () => {
       },
     )
 
-    const packedUserOpSwapSigner = buildPackedUserOperationFromSafeUserOperation({
-      safeOp: safeOpSwapSigner,
-      signature: '0x',
-    })
-
     // EOA wallet signs the userOp to swap the Passkey signer
     const signatureSwapSigner = buildSignatureBytes([
       {
@@ -221,21 +163,17 @@ describe('Rotate passkey owner [@User story]', () => {
       },
     ])
 
-    // Step 5: Execute the userOp to swap the passkey signer
-    await (
-      await entryPoint.handleOps(
-        [
-          {
-            ...packedUserOpSwapSigner,
-            signature: ethers.solidityPacked(
-              ['uint48', 'uint48', 'bytes'],
-              [safeOpSwapSigner.validAfter, safeOpSwapSigner.validUntil, signatureSwapSigner],
-            ),
-          },
-        ],
-        user.address,
-      )
-    ).wait()
+    const packedUserOpSwapSigner = buildPackedUserOperationFromSafeUserOperation({
+      safeOp: safeOpSwapSigner,
+      signature: signatureSwapSigner,
+    })
+
+    // Step 3: Execute the userOp to swap the passkey signer
+
+    // Send 1 ETH to the Safe
+    await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') }).then((tx) => tx.wait())
+
+    await (await entryPoint.handleOps([packedUserOpSwapSigner], user.address)).wait()
 
     // Check if new signer is a Safe owner
     expect(await safeInstance.getOwners()).to.deep.equal([user.address, signerNew])
