@@ -53,12 +53,6 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
       },
     })
 
-    const publicKey = decodePublicKey(credential.response)
-    // Deploy signer contract
-    await (await signerFactory.createSigner(publicKey.x, publicKey.y, await verifier.getAddress())).wait()
-    // Get signer address
-    const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, await verifier.getAddress())
-
     return {
       user,
       proxyFactory,
@@ -70,14 +64,21 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
       navigator,
       verifier,
       SafeL2,
-      signer,
       credential,
     }
   })
 
   it('should execute a userOp with WebAuthn signer as owner', async () => {
     // Step 1: Setup the contracts
-    const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, signer, credential } = await setupTests()
+    const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, navigator, SafeL2, credential, signerFactory, verifier } =
+      await setupTests()
+
+    // Deploy a signer contract
+    const publicKey = decodePublicKey(credential.response)
+    // Deploy signer contract
+    await signerFactory.createSigner(publicKey.x, publicKey.y, await verifier.getAddress())
+    // Get signer address
+    const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, await verifier.getAddress())
 
     // Step 2: Create a userOp, sign it with Passkey signer.
 
@@ -114,10 +115,8 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
       true,
       {
         initCode: ethers.solidityPacked(['address', 'bytes'], [proxyFactory.target, deployData]),
+        // Set a higher verificationGasLimit to avoid error "AA26 over verificationGasLimit"
         verificationGasLimit: 700000,
-        callGasLimit: 2000000,
-        maxFeePerGas: 10000000000,
-        maxPriorityFeePerGas: 10000000000,
       },
     )
 
@@ -146,7 +145,9 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
         dynamic: true,
       },
     ])
-    packedUserOp.signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]);
+
+    // Set the signature in the packedUserOp
+    packedUserOp.signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature])
 
     // Send 1 ETH to the Safe
     await user.sendTransaction({ to: safe, value: ethers.parseEther('1') }).then((tx) => tx.wait())
@@ -154,17 +155,7 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
     expect(await ethers.provider.getCode(safe)).to.equal('0x')
 
     // Step 3: Execute the userOp that deploys a safe with passkey signer as owner.
-    await (
-      await entryPoint.handleOps(
-        [
-          {
-            ...packedUserOp,
-            signature: ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]),
-          },
-        ],
-        user.address,
-      )
-    ).wait()
+    await (await entryPoint.handleOps([packedUserOp], user.address)).wait()
 
     // Check if Safe is created and uses the expected Singleton
     const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))
