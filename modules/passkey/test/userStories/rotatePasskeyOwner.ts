@@ -1,4 +1,4 @@
-// Import necessary dependencies from chai, hardhat, @safe-global, webauthn
+// Import necessary dependencies from chai, hardhat, @safe-global/safe-4337, webauthn
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey } from '../utils/webauthn'
