@@ -146,6 +146,7 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
         dynamic: true,
       },
     ])
+    packedUserOp.signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature]);
 
     // Send 1 ETH to the Safe
     await user.sendTransaction({ to: safe, value: ethers.parseEther('1') }).then((tx) => tx.wait())
