@@ -103,7 +103,7 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
     const { user, module, entryPoint, navigator, signer, credential, safeAddress } = await setupTests()
 
     // Step 4: Create a userOp and sign it using passkey credential.
-    const safeOp2 = buildSafeUserOpTransaction(
+    const safeOp = buildSafeUserOpTransaction(
       safeAddress,
       ethers.ZeroAddress,
       ethers.parseEther('0.2'),
@@ -114,16 +114,16 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
       true,
     )
 
-    const packedUserOp2 = buildPackedUserOperationFromSafeUserOperation({
-      safeOp: safeOp2,
+    const packedUserOp = buildPackedUserOperationFromSafeUserOperation({
+      safeOp: safeOp,
       signature: '0x',
     })
 
-    const opHash2 = await module.getOperationHash(packedUserOp2)
+    const opHash = await module.getOperationHash(packedUserOp)
 
-    const assertion2 = navigator.credentials.get({
+    const assertion = navigator.credentials.get({
       publicKey: {
-        challenge: ethers.getBytes(opHash2),
+        challenge: ethers.getBytes(opHash),
         rpId: 'safe.global',
         allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
         userVerification: 'required',
@@ -134,29 +134,21 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
     const signature2 = buildSignatureBytes([
       {
         signer: signer as string,
-        data: encodeWebAuthnSignature(assertion2.response),
+        data: encodeWebAuthnSignature(assertion.response),
         dynamic: true,
       },
     ])
 
-    const balanceBefore = await ethers.provider.getBalance(ethers.ZeroAddress)
+    packedUserOp.signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature2])
 
     // Step 5: Execute the userOp.
 
     // Send 1 ETH to the Safe
     await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') }).then((tx) => tx.wait())
 
-    await (
-      await entryPoint.handleOps(
-        [
-          {
-            ...packedUserOp2,
-            signature: ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp2.validAfter, safeOp2.validUntil, signature2]),
-          },
-        ],
-        user.address,
-      )
-    ).wait()
+    const balanceBefore = await ethers.provider.getBalance(ethers.ZeroAddress)
+
+    await (await entryPoint.handleOps([packedUserOp], user.address)).wait()
 
     // Check if the address(0) the 0.2 ETH
     expect(await ethers.provider.getBalance(ethers.ZeroAddress)).to.be.equal(balanceBefore + ethers.parseEther('0.2'))
