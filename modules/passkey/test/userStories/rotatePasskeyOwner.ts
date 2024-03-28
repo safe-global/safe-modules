@@ -62,7 +62,7 @@ describe('Rotate passkey owner [@User story]', () => {
     })
 
     const publicKey = decodePublicKey(credential.response)
-    await (await signerFactory.createSigner(publicKey.x, publicKey.y, verifier.target)).wait()
+    await signerFactory.createSigner(publicKey.x, publicKey.y, verifier.target)
     const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, verifier.target)
 
     // The initializer data to enable the Safe4337Module as a module on a Safe
