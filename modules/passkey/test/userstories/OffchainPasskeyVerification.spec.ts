@@ -70,14 +70,14 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
     const { safe, signer, navigator, credential } = await setupTests()
 
     // Define message to be signed. The message should be a 32 byte hash of some data as shown below.
-    const message = ethers.id("Signature verification with passkeys is cool!")
+    const message = ethers.id('Signature verification with passkeys is cool!')
 
     // Compute the `SafeMessage` hash which gets specified as the challenge and ultimately signed by the private key.
     const { chainId } = await ethers.provider.getNetwork()
     const safeMsgData = ethers.TypedDataEncoder.encode(
       { verifyingContract: await safe.getAddress(), chainId },
-      { SafeMessage: [{name: 'message', type: 'bytes'}] },
-      { message }
+      { SafeMessage: [{ name: 'message', type: 'bytes' }] },
+      { message },
     )
     const safeMsgHash = ethers.keccak256(safeMsgData)
 
