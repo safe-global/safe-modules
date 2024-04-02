@@ -33,7 +33,7 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
 
     const verifierAddress = await verifier.getAddress()
 
-    // Creating the credentials for Passkey.
+    // Create the credentials for Passkey.
     const credential = navigator.credentials.create({
       publicKey: {
         rp: {
@@ -50,15 +50,13 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
       },
     })
 
-    // Getting the publicKey from the credential and creating the signer.
+    // Get the publicKey from the credential and create the signer.
     const publicKey = decodePublicKey(credential.response)
     await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
-
-    // Querying the signer.
     const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
     const signer = await ethers.getContractAt('WebAuthnSigner', signerAddress)
 
-    // Deploying Safe with the signer as a Single Owner.
+    // Deploy Safe with the WebSuthn signer as a single owner.
     const singletonAddress = await singleton.getAddress()
     const setupData = singleton.interface.encodeFunctionData('setup', [
       [signerAddress],
@@ -71,7 +69,7 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
       ethers.ZeroAddress,
     ])
     const safeAddress = await proxyFactory.createProxyWithNonce.staticCall(singletonAddress, setupData, 0)
-    await proxyFactory.createProxyWithNonce(singletonAddress, setupData, 0).then((tx: any) => tx.wait())
+    await proxyFactory.createProxyWithNonce(singletonAddress, setupData, 0)
     const safe = await ethers.getContractAt(SafeL2.abi, safeAddress)
 
     // Calling `checkSignatures(...)` (With passkey signed dataHash - EIP1271) on the created Safe and check it doesn't revert.
