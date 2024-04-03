@@ -9,7 +9,6 @@ import {
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
-import { Log } from 'hardhat-deploy/types'
 
 /**
  * User story: Rotate passkey owner
