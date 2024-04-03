@@ -24,7 +24,8 @@ import { Log } from 'hardhat-deploy/types'
 describe('Rotate passkey owner [@User story]', () => {
   // Create a fixture to setup the contracts and signer(s)
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
+      await deployments.run()
 
     // EOA which will be the owner of the Safe
     const [user] = await ethers.getSigners()
@@ -35,9 +36,7 @@ describe('Rotate passkey owner [@User story]', () => {
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-
-    const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
-    const signerFactory = await WebAuthnSignerFactory.deploy()
+    const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
