@@ -2,10 +2,8 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
-import { Safe4337Module } from '@safe-global/safe-4337/typechain-types/contracts/Safe4337Module'
 import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { Log } from 'hardhat-deploy/types'
 
 /**
  * User story: Execute userOp from Passkey signer
@@ -21,10 +19,10 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } = await deployments.run()
 
-    const [user] = await ethers.getSigners()
+    const [relayer] = await ethers.getSigners()
 
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
-    const module = await ethers.getContractAt('Safe4337Module', Safe4337Module.address)
+    const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
@@ -81,7 +79,7 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
     await proxyFactory.createProxyWithNonce(singleton, setupData, safeSalt)
 
     return {
-      user,
+      relayer,
       proxyFactory,
       safeModuleSetup,
       module,
@@ -99,7 +97,7 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
 
   it('should execute a userOp with WebAuthn signer as owner', async () => {
     // Step 1: Setup the contracts
-    const { user, module, entryPoint, navigator, signer, credential, safeAddress } = await setupTests()
+    const { relayer, module, entryPoint, navigator, signer, credential, safeAddress } = await setupTests()
 
     // Step 4: Create a userOp and sign it using passkey credential.
     const safeOp = buildSafeUserOpTransaction(
@@ -143,11 +141,11 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
     // Step 5: Execute the userOp.
 
     // Send 1 ETH to the Safe
-    await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') }).then((tx) => tx.wait())
+    await relayer.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') }).then((tx) => tx.wait())
 
     const balanceBefore = await ethers.provider.getBalance(ethers.ZeroAddress)
 
-    await (await entryPoint.handleOps([packedUserOp], user.address)).wait()
+    await (await entryPoint.handleOps([packedUserOp], relayer.address)).wait()
 
     // Check if the address(0) the 0.2 ETH
     expect(await ethers.provider.getBalance(ethers.ZeroAddress)).to.be.equal(balanceBefore + ethers.parseEther('0.2'))
