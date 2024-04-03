@@ -31,7 +31,7 @@ describe('Rotate passkey owner [@User story]', () => {
     const [user] = await ethers.getSigners()
 
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
-    const module = (await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)) as unknown as Safe4337Module
+    const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
