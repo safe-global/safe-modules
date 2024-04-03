@@ -2,7 +2,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
-import { Safe4337Module } from '@safe-global/safe-4337/typechain-types/contracts/Safe4337Module'
 import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 
@@ -23,7 +22,7 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
     const [user] = await ethers.getSigners()
 
     const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
-    const module = (await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)) as unknown as Safe4337Module
+    const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
@@ -116,7 +115,7 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
       {
         initCode: ethers.solidityPacked(['address', 'bytes'], [proxyFactory.target, deployData]),
         // Set a higher verificationGasLimit to avoid error "AA26 over verificationGasLimit"
-        verificationGasLimit: 700000,
+        verificationGasLimit: 600000,
       },
     )
 
