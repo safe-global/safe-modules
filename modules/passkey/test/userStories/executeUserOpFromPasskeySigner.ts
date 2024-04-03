@@ -15,7 +15,7 @@ import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
  * Step 2: Create a userOp and sign it using passkey credential.
  * Step 3: Execute the userOp.
  */
-describe('Execute userOp from Passkey signer [@User story]', () => {
+describe('Execute userOp from Passkey signer [@userstory]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
       await deployments.run()
