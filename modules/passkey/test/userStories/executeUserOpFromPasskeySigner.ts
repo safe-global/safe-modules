@@ -146,7 +146,7 @@ describe('Execute userOp from Passkey signer [@User story]', () => {
 
     await (await entryPoint.handleOps([packedUserOp], relayer.address)).wait()
 
-    // Check if the address(0) the 0.2 ETH
+    // Check if the address(0) received 0.2 ETH
     expect(await ethers.provider.getBalance(ethers.ZeroAddress)).to.be.equal(balanceBefore + ethers.parseEther('0.2'))
     expect(await ethers.provider.getBalance(safeAddress)).to.be.lessThanOrEqual(ethers.parseEther('1') - ethers.parseEther('0.2'))
   })
