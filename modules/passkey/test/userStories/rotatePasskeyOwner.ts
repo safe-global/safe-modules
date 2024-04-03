@@ -131,7 +131,7 @@ describe('Rotate passkey owner [@User story]', () => {
     })
 
     const publicKeyNew = decodePublicKey(credentialNew.response)
-    await (await signerFactory.createSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)).wait()
+    await signerFactory.createSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)
     const signerNew = await signerFactory.getSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)
 
     const interfaceSwapOwner = new ethers.Interface(['function swapOwner(address,address,address)'])
