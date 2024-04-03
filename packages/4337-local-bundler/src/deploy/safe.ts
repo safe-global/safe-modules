@@ -33,13 +33,13 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
     log: true,
     deterministicDeployment: true,
   })
-  await deploy("CompatibilityFallbackHandler", {
+  await deploy('CompatibilityFallbackHandler', {
     contract: CompatibilityFallbackHandler,
     from: deployer,
     args: [],
     log: true,
     deterministicDeployment: true,
-  });
+  })
 }
 
 deploy.tags = ['safe']
