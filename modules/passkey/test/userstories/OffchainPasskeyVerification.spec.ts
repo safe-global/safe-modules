@@ -3,6 +3,15 @@ import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 
+/**
+ * User story: Off-chain Passkey Signature Verification
+ * The user story here creates a passkey signer, deploys a Safe with that signer and verifies the signature.
+ *
+ * The flow can be summarized as follows:
+ * Step 1: Setup the contracts.
+ * Step 2: Create the `SafeMessage`, hash it and finally create the signature for the hash by the passkey signer.
+ * Step 3: Verify that the signature returns the EIP_1271_MAGIC_VALUE.
+ */
 describe('Offchain Passkey Signature Verification [@userstory]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { SafeProxyFactory, SafeL2, FCLP256Verifier, WebAuthnSignerFactory, CompatibilityFallbackHandler } = await deployments.run()
