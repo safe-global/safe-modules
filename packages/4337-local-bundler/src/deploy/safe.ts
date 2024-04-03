@@ -1,6 +1,7 @@
 import MultiSend from '@safe-global/safe-contracts/build/artifacts/contracts/libraries/MultiSend.sol/MultiSend.json'
 import SafeProxyFactory from '@safe-global/safe-contracts/build/artifacts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
 import SafeL2 from '@safe-global/safe-contracts/build/artifacts/contracts/SafeL2.sol/SafeL2.json'
+import CompatibilityFallbackHandler from '@safe-global/safe-contracts/build/artifacts/contracts/handler/CompatibilityFallbackHandler.sol/CompatibilityFallbackHandler.json'
 import { DeployFunction } from 'hardhat-deploy/types'
 
 const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }) => {
@@ -32,6 +33,13 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts, network }
     log: true,
     deterministicDeployment: true,
   })
+  await deploy("CompatibilityFallbackHandler", {
+    contract: CompatibilityFallbackHandler,
+    from: deployer,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  });
 }
 
 deploy.tags = ['safe']

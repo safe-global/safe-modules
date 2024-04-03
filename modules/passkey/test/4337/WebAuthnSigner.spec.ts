@@ -12,8 +12,16 @@ describe('WebAuthn Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeECDSASignerLaunchpad, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier } =
-      await deployments.run()
+    const {
+      EntryPoint,
+      Safe4337Module,
+      SafeECDSASignerLaunchpad,
+      SafeProxyFactory,
+      SafeModuleSetup,
+      SafeL2,
+      FCLP256Verifier,
+      WebAuthnSignerFactory,
+    } = await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -24,9 +32,7 @@ describe('WebAuthn Signers [@4337]', () => {
     const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-
-    const WebAuthnSignerFactory = await ethers.getContractFactory('WebAuthnSignerFactory')
-    const signerFactory = await WebAuthnSignerFactory.deploy()
+    const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
