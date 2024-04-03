@@ -134,8 +134,7 @@ describe('Rotate passkey owner [@User story]', () => {
     await signerFactory.createSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)
     const signerNew = await signerFactory.getSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)
 
-    const interfaceSwapOwner = new ethers.Interface(['function swapOwner(address,address,address)'])
-    const data = interfaceSwapOwner.encodeFunctionData('swapOwner', [user.address, signer, signerNew])
+    const data = safeInstance.interface.encodeFunctionData('swapOwner', [user.address, signer, signerNew])
 
     // Build SafeOp
     const safeOpSwapSigner = buildSafeUserOpTransaction(
