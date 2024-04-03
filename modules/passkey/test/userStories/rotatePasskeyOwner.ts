@@ -2,7 +2,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey } from '../utils/webauthn'
-import { Safe4337Module } from '@safe-global/safe-4337/typechain-types/contracts/Safe4337Module'
 import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
@@ -147,10 +146,7 @@ describe('Rotate passkey owner [@User story]', () => {
       false,
       true,
       {
-        verificationGasLimit: 700000,
-        callGasLimit: 2000000,
-        maxFeePerGas: 10000000000,
-        maxPriorityFeePerGas: 10000000000,
+        verificationGasLimit: 100000,
       },
     )
 
