@@ -171,9 +171,9 @@ describe('Rotate passkey owner [@User story]', () => {
     // Step 3: Execute the userOp to swap the passkey signer
 
     // Send 1 ETH to the Safe
-    await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') }).then((tx) => tx.wait())
+    await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') })
 
-    await (await entryPoint.handleOps([packedUserOpSwapSigner], user.address)).wait()
+    await entryPoint.handleOps([packedUserOpSwapSigner], user.address)
 
     // Check if new signer is a Safe owner
     expect(await safeInstance.getOwners()).to.deep.equal([user.address, signerNew])
