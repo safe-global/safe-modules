@@ -80,9 +80,8 @@ describe('Rotate passkey owner [@User story]', () => {
 
     // Deploy a Safe with EOA and passkey signer as owners
     const safeSalt = Date.now()
-    const txReceipt = await (await proxyFactory.createProxyWithNonce(singleton, setupData, safeSalt)).wait()
-    // Get Safe address from the event logs
-    const safeAddress = txReceipt.logs.filter((log: Log) => log.address === proxyFactory.target)[0].args[0]
+    const safeAddress = await proxyFactory.createProxyWithNonce.staticCall(singleton, setupData, safeSalt)
+    await proxyFactory.createProxyWithNonce(singleton, setupData, safeSalt)
 
     return {
       user,
