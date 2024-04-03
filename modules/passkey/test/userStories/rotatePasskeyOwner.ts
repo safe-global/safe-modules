@@ -20,7 +20,7 @@ import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
  * Step 2: Create a userOp to swap the passkey signer, sign it with EOA wallet
  * Step 3: Execute the userOp to swap the passkey signer
  */
-describe('Rotate passkey owner [@User story]', () => {
+describe('Rotate passkey owner [@userstory]', () => {
   // Create a fixture to setup the contracts and signer(s)
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
