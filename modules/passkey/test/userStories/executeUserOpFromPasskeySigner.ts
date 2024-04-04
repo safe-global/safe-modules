@@ -1,4 +1,3 @@
-// Import necessary dependencies from chai, hardhat, @safe-global/safe-4337, webauthn
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
@@ -74,6 +73,7 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
 
     // Deploy a Safe with EOA and passkey signer as owners
     const safeSalt = Date.now()
+    // Calculate the address of the Safe. Alternatively, address can be retrieved from the event logs or by calculating it off-chain via create2.
     const safeAddress = await proxyFactory.createProxyWithNonce.staticCall(singleton, setupData, safeSalt)
     await proxyFactory.createProxyWithNonce(singleton, setupData, safeSalt)
 
@@ -89,7 +89,6 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
   })
 
   it('should execute a userOp with WebAuthn signer as owner', async () => {
-    // Step 1: Setup the contracts
     const { relayer, module, entryPoint, navigator, signer, credential, safeAddress } = await setupTests()
 
     // Step 2: Create a userOp and sign it using passkey credential.
