@@ -53,7 +53,9 @@ function getSafe4337ModuleContract(provider: ethers.JsonRpcProvider): Safe4337Mo
  * @returns An instance of the SafeWebAuthnSignerFactory contract.
  */
 function getSafeWebAuthnSignerFactoryContract(provider: ethers.JsonRpcProvider): SafeWebAuthnSignerFactory {
-  return new ethers.Contract(WEBAUTHN_SIGNER_FACTORY_ADDRESS, SafeWebAuthnSignerFactoryAbi, { provider }) as unknown as SafeWebAuthnSignerFactory
+  return new ethers.Contract(WEBAUTHN_SIGNER_FACTORY_ADDRESS, SafeWebAuthnSignerFactoryAbi, {
+    provider,
+  }) as unknown as SafeWebAuthnSignerFactory
 }
 
 /**
