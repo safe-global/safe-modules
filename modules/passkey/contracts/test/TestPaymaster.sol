@@ -9,6 +9,12 @@ import {IEntryPoint} from "@account-abstraction/contracts/interfaces/IEntryPoint
  * TODO: This is a dummy contract that has no validation logic. Either implement validation logic or remove this contract and use MockContract.
  */
 contract TestPaymaster {
+    enum PostOpMode {
+        opSucceeded, // user op succeeded
+        opReverted, // user op reverted. still has to pay for gas.
+        postOpReverted // Regardless of the UserOp call status, the postOp reverted, and caused both executions to revert.
+    }
+
     function validatePaymasterUserOp(
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
@@ -19,12 +25,6 @@ contract TestPaymaster {
     }
 
     function postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost, uint256 actualUserOpFeePerGas) external {}
-
-    enum PostOpMode {
-        opSucceeded, // user op succeeded
-        opReverted, // user op reverted. still has to pay for gas.
-        postOpReverted // Regardless of the UserOp call status, the postOp reverted, and caused both executions to revert.
-    }
 
     function stakeEntryPoint(IEntryPoint entryPoint, uint32 unstakeDelaySecs) external payable {
         entryPoint.addStake{value: msg.value}(unstakeDelaySecs);
