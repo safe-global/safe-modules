@@ -92,7 +92,7 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
     // Step 1: Setup the contracts
     const { relayer, module, entryPoint, navigator, signer, credential, safeAddress } = await setupTests()
 
-    // Step 4: Create a userOp and sign it using passkey credential.
+    // Step 2: Create a userOp and sign it using passkey credential.
     const safeOp = buildSafeUserOpTransaction(
       safeAddress,
       ethers.ZeroAddress,
@@ -131,7 +131,7 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
 
     packedUserOp.signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature2])
 
-    // Step 5: Execute the userOp.
+    // Step 3: Execute the userOp.
 
     // Send 1 ETH to the Safe
     await relayer.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') })
