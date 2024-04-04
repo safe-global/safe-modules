@@ -16,7 +16,7 @@ contract TestWebAuthnLib {
         bytes32 challenge,
         bytes calldata authenticatorData,
         string calldata clientDataFields
-    ) external pure returns (bytes32 message) {
+    ) external view returns (bytes32 message) {
         message = WebAuthn.signingMessage(challenge, authenticatorData, clientDataFields);
     }
 

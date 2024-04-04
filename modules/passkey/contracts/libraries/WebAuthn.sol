@@ -195,9 +195,9 @@ library WebAuthn {
         bytes32 challenge,
         bytes calldata authenticatorData,
         string calldata clientDataFields
-    ) internal pure returns (bytes32 message) {
+    ) internal view returns (bytes32 message) {
         string memory clientDataJson = encodeClientDataJson(challenge, clientDataFields);
-        message = sha256(abi.encodePacked(authenticatorData, sha256(bytes(clientDataJson))));
+        message = _sha256(abi.encodePacked(authenticatorData, _sha256(bytes(clientDataJson))));
     }
 
     /**
@@ -258,5 +258,25 @@ library WebAuthn {
 
         bytes32 message = signingMessage(challenge, signature.authenticatorData, signature.clientDataFields);
         success = verifier.verifySignatureAllowMalleability(message, signature.r, signature.s, x, y);
+    }
+
+    /**
+     * @notice Compute the SHA-256 hash of the input bytes.
+     * @dev The Solidity compiler sometimes generates a memory copy loop for the call to the SHA-256
+     * precompile, even if the input is already in memory. Force this not to happen by manually
+     * implementing the call to the SHA-256 precompile.
+     * @param input The input bytes to hash.
+     * @return digest The SHA-256 digest of the input bytes.
+     */
+    function _sha256(bytes memory input) private view returns (bytes32 digest) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            // The SHA-256 precompile is at address 0x0002. Note that we don't check the whether or
+            // not the precompile reverted or if the return data size is 32 bytes, which is a
+            // reasonable assumption for the precompile, as it is specified to always return the
+            // SHA-256 of its input bytes.
+            pop(staticcall(gas(), 0x0002, add(input, 0x20), mload(input), 0, 32))
+            digest := mload(0)
+        }
     }
 }
