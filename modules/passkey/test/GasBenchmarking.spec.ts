@@ -4,7 +4,7 @@ import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from './utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
 
-describe('Gas Benchmarking', function () {
+describe('Gas Benchmarking [@bench]', function () {
   const navigator = {
     credentials: new WebAuthnCredentials(),
   }
