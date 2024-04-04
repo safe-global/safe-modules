@@ -47,9 +47,9 @@ describe('WebAuthn Library', () => {
         origin: 'http://safe.global',
       }
       const clientDataHash = ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))
-      const message = ethers.sha256(ethers.concat([authenticatorData, clientDataHash]))
+      const message = ethers.concat([authenticatorData, clientDataHash])
 
-      expect(await webAuthnLib.signingMessage(challenge, authenticatorData, `"origin":"http://safe.global"`)).to.equal(message)
+      expect(await webAuthnLib.encodeSigningMessage(challenge, authenticatorData, `"origin":"http://safe.global"`)).to.equal(message)
     })
   })
 

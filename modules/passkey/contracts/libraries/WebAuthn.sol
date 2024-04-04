@@ -6,7 +6,7 @@ import {IP256Verifier, P256} from "./P256.sol";
 /**
  * @title WebAuthn Signature Verification
  * @dev Library for verifying WebAuthn signatures for public key credentials using the ES256
- * algorithm.
+ * algorithm with the P-256 curve.
  * @custom:security-contact bounty@safe.global
  */
 library WebAuthn {
@@ -181,23 +181,48 @@ library WebAuthn {
     }
 
     /**
-     * @notice Generate a signing message based on the authenticator data, challenge, and client
-     * data fields.
-     * @dev The signing message are the 32-bytes that are actually signed by the P-256 private key
-     * when doing a WebAuthn credential assertion. Note that we verify that the challenge is indeed
-     * signed by using its value to compute the signing message on-chain.
+     * @notice Encodes the message that is signed in a WebAuthn assertion.
+     * @dev The signing message is defined to be the concatenation of the authenticator data bytes
+     * with the 32-byte SHA-256 digest of the client data JSON. The hashing algorithm used on the
+     * signing message itself depends on the public key algorithm that was selected on WebAuthn
+     * credential creation.
      * @param challenge The WebAuthn challenge used for the credential assertion.
      * @param authenticatorData Authenticator data.
      * @param clientDataFields Client data fields.
-     * @return message Signing message.
+     * @return message Signing message bytes.
      */
-    function signingMessage(
+    function encodeSigningMessage(
         bytes32 challenge,
         bytes calldata authenticatorData,
         string calldata clientDataFields
-    ) internal view returns (bytes32 message) {
+    ) internal view returns (bytes memory message) {
         string memory clientDataJson = encodeClientDataJson(challenge, clientDataFields);
-        message = _sha256(abi.encodePacked(authenticatorData, _sha256(bytes(clientDataJson))));
+        bytes32 clientDataHash = _sha256(bytes(clientDataJson));
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            // The length of the signing message, this is the length of the authenticator data plus
+            // the 32-byte hash of the client data JSON.
+            let messageLength := add(authenticatorData.length, 32)
+
+            // Allocate the encoded signing `message` at the start of the free memory. Note that we
+            // pad the allocation to 32-byte boundary as Solidity typically does.
+            message := mload(0x40)
+            mstore(0x40, and(add(message, add(messageLength, 0x3f)), not(0x1f)))
+            mstore(message, messageLength)
+
+            // The actual message data is written to 32 bytes past the start of the allocation, as
+            // the first 32 bytes contains the length of the byte array.
+            let messagePtr := add(message, 32)
+
+            // Copy the authenticator from calldata to the start of the `message` buffer that was
+            // allocated. Note that we start copying 32 bytes after the start of the allocation to
+            // account for the length.
+            calldatacopy(messagePtr, authenticatorData.offset, authenticatorData.length)
+
+            // Finally, write the client data JSON hash to the end of the `message`.
+            mstore(add(messagePtr, authenticatorData.length), clientDataHash)
+        }
     }
 
     /**
@@ -252,12 +277,10 @@ library WebAuthn {
         uint256 y,
         IP256Verifier verifier
     ) internal view returns (bool success) {
-        if (!checkAuthenticatorFlags(signature.authenticatorData, authenticatorFlags)) {
-            return false;
+        bytes memory message = encodeSigningMessage(challenge, signature.authenticatorData, signature.clientDataFields);
+        if (checkAuthenticatorFlags(signature.authenticatorData, authenticatorFlags)) {
+            success = verifier.verifySignatureAllowMalleability(_sha256(message), signature.r, signature.s, x, y);
         }
-
-        bytes32 message = signingMessage(challenge, signature.authenticatorData, signature.clientDataFields);
-        success = verifier.verifySignatureAllowMalleability(message, signature.r, signature.s, x, y);
     }
 
     /**
