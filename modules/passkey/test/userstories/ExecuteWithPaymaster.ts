@@ -1,4 +1,3 @@
-// Import necessary dependencies from chai, hardhat, @safe-global/safe-4337, webauthn
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
@@ -80,7 +79,6 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
     })
 
     it('should execute a userOp and deploy a Safe using Paymaster', async () => {
-      // Step 1: Setup the contracts
       const {
         relayer,
         proxyFactory,
@@ -280,7 +278,6 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
     })
 
     it('should execute a userOp with an existing Safe using Paymaster', async () => {
-      // Step 1: Setup the contracts
       const { safeAddress, signer, relayer, module, entryPoint, navigator, credential, paymaster } = await setupTests()
 
       // Concatenated values: paymaster address, paymasterVerificationGasLimit, paymasterPostOpGasLimit
