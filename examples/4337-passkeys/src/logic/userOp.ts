@@ -17,10 +17,7 @@ import {
   XANDER_BLAZE_NFT_ADDRESS,
 } from '../config'
 import { encodeSafeMintData } from './erc721'
-import {
-  PasskeyLocalStorageFormat,
-  signWithPasskey
-} from "./passkeys";
+import { PasskeyLocalStorageFormat, signWithPasskey } from './passkeys'
 
 type PackedUserOperation = {
   sender: string
@@ -306,7 +303,6 @@ function getUserOpHash(
   return ethers.keccak256(enc)
 }
 
-
 /**
  * Signs and sends a user operation to the specified entry point on the blockchain.
  * @param userOp The unsigned user operation to sign and send.
@@ -346,14 +342,7 @@ async function signAndSendUserOp(
 
   const passkeySignature = await signWithPasskey(passkey.rawId, safeInitOpHash)
 
-  const signature = ethers.solidityPacked(
-    ['uint48', 'uint48', 'bytes'],
-    [
-      safeInitOp.validAfter,
-      safeInitOp.validUntil,
-      passkeySignature
-    ],
-  )
+  const signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeInitOp.validAfter, safeInitOp.validUntil, passkeySignature])
 
   const rpcUserOp = unpackUserOperationForRpc(userOp, signature)
   return await getEip4337BundlerProvider().send('eth_sendUserOperation', [rpcUserOp, entryPoint])

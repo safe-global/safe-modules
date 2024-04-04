@@ -1,5 +1,5 @@
-import { ethers } from "ethers";
-import { hexStringToUint8Array } from "../utils.ts";
+import { ethers } from 'ethers'
+import { hexStringToUint8Array } from '../utils.ts'
 
 type PasskeyCredential = {
   id: 'string'
@@ -126,7 +126,6 @@ function extractSignature(response: AuthenticatorAssertionResponse): [bigint, bi
 type Assertion = {
   response: AuthenticatorAssertionResponse
 }
-
 
 export type PasskeyLocalStorageFormat = {
   rawId: string
