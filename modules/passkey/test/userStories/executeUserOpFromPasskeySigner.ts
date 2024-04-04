@@ -133,7 +133,7 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
 
     // Step 3: Execute the userOp.
 
-    // Send 1 ETH to the Safe
+    // Send 1 ETH to the Safe for the transaction and the prefund
     await relayer.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') })
 
     const balanceBefore = await ethers.provider.getBalance(ethers.ZeroAddress)
