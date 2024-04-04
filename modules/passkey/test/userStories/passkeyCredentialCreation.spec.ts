@@ -102,15 +102,6 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
     )
     const message = ethers.keccak256(safeTxData) // Safe Tx Hash
 
-    // Compute the `SafeMessage` hash which gets specified as the challenge and ultimately signed by the private key.
-    // const { chainId } = await ethers.provider.getNetwork()
-    // const safeMsgData = ethers.TypedDataEncoder.encode(
-    //   { verifyingContract: await safe.getAddress(), chainId },
-    //   { SafeMessage: [{ name: 'message', type: 'bytes' }] },
-    //   { message },
-    // )
-    // const safeMsgHash = ethers.keccak256(safeMsgData)
-
     // Creating the signature for the `safeMsgHash`.
     const assertion = navigator.credentials.get({
       publicKey: {
