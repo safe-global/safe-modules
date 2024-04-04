@@ -79,15 +79,9 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
 
     return {
       relayer,
-      proxyFactory,
-      safeModuleSetup,
       module,
       entryPoint,
-      singleton,
-      signerFactory,
       navigator,
-      verifier,
-      SafeL2,
       signer,
       credential,
       safeAddress,
