@@ -1,15 +1,15 @@
 import { ethers } from 'ethers'
 import { abi as SafeECDSASignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeECDSASignerLaunchpad.sol/SafeECDSASignerLaunchpad.json'
-import { abi as WebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/WebAuthnSignerFactory.sol/WebAuthnSignerFactory.json'
+import { abi as SafeWebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSignerFactory.sol/SafeWebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import {
-  abi as WebAuthnSignerAbi,
+  abi as SafeWebAuthnSignerAbi,
   bytecode as WebAuthSignerBytecode,
-} from '@safe-global/safe-passkey/build/artifacts/contracts/WebAuthnSigner.sol/WebAuthnSigner.json'
+} from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSigner.sol/SafeWebAuthnSigner.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
 import type { Safe4337Module, SafeProxyFactory, SafeModuleSetup } from '@safe-global/safe-4337/typechain-types/'
-import type { SafeECDSASignerLaunchpad, WebAuthnSigner, WebAuthnSignerFactory } from '@safe-global/safe-passkey/typechain-types/'
+import type { SafeECDSASignerLaunchpad, SafeWebAuthnSigner, SafeWebAuthnSignerFactory } from '@safe-global/safe-passkey/typechain-types/'
 
 import {
   SAFE_SIGNER_LAUNCHPAD_ADDRESS,
@@ -47,24 +47,24 @@ function getSafe4337ModuleContract(provider: ethers.JsonRpcProvider): Safe4337Mo
 }
 
 /**
- * Returns an instance of the WebAuthnSignerFactory contract.
+ * Returns an instance of the SafeWebAuthnSignerFactory contract.
  *
  * @param provider - The JSON-RPC provider used to interact with the Ethereum network.
- * @returns An instance of the WebAuthnSignerFactory contract.
+ * @returns An instance of the SafeWebAuthnSignerFactory contract.
  */
-function getWebAuthnSignerFactoryContract(provider: ethers.JsonRpcProvider): WebAuthnSignerFactory {
-  return new ethers.Contract(WEBAUTHN_SIGNER_FACTORY_ADDRESS, WebAuthnSignerFactoryAbi, { provider }) as unknown as WebAuthnSignerFactory
+function getSafeWebAuthnSignerFactoryContract(provider: ethers.JsonRpcProvider): SafeWebAuthnSignerFactory {
+  return new ethers.Contract(WEBAUTHN_SIGNER_FACTORY_ADDRESS, SafeWebAuthnSignerFactoryAbi, { provider }) as unknown as SafeWebAuthnSignerFactory
 }
 
 /**
- * Creates a WebAuthnSigner contract instance.
+ * Creates a SafeWebAuthnSigner contract instance.
  *
  * @param provider - The JSON-RPC provider.
  * @param address - The address of the contract.
- * @returns The WebAuthnSigner contract instance.
+ * @returns The SafeWebAuthnSigner contract instance.
  */
-function getWebAuthnSignerContract(provider: ethers.JsonRpcProvider, address: string): WebAuthnSigner {
-  return new ethers.Contract(address, WebAuthnSignerAbi, { provider }) as unknown as WebAuthnSigner
+function getSafeWebAuthnSignerContract(provider: ethers.JsonRpcProvider, address: string): SafeWebAuthnSigner {
+  return new ethers.Contract(address, SafeWebAuthnSignerAbi, { provider }) as unknown as SafeWebAuthnSigner
 }
 
 /**
@@ -232,8 +232,8 @@ export {
   getLaunchpadInitializeThenUserOpData,
   getSafeSignerLaunchpadContract,
   getSafe4337ModuleContract,
-  getWebAuthnSignerFactoryContract,
-  getWebAuthnSignerContract,
+  getSafeWebAuthnSignerFactoryContract,
+  getSafeWebAuthnSignerContract,
   getSignerAddressFromPubkeyCoords,
   getSafeDeploymentData,
   getSafeAddress,

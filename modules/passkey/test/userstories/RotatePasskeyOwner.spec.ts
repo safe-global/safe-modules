@@ -23,7 +23,7 @@ import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
 describe('Rotate passkey owner [@userstory]', () => {
   // Create a fixture to setup the contracts and signer(s)
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
       await deployments.run()
 
     // EOA which will be the owner of the Safe
@@ -35,7 +35,7 @@ describe('Rotate passkey owner [@userstory]', () => {
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-    const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),

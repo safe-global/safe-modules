@@ -6,7 +6,7 @@ import {IP256Verifier} from "../interfaces/IP256Verifier.sol";
 /**
  * @title P-256 Elliptic Curve Verification Library.
  * @dev Library P-256 verification with contracts that follows the EIP-7212 EC verify precompile
- * interface. See <https://eips.ethereum.org/EIPS/eip-7212>
+ * interface. See <https://eips.ethereum.org/EIPS/eip-7212>.
  * @custom:security-contact bounty@safe.global
  */
 library P256 {
