@@ -123,7 +123,7 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
     // Build contract signature that the Safe will forward to the signer contract
     const signature2 = buildSignatureBytes([
       {
-        signer: signer as string,
+        signer: signer,
         data: encodeWebAuthnSignature(assertion.response),
         dynamic: true,
       },
