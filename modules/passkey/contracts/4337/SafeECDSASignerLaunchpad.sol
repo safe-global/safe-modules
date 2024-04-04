@@ -86,6 +86,19 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
         }
     }
 
+    /**
+     * @notice This function generates a unique initialization hash for a Safe.
+     * @dev The hash is generated using the keccak256 hash function and the EIP-712 standard.
+     * @param singleton The singleton to evolve into during the setup.
+     * @param signerFactory The unique signer factory to use for creating an owner.
+     * @param signerX The X coordinate of the signer's public key.
+     * @param signerY The Y coordinate of the signer's public key.
+     * @param signerVerifier The address of the contract that verifies the signer's signature.
+     * @param setupTo The contract to delegatecall during setup.
+     * @param setupData The calldata for the setup delegatecall.
+     * @param fallbackHandler The fallback handler to initialize the Safe with.
+     * @return initHash The unique initialization hash for the Safe.
+     */
     function getInitHash(
         address singleton,
         address signerFactory,

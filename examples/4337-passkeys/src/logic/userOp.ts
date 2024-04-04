@@ -17,8 +17,10 @@ import {
   XANDER_BLAZE_NFT_ADDRESS,
 } from '../config'
 import { encodeSafeMintData } from './erc721'
-import { PasskeyLocalStorageFormat } from './passkeys'
-import { hexStringToUint8Array } from '../utils'
+import {
+  PasskeyLocalStorageFormat,
+  signWithPasskey
+} from "./passkeys";
 
 type PackedUserOperation = {
   sender: string
@@ -304,67 +306,6 @@ function getUserOpHash(
   return ethers.keccak256(enc)
 }
 
-/**
- * Compute the additional client data JSON fields. This is the fields other than `type` and
- * `challenge` (including `origin` and any other additional client data fields that may be
- * added by the authenticator).
- *
- * See <https://w3c.github.io/webauthn/#clientdatajson-serialization>
- */
-function extractClientDataFields(response: AuthenticatorAssertionResponse): string {
-  const clientDataJSON = new TextDecoder('utf-8').decode(response.clientDataJSON)
-  const match = clientDataJSON.match(/^\{"type":"webauthn.get","challenge":"[A-Za-z0-9\-_]{43}",(.*)\}$/)
-
-  if (!match) {
-    throw new Error('challenge not found in client data JSON')
-  }
-
-  const [, fields] = match
-  return ethers.hexlify(ethers.toUtf8Bytes(fields))
-}
-
-/**
- * Extracts the signature into R and S values from the authenticator response.
- *
- * See:
- * - <https://datatracker.ietf.org/doc/html/rfc3279#section-2.2.3>
- * - <https://en.wikipedia.org/wiki/X.690#BER_encoding>
- */
-function extractSignature(response: AuthenticatorAssertionResponse): [bigint, bigint] {
-  const check = (x: boolean) => {
-    if (!x) {
-      throw new Error('invalid signature encoding')
-    }
-  }
-
-  // Decode the DER signature. Note that we assume that all lengths fit into 8-bit integers,
-  // which is true for the kinds of signatures we are decoding but generally false. I.e. this
-  // code should not be used in any serious application.
-  const view = new DataView(response.signature)
-
-  // check that the sequence header is valid
-  check(view.getUint8(0) === 0x30)
-  check(view.getUint8(1) === view.byteLength - 2)
-
-  // read r and s
-  const readInt = (offset: number) => {
-    check(view.getUint8(offset) === 0x02)
-    const len = view.getUint8(offset + 1)
-    const start = offset + 2
-    const end = start + len
-    const n = BigInt(ethers.hexlify(new Uint8Array(view.buffer.slice(start, end))))
-    check(n < ethers.MaxUint256)
-    return [n, end] as const
-  }
-  const [r, sOffset] = readInt(2)
-  const [s] = readInt(sOffset)
-
-  return [r, s]
-}
-
-type Assertion = {
-  response: AuthenticatorAssertionResponse
-}
 
 /**
  * Signs and sends a user operation to the specified entry point on the blockchain.
@@ -403,31 +344,14 @@ async function signAndSendUserOp(
     safeInitOp,
   )
 
-  const assertion = (await navigator.credentials.get({
-    publicKey: {
-      challenge: ethers.getBytes(safeInitOpHash),
-      allowCredentials: [{ type: 'public-key', id: hexStringToUint8Array(passkey.rawId) }],
-      userVerification: 'required',
-    },
-  })) as Assertion | null
-
-  if (!assertion) {
-    throw new Error('Failed to sign user operation')
-  }
+  const passkeySignature = await signWithPasskey(passkey.rawId, safeInitOpHash)
 
   const signature = ethers.solidityPacked(
     ['uint48', 'uint48', 'bytes'],
     [
       safeInitOp.validAfter,
       safeInitOp.validUntil,
-      ethers.AbiCoder.defaultAbiCoder().encode(
-        ['bytes', 'bytes', 'uint256[2]'],
-        [
-          new Uint8Array(assertion.response.authenticatorData),
-          extractClientDataFields(assertion.response),
-          extractSignature(assertion.response),
-        ],
-      ),
+      passkeySignature
     ],
   )
 
