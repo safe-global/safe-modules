@@ -78,7 +78,7 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
     }
   })
 
-  it.only('should be possible to execute a transaction signed by passkey', async () => {
+  it('should be possible to execute a transaction signed by passkey', async () => {
     const { user, safe, safeAddress, signer, navigator, credential } = await setupTests()
 
     // Send 1 ETH to the Safe
