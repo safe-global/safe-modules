@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {Base64Url} from "../libraries/Base64Url.sol";
 import {IP256Verifier, P256} from "./P256.sol";
 
 /**
@@ -87,6 +86,101 @@ library WebAuthn {
     }
 
     /**
+     * @notice Encodes the client data JSON string from the specified challenge, and additional
+     * client data fields.
+     * @dev The client data JSON follows a very specific encoding process outlined in the Web
+     * Authentication standard. See <https://w3c.github.io/webauthn/#clientdatajson-serialization>.
+     * @param challenge The WebAuthn challenge used for the credential assertion.
+     * @param clientDataFields Client data fields.
+     * @return clientDataJson The encoded client data JSON.
+     */
+    function encodeClientDataJson(
+        bytes32 challenge,
+        string calldata clientDataFields
+    ) internal pure returns (string memory clientDataJson) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            // The length of the encoded JSON string. This is always 82 plus the length of the
+            // additional client data fields:
+            // - 36 bytes for: `{"type":"webauthn.get","challenge":"`
+            // - 43 bytes for base-64 encoding of 32 bytes of data
+            // - 2 bytes for: `",`
+            // - `clientDataFields.length` bytes for the additional client data JSON fields
+            // - 1 byte for: `}`
+            let encodedLength := add(82, clientDataFields.length)
+
+            // Set `clientDataJson` return parameter to point to the start of the free memory.
+            // This is where the encoded JSON will be stored.
+            clientDataJson := mload(0x40)
+
+            // Write the constant bytes of the encoded client data JSON string as per the JSON
+            // serialization specification. Note that we write the data backwards, this is to avoid
+            // overwriting previously written data with zeros. Offsets are computed to account for
+            // both the leading 32-byte length and leading zeros from the constants.
+            mstore(add(clientDataJson, encodedLength), 0x7d) // }
+            mstore(add(clientDataJson, 81), 0x222c) // ",
+            mstore(add(clientDataJson, 36), 0x2c226368616c6c656e6765223a22) // ,"challenge":"
+            mstore(add(clientDataJson, 22), 0x7b2274797065223a22776562617574686e2e67657422) // {"type":"webauthn.get"
+            mstore(clientDataJson, encodedLength)
+
+            // Copy the client data fields from calldata to their reserved space in memory.
+            calldatacopy(add(clientDataJson, 113), clientDataFields.offset, clientDataFields.length)
+
+            // Store the base-64 URL character lookup table into the scratch and free memory pointer
+            // space in memory [^1]. The table is split into two 32-byte parts and stored in memory
+            // from address 0x1f to 0x5e. Note that the offset is chosen in such a way that the
+            // least significant byte of `mload(x)` is the base-64 ASCII character for the 6-bit
+            // value `x`. We will write the free memory pointer at address `0x40` before leaving the
+            // assembly block accounting for the allocation of `clientDataJson`.
+            //
+            // - [^1](https://docs.soliditylang.org/en/stable/internals/layout_in_memory.html).
+            mstore(0x1f, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef")
+            mstore(0x3f, "ghijklmnopqrstuvwxyz0123456789-_")
+
+            // Initialize a pointer for writing the base-64 encoded challenge.
+            let ptr := add(clientDataJson, 68)
+
+            // Base-64 encode the challenge to its reserved space in memory.
+            //
+            // To minimize stack and jump operations, we partially unroll the loop. With full 6
+            // iterations of the loop, we need to encode seven 6-bit groups and one 4-bit group. In
+            // total, it encodes 6 iterations * 7 groups * 6 bits = 252 bits. The remaining 4-bit
+            // group is encoded after the loop. `i` is initialized to 250, which is the number of
+            // bits by which we need to shift the data to get the first 6-bit group, and then we
+            // subtract 6 to get the next 6-bit group.
+            //
+            // We want to exit when all full 6 bits groups are encoded. After 6 iterations, `i` will
+            // be -2 and the **signed** comparison with 0 will break the loop.
+            for {
+                let i := 250
+            } sgt(i, 0) {
+                // Advance the pointer by the number of bytes written (7 bytes in this case).
+                ptr := add(ptr, 7)
+                // Move `i` by 42 = 6 bits * 7 (groups processed in each iteration).
+                i := sub(i, 42)
+            } {
+                // Encode 6-bit groups into characters by looking them up in the character table.
+                // 0x3f is a mask to get the last 6 bits so that we can index directly to the
+                // base-64 lookup table.
+                mstore8(ptr, mload(and(shr(i, challenge), 0x3f)))
+                mstore8(add(ptr, 1), mload(and(shr(sub(i, 6), challenge), 0x3f)))
+                mstore8(add(ptr, 2), mload(and(shr(sub(i, 12), challenge), 0x3f)))
+                mstore8(add(ptr, 3), mload(and(shr(sub(i, 18), challenge), 0x3f)))
+                mstore8(add(ptr, 4), mload(and(shr(sub(i, 24), challenge), 0x3f)))
+                mstore8(add(ptr, 5), mload(and(shr(sub(i, 30), challenge), 0x3f)))
+                mstore8(add(ptr, 6), mload(and(shr(sub(i, 36), challenge), 0x3f)))
+            }
+
+            // Encode the final 4-bit group, where 0x0f is a mask to get the last 4 bits.
+            mstore8(ptr, mload(shl(2, and(challenge, 0x0f))))
+
+            // Update the free memory pointer to point to the end of the encoded string.
+            // Store the length of the encoded string at the beginning of `result`.
+            mstore(0x40, and(add(clientDataJson, add(encodedLength, 0x3f)), not(0x1f)))
+        }
+    }
+
+    /**
      * @notice Generate a signing message based on the authenticator data, challenge, and client
      * data fields.
      * @dev The signing message are the 32-bytes that are actually signed by the P-256 private key
@@ -102,19 +196,8 @@ library WebAuthn {
         bytes calldata authenticatorData,
         string calldata clientDataFields
     ) internal pure returns (bytes32 message) {
-        string memory encodedChallenge = Base64Url.encode(challenge);
-
-        /* solhint-disable quotes */
-        bytes memory clientDataJson = abi.encodePacked(
-            '{"type":"webauthn.get","challenge":"',
-            encodedChallenge,
-            '",',
-            clientDataFields,
-            "}"
-        );
-        /* solhint-enable quotes */
-
-        message = sha256(abi.encodePacked(authenticatorData, sha256(clientDataJson)));
+        string memory clientDataJson = encodeClientDataJson(challenge, clientDataFields);
+        message = sha256(abi.encodePacked(authenticatorData, sha256(bytes(clientDataJson))));
     }
 
     /**
