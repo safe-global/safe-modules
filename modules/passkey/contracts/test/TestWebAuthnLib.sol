@@ -12,12 +12,12 @@ contract TestWebAuthnLib {
         clientDataJson = WebAuthn.encodeClientDataJson(challenge, clientDataFields);
     }
 
-    function signingMessage(
+    function encodeSigningMessage(
         bytes32 challenge,
         bytes calldata authenticatorData,
         string calldata clientDataFields
-    ) external view returns (bytes32 message) {
-        message = WebAuthn.signingMessage(challenge, authenticatorData, clientDataFields);
+    ) external view returns (bytes memory message) {
+        message = WebAuthn.encodeSigningMessage(challenge, authenticatorData, clientDataFields);
     }
 
     function verifySignatureCastSig(
