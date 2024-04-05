@@ -3,7 +3,7 @@ import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { TestPaymaster } from '../../typechain-types'
+import { TestPaymaster, VerifyingPaymaster } from '../../typechain-types'
 
 /**
  * User story: Execute transaction with Paymaster
@@ -23,7 +23,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
         await deployments.run()
 
-      const [relayer] = await ethers.getSigners()
+      const [relayer, verifyingSigner] = await ethers.getSigners()
 
       const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
       const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
@@ -34,12 +34,12 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
 
       // Deploy a Paymaster contract
-      const paymaster = (await (await ethers.getContractFactory('TestPaymaster')).deploy()) as unknown as TestPaymaster
-      // Add stake and deposit
-      await paymaster.stakeEntryPoint(entryPoint, 1n, { value: ethers.parseEther('10') })
-      await paymaster.depositTo(entryPoint, { value: ethers.parseEther('10') })
 
-      // await user.sendTransaction({ to: safe, value: ethers.parseEther('1') })
+      const paymaster = (await (
+        await ethers.getContractFactory('VerifyingPaymaster')
+      ).deploy(entryPoint, verifyingSigner)) as unknown as VerifyingPaymaster
+      // Add paymaster deposit
+      await paymaster.deposit({ value: ethers.parseEther('10') })
 
       const navigator = {
         credentials: new WebAuthnCredentials(),
@@ -75,6 +75,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         SafeL2,
         credential,
         paymaster,
+        verifyingSigner,
       }
     })
 
@@ -92,6 +93,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         signerFactory,
         verifier,
         paymaster,
+        verifyingSigner,
       } = await setupTests()
 
       // Deploy a signer contract
@@ -125,8 +127,12 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Deploy data required in the initCode of the userOp
       const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, setupData, safeSalt])
 
-      // Concatenated values: paymaster address, paymasterVerificationGasLimit, paymasterPostOpGasLimit
-      const paymasterAndData = ethers.solidityPacked(['address', 'uint128', 'uint128'], [paymaster.target, 600000, 60000])
+      const paymasterVerificationGasLimit = 60000
+      const paymasterPostOpGasLimit = 60000
+      let paymasterAndData = ethers.solidityPacked(
+        ['address', 'uint128', 'uint128'],
+        [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit],
+      )
 
       const safeOp = buildSafeUserOpTransaction(
         safe,
@@ -149,6 +155,20 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         safeOp,
         signature: '0x',
       })
+
+      const paymasterValidUntil = 0
+      const paymasterValidAfter = 0
+      const paymasterHash = await paymaster.getHash(packedUserOp, paymasterValidAfter, paymasterValidUntil)
+      const paymasterSignature = await verifyingSigner.signMessage(ethers.getBytes(paymasterHash))
+      const d = ethers.AbiCoder.defaultAbiCoder().encode(['uint48', 'uint48'], [paymasterValidAfter, paymasterValidUntil])
+      const d1 = ethers.solidityPacked(['bytes', 'bytes'], [d, paymasterSignature])
+
+      paymasterAndData = ethers.solidityPacked(
+        ['address', 'uint128', 'uint128', 'bytes'],
+        [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit, d1],
+      )
+
+      packedUserOp.paymasterAndData = paymasterAndData
 
       // opHash that will be signed using Passkey credentials
       const opHash = await module.getOperationHash(packedUserOp)
@@ -202,7 +222,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
         await deployments.run()
 
-      const [relayer] = await ethers.getSigners()
+      const [relayer, verifyingSigner] = await ethers.getSigners()
 
       const entryPoint = await ethers.getContractAt('IEntryPoint', EntryPoint.address)
       const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
@@ -213,10 +233,11 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
 
       // Deploy a Paymaster contract
-      const paymaster = (await (await ethers.getContractFactory('TestPaymaster')).deploy()) as unknown as TestPaymaster
-      // Add stake and deposit
-      await paymaster.stakeEntryPoint(entryPoint, 1n, { value: ethers.parseEther('10') })
-      await paymaster.depositTo(entryPoint, { value: ethers.parseEther('10') })
+      const paymaster = (await (
+        await ethers.getContractFactory('VerifyingPaymaster')
+      ).deploy(entryPoint, verifyingSigner)) as unknown as VerifyingPaymaster
+      // Add deposit
+      await paymaster.deposit({ value: ethers.parseEther('10') })
 
       // await user.sendTransaction({ to: safe, value: ethers.parseEther('1') })
 
@@ -274,14 +295,19 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         paymaster,
         safeAddress,
         signer,
+        verifyingSigner,
       }
     })
 
     it('should execute a userOp with an existing Safe using Paymaster', async () => {
-      const { safeAddress, signer, relayer, module, entryPoint, navigator, credential, paymaster } = await setupTests()
+      const { safeAddress, signer, relayer, module, entryPoint, navigator, credential, paymaster, verifyingSigner } = await setupTests()
 
-      // Concatenated values: paymaster address, paymasterVerificationGasLimit, paymasterPostOpGasLimit
-      const paymasterAndData = ethers.solidityPacked(['address', 'uint128', 'uint128'], [paymaster.target, 600000, 60000])
+      const paymasterVerificationGasLimit = 60000
+      const paymasterPostOpGasLimit = 60000
+      let paymasterAndData = ethers.solidityPacked(
+        ['address', 'uint128', 'uint128'],
+        [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit],
+      )
 
       const safeOp = buildSafeUserOpTransaction(
         safeAddress,
@@ -301,6 +327,22 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         safeOp,
         signature: '0x',
       })
+
+      const paymasterValidUntil = 0
+      const paymasterValidAfter = 0
+      const paymasterHash = await paymaster.getHash(packedUserOp, paymasterValidAfter, paymasterValidUntil)
+      const paymasterSignature = await verifyingSigner.signMessage(ethers.getBytes(paymasterHash))
+      const paymasterData = ethers.solidityPacked(
+        ['bytes', 'bytes'],
+        [ethers.AbiCoder.defaultAbiCoder().encode(['uint48', 'uint48'], [paymasterValidAfter, paymasterValidUntil]), paymasterSignature],
+      )
+
+      paymasterAndData = ethers.solidityPacked(
+        ['address', 'uint128', 'uint128', 'bytes'],
+        [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit, paymasterData],
+      )
+
+      packedUserOp.paymasterAndData = paymasterAndData
 
       // opHash that will be signed using Passkey credentials
       const opHash = await module.getOperationHash(packedUserOp)
