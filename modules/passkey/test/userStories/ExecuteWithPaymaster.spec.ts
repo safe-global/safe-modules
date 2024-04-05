@@ -3,19 +3,25 @@ import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { TestPaymaster, VerifyingPaymaster } from '../../typechain-types'
+import { VerifyingPaymaster } from '../../typechain-types'
 
 /**
  * User story: Execute transaction with Paymaster
  * 1. The test case deploys a Safe with a passkey signer as an Owner. The transaction is sponsored by a Paymaster.
  * 2. The test case executes a userOp with an existing Safe using a Paymaster.
+ *
+ * The paymaster is VerifyingPaymaster contract imported from @account-abstraction/contracts/samples/VerifyingPaymaster.sol.
+ * This contract has a verifyingSigner address which provides approval for sponsoring userOp gas via ECDSA signatures.
+ *
  */
 describe('Execute userOps with Paymaster: [@userstory]', () => {
   /**
    * The flow can be summarized as follows:
    * Step 1: Setup the contracts.
-   * Step 2: Create a userOp, sign it with Passkey signer.
-   * Step 3: Execute the userOp that deploys a Safe with passkey signer as owner using Paymaster
+   * Step 2: Create a userOp with initCode that would deploy a Safe account.
+   * Step 3: Get signature from verifyingSigner account and create paymaster data.
+   * Step 4: Sign userOp with Passkey signer.
+   * Step 5: Execute the userOp that deploys a Safe with passkey signer as owner using Paymaster.
    */
   describe('Execute a userOp that deploys a Safe using Paymaster', () => {
     // Create a fixture to setup the contracts and signer(s)
@@ -38,6 +44,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const paymaster = (await (
         await ethers.getContractFactory('VerifyingPaymaster')
       ).deploy(entryPoint, verifyingSigner)) as unknown as VerifyingPaymaster
+
       // Add paymaster deposit
       await paymaster.deposit({ value: ethers.parseEther('10') })
 
@@ -103,7 +110,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Get signer address
       const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, await verifier.getAddress())
 
-      // Step 2: Create a userOp, sign it with Passkey signer.
+      // Step 2: Create a userOp with initCode that would deploy a Safe account.
 
       // The initializer data to enable the Safe4337Module as a module on a Safe
       const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
@@ -127,6 +134,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Deploy data required in the initCode of the userOp
       const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, setupData, safeSalt])
 
+      // Step 3: Get signature from verifyingSigner account and create paymaster data.
       const paymasterVerificationGasLimit = 60000
       const paymasterPostOpGasLimit = 60000
       let paymasterAndData = ethers.solidityPacked(
@@ -160,16 +168,19 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const paymasterValidAfter = 0
       const paymasterHash = await paymaster.getHash(packedUserOp, paymasterValidAfter, paymasterValidUntil)
       const paymasterSignature = await verifyingSigner.signMessage(ethers.getBytes(paymasterHash))
-      const d = ethers.AbiCoder.defaultAbiCoder().encode(['uint48', 'uint48'], [paymasterValidAfter, paymasterValidUntil])
-      const d1 = ethers.solidityPacked(['bytes', 'bytes'], [d, paymasterSignature])
+      const paymasterData = ethers.solidityPacked(
+        ['bytes', 'bytes'],
+        [ethers.AbiCoder.defaultAbiCoder().encode(['uint48', 'uint48'], [paymasterValidAfter, paymasterValidUntil]), paymasterSignature],
+      )
 
       paymasterAndData = ethers.solidityPacked(
         ['address', 'uint128', 'uint128', 'bytes'],
-        [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit, d1],
+        [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit, paymasterData],
       )
 
       packedUserOp.paymasterAndData = paymasterAndData
 
+      // Step 4: Sign userOp with Passkey signer.
       // opHash that will be signed using Passkey credentials
       const opHash = await module.getOperationHash(packedUserOp)
 
@@ -185,7 +196,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Build the contract signature that a Safe will forward to the signer contract
       const signature = buildSignatureBytes([
         {
-          signer: signer as string,
+          signer: signer,
           data: encodeWebAuthnSignature(assertion.response),
           dynamic: true,
         },
@@ -197,7 +208,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Check if Safe is not already created
       expect(await ethers.provider.getCode(safe)).to.equal('0x')
 
-      // Step 3: Execute the userOp that deploys a safe with passkey signer as owner using Paymaster
+      // Step 5: Execute the userOp that deploys a Safe with passkey signer as owner using Paymaster.
       await entryPoint.handleOps([packedUserOp], relayer.address)
 
       // Check if Safe is created and uses the expected Singleton
@@ -213,8 +224,10 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
   /**
    * The flow can be summarized as follows:
    * Step 1: Setup the contracts.
-   * Step 2: Create a userOp, sign it with Passkey signer.
-   * Step 3: Execute the userOp that with an existing Safe with passkey signer as owner using Paymaster
+   * Step 2: Create a userOp with callData that transfer 0.2 ethers to address(0).
+   * Step 3: Get signature from verifyingSigner account and create paymaster data.
+   * Step 4: Sign userOp with Passkey signer.
+   * Step 5: Execute the userOp that with an existing Safe with passkey signer as owner using Paymaster.
    */
   describe('Execute a userOp with an existing Safe using Paymaster', () => {
     // Create a fixture to setup the contracts and signer(s)
@@ -309,6 +322,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         [paymaster.target, paymasterVerificationGasLimit, paymasterPostOpGasLimit],
       )
 
+      // Step 2: Create a userOp with callData that transfer 0.2 ethers to address(0).
       const safeOp = buildSafeUserOpTransaction(
         safeAddress,
         ethers.ZeroAddress,
@@ -328,6 +342,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         signature: '0x',
       })
 
+      // Step 3: Get signature from verifyingSigner account and create paymaster data.
       const paymasterValidUntil = 0
       const paymasterValidAfter = 0
       const paymasterHash = await paymaster.getHash(packedUserOp, paymasterValidAfter, paymasterValidUntil)
@@ -344,6 +359,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
 
       packedUserOp.paymasterAndData = paymasterAndData
 
+      // Step 4: Sign userOp with Passkey signer.
       // opHash that will be signed using Passkey credentials
       const opHash = await module.getOperationHash(packedUserOp)
 
@@ -359,7 +375,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Build the contract signature that a Safe will forward to the signer contract
       const signature = buildSignatureBytes([
         {
-          signer: signer as string,
+          signer: signer,
           data: encodeWebAuthnSignature(assertion.response),
           dynamic: true,
         },
@@ -371,7 +387,8 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Send 1 ETH to the Safe
       await relayer.sendTransaction({ to: safeAddress, value: ethers.parseEther('1') })
       const balanceBefore = await ethers.provider.getBalance(ethers.ZeroAddress)
-      // Step 3: Execute the userOp that deploys a safe with passkey signer as owner using Paymaster
+
+      // Step 5: Execute the userOp that with an existing Safe with passkey signer as owner using Paymaster
       await entryPoint.handleOps([packedUserOp], relayer.address)
 
       // Check if the address(0) received 0.2 ETH
