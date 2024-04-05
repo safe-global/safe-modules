@@ -10,7 +10,7 @@ import {WebAuthn} from "./libraries/WebAuthn.sol";
  * @dev A contract that represents a WebAuthn signer.
  * @custom:security-contact bounty@safe.global
  */
-contract WebAuthnSigner is SignatureValidator {
+contract SafeWebAuthnSigner is SignatureValidator {
     uint256 public immutable X;
     uint256 public immutable Y;
     IP256Verifier public immutable VERIFIER;
