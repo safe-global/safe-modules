@@ -1,0 +1,75 @@
+{
+  "name": "@safe-global/safe-6900",
+  "version": "0.1.0",
+  "description": "Safe Module for ERC-6900 support",
+  "homepage": "https://github.com/safe-global/safe-modules/tree/main/modules/6900",
+  "license": "GPL-3.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "contracts",
+    "dist",
+    "src",
+    "test",
+    "build"
+  ],
+  "scripts": {
+    "build": "npm run build:sol && npm run build:ts",
+    "build:sol": "rimraf build typechain-types && hardhat compile",
+    "build:ts": "rimraf dist && tsc",
+    "test": "hardhat test --deploy-fixture",
+    "coverage": "hardhat coverage",
+    "codesize": "hardhat codesize",
+    "benchmark": "npm run test benchmark/*.ts",
+    "deploy-all": "hardhat deploy-contracts --network",
+    "deploy": "hardhat deploy --network",
+    "lint": "npm run lint:sol && npm run lint:ts",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "lint:ts": "eslint ./src --fix && eslint ./test --fix",
+    "fmt": "prettier --write ./contracts/**/*.sol",
+    "fmt:check": "prettier --check ./**/*.sol",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/safe-global/safe-modules.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe",
+    "Safe module"
+  ],
+  "author": "@safe-global",
+  "bugs": {
+    "url": "https://github.com/safe-global/safe-modules/issues"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@types/chai": "^4.3.14",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.30",
+    "@types/yargs": "^17.0.32",
+    "cbor": "^9.0.2",
+    "debug": "^4.3.4",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.11.1",
+    "hardhat": "^2.22.2",
+    "hardhat-deploy": "^0.12.2",
+    "husky": "^9.0.11",
+    "solc": "^0.8.25",
+    "solhint": "^4.5.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3",
+    "yargs": "^17.7.2"
+  },
+  "overrides": {
+    "@safe-global/safe-contracts": {
+      "ethers": "^6.11.1"
+    }
+  },
+  "dependencies": {
+    "@safe-global/safe-contracts": "^1.4.1-build.0"
+  }
+}
