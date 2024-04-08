@@ -248,7 +248,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // Deploy a Paymaster contract
       const paymaster = (await (
         await ethers.getContractFactory('VerifyingPaymaster')
-      ).deploy(entryPoint, verifyingSigner)) as unknown as VerifyingPaymaster
+      ).deploy(entryPoint, verifyingSigner))
       // Add deposit in the entrypoint contract so that paymaster can sponsor userOp execution
       await paymaster.deposit({ value: ethers.parseEther('1') })
 
