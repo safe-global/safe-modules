@@ -14,10 +14,10 @@ import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
  * Step 2: Create a userOp, sign it with Passkey signer.
  * Step 3: Execute the userOp that deploys a safe with passkey signer as owner.
  */
-describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
+describe('Create a Safe with Passkey signer as owner: [@userstory]', () => {
   // Create a fixture to setup the contracts and signer(s)
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
       await deployments.run()
 
     const [user] = await ethers.getSigners()
@@ -28,7 +28,7 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-    const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
@@ -148,12 +148,12 @@ describe('Create a Safe with Passkey signer as owner: [@User story]', () => {
     packedUserOp.signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeOp.validAfter, safeOp.validUntil, signature])
 
     // Send 1 ETH to the Safe
-    await user.sendTransaction({ to: safe, value: ethers.parseEther('1') }).then((tx) => tx.wait())
+    await user.sendTransaction({ to: safe, value: ethers.parseEther('1') })
     // Check if Safe is not already created
     expect(await ethers.provider.getCode(safe)).to.equal('0x')
 
     // Step 3: Execute the userOp that deploys a safe with passkey signer as owner.
-    await (await entryPoint.handleOps([packedUserOp], user.address)).wait()
+    await entryPoint.handleOps([packedUserOp], user.address)
 
     // Check if Safe is created and uses the expected Singleton
     const [implementation] = ethers.AbiCoder.defaultAbiCoder().decode(['address'], await ethers.provider.getStorage(safe, 0))

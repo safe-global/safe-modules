@@ -5,12 +5,19 @@ import {WebAuthn} from "../libraries/WebAuthn.sol";
 import {IP256Verifier} from "../libraries/P256.sol";
 
 contract TestWebAuthnLib {
-    function signingMessage(
+    function encodeClientDataJson(
+        bytes32 challenge,
+        string calldata clientDataFields
+    ) external pure returns (string memory clientDataJson) {
+        clientDataJson = WebAuthn.encodeClientDataJson(challenge, clientDataFields);
+    }
+
+    function encodeSigningMessage(
         bytes32 challenge,
         bytes calldata authenticatorData,
         string calldata clientDataFields
-    ) public pure returns (bytes32 message) {
-        message = WebAuthn.signingMessage(challenge, authenticatorData, clientDataFields);
+    ) external view returns (bytes memory message) {
+        message = WebAuthn.encodeSigningMessage(challenge, authenticatorData, clientDataFields);
     }
 
     function verifySignatureCastSig(
@@ -20,7 +27,7 @@ contract TestWebAuthnLib {
         uint256 x,
         uint256 y,
         IP256Verifier verifier
-    ) public view returns (bool success) {
+    ) external view returns (bool success) {
         success = WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifier);
     }
 
@@ -31,7 +38,7 @@ contract TestWebAuthnLib {
         uint256 x,
         uint256 y,
         IP256Verifier verifier
-    ) public view returns (bool success) {
+    ) external view returns (bool success) {
         success = WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifier);
     }
 }

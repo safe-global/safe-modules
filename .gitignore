@@ -16,3 +16,4 @@ env/
 coverage*
 .certora_internal
 .vscode
+.idea
