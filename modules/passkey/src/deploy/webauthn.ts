@@ -10,6 +10,20 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
     log: true,
     deterministicDeployment: true,
   })
+
+  await deploy('SafeWebAuthnSignerProxyFactory', {
+    from: deployer,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
+
+  await deploy('SafeWebAuthnSignerSingleton', {
+    from: deployer,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
 }
 
 export default deploy
