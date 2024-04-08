@@ -280,7 +280,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       // The initializer data to enable the Safe4337Module as a module on a Safe
       const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
 
-      // Create setup data to deploy a Safe with EOA and passkey signer as owners, threshold 1, Safe4337Module as module and fallback handler
+      // Create setup data to deploy a Safe passkey signer as owner, threshold 1, Safe4337Module as module and fallback handler
       const setupData = singleton.interface.encodeFunctionData('setup', [
         [signer],
         1n,
