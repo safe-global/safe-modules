@@ -7,18 +7,29 @@ import {WebAuthn} from "./libraries/WebAuthn.sol";
 
 /**
  * @title WebAuthn Safe Signature Validator
- * @dev A contract that represents a WebAuthn signer.
+ * @dev A Safe signature validator implementation for a WebAuthn P-256 credential.
  * @custom:security-contact bounty@safe.global
  */
 contract SafeWebAuthnSigner is SignatureValidator {
+    /**
+     * @notice The X coordinate of the P-256 public key of the WebAuthn credential.
+     */
     uint256 public immutable X;
+
+    /**
+     * @notice The Y coordinate of the P-256 public key of the WebAuthn credential.
+     */
     uint256 public immutable Y;
+
+    /**
+     * @notice The P-256 verifier used for ECDSA signature validation.
+     */
     IP256Verifier public immutable VERIFIER;
 
     /**
      * @dev Constructor function.
-     * @param x The X coordinate of the signer's public key.
-     * @param y The Y coordinate of the signer's public key.
+     * @param x The X coordinate of the P-256 public key of the WebAuthn credential.
+     * @param y The Y coordinate of the P-256 public key of the WebAuthn credential.
      * @param verifier The P-256 verifier to use for signature validation. It MUST implement the
      * same interface as the EIP-7212 precompile.
      */

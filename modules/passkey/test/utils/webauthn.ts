@@ -195,7 +195,7 @@ export class WebAuthnCredentials {
 
     // <https://w3c.github.io/webauthn/#dictionary-client-data>
     const clientData = {
-      type: 'webauthn.get',
+      type: 'webauthn.get' as const,
       challenge: base64UrlEncode(publicKey.challenge),
       origin: `https://${publicKey.rpId}`,
     }
@@ -214,15 +214,11 @@ export class WebAuthnCredentials {
     )
 
     // <https://w3c.github.io/webauthn/#sctn-op-get-assertion>
-    // <https://w3c.github.io/webauthn/#fig-signature>
-    const signature = p256.sign(
-      ethers.getBytes(ethers.concat([authenticatorData, ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))])),
-      credential.pk,
-      {
-        lowS: false,
-        prehash: true,
-      },
-    )
+    const message = encodeWebAuthnSigningMessage(clientData, authenticatorData)
+    const signature = p256.sign(message, credential.pk, {
+      lowS: false,
+      prehash: true,
+    })
 
     return {
       id: base64UrlEncode(credential.id),
@@ -251,6 +247,18 @@ function userVerificationFlag(userVerification: UserVerificationRequirement = 'p
 
 function b2ab(buf: Uint8Array): ArrayBuffer {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+}
+
+/**
+ * Returns the message that gets signed by the WebAuthn credentials.
+ *
+ * See <https://w3c.github.io/webauthn/#fig-signature>
+ */
+export function encodeWebAuthnSigningMessage(
+  clientData: { type: 'webauthn.get'; challenge: string; [key: string]: unknown },
+  authenticatorData: BytesLike,
+) {
+  return ethers.getBytes(ethers.concat([authenticatorData, ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))]))
 }
 
 /**
@@ -392,3 +400,18 @@ export const DUMMY_CLIENT_DATA_FIELDS = [
   `"origin":"http://safe.global"`,
   `"padding":"This pads the clientDataJSON so that we can leave room for additional implementation specific fields for a more accurate 'preVerificationGas' estimate."`,
 ].join(',')
+
+/**
+ * Dummy authenticator data. This can be used for gas estimations, as it ensures that the correct
+ * authenticator flags are set.
+ */
+export const DUMMY_AUTHENTICATOR_DATA = ethers.getBytes(
+  ethers.solidityPacked(
+    ['bytes32', 'uint8', 'uint32'],
+    [
+      ethers.toBeHex(ethers.MaxUint256),
+      userVerificationFlag('required'),
+      0xffffffff, // signCount
+    ],
+  ),
+)
