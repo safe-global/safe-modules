@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { buildSafeTransaction } from '../utils/safe'
+import { buildSafeTransaction, buildSafeTransactionData, domainSeparatorTypehash } from '../utils/safe'
 
 /**
  * User story: Passkey Credential Creation for Safe Ownership
@@ -68,10 +68,16 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
     await proxyFactory.createProxyWithNonce(singletonAddress, setupData, 0)
     const safe = await ethers.getContractAt([...SafeL2.abi, ...CompatibilityFallbackHandler.abi], safeAddress)
 
+    const { chainId } = await ethers.provider.getNetwork()
+    const domainSeparator = ethers.keccak256(
+      ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'uint256', 'address'], [domainSeparatorTypehash, chainId, safeAddress]),
+    )
+
     return {
       user,
       safe,
       safeAddress,
+      domainSeparator,
       signer,
       navigator,
       credential,
@@ -79,27 +85,16 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
   })
 
   it('should be possible to execute a transaction signed by passkey', async () => {
-    const { user, safe, safeAddress, signer, navigator, credential } = await setupTests()
+    const { user, safe, safeAddress, domainSeparator, signer, navigator, credential } = await setupTests()
 
-    // Send 1 ETH to the Safe
-    await user.sendTransaction({ to: safe, value: ethers.parseEther('1') })
+    // Send 1 wei to the Safe
+    await user.sendTransaction({ to: safe, value: 1n })
 
     // Define transaction to be signed.
     const nonce = await safe.nonce()
     const randomAddress = ethers.getAddress(ethers.hexlify(ethers.randomBytes(20)))
     const safeTx = buildSafeTransaction({ to: randomAddress, value: 1n, nonce: nonce })
-    const safeTxData = await safe.encodeTransactionData.staticCall(
-      safeTx.to,
-      safeTx.value,
-      safeTx.data,
-      safeTx.operation,
-      safeTx.safeTxGas,
-      safeTx.baseGas,
-      safeTx.gasPrice,
-      safeTx.gasToken,
-      safeTx.refundReceiver,
-      safeTx.nonce,
-    )
+    const safeTxData = buildSafeTransactionData(safeTx, domainSeparator)
     const message = ethers.keccak256(safeTxData) // Safe Tx Hash
 
     // Creating the signature for the `safeMsgHash`.
