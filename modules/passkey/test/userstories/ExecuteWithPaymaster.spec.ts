@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
-import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/src/utils/userOp'
-import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
+import { buildSafeUserOpTransaction, buildPackedUserOperationFromSafeUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp'
+import { buildSignatureBytes } from '@safe-global/safe-4337/dist/src/utils/execution'
 
 /**
  * User story: Execute with Paymaster.
