@@ -26,7 +26,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
   describe('Execute a userOp that deploys a Safe using Paymaster', () => {
     // Create a fixture to setup the contracts and signer(s)
     const setupTests = deployments.createFixture(async ({ deployments }) => {
-      const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
+      const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
         await deployments.run()
 
       const [relayer, verifyingSigner] = await ethers.getSigners()
@@ -37,12 +37,10 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
       const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
       const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-      const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
+      const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
       // Deploy a Paymaster contract
-      const paymaster = (await (
-        await ethers.getContractFactory('VerifyingPaymaster')
-      ).deploy(entryPoint, verifyingSigner))
+      const paymaster = await (await ethers.getContractFactory('VerifyingPaymaster')).deploy(entryPoint, verifyingSigner)
 
       // Add deposit in the entrypoint contract so that paymaster can sponsor userOp execution
       await paymaster.deposit({ value: ethers.parseEther('1') })
@@ -231,7 +229,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
   describe('Execute a userOp with an existing Safe using Paymaster', () => {
     // Create a fixture to setup the contracts and signer(s)
     const setupTests = deployments.createFixture(async ({ deployments }) => {
-      const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, WebAuthnSignerFactory } =
+      const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
         await deployments.run()
 
       const [relayer, verifyingSigner] = await ethers.getSigners()
@@ -242,12 +240,10 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
       const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
       const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-      const signerFactory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
+      const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
       // Deploy a Paymaster contract
-      const paymaster = (await (
-        await ethers.getContractFactory('VerifyingPaymaster')
-      ).deploy(entryPoint, verifyingSigner))
+      const paymaster = await (await ethers.getContractFactory('VerifyingPaymaster')).deploy(entryPoint, verifyingSigner)
       // Add deposit in the entrypoint contract so that paymaster can sponsor userOp execution
       await paymaster.deposit({ value: ethers.parseEther('1') })
 
