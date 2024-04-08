@@ -8,7 +8,7 @@ const SAFE_TX_TYPEHASH = ethers.keccak256(
   ),
 )
 
-export const domainSeparatorTypehash = ethers.keccak256(ethers.toUtf8Bytes('EIP712Domain(uint256 chainId,address verifyingContract)'))
+export const DOMAIN_SEPARATOR_TYPEHASH = ethers.keccak256(ethers.toUtf8Bytes('EIP712Domain(uint256 chainId,address verifyingContract)'))
 
 export const buildSafeTransactionData = (safeTx: SafeTransaction, domainSeparator: Hex): Hex => {
   const safeTxHash = ethers.keccak256(

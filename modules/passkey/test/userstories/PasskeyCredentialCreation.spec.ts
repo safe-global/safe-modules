@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { buildSafeTransaction, buildSafeTransactionData, domainSeparatorTypehash } from '../utils/safe'
+import { buildSafeTransaction, buildSafeTransactionData, DOMAIN_SEPARATOR_TYPEHASH } from '../utils/safe'
 
 /**
  * User story: Passkey Credential Creation for Safe Ownership
@@ -70,7 +70,7 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
 
     const { chainId } = await ethers.provider.getNetwork()
     const domainSeparator = ethers.keccak256(
-      ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'uint256', 'address'], [domainSeparatorTypehash, chainId, safeAddress]),
+      ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'uint256', 'address'], [DOMAIN_SEPARATOR_TYPEHASH, chainId, safeAddress]),
     )
 
     return {
