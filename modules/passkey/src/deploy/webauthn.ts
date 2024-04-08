@@ -4,7 +4,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
   const { deployer } = await getNamedAccounts()
   const { deploy } = deployments
 
-  await deploy('WebAuthnSignerFactory', {
+  await deploy('SafeWebAuthnSignerFactory', {
     from: deployer,
     args: [],
     log: true,

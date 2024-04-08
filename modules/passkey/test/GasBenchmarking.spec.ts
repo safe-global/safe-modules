@@ -4,7 +4,7 @@ import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from './utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
 
-describe('Gas Benchmarking', function () {
+describe('Gas Benchmarking [@bench]', function () {
   const navigator = {
     credentials: new WebAuthnCredentials(),
   }
@@ -25,12 +25,12 @@ describe('Gas Benchmarking', function () {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { DaimoP256Verifier, FCLP256Verifier, WebAuthnSignerFactory } = await deployments.fixture()
+    const { DaimoP256Verifier, FCLP256Verifier, SafeWebAuthnSignerFactory } = await deployments.fixture()
 
     const Benchmarker = await ethers.getContractFactory('Benchmarker')
     const benchmarker = await Benchmarker.deploy()
 
-    const factory = await ethers.getContractAt('WebAuthnSignerFactory', WebAuthnSignerFactory.address)
+    const factory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const DummyP256Verifier = await ethers.getContractFactory('DummyP256Verifier')
     const verifiers = {
@@ -42,7 +42,7 @@ describe('Gas Benchmarking', function () {
     return { benchmarker, factory, verifiers }
   })
 
-  describe('WebAuthnSigner', () => {
+  describe('SafeWebAuthnSigner', () => {
     it(`Benchmark signer deployment cost`, async function () {
       const { benchmarker, factory } = await setupTests()
 
@@ -76,7 +76,7 @@ describe('Gas Benchmarking', function () {
         const verifier = verifiers[key]
 
         await factory.createSigner(x, y, verifier)
-        const signer = await ethers.getContractAt('WebAuthnSigner', await factory.getSigner(x, y, verifier))
+        const signer = await ethers.getContractAt('SafeWebAuthnSigner', await factory.getSigner(x, y, verifier))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(

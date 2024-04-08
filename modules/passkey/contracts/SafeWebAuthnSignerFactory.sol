@@ -5,18 +5,18 @@ import {ICustomECDSASignerFactory} from "./interfaces/ICustomECDSASignerFactory.
 import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
 import {ERC1271} from "./libraries/ERC1271.sol";
 import {WebAuthn} from "./libraries/WebAuthn.sol";
-import {WebAuthnSigner} from "./WebAuthnSigner.sol";
+import {SafeWebAuthnSigner} from "./SafeWebAuthnSigner.sol";
 
 /**
  * @title WebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn signers.
  */
-contract WebAuthnSignerFactory is ICustomECDSASignerFactory {
+contract SafeWebAuthnSignerFactory is ICustomECDSASignerFactory {
     /**
      * @inheritdoc ICustomECDSASignerFactory
      */
     function getSigner(uint256 x, uint256 y, address verifier) public view override returns (address signer) {
-        bytes32 codeHash = keccak256(abi.encodePacked(type(WebAuthnSigner).creationCode, x, y, uint256(uint160(verifier))));
+        bytes32 codeHash = keccak256(abi.encodePacked(type(SafeWebAuthnSigner).creationCode, x, y, uint256(uint160(verifier))));
         signer = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
@@ -27,7 +27,7 @@ contract WebAuthnSignerFactory is ICustomECDSASignerFactory {
         signer = getSigner(x, y, verifier);
 
         if (_hasNoCode(signer)) {
-            WebAuthnSigner created = new WebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
+            SafeWebAuthnSigner created = new SafeWebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
             require(address(created) == signer);
         }
     }

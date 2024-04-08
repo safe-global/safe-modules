@@ -27,6 +27,7 @@
     "build"
   ],
   "scripts": {
+    "bench": "hardhat test --grep @bench",
     "build": "npm run build:sol && npm run build:ts",
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
