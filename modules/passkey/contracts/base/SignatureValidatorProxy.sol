@@ -10,8 +10,8 @@ import {ERC1271} from "../libraries/ERC1271.sol";
 abstract contract SignatureValidatorProxy {
     /**
      * @dev Validates the signature for the given data.
-     * bytes data The signed data bytes.
-     * bytes calldata signature The signature to be validated.
+     * @param data The signed data bytes.
+     * @param signature The signature to be validated.
      * @return magicValue The magic value indicating the validity of the signature.
      */
     function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
@@ -31,8 +31,8 @@ abstract contract SignatureValidatorProxy {
 
     /**
      * @dev Validates the signature for a given data hash.
-     * bytes32 message The signed message.
-     * bytes calldata signature The signature to be validated.
+     * @param message The signed message.
+     * @param signature The signature to be validated.
      * @return magicValue The magic value indicating the validity of the signature.
      */
     function isValidSignature(bytes32 message, bytes calldata signature) external view returns (bytes4 magicValue) {
@@ -54,6 +54,10 @@ abstract contract SignatureValidatorProxy {
     /**
      * @dev Verifies a signature.
      * @param message The signed message.
+     * @param signature The signature to be validated.
+     * @param x The x coordinate of the public key.
+     * @param y The y coordinate of the public key.
+     * @param verifier The address of the verifier contract.
      * @return success Whether the signature is valid.
      */
     function _verifySignature(

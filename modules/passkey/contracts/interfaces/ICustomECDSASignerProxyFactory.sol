@@ -12,6 +12,7 @@ interface ICustomECDSASignerProxyFactory {
      * @notice Gets the unique signer address for the specified data.
      * @dev The unique signer address must be unique for some given data. The signer is not
      * guaranteed to be created yet.
+     * @param singleton The address of the singleton implementation.
      * @param x The x-coordinate of the public key.
      * @param y The y-coordinate of the public key.
      * @param verifier The address of the verifier.
@@ -23,6 +24,7 @@ interface ICustomECDSASignerProxyFactory {
      * @notice Create a new unique signer for the specified data.
      * @dev The unique signer address must be unique for some given data. This must not revert if
      * the unique owner already exists.
+     * @param singleton The address of the singleton implementation.
      * @param x The x-coordinate of the public key.
      * @param y The y-coordinate of the public key.
      * @param verifier The address of the verifier.
