@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { buildSafeTransaction, buildSafeTransactionData, DOMAIN_SEPARATOR_TYPEHASH } from '../utils/safe'
+import { buildSafeTransaction, buildSafeTransactionData, SafeDomain } from '../utils/safe'
 
 /**
  * User story: Passkey Credential Creation for Safe Ownership
@@ -69,15 +69,13 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
     const safe = await ethers.getContractAt([...SafeL2.abi, ...CompatibilityFallbackHandler.abi], safeAddress)
 
     const { chainId } = await ethers.provider.getNetwork()
-    const domainSeparator = ethers.keccak256(
-      ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'uint256', 'address'], [DOMAIN_SEPARATOR_TYPEHASH, chainId, safeAddress]),
-    )
+    const safeDomain: SafeDomain = { verifyingContract: safeAddress, chainId: chainId }
 
     return {
       user,
       safe,
       safeAddress,
-      domainSeparator,
+      safeDomain,
       signer,
       navigator,
       credential,
@@ -85,7 +83,7 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
   })
 
   it('should be possible to execute a transaction signed by passkey', async () => {
-    const { user, safe, safeAddress, domainSeparator, signer, navigator, credential } = await setupTests()
+    const { user, safe, safeAddress, safeDomain, signer, navigator, credential } = await setupTests()
 
     // Send 1 wei to the Safe
     await user.sendTransaction({ to: safe, value: 1n })
@@ -94,7 +92,7 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
     const nonce = await safe.nonce()
     const randomAddress = ethers.getAddress(ethers.hexlify(ethers.randomBytes(20)))
     const safeTx = buildSafeTransaction({ to: randomAddress, value: 1n, nonce: nonce })
-    const safeTxData = buildSafeTransactionData(safeTx, domainSeparator)
+    const safeTxData = buildSafeTransactionData(safeDomain, safeTx)
     const message = ethers.keccak256(safeTxData) // Safe Tx Hash
 
     // Creating the signature for the `safeMsgHash`.
