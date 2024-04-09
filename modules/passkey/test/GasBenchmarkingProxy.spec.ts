@@ -43,7 +43,7 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
     return { benchmarker, proxyFactory, verifiers, singleton }
   })
 
-  describe('SafeWebAuthnSigner', () => {
+  describe('SafeWebAuthnSignerProxy', () => {
     it(`Benchmark signer deployment cost`, async function () {
       const { benchmarker, proxyFactory, singleton } = await setupTests()
 
