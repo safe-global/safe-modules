@@ -48,13 +48,17 @@ describe('SafeWebAuthnSignerFactory', () => {
   })
 
   describe('createSigner', function () {
-    it('Should create a signer and return its address', async () => {
+    it('Should create a signer and return its deterministic address', async () => {
       const { factory, mockVerifier } = await setupTests()
 
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
       const signer = await factory.createSigner.staticCall(x, y, mockVerifier)
+
+      const SafeWebAuthnSigner = await ethers.getContractFactory('SafeWebAuthnSigner')
+      const { data: initCode } = await SafeWebAuthnSigner.getDeployTransaction(x, y, mockVerifier)
+      expect(signer).to.equal(ethers.getCreate2Address(await factory.getAddress(), ethers.ZeroHash, ethers.keccak256(initCode)))
 
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.equal(0)
 
