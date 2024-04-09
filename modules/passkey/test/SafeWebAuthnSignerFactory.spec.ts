@@ -1,5 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
+
+import * as ERC1271 from './utils/erc1271'
 import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, encodeWebAuthnSigningMessage, getSignatureBytes } from './utils/webauthn'
 
 describe('SafeWebAuthnSignerFactory', () => {
@@ -113,7 +115,7 @@ describe('SafeWebAuthnSignerFactory', () => {
         true,
       )
 
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.equal('0x1626ba7e')
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.equal(ERC1271.MAGIC_VALUE)
     })
 
     it('Should return false when the verifier does not return true', async () => {
@@ -147,7 +149,7 @@ describe('SafeWebAuthnSignerFactory', () => {
         '0xfe',
       )
 
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.not.equal('0x1626ba7e')
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.not.equal(ERC1271.MAGIC_VALUE)
     })
 
     it('Should return false on non-matching authenticator flags', async () => {
@@ -176,7 +178,7 @@ describe('SafeWebAuthnSignerFactory', () => {
       })
 
       await mockVerifier.givenAnyReturnBool(true)
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.not.equal('0x1626ba7e')
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.not.equal(ERC1271.MAGIC_VALUE)
     })
   })
 })
