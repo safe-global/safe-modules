@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { BigNumberish, BytesLike } from 'ethers'
 import { deployments, ethers } from 'hardhat'
 
-import { Account } from '../utils/p256'
+import { Account } from '../../src/utils/p256'
 
 describe('FCLP256Verifier', function () {
   const setupTests = deployments.createFixture(async ({ deployments }) => {

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
-import { Account } from '../utils/p256'
+import { Account } from '../../src/utils/p256'
 
 describe('P256', function () {
   const setupTests = deployments.createFixture(async ({ deployments }) => {

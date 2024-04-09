@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, encodeWebAuthnSigningMessage, getSignatureBytes } from './utils/webauthn'
+import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, encodeWebAuthnSigningMessage, getSignatureBytes } from '../src/utils/webauthn'
 
 describe('SafeWebAuthnSigner', () => {
   const setupTests = deployments.createFixture(async () => {
