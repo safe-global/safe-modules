@@ -1,6 +1,5 @@
-import { Hex } from '@noble/curves/abstract/utils'
+import { AddressLike, BytesLike } from 'ethers'
 import { ethers } from 'hardhat'
-import { Address } from 'hardhat-deploy/types'
 
 const SAFE_TX_TYPEHASH = ethers.keccak256(
   ethers.toUtf8Bytes(
@@ -33,9 +32,9 @@ export const buildSafeTransactionData = (safeTx: SafeTransaction, domainSeparato
 }
 
 export interface MetaTransaction {
-  to: Address
+  to: AddressLike
   value: bigint
-  data: Hex
+  data: BytesLike
   operation: number
 }
 
@@ -43,21 +42,21 @@ export interface SafeTransaction extends MetaTransaction {
   safeTxGas: bigint
   baseGas: bigint
   gasPrice: bigint
-  gasToken: Address
-  refundReceiver: Address
+  gasToken: AddressLike
+  refundReceiver: AddressLike
   nonce: bigint
 }
 
 export const buildSafeTransaction = (template: {
-  to: Address
+  to: AddressLike
   value?: bigint
-  data?: Hex
+  data?: BytesLike
   operation?: number
   safeTxGas?: bigint
   baseGas?: bigint
   gasPrice?: bigint
-  gasToken?: Address
-  refundReceiver?: Address
+  gasToken?: AddressLike
+  refundReceiver?: AddressLike
   nonce: bigint
 }): SafeTransaction => {
   return {
