@@ -10,7 +10,7 @@ contract SafeWebAuthnSignerProxy {
     uint256 internal immutable X;
     uint256 internal immutable Y;
     IP256Verifier internal immutable VERIFIER;
-    address internal singleton;
+    address internal immutable singleton;
     constructor(address implementation, uint256 x, uint256 y, address verifier) {
         singleton = implementation;
         X = x;
@@ -22,15 +22,10 @@ contract SafeWebAuthnSignerProxy {
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
         bytes memory data = abi.encodePacked(msg.data, X, Y, VERIFIER);
+        address _singleton = singleton;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            let _singleton := and(sload(0), 0xffffffffffffffffffffffffffffffffffffffff)
-            // 0xa619486e == keccak("masterCopy()"). The value is right padded to 32-bytes with 0s
-            if eq(calldataload(0), 0xa619486e00000000000000000000000000000000000000000000000000000000) {
-                mstore(0, _singleton)
-                return(0, 0x20)
-            }
             let dataSize := mload(data)
             let dataLocation := add(data, 0x20)
 
