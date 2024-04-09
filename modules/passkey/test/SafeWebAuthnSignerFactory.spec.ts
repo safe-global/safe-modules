@@ -29,7 +29,7 @@ describe('SafeWebAuthnSignerFactory', () => {
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.not.equal(0)
     })
 
-    it('Should return the address that a signer will be created on', async () => {
+    it('Should return different signer for different inputs', async () => {
       const { factory, mockVerifier } = await setupTests()
 
       const x = ethers.id('publicKey.x')
