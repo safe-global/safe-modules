@@ -1,7 +1,9 @@
+import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
+
+import * as ERC1271 from '../utils/erc1271'
 import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
-import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 
 /**
  * User story: Off-chain Passkey Signature Verification
@@ -109,6 +111,6 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
       },
     ])
 
-    expect(await safe['isValidSignature(bytes32,bytes)'](message, signature)).to.eq('0x1626ba7e')
+    expect(await safe['isValidSignature(bytes32,bytes)'](message, signature)).to.eq(ERC1271.MAGIC_VALUE)
   })
 })

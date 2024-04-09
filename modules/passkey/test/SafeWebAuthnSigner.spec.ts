@@ -1,5 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
+
+import * as ERC1271 from './utils/erc1271'
 import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, encodeWebAuthnSigningMessage, getSignatureBytes } from './utils/webauthn'
 
 describe('SafeWebAuthnSigner', () => {
@@ -55,8 +57,8 @@ describe('SafeWebAuthnSigner', () => {
         true,
       )
 
-      expect(await signer['isValidSignature(bytes32,bytes)'](dataHash, signature)).to.equal('0x1626ba7e')
-      expect(await signer['isValidSignature(bytes,bytes)'](data, signature)).to.equal('0x20c13b0b')
+      expect(await signer['isValidSignature(bytes32,bytes)'](dataHash, signature)).to.equal(ERC1271.MAGIC_VALUE)
+      expect(await signer['isValidSignature(bytes,bytes)'](data, signature)).to.equal(ERC1271.LEGACY_MAGIC_VALUE)
     })
 
     it('Should return false when the verifier does not return true', async () => {
@@ -90,8 +92,8 @@ describe('SafeWebAuthnSigner', () => {
         '0xfe',
       )
 
-      expect(await signer['isValidSignature(bytes32,bytes)'](dataHash, signature)).to.not.equal('0x1626ba7e')
-      expect(await signer['isValidSignature(bytes,bytes)'](data, signature)).to.not.equal('0x20c13b0b')
+      expect(await signer['isValidSignature(bytes32,bytes)'](dataHash, signature)).to.not.equal(ERC1271.MAGIC_VALUE)
+      expect(await signer['isValidSignature(bytes,bytes)'](data, signature)).to.not.equal(ERC1271.LEGACY_MAGIC_VALUE)
     })
 
     it('Should return false on non-matching authenticator flags', async () => {
@@ -120,8 +122,8 @@ describe('SafeWebAuthnSigner', () => {
       })
 
       await mockVerifier.givenAnyReturnBool(true)
-      expect(await signer['isValidSignature(bytes32,bytes)'](dataHash, signature)).to.not.equal('0x1626ba7e')
-      expect(await signer['isValidSignature(bytes,bytes)'](data, signature)).to.not.equal('0x20c13b0b')
+      expect(await signer['isValidSignature(bytes32,bytes)'](dataHash, signature)).to.not.equal(ERC1271.MAGIC_VALUE)
+      expect(await signer['isValidSignature(bytes,bytes)'](data, signature)).to.not.equal(ERC1271.LEGACY_MAGIC_VALUE)
     })
   })
 })
