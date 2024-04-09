@@ -10,8 +10,6 @@ import {WebAuthn} from "./libraries/WebAuthn.sol";
  * @custom:security-contact bounty@safe.global
  */
 contract SafeWebAuthnSignerSingleton is SignatureValidatorProxy {
-    address internal singleton;
-
     /**
      * @inheritdoc SignatureValidatorProxy
      */
