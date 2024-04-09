@@ -1,12 +1,3 @@
-/**
- * This module provides a minimal shim to emulate the Web Authentication API implemented in browsers. This allows us to
- * write tests where we create and authenticate WebAuthn credentials that are verified on-chain.
- *
- * This implementation is inspired by software authenticators found in the Awesome WebAuthn list [1].
- *
- * [1]: <https://github.com/herrjemand/awesome-webauthn#software-authenticators>
- */
-
 import { ethers } from 'ethers'
 import type { BigNumberish, BytesLike } from 'ethers'
 import CBOR from 'cbor'
