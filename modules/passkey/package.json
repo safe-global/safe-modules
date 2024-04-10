@@ -63,7 +63,7 @@
     }
   },
   "dependencies": {
-    "cbor": "^9.0.2",
-    "@safe-global/safe-contracts": "^1.4.1-build.0"
+    "@safe-global/safe-contracts": "^1.4.1-build.0",
+    "cbor": "^9.0.2"
   }
 }
