@@ -3,7 +3,7 @@ import { deployments, ethers } from 'hardhat'
 import { WebAuthnCredentials } from '../../test/utils/webauthn'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { buildSafeTransaction, buildSafeTransactionData, SafeDomain } from '../../src/utils/safe'
+import { buildSafeTransaction, buildSafeTransactionData, SafeDomain } from '../utils/safe'
 
 /**
  * User story: Passkey Credential Creation for Safe Ownership
