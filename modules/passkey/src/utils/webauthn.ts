@@ -2,6 +2,11 @@ import { ethers } from 'ethers'
 import type { BigNumberish, BytesLike } from 'ethers'
 import CBOR from 'cbor'
 
+/**
+ * Returns the flag for the user verification requirement.
+ *
+ * See: <https://w3c.github.io/webauthn/#enumdef-userverificationrequirement>
+ */
 export function userVerificationFlag(userVerification: UserVerificationRequirement = 'preferred'): number {
   switch (userVerification) {
     case 'preferred':
