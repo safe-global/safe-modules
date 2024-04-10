@@ -25,7 +25,7 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { DaimoP256Verifier, FCLP256Verifier, SafeWebAuthnSignerProxyFactory, SafeWebAuthnSignerSingleton } = await deployments.fixture()
+    const { DaimoP256Verifier, FCLP256Verifier, SafeWebAuthnSignerProxyFactory } = await deployments.fixture()
 
     const Benchmarker = await ethers.getContractFactory('Benchmarker')
     const benchmarker = await Benchmarker.deploy()
@@ -39,20 +39,19 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
       dummy: await DummyP256Verifier.deploy(),
     } as Record<string, IP256Verifier>
 
-    const singleton = await ethers.getContractAt('SafeWebAuthnSignerSingleton', SafeWebAuthnSignerSingleton.address)
-    return { benchmarker, proxyFactory, verifiers, singleton }
+    return { benchmarker, proxyFactory, verifiers }
   })
 
   describe('SafeWebAuthnSignerProxy', () => {
     it(`Benchmark signer deployment cost`, async function () {
-      const { benchmarker, proxyFactory, singleton } = await setupTests()
+      const { benchmarker, proxyFactory } = await setupTests()
 
       const { x, y } = decodePublicKey(credential.response)
       const verifier = `0x${'ee'.repeat(20)}`
 
       const [gas] = await benchmarker.call.staticCall(
         proxyFactory,
-        proxyFactory.interface.encodeFunctionData('createSigner', [singleton.target, x, y, verifier]),
+        proxyFactory.interface.encodeFunctionData('createSigner', [x, y, verifier]),
       )
 
       console.log(`      ⛽ deployment: ${gas}`)
@@ -64,7 +63,7 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
       ['Dummy', 'dummy'],
     ]) {
       it(`Benchmark signer verification cost with ${name} verifier`, async function () {
-        const { benchmarker, verifiers, proxyFactory, singleton } = await setupTests()
+        const { benchmarker, verifiers, proxyFactory } = await setupTests()
 
         const challenge = ethers.id('hello world')
         const assertion = navigator.credentials.get({
@@ -80,8 +79,8 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
         const verifier = verifiers[key]
 
         const isValidSignatureInterface = new ethers.Interface(['function isValidSignature(bytes32,bytes) external view returns (bytes4)'])
-        await proxyFactory.createSigner(singleton, x, y, verifier)
-        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await proxyFactory.getSigner(singleton, x, y, verifier))
+        await proxyFactory.createSigner(x, y, verifier)
+        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await proxyFactory.getSigner(x, y, verifier))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(

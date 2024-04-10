@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {ICustomECDSASignerProxyFactory} from "./interfaces/ICustomECDSASignerProxyFactory.sol";
+import {ICustomECDSASignerFactory} from "./interfaces/ICustomECDSASignerFactory.sol";
 import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
 import {ERC1271} from "./libraries/ERC1271.sol";
 import {WebAuthn} from "./libraries/WebAuthn.sol";
@@ -10,31 +10,36 @@ import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
  * @title SafeWebAuthnSignerProxyFactory
  * @dev A factory contract for creating and managing WebAuthn proxy signers.
  */
-contract SafeWebAuthnSignerProxyFactory is ICustomECDSASignerProxyFactory {
+contract SafeWebAuthnSignerProxyFactory is ICustomECDSASignerFactory {
+    address public immutable SINGLETON;
+    constructor(address _singleton) {
+        SINGLETON = _singleton;
+    }
+
     /**
-     * @inheritdoc ICustomECDSASignerProxyFactory
+     * @inheritdoc ICustomECDSASignerFactory
      */
-    function getSigner(address singleton, uint256 x, uint256 y, address verifier) public view override returns (address signer) {
+    function getSigner(uint256 x, uint256 y, address verifier) public view override returns (address signer) {
         bytes32 codeHash = keccak256(
-            abi.encodePacked(type(SafeWebAuthnSignerProxy).creationCode, uint256(uint160(singleton)), x, y, uint256(uint160(verifier)))
+            abi.encodePacked(type(SafeWebAuthnSignerProxy).creationCode, uint256(uint160(SINGLETON)), x, y, uint256(uint160(verifier)))
         );
         signer = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
 
     /**
-     * @inheritdoc ICustomECDSASignerProxyFactory
+     * @inheritdoc ICustomECDSASignerFactory
      */
-    function createSigner(address singleton, uint256 x, uint256 y, address verifier) external returns (address signer) {
-        signer = getSigner(singleton, x, y, verifier);
+    function createSigner(uint256 x, uint256 y, address verifier) external returns (address signer) {
+        signer = getSigner(x, y, verifier);
 
         if (_hasNoCode(signer)) {
-            SafeWebAuthnSignerProxy created = new SafeWebAuthnSignerProxy{salt: bytes32(0)}(singleton, x, y, verifier);
+            SafeWebAuthnSignerProxy created = new SafeWebAuthnSignerProxy{salt: bytes32(0)}(SINGLETON, x, y, verifier);
             require(address(created) == signer);
         }
     }
 
     /**
-     * @inheritdoc ICustomECDSASignerProxyFactory
+     * @inheritdoc ICustomECDSASignerFactory
      */
     function isValidSignatureForSigner(
         bytes32 message,
