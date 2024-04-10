@@ -162,7 +162,11 @@ export const DUMMY_CLIENT_DATA_FIELDS = [
  * Dummy authenticator data. This can be used for gas estimations, as it ensures that the correct
  * authenticator flags are set.
  */
-export const DUMMY_AUTHENTICATOR_DATA = fromHexString(
-  '0x' + MaxUint256.toString(16) + '0' + userVerificationFlag('required') + 'ffffffff',
-  // `0x` for Hex, added a `0` for userVerification as it returns `number` and removed the `0x` from the sign count.
-)
+export const DUMMY_AUTHENTICATOR_DATA = new Uint8Array(37)
+// Authenticator data is the concatenation of:
+// - 32 byte SHA-256 hash of the relying party ID
+// - 1 byte for the user verification flag
+// - 4 bytes for the signature count
+// We fill it all with `0xfe` and set the appropriate user verification flag.
+DUMMY_AUTHENTICATOR_DATA.fill(0xfe)
+DUMMY_AUTHENTICATOR_DATA[32] = userVerificationFlag('required')
