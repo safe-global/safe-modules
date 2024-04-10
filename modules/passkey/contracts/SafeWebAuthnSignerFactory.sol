@@ -28,7 +28,7 @@ contract SafeWebAuthnSignerFactory is ICustomECDSASignerFactory {
 
         if (_hasNoCode(signer)) {
             SafeWebAuthnSigner created = new SafeWebAuthnSigner{salt: bytes32(0)}(x, y, verifier);
-            require(address(created) == signer);
+            assert(address(created) == signer);
         }
     }
 
