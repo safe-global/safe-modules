@@ -47,3 +47,15 @@ jobs:
       - run: |
           npm ci
           npm run test:4337 -w modules/passkey
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: |
+          npm ci
+          npm run bench -w modules/passkey
