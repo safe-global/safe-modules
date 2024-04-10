@@ -17,7 +17,6 @@ function b2ab(buf: Uint8Array): ArrayBuffer {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }
 
-
 /**
  * Returns the message that gets signed by the WebAuthn credentials.
  *

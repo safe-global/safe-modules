@@ -52,7 +52,6 @@
     "@safe-global/safe-4337": "^0.3.0",
     "@safe-global/safe-4337-local-bundler": "^0.0.0",
     "@simplewebauthn/server": "^9.0.3",
-    "cbor": "^9.0.2",
     "dotenv": "^16.4.5",
     "hardhat": "^2.22.2",
     "hardhat-deploy": "^0.12.2",
@@ -64,6 +63,7 @@
     }
   },
   "dependencies": {
+    "cbor": "^9.0.2",
     "@safe-global/safe-contracts": "^1.4.1-build.0"
   }
 }
