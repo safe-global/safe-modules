@@ -1,4 +1,9 @@
+// 11155111 = Sepolia testnet chain id
 const APP_CHAIN_ID = 11155111
+
+// Sep testnet shortname
+// https://eips.ethereum.org/EIPS/eip-3770
+const APP_CHAIN_SHORTNAME = 'sep'
 
 /*
   Some of the contracts used in the PoC app are still experimental, and not included in
@@ -34,4 +39,5 @@ export {
   XANDER_BLAZE_NFT_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
+  APP_CHAIN_SHORTNAME,
 }

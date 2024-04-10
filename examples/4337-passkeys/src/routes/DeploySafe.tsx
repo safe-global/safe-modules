@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { ethers } from 'ethers'
-import { encodeSafeModuleSetupCall } from '../logic/safe'
+import { LoaderFunction, Navigate, redirect, useLoaderData, useOutletContext } from 'react-router-dom'
+import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress } from '../logic/safe'
 import type { SafeInitializer } from '../logic/safe'
 import {
   SAFE_4337_MODULE_ADDRESS,
@@ -9,8 +9,9 @@ import {
   SAFE_SINGLETON_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
+  APP_CHAIN_ID,
 } from '../config'
-import { PasskeyLocalStorageFormat } from '../logic/passkeys'
+import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
   UnsignedPackedUserOperation,
   getRequiredPrefund,
@@ -20,12 +21,42 @@ import {
 } from '../logic/userOp'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation'
 import { RequestStatus } from '../utils'
-import { PrefundCard } from './OpPrefundCard'
+import { PrefundCard } from '../components/OpPrefundCard'
 import { useFeeData } from '../hooks/useFeeData'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
+import { getSafeRoute, HOME } from './constants.ts'
+import { OutletContext } from '../types/Outlet.ts'
 
-function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; provider: ethers.Eip1193Provider }) {
+const loader: LoaderFunction = async () => {
+  const passkey = getPasskeyFromLocalStorage()
+
+  if (!passkey) {
+    return redirect(HOME)
+  }
+
+  const initializer: SafeInitializer = {
+    singleton: SAFE_SINGLETON_ADDRESS,
+    fallbackHandler: SAFE_4337_MODULE_ADDRESS,
+    signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
+    signerX: passkey.pubkeyCoordinates.x,
+    signerY: passkey.pubkeyCoordinates.y,
+    signerVerifier: P256_VERIFIER_ADDRESS,
+    setupTo: SAFE_MODULE_SETUP_ADDRESS,
+    setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
+  }
+  const initHash = getInitHash(initializer, APP_CHAIN_ID)
+  const launchpadInitializer = getLaunchpadInitializer(initHash)
+  const safeAddress = getSafeAddress(launchpadInitializer)
+
+  return { passkey, safeAddress }
+}
+
+function DeploySafe() {
+  const { passkey, safeAddress } = useLoaderData() as { passkey: PasskeyLocalStorageFormat; safeAddress: string }
+  const { walletProvider } = useOutletContext<OutletContext>()
+  const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
+
   const initializer: SafeInitializer = useMemo(
     () => ({
       singleton: SAFE_SINGLETON_ADDRESS,
@@ -45,7 +76,7 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
     [initializer],
   )
 
-  const [feeData, feeDataStatus] = useFeeData(provider)
+  const [feeData, feeDataStatus] = useFeeData(walletProvider)
   const { userOpGasLimitEstimation, status: estimationStatus } = useUserOpGasLimitEstimation(unsignedUserOperation)
   const gasParametersReady =
     feeDataStatus === RequestStatus.SUCCESS &&
@@ -54,8 +85,7 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
     feeData?.maxFeePerGas != null &&
     feeData?.maxPriorityFeePerGas != null
 
-  const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(provider, unsignedUserOperation.sender)
-  const [safeCode, safeCodeStatus] = useCodeAtAddress(provider, unsignedUserOperation.sender)
+  const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(walletProvider, unsignedUserOperation.sender)
   const [userOpHash, setUserOpHash] = useState<string>()
 
   const deployed = safeCodeStatus === RequestStatus.SUCCESS && safeCode !== '0x'
@@ -84,21 +114,19 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
     setUserOpHash(bundlerUserOpHash)
   }
 
+  if (deployed) {
+    return <Navigate to={getSafeRoute(safeAddress)} />
+  }
+
   return (
     <div className="card">
-      <p>Counterfactual Safe Address: {unsignedUserOperation.sender}</p>
+      <p>Safe Address: {unsignedUserOperation.sender}</p>
 
       {userOpHash && (
         <p>
           Your Safe is being deployed. Track the user operation on{' '}
-          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=sepolia`}>jiffyscan</a>
-        </p>
-      )}
-
-      {deployed && (
-        <p>
-          Your Safe has been deployed. More info on{' '}
-          <a href={`https://jiffyscan.xyz/account/${unsignedUserOperation.sender}?network=sepolia`}>jiffyscan</a>
+          <a href={`https://jiffyscan.xyz/userOpHash/${userOpHash}?network=sepolia`}>jiffyscan</a>. Once deployed, the page will
+          automatically redirect to the Safe dashboard.⏳
         </p>
       )}
 
@@ -107,7 +135,7 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
           {gasParametersLoading && <p>Estimating gas parameters...</p>}
           {gasParametersError && <p>Failed to estimate gas limit</p>}
           {gasParametersReady && (
-            <PrefundCard provider={provider} safeAddress={unsignedUserOperation.sender} requiredPrefund={requiredPrefund} />
+            <PrefundCard provider={walletProvider} safeAddress={unsignedUserOperation.sender} requiredPrefund={requiredPrefund} />
           )}
         </>
       ) : null}
@@ -117,4 +145,4 @@ function SafeCard({ passkey, provider }: { passkey: PasskeyLocalStorageFormat; p
   )
 }
 
-export { SafeCard }
+export { DeploySafe, loader }

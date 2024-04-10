@@ -19,7 +19,7 @@ const metadata = {
   icons: ['https://app.safe.global/favicons/favicon.ico'],
 }
 
-createWeb3Modal({
+const web3modal = createWeb3Modal({
   ethersConfig: defaultConfig({ metadata }),
   chains: [sepolia],
   projectId,
@@ -65,4 +65,4 @@ function getJsonRpcProviderFromEip1193Provider(provider: ethers.Eip1193Provider)
   return new ethers.BrowserProvider(provider)
 }
 
-export { switchToSepolia, getJsonRpcProviderFromEip1193Provider }
+export { switchToSepolia, getJsonRpcProviderFromEip1193Provider, web3modal }

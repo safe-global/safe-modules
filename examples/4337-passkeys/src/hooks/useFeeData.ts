@@ -3,13 +3,25 @@ import { useEffect, useState } from 'react'
 import { getJsonRpcProviderFromEip1193Provider } from '../logic/wallets'
 import { RequestStatus } from '../utils'
 
+type FeeData = Omit<ethers.FeeData, 'toJSON'>
+
+function applyMultiplier(feeData: FeeData, multiplier: bigint = 120n): FeeData {
+  if (!feeData.gasPrice || !feeData.maxFeePerGas || !feeData.maxPriorityFeePerGas) return feeData
+
+  return {
+    gasPrice: (feeData.gasPrice * multiplier) / 100n,
+    maxFeePerGas: (feeData.maxFeePerGas * multiplier) / 100n,
+    maxPriorityFeePerGas: (feeData.maxPriorityFeePerGas * multiplier) / 100n,
+  }
+}
+
 /**
  * Custom hook that fetches fee data using the provided Eip1193Provider.
  * @param provider The Eip1193Provider instance.
  * @returns A tuple containing the fee data and the request status.
  */
-function useFeeData(provider: ethers.Eip1193Provider): [ethers.FeeData | undefined, RequestStatus] {
-  const [feeData, setFeeData] = useState<ethers.FeeData>()
+function useFeeData(provider: ethers.Eip1193Provider): [FeeData | undefined, RequestStatus] {
+  const [feeData, setFeeData] = useState<FeeData>()
   const [status, setStatus] = useState<RequestStatus>(RequestStatus.NOT_REQUESTED)
 
   useEffect(() => {
@@ -19,7 +31,7 @@ function useFeeData(provider: ethers.Eip1193Provider): [ethers.FeeData | undefin
       jsonRpcProvider
         .getFeeData()
         .then((feeData) => {
-          setFeeData(feeData)
+          setFeeData(applyMultiplier(feeData))
           setStatus(RequestStatus.SUCCESS)
         })
         .catch((error) => {
