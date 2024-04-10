@@ -10,9 +10,9 @@ contract SafeWebAuthnSignerProxy {
     uint256 internal immutable X;
     uint256 internal immutable Y;
     IP256Verifier internal immutable VERIFIER;
-    address internal immutable singleton;
+    address internal immutable SINGLETON;
     constructor(address implementation, uint256 x, uint256 y, address verifier) {
-        singleton = implementation;
+        SINGLETON = implementation;
         X = x;
         Y = y;
         VERIFIER = IP256Verifier(verifier);
@@ -22,7 +22,7 @@ contract SafeWebAuthnSignerProxy {
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
         bytes memory data = abi.encodePacked(msg.data, X, Y, VERIFIER);
-        address _singleton = singleton;
+        address _singleton = SINGLETON;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
