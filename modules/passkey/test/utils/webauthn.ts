@@ -10,7 +10,11 @@
 import { p256 } from '@noble/curves/p256'
 import { ethers } from 'ethers'
 import CBOR from 'cbor'
-import { b2ab, base64UrlEncode, encodeWebAuthnSigningMessage, userVerificationFlag } from '../../src/utils/webauthn'
+import { base64UrlEncode, encodeWebAuthnSigningMessage, userVerificationFlag } from '../../src/utils/webauthn'
+
+function b2ab(buf: Uint8Array): ArrayBuffer {
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+}
 
 export interface CredentialCreationOptions {
   publicKey: PublicKeyCredentialCreationOptions
