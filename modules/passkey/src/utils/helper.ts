@@ -1,25 +1,4 @@
 /**
- *  Any type that can be used where a numeric value is needed.
- */
-export type Numeric = number | bigint
-
-/**
- *  Any type that can be used where a big number is needed.
- */
-export type BigNumberish = string | Numeric
-
-/**
- *  A [[HexString]] whose length is even, which ensures it is a valid
- *  representation of binary data.
- */
-export type DataHexString = string
-
-/**
- *  An object that can be used to represent binary data.
- */
-export type BytesLike = DataHexString | Uint8Array
-
-/**
  *  A constant for the maximum value for a ``uint256``.
  *
  *  (**i.e.** ``0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn``)
@@ -33,7 +12,7 @@ export const MaxUint256: bigint = BigInt('0xffffffffffffffffffffffffffffffffffff
  *  %%value%% is a valid [[DataHexString]] of %%length%% (if a //number//)
  *  bytes of data (e.g. ``0x1234`` is 2 bytes).
  */
-export function isHexString(value: BytesLike | ArrayBufferLike, length?: number | boolean): value is `0x${string}` {
+export function isHexString(value: string | ArrayBufferLike, length?: number | boolean): value is `0x${string}` {
   if (typeof value !== 'string' || !value.match(/^0x[0-9A-Fa-f]*$/)) {
     return false
   }
@@ -52,7 +31,7 @@ export function isHexString(value: BytesLike | ArrayBufferLike, length?: number 
  *  Returns true if %%value%% is a valid representation of arbitrary
  *  data (i.e. a valid [[DataHexString]] or a Uint8Array).
  */
-export function isBytesLike(value: BytesLike | ArrayBufferLike): value is BytesLike {
+export function isBytesLike(value: string | ArrayBufferLike): value is string {
   return isHexString(value, true) || value instanceof Uint8Array
 }
 
@@ -153,7 +132,7 @@ export function encodeABI(types: string[], values: any[]) {
  *  Get a typed Uint8Array for %%value%%. If already a Uint8Array
  *  the original %%value%% is returned;
  */
-function getBytes(value: BytesLike, name?: string): Uint8Array {
+function getBytes(value: string | Uint8Array, name?: string): Uint8Array {
   if (value instanceof Uint8Array) {
     return value
   }
@@ -191,6 +170,6 @@ function getBytes(value: BytesLike, name?: string): Uint8Array {
  *    encodeBase64(toUtf8Bytes("Hello World!!"))
  *    //_result:
  */
-export function encodeBase64(data: BytesLike): string {
+export function encodeBase64(data: string | Uint8Array): string {
   return Buffer.from(getBytes(data)).toString('base64')
 }

@@ -1,5 +1,4 @@
 import { MaxUint256, encodeABI, encodeBase64, isBytesLike, toHexString } from '../utils/helper'
-import type { BigNumberish, BytesLike } from '../utils/helper'
 import CBOR from 'cbor'
 
 /**
@@ -26,7 +25,7 @@ export function userVerificationFlag(userVerification: UserVerificationRequireme
  * @param data data to encode to `base64url`
  * @returns the `base64url` encoded data as a string.
  */
-export function base64UrlEncode(data: BytesLike | ArrayBufferLike): string {
+export function base64UrlEncode(data: string | Uint8Array | ArrayBuffer): string {
   const bytes = isBytesLike(data) ? data : new Uint8Array(data)
   return encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
 }
@@ -126,10 +125,10 @@ export function getSignatureBytes({
   r,
   s,
 }: {
-  authenticatorData: BytesLike
+  authenticatorData: string | Uint8Array
   clientDataFields: string
-  r: BigNumberish
-  s: BigNumberish
+  r: string | bigint
+  s: string | bigint
 }): string {
   return encodeABI(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
 }
