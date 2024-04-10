@@ -1,5 +1,5 @@
-import { ethers } from 'ethers'
-import type { BigNumberish, BytesLike } from 'ethers'
+import { MaxUint256, encodeABI, encodeBase64, fromHexString, isBytesLike, toHexString } from '../utils/helper'
+import type { BigNumberish, BytesLike } from '../utils/helper'
 import CBOR from 'cbor'
 
 /**
@@ -27,8 +27,8 @@ export function userVerificationFlag(userVerification: UserVerificationRequireme
  * @returns the `base64url` encoded data as a string.
  */
 export function base64UrlEncode(data: BytesLike | ArrayBufferLike): string {
-  const bytes = ethers.isBytesLike(data) ? data : new Uint8Array(data)
-  return ethers.encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
+  const bytes = isBytesLike(data) ? data : new Uint8Array(data)
+  return encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
 }
 
 /**
@@ -45,7 +45,7 @@ export function decodePublicKey(response: Pick<AuthenticatorAttestationResponse,
   const credentialIdLength = authData.getUint16(53)
   const cosePublicKey = attestationObject.authData.slice(55 + credentialIdLength)
   const key: Map<number, unknown> = CBOR.decode(cosePublicKey)
-  const bn = (bytes: Uint8Array) => BigInt(ethers.hexlify(bytes))
+  const bn = (bytes: Uint8Array) => BigInt('0x' + toHexString(bytes))
   return {
     x: bn(key.get(-2) as Uint8Array),
     y: bn(key.get(-3) as Uint8Array),
@@ -95,8 +95,8 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
     const len = view.getUint8(offset + 1)
     const start = offset + 2
     const end = start + len
-    const n = BigInt(ethers.hexlify(new Uint8Array(view.buffer.slice(start, end))))
-    check(n < ethers.MaxUint256)
+    const n = BigInt('0x' + toHexString(new Uint8Array(view.buffer.slice(start, end))))
+    check(n < MaxUint256)
     return [n, end] as const
   }
 
@@ -131,7 +131,7 @@ export function getSignatureBytes({
   r: BigNumberish
   s: BigNumberish
 }): string {
-  return ethers.AbiCoder.defaultAbiCoder().encode(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
+  return encodeABI(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
 }
 
 /**
@@ -162,13 +162,7 @@ export const DUMMY_CLIENT_DATA_FIELDS = [
  * Dummy authenticator data. This can be used for gas estimations, as it ensures that the correct
  * authenticator flags are set.
  */
-export const DUMMY_AUTHENTICATOR_DATA = ethers.getBytes(
-  ethers.solidityPacked(
-    ['bytes32', 'uint8', 'uint32'],
-    [
-      ethers.toBeHex(ethers.MaxUint256),
-      userVerificationFlag('required'),
-      0xffffffff, // signCount
-    ],
-  ),
+export const DUMMY_AUTHENTICATOR_DATA = fromHexString(
+  '0x' + MaxUint256.toString(16) + '0' + userVerificationFlag('required') + 'ffffffff',
+  // `0x` for Hex, added a `0` for userVerification as it returns `number` and removed the `0x` from the sign count.
 )
