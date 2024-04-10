@@ -1,4 +1,4 @@
-import { MaxUint256, encodeABI, encodeBase64, fromHexString, isBytesLike, toHexString } from '../utils/helper'
+import { MaxUint256, encodeABI, encodeBase64, isBytesLike, toHexString } from '../utils/helper'
 import type { BigNumberish, BytesLike } from '../utils/helper'
 import CBOR from 'cbor'
 
