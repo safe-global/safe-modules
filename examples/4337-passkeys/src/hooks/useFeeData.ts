@@ -5,6 +5,14 @@ import { RequestStatus } from '../utils'
 
 type FeeData = Omit<ethers.FeeData, 'toJSON'>
 
+/**
+ * Applies a multiplier to the provided fee data. Pimlico bundler started requiring
+ * a 1.2x multiplier on gas prices. Customize it for your bundler or use their proprietary
+ * method that will return the prices with the multiplier applied.
+ * @param feeData The fee data to apply the multiplier to.
+ * @param multiplier The multiplier to apply to the fee data.
+ * @returns The fee data with the multiplier applied.
+ */
 function applyMultiplier(feeData: FeeData, multiplier: bigint = 120n): FeeData {
   if (!feeData.gasPrice || !feeData.maxFeePerGas || !feeData.maxPriorityFeePerGas) return feeData
 

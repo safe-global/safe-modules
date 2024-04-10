@@ -51,6 +51,7 @@ async function loader(): Promise<Response | LoaderData> {
   return { passkey, passkeySignerAddress, safeAddress }
 }
 
+// This page doesn't have a UI, it just determines where to redirect the user based on the state.
 function Home() {
   const { safeAddress, passkey } = useLoaderData() as LoaderData
   const { walletProvider } = useOutletContext<OutletContext>()
