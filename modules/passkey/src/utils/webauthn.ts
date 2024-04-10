@@ -19,18 +19,6 @@ export function userVerificationFlag(userVerification: UserVerificationRequireme
 }
 
 /**
- * Returns the message that gets signed by the WebAuthn credentials.
- *
- * See <https://w3c.github.io/webauthn/#fig-signature>
- */
-export function encodeWebAuthnSigningMessage(
-  clientData: { type: 'webauthn.get'; challenge: string; [key: string]: unknown },
-  authenticatorData: BytesLike,
-) {
-  return ethers.getBytes(ethers.concat([authenticatorData, ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))]))
-}
-
-/**
  * Encode bytes using the Base64 URL encoding.
  *
  * See <https://www.rfc-editor.org/rfc/rfc4648#section-5>

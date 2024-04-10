@@ -9,11 +9,25 @@
 
 import { p256 } from '@noble/curves/p256'
 import { ethers } from 'ethers'
+import type { BytesLike } from 'ethers'
 import CBOR from 'cbor'
-import { base64UrlEncode, encodeWebAuthnSigningMessage, userVerificationFlag } from '../../src/utils/webauthn'
+import { base64UrlEncode, userVerificationFlag } from '../../src/utils/webauthn'
 
 function b2ab(buf: Uint8Array): ArrayBuffer {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+}
+
+
+/**
+ * Returns the message that gets signed by the WebAuthn credentials.
+ *
+ * See <https://w3c.github.io/webauthn/#fig-signature>
+ */
+export function encodeWebAuthnSigningMessage(
+  clientData: { type: 'webauthn.get'; challenge: string; [key: string]: unknown },
+  authenticatorData: BytesLike,
+) {
+  return ethers.getBytes(ethers.concat([authenticatorData, ethers.sha256(ethers.toUtf8Bytes(JSON.stringify(clientData)))]))
 }
 
 export interface CredentialCreationOptions {
