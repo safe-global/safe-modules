@@ -1,4 +1,3 @@
-import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
