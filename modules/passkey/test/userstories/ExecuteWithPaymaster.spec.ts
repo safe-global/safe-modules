@@ -23,7 +23,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
    * Step 4: Sign userOp with passkey signer.
    * Step 5: Execute the userOp that deploys a Safe with passkey signer as owner.
    */
-  describe('Execute a userOp that deploys a Safe using Paymaster', () => {
+  describe('New Safe', () => {
     // Create a fixture to setup the contracts and signer(s)
     const setupTests = deployments.createFixture(async ({ deployments }) => {
       const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
