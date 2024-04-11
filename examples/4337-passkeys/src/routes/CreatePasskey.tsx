@@ -42,7 +42,7 @@ function CreatePasskey() {
         biometrics like a fingerprint, Face ID or a device PIN. This makes passkeys much more secure than passwords and resistant to
         phishing attacks.
         <br />
-        For the Safe Account passkeys serve as credentials for verifying user operations on-chain. This added layer of authentication
+        For the Safe Account, passkeys serve as credentials for verifying user operations on-chain. This added layer of authentication
         ensures that only the passkey holder can access and perform actions with the account.
       </p>
       <button onClick={handleCreatePasskeyClick}>Create Passkey</button>
