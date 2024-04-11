@@ -2,6 +2,8 @@
 pragma solidity >=0.8.0;
 
 import {ERC1271} from "../libraries/ERC1271.sol";
+import {P256} from "../libraries/WebAuthn.sol";
+
 /**
  * @title Signature Validator Base Contract
  * @dev A interface for smart contract Safe owners that supports multiple ERC-1271 `isValidSignature` versions.
@@ -17,14 +19,14 @@ abstract contract SignatureValidator {
     function isValidSignature(bytes memory data, bytes calldata signature) external view returns (bytes4 magicValue) {
         uint256 x;
         uint256 y;
-        address verifier;
+        P256.Verifiers verifiers;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            x := calldataload(sub(calldatasize(), 84))
-            y := calldataload(sub(calldatasize(), 52))
-            verifier := shr(96, calldataload(sub(calldatasize(), 20)))
+            x := calldataload(sub(calldatasize(), 88))
+            y := calldataload(sub(calldatasize(), 56))
+            verifiers := shr(96, calldataload(sub(calldatasize(), 24)))
         }
-        if (_verifySignature(keccak256(data), signature, x, y, verifier)) {
+        if (_verifySignature(keccak256(data), signature, x, y, verifiers)) {
             magicValue = ERC1271.LEGACY_MAGIC_VALUE;
         }
     }
@@ -38,15 +40,15 @@ abstract contract SignatureValidator {
     function isValidSignature(bytes32 message, bytes calldata signature) external view returns (bytes4 magicValue) {
         uint256 x;
         uint256 y;
-        address verifier;
+        P256.Verifiers verifiers;
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            x := calldataload(sub(calldatasize(), 84))
-            y := calldataload(sub(calldatasize(), 52))
-            verifier := shr(96, calldataload(sub(calldatasize(), 20)))
+            x := calldataload(sub(calldatasize(), 88))
+            y := calldataload(sub(calldatasize(), 56))
+            verifiers := shr(96, calldataload(sub(calldatasize(), 24)))
         }
 
-        if (_verifySignature(message, signature, x, y, verifier)) {
+        if (_verifySignature(message, signature, x, y, verifiers)) {
             magicValue = ERC1271.MAGIC_VALUE;
         }
     }
@@ -57,7 +59,7 @@ abstract contract SignatureValidator {
      * @param signature The signature to be validated.
      * @param x The x coordinate of the public key.
      * @param y The y coordinate of the public key.
-     * @param verifier The address of the verifier contract.
+     * @param verifiers The address of the verifier contract and the fallback address.
      * @return success Whether the signature is valid.
      */
     function _verifySignature(
@@ -65,6 +67,6 @@ abstract contract SignatureValidator {
         bytes calldata signature,
         uint256 x,
         uint256 y,
-        address verifier
+        P256.Verifiers verifiers
     ) internal view virtual returns (bool success);
 }
