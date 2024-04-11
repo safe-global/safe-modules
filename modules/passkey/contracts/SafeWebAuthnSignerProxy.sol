@@ -1,21 +1,32 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
-import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
+import {P256, WebAuthn} from "./libraries/WebAuthn.sol";
 
 /**
- * @title SafeWebAuthnSignerProxy
- * @dev A proxy contract that points to SafeWebAuthnSigner.
+ * @title WebAuthn Safe Signature Validator
+ * @dev A proxy contracy that points to Safe signature validator implementation for a WebAuthn P-256 credential.
+ * @custom:security-contact bounty@safe.global
  */
 contract SafeWebAuthnSignerProxy {
+        
+    /**
+     * @notice The X coordinate of the P-256 public key of the WebAuthn credential.
+     */
     uint256 internal immutable X;
+    /**
+     * @notice The Y coordinate of the P-256 public key of the WebAuthn credential.
+     */
     uint256 internal immutable Y;
-    IP256Verifier internal immutable VERIFIER;
+    /**
+     * @notice The P-256 verifiers used for ECDSA signature validation.
+     */
+    P256.Verifiers internal immutable VERIFIERS;
     address internal immutable SINGLETON;
-    constructor(address implementation, uint256 x, uint256 y, address verifier) {
+    constructor(address implementation, uint256 x, uint256 y, P256.Verifiers verifiers) {
         SINGLETON = implementation;
         X = x;
         Y = y;
-        VERIFIER = IP256Verifier(verifier);
+        VERIFIERS = verifiers;
     }
 
     /// @dev Fallback function forwards all transactions and returns all received return data.

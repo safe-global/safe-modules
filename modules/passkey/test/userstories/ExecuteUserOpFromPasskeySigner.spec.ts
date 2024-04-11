@@ -17,7 +17,7 @@ import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
  */
 describe('Execute userOp from Passkey signer [@userstory]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerProxyFactory } =
       await deployments.run()
 
     const [relayer] = await ethers.getSigners()
@@ -28,7 +28,7 @@ describe('Execute userOp from Passkey signer [@userstory]', () => {
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),

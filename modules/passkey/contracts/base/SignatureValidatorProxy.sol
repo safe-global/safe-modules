@@ -66,5 +66,5 @@ abstract contract SignatureValidatorProxy {
         uint256 x,
         uint256 y,
         address verifier
-    ) public view virtual returns (bool success);
+    ) internal view virtual returns (bool success);
 }
