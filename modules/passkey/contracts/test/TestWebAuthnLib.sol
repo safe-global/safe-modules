@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {WebAuthn} from "../libraries/WebAuthn.sol";
-import {IP256Verifier} from "../libraries/P256.sol";
+import {P256, WebAuthn} from "../libraries/WebAuthn.sol";
 
 contract TestWebAuthnLib {
     function encodeClientDataJson(
@@ -26,9 +25,9 @@ contract TestWebAuthnLib {
         WebAuthn.AuthenticatorFlags authenticatorFlags,
         uint256 x,
         uint256 y,
-        IP256Verifier verifier
+        P256.Verifiers verifiers
     ) external view returns (bool success) {
-        success = WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifier);
+        success = WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifiers);
     }
 
     function verifySignature(
@@ -37,8 +36,8 @@ contract TestWebAuthnLib {
         WebAuthn.AuthenticatorFlags authenticatorFlags,
         uint256 x,
         uint256 y,
-        IP256Verifier verifier
+        P256.Verifiers verifiers
     ) external view returns (bool success) {
-        success = WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifier);
+        success = WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifiers);
     }
 }

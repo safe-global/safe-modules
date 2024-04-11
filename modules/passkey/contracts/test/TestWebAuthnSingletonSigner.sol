@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import {SignatureValidator} from "../base/SignatureValidator.sol";
-import {WebAuthn, IP256Verifier} from "../libraries/WebAuthn.sol";
+import {P256, WebAuthn} from "../libraries/WebAuthn.sol";
 
 /**
  * @title WebAuthn Singleton Signer
@@ -10,13 +10,13 @@ import {WebAuthn, IP256Verifier} from "../libraries/WebAuthn.sol";
  */
 contract TestWebAuthnSingletonSigner is SignatureValidator {
     /**
-     * @notice Data associated with a WebAuthn signer. It reprensents the X and Y coordinates of the signer's public
-     * key. This is stored in a mapping using the account address as the key.
+     * @notice Data associated with a WebAuthn signer. It represents the X and Y coordinates of the
+     * signer's public key. This is stored in a mapping using the account address as the key.
      */
     struct OwnerData {
         uint256 x;
         uint256 y;
-        IP256Verifier verifier;
+        P256.Verifiers verifiers;
     }
 
     /**
@@ -47,7 +47,7 @@ contract TestWebAuthnSingletonSigner is SignatureValidator {
         OwnerData memory owner = owners[msg.sender];
 
         isValid =
-            address(owner.verifier) != address(0) &&
-            WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, owner.x, owner.y, owner.verifier);
+            P256.Verifiers.unwrap(owner.verifiers) != 0 &&
+            WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, owner.x, owner.y, owner.verifiers);
     }
 }

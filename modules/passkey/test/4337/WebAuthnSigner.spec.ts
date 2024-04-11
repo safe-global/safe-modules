@@ -16,7 +16,7 @@ describe('WebAuthn Signers [@4337]', () => {
     const {
       EntryPoint,
       Safe4337Module,
-      SafeECDSASignerLaunchpad,
+      SafeSignerLaunchpad,
       SafeProxyFactory,
       SafeModuleSetup,
       SafeL2,
@@ -30,7 +30,7 @@ describe('WebAuthn Signers [@4337]', () => {
     const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
-    const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
+    const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
     const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
@@ -97,7 +97,7 @@ describe('WebAuthn Signers [@4337]', () => {
       signerFactory: signerFactory.target,
       signerX: publicKey.x,
       signerY: publicKey.y,
-      signerVerifier: verifierAddress,
+      signerVerifiers: verifierAddress,
       setupTo: safeModuleSetup.target,
       setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
       fallbackHandler: module.target,
@@ -110,7 +110,7 @@ describe('WebAuthn Signers [@4337]', () => {
           { type: 'address', name: 'signerFactory' },
           { type: 'uint256', name: 'signerX' },
           { type: 'uint256', name: 'signerY' },
-          { type: 'address', name: 'signerVerifier' },
+          { type: 'uint192', name: 'signerVerifiers' },
           { type: 'address', name: 'setupTo' },
           { type: 'bytes', name: 'setupData' },
           { type: 'address', name: 'fallbackHandler' },
@@ -125,7 +125,7 @@ describe('WebAuthn Signers [@4337]', () => {
         safeInit.signerFactory,
         safeInit.signerX,
         safeInit.signerY,
-        safeInit.signerVerifier,
+        safeInit.signerVerifiers,
         safeInit.setupTo,
         safeInit.setupData,
         safeInit.fallbackHandler,
@@ -155,7 +155,7 @@ describe('WebAuthn Signers [@4337]', () => {
         safeInit.signerFactory,
         safeInit.signerX,
         safeInit.signerY,
-        safeInit.signerVerifier,
+        safeInit.signerVerifiers,
         safeInit.setupTo,
         safeInit.setupData,
         safeInit.fallbackHandler,

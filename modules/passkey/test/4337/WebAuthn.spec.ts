@@ -20,7 +20,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       SafeProxyFactory,
       FCLP256Verifier,
       Safe4337Module,
-      SafeECDSASignerLaunchpad,
+      SafeSignerLaunchpad,
       EntryPoint,
       SafeWebAuthnSignerFactory,
     } = await deployments.fixture()
@@ -30,7 +30,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     const module = await ethers.getContractAt(Safe4337Module.abi, Safe4337Module.address)
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
-    const signerLaunchpad = await ethers.getContractAt('SafeECDSASignerLaunchpad', SafeECDSASignerLaunchpad.address)
+    const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
     const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
@@ -82,7 +82,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         signerFactory: signerFactory.target,
         signerX: publicKey.x,
         signerY: publicKey.y,
-        signerVerifier: verifierAddress,
+        signerVerifiers: verifierAddress,
         setupTo: safeModuleSetup.target,
         setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
         fallbackHandler: module.target,
@@ -95,7 +95,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
             { type: 'address', name: 'signerFactory' },
             { type: 'uint256', name: 'signerX' },
             { type: 'uint256', name: 'signerY' },
-            { type: 'address', name: 'signerVerifier' },
+            { type: 'uint192', name: 'signerVerifiers' },
             { type: 'address', name: 'setupTo' },
             { type: 'bytes', name: 'setupData' },
             { type: 'address', name: 'fallbackHandler' },
@@ -110,7 +110,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           safeInit.signerFactory,
           safeInit.signerX,
           safeInit.signerY,
-          safeInit.signerVerifier,
+          safeInit.signerVerifiers,
           safeInit.setupTo,
           safeInit.setupData,
           safeInit.fallbackHandler,
@@ -140,7 +140,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
           safeInit.signerFactory,
           safeInit.signerX,
           safeInit.signerY,
-          safeInit.signerVerifier,
+          safeInit.signerVerifiers,
           safeInit.setupTo,
           safeInit.setupData,
           safeInit.fallbackHandler,

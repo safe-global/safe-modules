@@ -8,7 +8,7 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
 
   const entryPoint = await deployments.getOrNull('EntryPoint').then((deployment) => deployment?.address ?? ENTRY_POINT)
 
-  await deploy('SafeECDSASignerLaunchpad', {
+  await deploy('SafeSignerLaunchpad', {
     from: deployer,
     args: [entryPoint],
     log: true,
