@@ -65,7 +65,7 @@ function Home() {
     return <Navigate to={DEPLOY_SAFE} state={{ passkey }} />
   }
 
-  return <p>You shouldn't have landed on this page, but somehow you did it! Here's an easter egg for you: 🐣</p>
+  return <p>You shouldn't have landed on this page, but somehow you did it! Here's an Easter egg for you: 🐣</p>
 }
 
 export { Home, loader }
