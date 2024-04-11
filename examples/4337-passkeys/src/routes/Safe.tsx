@@ -1,11 +1,12 @@
 import { ethers, isAddress } from 'ethers'
-import { LoaderFunction, Navigate, redirect, useOutletContext, useParams } from 'react-router-dom'
+import { LoaderFunction, Navigate, redirect, useParams } from 'react-router-dom'
 import { RequestStatus } from '../utils'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
 import { getSafeWalletAppSafeDashboardLink } from '../logic/safeWalletApp.ts'
 import { HOME_ROUTE } from './constants.ts'
-import { OutletContext } from '../types/Outlet.ts'
+
+import { useOutletContext } from '../hooks/UseOutletContext.tsx'
 
 const loader: LoaderFunction = async ({ params }) => {
   const { safeAddress } = params
@@ -19,7 +20,7 @@ const loader: LoaderFunction = async ({ params }) => {
 
 function Safe() {
   const { safeAddress } = useParams<{ safeAddress: string }>()
-  const { walletProvider } = useOutletContext<OutletContext>()
+  const { walletProvider } = useOutletContext()
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress || '')
   const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(walletProvider, safeAddress || '')
 

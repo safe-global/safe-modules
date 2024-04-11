@@ -1,4 +1,4 @@
-import { Navigate, redirect, useLoaderData, useOutletContext } from 'react-router-dom'
+import { Navigate, redirect, useLoaderData } from 'react-router-dom'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys.ts'
 import {
   encodeSafeModuleSetupCall,
@@ -19,7 +19,8 @@ import {
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress.ts'
 import { RequestStatus } from '../utils.ts'
 import { DEPLOY_SAFE_ROUTE, CREATE_PASSKEY_ROUTE, getSafeRoute } from './constants.ts'
-import { OutletContext } from '../types/Outlet.ts'
+
+import { useOutletContext } from '../hooks/UseOutletContext.tsx'
 
 type LoaderData = {
   passkey: PasskeyLocalStorageFormat
@@ -54,7 +55,7 @@ async function loader(): Promise<Response | LoaderData> {
 // This page doesn't have a UI, it just determines where to redirect the user based on the state.
 function Home() {
   const { safeAddress, passkey } = useLoaderData() as LoaderData
-  const { walletProvider } = useOutletContext<OutletContext>()
+  const { walletProvider } = useOutletContext()
   const [safeCode, requestStatus] = useCodeAtAddress(walletProvider, safeAddress)
 
   if (requestStatus === RequestStatus.SUCCESS && safeCode !== '0x') {
