@@ -10,18 +10,18 @@ import { Root } from './routes/Root.tsx'
 import { Home, loader as homeLoader } from './routes/Home.tsx'
 import { DeploySafe, loader as deploySafeLoader } from './routes/DeploySafe.tsx'
 import { CreatePasskey } from './routes/CreatePasskey.tsx'
-import { CREATE_PASSKEY, DEPLOY_SAFE, HOME, SAFE } from './routes/constants.ts'
+import { CREATE_PASSKEY_ROUTE, DEPLOY_SAFE_ROUTE, HOME_ROUTE, SAFE_ROUTE } from './routes/constants.ts'
 import { Safe, loader as safeLoader } from './routes/Safe.tsx'
 
 const router = createBrowserRouter([
   {
-    path: HOME,
+    path: HOME_ROUTE,
     element: <Root />,
     children: [
       { index: true, loader: homeLoader, element: <Home /> },
-      { path: CREATE_PASSKEY, element: <CreatePasskey /> },
-      { path: DEPLOY_SAFE, loader: deploySafeLoader, element: <DeploySafe /> },
-      { path: SAFE, loader: safeLoader, element: <Safe /> },
+      { path: CREATE_PASSKEY_ROUTE, element: <CreatePasskey /> },
+      { path: DEPLOY_SAFE_ROUTE, loader: deploySafeLoader, element: <DeploySafe /> },
+      { path: SAFE_ROUTE, loader: safeLoader, element: <Safe /> },
     ],
   },
 ])

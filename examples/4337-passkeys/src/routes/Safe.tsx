@@ -4,14 +4,14 @@ import { RequestStatus } from '../utils'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
 import { getSafeWalletAppSafeDashboardLink } from '../logic/safeWalletApp.ts'
-import { HOME } from './constants.ts'
+import { HOME_ROUTE } from './constants.ts'
 import { OutletContext } from '../types/Outlet.ts'
 
 const loader: LoaderFunction = async ({ params }) => {
   const { safeAddress } = params
 
   if (!isAddress(safeAddress)) {
-    return redirect(HOME)
+    return redirect(HOME_ROUTE)
   }
 
   return null
@@ -25,7 +25,7 @@ function Safe() {
 
   const notDeployed = safeCodeStatus === RequestStatus.SUCCESS && safeCode === '0x'
   if (notDeployed) {
-    return <Navigate to={HOME} />
+    return <Navigate to={HOME_ROUTE} />
   }
 
   if (!safeAddress) {

@@ -11,7 +11,7 @@ import {
   P256_VERIFIER_ADDRESS,
   APP_CHAIN_ID,
 } from '../config'
-import { getPasskeyFromLocalStorage } from '../logic/passkeys'
+import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
   UnsignedPackedUserOperation,
   getRequiredPrefund,
@@ -25,14 +25,14 @@ import { PrefundCard } from '../components/OpPrefundCard'
 import { useFeeData } from '../hooks/useFeeData'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
-import { getSafeRoute, HOME } from './constants.ts'
+import { getSafeRoute, HOME_ROUTE } from './constants.ts'
 import { OutletContext } from '../types/Outlet.ts'
 
 const loader: LoaderFunction = async () => {
   const passkey = getPasskeyFromLocalStorage()
 
   if (!passkey) {
-    return redirect(HOME)
+    return redirect(HOME_ROUTE)
   }
 
   const initializer: SafeInitializer = {
@@ -53,7 +53,7 @@ const loader: LoaderFunction = async () => {
 }
 
 function DeploySafe() {
-  const { passkey, safeAddress } = useLoaderData() as ReturnType<typeof loader>
+  const { passkey, safeAddress } = useLoaderData() as { safeAddress: string; passkey: PasskeyLocalStorageFormat }
   const { walletProvider } = useOutletContext<OutletContext>()
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
 

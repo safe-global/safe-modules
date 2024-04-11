@@ -18,7 +18,7 @@ import {
 } from '../config.ts'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress.ts'
 import { RequestStatus } from '../utils.ts'
-import { DEPLOY_SAFE, CREATE_PASSKEY, getSafeRoute } from './constants.ts'
+import { DEPLOY_SAFE_ROUTE, CREATE_PASSKEY_ROUTE, getSafeRoute } from './constants.ts'
 import { OutletContext } from '../types/Outlet.ts'
 
 type LoaderData = {
@@ -30,7 +30,7 @@ type LoaderData = {
 async function loader(): Promise<Response | LoaderData> {
   const passkey = getPasskeyFromLocalStorage()
   if (!passkey) {
-    return redirect(CREATE_PASSKEY)
+    return redirect(CREATE_PASSKEY_ROUTE)
   }
 
   const passkeySignerAddress = getSignerAddressFromPubkeyCoords(passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y)
@@ -62,7 +62,7 @@ function Home() {
   }
 
   if (requestStatus === RequestStatus.SUCCESS && safeCode === '0x') {
-    return <Navigate to={DEPLOY_SAFE} state={{ passkey }} />
+    return <Navigate to={DEPLOY_SAFE_ROUTE} state={{ passkey }} />
   }
 
   return <p>You shouldn't have landed on this page, but somehow you did it! Here's an Easter egg for you: 🐣</p>

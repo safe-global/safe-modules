@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { redirect, useNavigate } from 'react-router-dom'
-import { DEPLOY_SAFE, HOME } from './constants.ts'
+import { DEPLOY_SAFE_ROUTE, HOME_ROUTE } from './constants.ts'
 import { createPasskey, getPasskeyFromLocalStorage, storePasskeyInLocalStorage } from '../logic/passkeys.ts'
 
 async function loader() {
   const passkey = getPasskeyFromLocalStorage()
   if (passkey) {
-    return redirect(HOME)
+    return redirect(HOME_ROUTE)
   }
 
   return null
@@ -23,7 +23,7 @@ function CreatePasskey() {
 
       storePasskeyInLocalStorage(passkey)
 
-      navigate(DEPLOY_SAFE, { replace: true })
+      navigate(DEPLOY_SAFE_ROUTE, { replace: true })
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message)
