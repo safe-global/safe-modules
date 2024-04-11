@@ -1,11 +1,12 @@
 import { ethers } from 'ethers'
 import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
-import { bytecode as SafeWebAuthSignerBytecode } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSigner.sol/SafeWebAuthnSigner.json'
+import { bytecode as SafeWebAuthnSignerSingletonBytecode } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSignerSingleton.sol/SafeWebAuthnSignerSingleton.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
 import type { Safe4337Module, SafeModuleSetup, SafeProxyFactory } from '@safe-global/safe-4337/typechain-types/'
-import type { SafeSignerLaunchpad } from '@safe-global/safe-passkey/typechain-types/'
+import type { SafeSignerLaunchpad,   SafeWebAuthnSignerProxy,
+  SafeWebAuthnSignerProxyFactory } from '@safe-global/safe-passkey/typechain-types/'
 
 import {
   P256_VERIFIER_ADDRESS,
@@ -28,7 +29,7 @@ const SafeProxyBytecode =
 function getSignerAddressFromPubkeyCoords(x: string, y: string): string {
   const deploymentCode = ethers.solidityPacked(
     ['bytes', 'uint256', 'uint256', 'uint256'],
-    [SafeWebAuthSignerBytecode, x, y, P256_VERIFIER_ADDRESS],
+    [SafeWebAuthnSignerSingletonBytecode, x, y, P256_VERIFIER_ADDRESS],
   )
   const salt = ethers.ZeroHash
   return ethers.getCreate2Address(WEBAUTHN_SIGNER_FACTORY_ADDRESS, salt, ethers.keccak256(deploymentCode))
