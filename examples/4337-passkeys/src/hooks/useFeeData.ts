@@ -33,19 +33,25 @@ function useFeeData(provider: ethers.Eip1193Provider): [FeeData | undefined, Req
   const [status, setStatus] = useState<RequestStatus>(RequestStatus.NOT_REQUESTED)
 
   useEffect(() => {
-    if (provider) {
-      setStatus(RequestStatus.LOADING)
-      const jsonRpcProvider = getJsonRpcProviderFromEip1193Provider(provider)
-      jsonRpcProvider
-        .getFeeData()
-        .then((feeData) => {
-          setFeeData(applyMultiplier(feeData))
-          setStatus(RequestStatus.SUCCESS)
-        })
-        .catch((error) => {
-          console.error(error)
-          setStatus(RequestStatus.ERROR)
-        })
+    let isMounted = true
+
+    setStatus(RequestStatus.LOADING)
+    const jsonRpcProvider = getJsonRpcProviderFromEip1193Provider(provider)
+    jsonRpcProvider
+      .getFeeData()
+      .then((feeData) => {
+        if (!isMounted) return
+        setFeeData(applyMultiplier(feeData))
+        setStatus(RequestStatus.SUCCESS)
+      })
+      .catch((error) => {
+        if (!isMounted) return
+        console.error(error)
+        setStatus(RequestStatus.ERROR)
+      })
+
+    return () => {
+      isMounted = false
     }
   }, [provider])
 

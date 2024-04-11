@@ -6,8 +6,6 @@ function SwitchNetwork({ walletProvider }: { walletProvider: Eip1193Provider }) 
   const [error, setError] = useState<string>()
 
   const handleSwitchToSepoliaClick = () => {
-    if (!walletProvider) return
-
     setError(undefined)
     try {
       switchToSepolia(walletProvider)
