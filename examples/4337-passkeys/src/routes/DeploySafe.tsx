@@ -11,7 +11,7 @@ import {
   P256_VERIFIER_ADDRESS,
   APP_CHAIN_ID,
 } from '../config'
-import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
+import { getPasskeyFromLocalStorage } from '../logic/passkeys'
 import {
   UnsignedPackedUserOperation,
   getRequiredPrefund,
