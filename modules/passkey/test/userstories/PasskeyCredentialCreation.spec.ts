@@ -16,13 +16,14 @@ import { buildSafeTransaction, buildSafeTransactionData, SafeDomain } from '../u
  */
 describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { SafeProxyFactory, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory, CompatibilityFallbackHandler } = await deployments.run()
+    const { SafeProxyFactory, SafeL2, FCLP256Verifier, SafeWebAuthnSignerProxyFactory, CompatibilityFallbackHandler } =
+      await deployments.run()
     const [user] = await ethers.getSigners()
 
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const fallbackHandler = await ethers.getContractAt(CompatibilityFallbackHandler.abi, CompatibilityFallbackHandler.address)
-    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
     const verifierAddress = await verifier.getAddress()
 
@@ -51,7 +52,7 @@ describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
     const publicKey = decodePublicKey(credential.response)
     await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
     const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
-    const signer = await ethers.getContractAt('SafeWebAuthnSigner', signerAddress)
+    const signer = await ethers.getContractAt('SafeWebAuthnSignerProxy', signerAddress)
 
     // Deploy Safe with the WebAuthn signer as a single owner.
     const singletonAddress = await singleton.getAddress()

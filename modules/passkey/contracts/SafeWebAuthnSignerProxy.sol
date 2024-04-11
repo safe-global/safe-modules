@@ -32,7 +32,7 @@ contract SafeWebAuthnSignerProxy {
     /// @dev Fallback function forwards all transactions and returns all received return data.
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        bytes memory data = abi.encodePacked(msg.data, X, Y, VERIFIER);
+        bytes memory data = abi.encodePacked(msg.data, X, Y, VERIFIERS);
         address _singleton = SINGLETON;
 
         // solhint-disable-next-line no-inline-assembly
