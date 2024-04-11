@@ -173,7 +173,7 @@ function toLocalStorageFormat(passkey: PasskeyCredentialWithPubkeyCoordinates): 
 /**
  * Retrieves a passkey from local storage.
  *
- * @returns The retrieved passkey in the format of a Local Storage Passkey, or null if no valid passkey is found.
+ * @returns The retrieved passkey in the format of a {@link PasskeyLocalStorageFormat}, or null if no valid passkey is found.
  */
 function getPasskeyFromLocalStorage(): PasskeyLocalStorageFormat | null {
   const passkey = getItem(PASSKEY_LOCALSTORAGE_KEY)
