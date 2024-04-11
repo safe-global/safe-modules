@@ -63,11 +63,10 @@ contract SafeWebAuthnSignerProxyFactory is ISafeSignerFactory {
             let dataLocation := add(data, 0x20)
 
             let success := staticcall(gas(), _singleton, dataLocation, dataSize, 0, 0)
-            returndatacopy(magicValue, 0, returndatasize())
-            if iszero(success) {
-                // TODO
+            if eq(success, 1) {
+                returndatacopy(magicValue, 0, returndatasize())
+                return(0, returndatasize())
             }
-            return(0, returndatasize())
         }
     }
 
