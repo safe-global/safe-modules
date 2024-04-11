@@ -26,6 +26,28 @@ describe('SafeWebAuthnSignerProxy', () => {
     return { x, y, mockPrecompile, mockVerifier, verifiers, signer }
   })
 
+  describe('forward call', function () {
+    it('Should forward call to singleton with additional information', async () => {
+      const { x, y, mockVerifier } = await setupTests()
+      const [sender] = await ethers.getSigners()
+      const mockSingleton = await ethers.getContractAt('MockContract', await (await ethers.getContractFactory('MockContract')).deploy())
+
+      const signerProxy = await ethers.getContractAt(
+        'MockContract',
+        await (await ethers.getContractFactory('SafeWebAuthnSignerProxy')).deploy(mockSingleton, x, y, mockVerifier),
+      )
+
+      const callData = ethers.hexlify(ethers.randomBytes(36))
+      await signerProxy.givenAnyReturnBool(true)
+
+      await sender.sendTransaction({ to: signerProxy.target, value: 0, data: callData })
+
+      expect(await signerProxy.invocationCount()).to.equal(1)
+      const data = ethers.solidityPacked(['bytes', 'uint256', 'uint256', 'address'], [callData, x, y, mockVerifier.target])
+      expect(await signerProxy.invocationCountForCalldata(data)).to.equal(1)
+    })
+  })
+
   describe('constructor', function () {
     it('Should set immutables', async () => {
       const { x, y, verifiers, signer } = await setupTests()
