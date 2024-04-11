@@ -22,7 +22,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       Safe4337Module,
       SafeSignerLaunchpad,
       EntryPoint,
-      SafeWebAuthnSignerFactory,
+      SafeWebAuthnSignerProxyFactory,
     } = await deployments.fixture()
 
     const [user] = await ethers.getSigners()
@@ -33,7 +33,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
@@ -229,7 +229,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       const publicKey = decodePublicKey(credential.response)
       await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
       const signer = await ethers.getContractAt(
-        'SafeWebAuthnSigner',
+        'SafeWebAuthnSignerProxy',
         await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress),
       )
 

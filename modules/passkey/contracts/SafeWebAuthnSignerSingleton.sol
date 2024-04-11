@@ -19,7 +19,7 @@ contract SafeWebAuthnSignerSingleton is SignatureValidatorProxy {
         uint256 x,
         uint256 y,
         address verifier
-    ) public view virtual override returns (bool success) {
-        success = WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, IP256Verifier(verifier));
+    ) internal view virtual override returns (bool success) {
+        success = WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, X, Y, VERIFIERS);
     }
 }

@@ -40,7 +40,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
       })
       .then((tx) => tx.wait())
 
-    const WebAuthnSingletonSigner = await ethers.getContractFactory('TestWebAuthnSingletonSigner')
+    const WebAuthnSingletonSigner = await ethers.getContractFactory('SafeWebAuthnSignerSingleton')
     const signer = await WebAuthnSingletonSigner.deploy()
 
     const navigator = {
@@ -108,11 +108,6 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
             to: safeModuleSetup.target,
             data: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
           },
-          {
-            op: 0 as const,
-            to: signer.target,
-            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifiers: verifierAddress }]),
-          },
         ]),
       ]),
       module.target,
@@ -175,6 +170,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
 
     expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.not.equal(0)
     expect(await ethers.provider.getBalance(safeAddress)).to.be.lessThan(ethers.parseEther('0.4'))
+    expect(await signer.x(safeAddress)).to.equal(publicKey.x));
     expect(await signer.getOwner(safeAddress)).to.deep.equal([publicKey.x, publicKey.y, verifier.target])
   })
 })
