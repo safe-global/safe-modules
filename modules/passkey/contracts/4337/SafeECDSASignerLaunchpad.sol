@@ -327,6 +327,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
 
     /**
      * @notice Reads the configured initialization hash from storage.
+     * @return value The value of the init hash read from storage.
      */
     function _initHash() public view returns (bytes32 value) {
         // solhint-disable-next-line no-inline-assembly
@@ -337,6 +338,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
 
     /**
      * @notice Sets an initialization hash in storage.
+     * @param value The value of the init hash to set in storage.
      */
     function _setInitHash(bytes32 value) internal {
         // solhint-disable-next-line no-inline-assembly
@@ -349,13 +351,15 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
      * @notice Returns whether or not an account is a contract.
      * @dev The current implementation the accounts code size is non-zero to determine whether or not the account is a
      * contract.
+     * @param account The account to check.
+     * @return isContract Whether or not the account is a contract.
      */
-    function _isContract(address account) internal view returns (bool) {
+    function _isContract(address account) internal view returns (bool isContract) {
         uint256 size;
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             size := extcodesize(account)
         }
-        return size > 0;
+        isContract = size > 0;
     }
 }
