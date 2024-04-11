@@ -6,7 +6,7 @@ import * as ERC1271 from './utils/erc1271'
 import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, getSignatureBytes } from '../src/utils/webauthn'
 import { encodeWebAuthnSigningMessage } from './utils/webauthnShim'
 
-describe('SafeWebAuthnSigner', () => {
+describe('SafeWebAuthnSignerProxy', () => {
   const setupTests = deployments.createFixture(async () => {
     const x = ethers.id('publicKey.x')
     const y = ethers.id('publicKey.y')
@@ -15,9 +15,13 @@ describe('SafeWebAuthnSigner', () => {
     const precompileAddress = `0x${'00'.repeat(18)}0100`
     const mockPrecompile = await ethers.getContractAt('MockContract', precompileAddress)
     await setCode(precompileAddress, await ethers.provider.getCode(mockVerifier))
-    const SafeWebAuthnSigner = await ethers.getContractFactory('SafeWebAuthnSigner')
     const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), mockVerifier.target]))
-    const signer = await SafeWebAuthnSigner.deploy(x, y, verifiers)
+    const singleton = await (await ethers.getContractFactory('SafeWebAuthnSignerSingleton')).deploy()
+    const SafeWebAuthnSignerProxy = await ethers.getContractFactory('SafeWebAuthnSignerProxy')
+    const signer = await ethers.getContractAt(
+      'SafeWebAuthnSignerSingleton',
+      (await SafeWebAuthnSignerProxy.deploy(singleton, x, y, verifiers)).target,
+    )
 
     return { x, y, mockPrecompile, mockVerifier, verifiers, signer }
   })
@@ -28,7 +32,9 @@ describe('SafeWebAuthnSigner', () => {
 
       expect(await signer.X()).to.equal(x)
       expect(await signer.Y()).to.equal(y)
-      expect(await signer.VERIFIERS()).to.equal(verifiers)
+      const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', signer.target)
+
+      expect(await signerProxy.VERIFIERS()).to.equal(verifiers)
     })
   })
 

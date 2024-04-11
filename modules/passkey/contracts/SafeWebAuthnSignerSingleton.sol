@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {SignatureValidatorProxy} from "./base/SignatureValidatorProxy.sol";
+import {SignatureValidator} from "./base/SignatureValidator.sol";
 import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
 import {WebAuthn} from "./libraries/WebAuthn.sol";
 /**
@@ -9,9 +9,9 @@ import {WebAuthn} from "./libraries/WebAuthn.sol";
  * @dev A contract that represents a WebAuthn signer.
  * @custom:security-contact bounty@safe.global
  */
-contract SafeWebAuthnSignerSingleton is SignatureValidatorProxy {
+contract SafeWebAuthnSignerSingleton is SignatureValidator {
     /**
-     * @inheritdoc SignatureValidatorProxy
+     * @inheritdoc SignatureValidator
      */
     function _verifySignature(
         bytes32 message,

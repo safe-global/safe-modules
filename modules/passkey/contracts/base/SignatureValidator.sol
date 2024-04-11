@@ -7,7 +7,7 @@ import {ERC1271} from "../libraries/ERC1271.sol";
  * @dev A interface for smart contract Safe owners that supports multiple ERC-1271 `isValidSignature` versions.
  * @custom:security-contact bounty@safe.global
  */
-abstract contract SignatureValidatorProxy {
+abstract contract SignatureValidator {
     /**
      * @dev Validates the signature for the given data.
      * @param data The signed data bytes.
