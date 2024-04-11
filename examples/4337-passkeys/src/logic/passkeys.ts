@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import { hexStringToUint8Array } from '../utils.ts'
+import { getItem, setItem } from './storage.ts'
 
 type PasskeyCredential = {
   id: 'string'
@@ -18,6 +19,8 @@ type PasskeyCredentialWithPubkeyCoordinates = PasskeyCredential & {
     y: string
   }
 }
+
+const PASSKEY_LOCALSTORAGE_KEY = 'passkeyId'
 
 /**
  * Creates a passkey for signing.
@@ -168,6 +171,35 @@ function toLocalStorageFormat(passkey: PasskeyCredentialWithPubkeyCoordinates): 
 }
 
 /**
+ * Retrieves a passkey from local storage.
+ *
+ * @returns The retrieved passkey in the format of a {@link PasskeyLocalStorageFormat}, or null if no valid passkey is found.
+ */
+function getPasskeyFromLocalStorage(): PasskeyLocalStorageFormat | null {
+  const passkey = getItem(PASSKEY_LOCALSTORAGE_KEY)
+  if (!passkey) return null
+
+  try {
+    const passkeyJson = JSON.parse(passkey)
+    return isLocalStoragePasskey(passkeyJson) ? passkeyJson : null
+  } catch {
+    console.error('Failed to parse passkey from local storage')
+    return null
+  }
+}
+
+/**
+ * Stores a passkey in local storage.
+ *
+ * This function takes a passkey of type PasskeyCredentialWithPubkeyCoordinates, converts it to a format that can be stored in local storage,
+ * and then stores it in local storage using a predefined key.
+ *
+ * @param passkey - The passkey to be stored in local storage. It must be of type PasskeyCredentialWithPubkeyCoordinates.
+ */
+function storePasskeyInLocalStorage(passkey: PasskeyCredentialWithPubkeyCoordinates): void {
+  setItem(PASSKEY_LOCALSTORAGE_KEY, toLocalStorageFormat(passkey))
+}
+/**
  * Signs data with a passkey.
  *
  * This function uses the WebAuthn API to sign data with a passkey. The passkey is identified by its ID.
@@ -211,4 +243,13 @@ function isLocalStoragePasskey(x: unknown): x is PasskeyLocalStorageFormat {
 }
 
 export type { Assertion }
-export { createPasskey, toLocalStorageFormat, isLocalStoragePasskey, extractSignature, extractClientDataFields, signWithPasskey }
+export {
+  createPasskey,
+  toLocalStorageFormat,
+  isLocalStoragePasskey,
+  extractSignature,
+  extractClientDataFields,
+  signWithPasskey,
+  getPasskeyFromLocalStorage,
+  storePasskeyInLocalStorage,
+}

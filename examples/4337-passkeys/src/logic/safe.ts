@@ -1,73 +1,23 @@
 import { ethers } from 'ethers'
 import { abi as SafeECDSASignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeECDSASignerLaunchpad.sol/SafeECDSASignerLaunchpad.json'
-import { abi as SafeWebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSignerFactory.sol/SafeWebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
-import {
-  abi as SafeWebAuthnSignerAbi,
-  bytecode as WebAuthSignerBytecode,
-} from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSigner.sol/SafeWebAuthnSigner.json'
+import { bytecode as WebAuthSignerBytecode } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSigner.sol/SafeWebAuthnSigner.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
-import type { Safe4337Module, SafeProxyFactory, SafeModuleSetup } from '@safe-global/safe-4337/typechain-types/'
-import type { SafeECDSASignerLaunchpad, SafeWebAuthnSigner, SafeWebAuthnSignerFactory } from '@safe-global/safe-passkey/typechain-types/'
+import type { Safe4337Module, SafeModuleSetup, SafeProxyFactory } from '@safe-global/safe-4337/typechain-types/'
+import type { SafeECDSASignerLaunchpad } from '@safe-global/safe-passkey/typechain-types/'
 
 import {
-  SAFE_SIGNER_LAUNCHPAD_ADDRESS,
-  SAFE_4337_MODULE_ADDRESS,
-  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-  SAFE_PROXY_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
+  SAFE_PROXY_FACTORY_ADDRESS,
+  SAFE_SIGNER_LAUNCHPAD_ADDRESS,
+  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
 } from '../config'
 import { PackedUserOperation } from './userOp'
 
 // Hardcoded because we cannot easily install @safe-global/safe-contracts because of conflicting ethers.js versions
 const SafeProxyBytecode =
   '0x608060405234801561001057600080fd5b506040516101e63803806101e68339818101604052602081101561003357600080fd5b8101908080519060200190929190505050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156100ca576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260228152602001806101c46022913960400191505060405180910390fd5b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505060ab806101196000396000f3fe608060405273ffffffffffffffffffffffffffffffffffffffff600054167fa619486e0000000000000000000000000000000000000000000000000000000060003514156050578060005260206000f35b3660008037600080366000845af43d6000803e60008114156070573d6000fd5b3d6000f3fea264697066735822122003d1488ee65e08fa41e58e888a9865554c535f2c77126a82cb4c0f917f31441364736f6c63430007060033496e76616c69642073696e676c65746f6e20616464726573732070726f7669646564'
-
-/**
- * Creates an instance of SafeSignerLaunchpad contract using the provided JSON-RPC provider.
- *
- * @param provider The JSON-RPC provider used to interact with the blockchain.
- * @returns An instance of SafeSignerLaunchpad contract.
- */
-function getSafeSignerLaunchpadContract(provider: ethers.JsonRpcProvider): SafeECDSASignerLaunchpad {
-  return new ethers.Contract(SAFE_SIGNER_LAUNCHPAD_ADDRESS, SafeECDSASignerLaunchpadAbi, {
-    provider,
-  }) as unknown as SafeECDSASignerLaunchpad
-}
-
-/**
- * Returns an instance of the Safe4337Module contract.
- *
- * @param provider - The JSON-RPC provider used to interact with the Ethereum network.
- * @returns An instance of the Safe4337Module contract.
- */
-function getSafe4337ModuleContract(provider: ethers.JsonRpcProvider): Safe4337Module {
-  return new ethers.Contract(SAFE_4337_MODULE_ADDRESS, Safe4337ModuleAbi, { provider }) as unknown as Safe4337Module
-}
-
-/**
- * Returns an instance of the SafeWebAuthnSignerFactory contract.
- *
- * @param provider - The JSON-RPC provider used to interact with the Ethereum network.
- * @returns An instance of the SafeWebAuthnSignerFactory contract.
- */
-function getSafeWebAuthnSignerFactoryContract(provider: ethers.JsonRpcProvider): SafeWebAuthnSignerFactory {
-  return new ethers.Contract(WEBAUTHN_SIGNER_FACTORY_ADDRESS, SafeWebAuthnSignerFactoryAbi, {
-    provider,
-  }) as unknown as SafeWebAuthnSignerFactory
-}
-
-/**
- * Creates a SafeWebAuthnSigner contract instance.
- *
- * @param provider - The JSON-RPC provider.
- * @param address - The address of the contract.
- * @returns The SafeWebAuthnSigner contract instance.
- */
-function getSafeWebAuthnSignerContract(provider: ethers.JsonRpcProvider, address: string): SafeWebAuthnSigner {
-  return new ethers.Contract(address, SafeWebAuthnSignerAbi, { provider }) as unknown as SafeWebAuthnSigner
-}
 
 /**
  * Calculates the signer address from the given public key coordinates.
@@ -96,7 +46,7 @@ type SafeInitializer = {
 }
 
 function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumberish): string {
-  const safeInitHash = ethers.TypedDataEncoder.hash(
+  return ethers.TypedDataEncoder.hash(
     { verifyingContract: SAFE_SIGNER_LAUNCHPAD_ADDRESS, chainId },
     {
       SafeInit: [
@@ -112,8 +62,6 @@ function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumber
     },
     safeInitializer,
   )
-
-  return safeInitHash
 }
 
 function getLaunchpadInitializer(safeInitHash: string, optionalCallAddress = ethers.ZeroAddress, optionalCalldata = '0x'): string {
@@ -226,16 +174,11 @@ function getValidateUserOpData(userOp: PackedUserOperation, userOpHash: string, 
 
   return validateUserOpData
 }
-
 export type { SafeInitializer }
 
 export {
   getExecuteUserOpData,
   getLaunchpadInitializeThenUserOpData,
-  getSafeSignerLaunchpadContract,
-  getSafe4337ModuleContract,
-  getSafeWebAuthnSignerFactoryContract,
-  getSafeWebAuthnSignerContract,
   getSignerAddressFromPubkeyCoords,
   getSafeDeploymentData,
   getSafeAddress,

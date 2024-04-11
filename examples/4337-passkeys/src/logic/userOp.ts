@@ -55,7 +55,7 @@ type UserOperation = {
 // so that the estimation doesn't revert. But we also want to use a dummy signature for
 // more accurate `verificationGasLimit` (We want to run the P256 signature verification
 // code) & `preVerificationGas` (The signature length in bytes should be accurate) estimate.
-// The challenge is neither P256 Verification Gas or signature length are stable, so we make
+// The challenge is neither P256 Verification Gas nor signature length are stable, so we make
 // a calculated guess.
 const DUMMY_SIGNATURE = ethers.solidityPacked(
   ['uint48', 'uint48', 'bytes'],
