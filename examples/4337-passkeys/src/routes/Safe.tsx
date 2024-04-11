@@ -37,7 +37,7 @@ function Safe() {
       <p>Safe Address: {safeAddress}</p>
 
       <p>
-        {`Your Safe has been deployed. See it in the `}
+        Your Safe has been deployed. See it in the{' '}
         <a href={getSafeWalletAppSafeDashboardLink(safeAddress)}>{`Safe{Wallet} App`}</a>
       </p>
 
