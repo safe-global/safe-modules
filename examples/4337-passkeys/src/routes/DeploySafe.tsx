@@ -53,7 +53,7 @@ const loader: LoaderFunction = async () => {
 }
 
 function DeploySafe() {
-  const { passkey, safeAddress } = useLoaderData() as { passkey: PasskeyLocalStorageFormat; safeAddress: string }
+  const { passkey, safeAddress } = useLoaderData() as ReturnType<typeof loader>
   const { walletProvider } = useOutletContext<OutletContext>()
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
 
