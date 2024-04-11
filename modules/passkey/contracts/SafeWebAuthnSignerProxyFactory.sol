@@ -12,8 +12,9 @@ import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
  */
 contract SafeWebAuthnSignerProxyFactory is ICustomECDSASignerFactory {
     address public immutable SINGLETON;
-    constructor(address _singleton) {
-        SINGLETON = _singleton;
+
+    constructor() {
+        SINGLETON = address(new SafeWebAuthnSignerSingleton());
     }
 
     /**
