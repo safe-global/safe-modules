@@ -4,7 +4,7 @@ import CBOR from 'cbor'
  * Returns the flag for the user verification requirement.
  *
  * See: <https://w3c.github.io/webauthn/#enumdef-userverificationrequirement>
- * 
+ *
  * @param userVerification - The user verification requirement.
  * @returns The flag for the user verification requirement.
  */
@@ -35,7 +35,7 @@ export function base64UrlEncode(data: string | Uint8Array | ArrayBuffer): string
 /**
  * Decodes the x and y coordinates of the public key from a created public key credential response.
  * Inspired from <https://webauthn.guide/#registration>.
- * 
+ *
  * @param response - The authenticator attestation response.
  * @returns The x and y coordinates of the public key.
  */
@@ -62,7 +62,7 @@ export function decodePublicKey(response: Pick<AuthenticatorAttestationResponse,
  * the authenticator).
  *
  * See <https://w3c.github.io/webauthn/#clientdatajson-serialization>
- * 
+ *
  * @param response - The authenticator assertion response.
  * @returns The client data JSON.
  */
@@ -88,7 +88,7 @@ export function decodeClientDataFields(response: Pick<AuthenticatorAssertionResp
  * See:
  * - <https://datatracker.ietf.org/doc/html/rfc3279#section-2.2.3>
  * - <https://en.wikipedia.org/wiki/X.690#BER_encoding>
- * 
+ *
  * @param response - The authenticator assertion response.
  * @returns The r and s values of the signature.
  */
@@ -169,7 +169,7 @@ export function getSignatureBytes({
 
 /**
  * Encodes the signature bytes for a WebAuthn signer.
- * 
+ *
  * @param response - The authenticator assertion response.
  * @returns The encoded signature as a string.
  */
@@ -209,7 +209,7 @@ DUMMY_AUTHENTICATOR_DATA[32] = userVerificationFlag('required')
 
 /**
  * Returns the hexadecimal encoding of the specified {@link Uint8Array}.
- * 
+ *
  * @param bytes - The bytes to convert to a hex string.
  * @returns The hex string.
  */
