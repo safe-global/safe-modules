@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
 import * as ERC1271 from '../utils/erc1271'
-import { WebAuthnCredentials } from '../../test/utils/webauthn'
+import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 

@@ -11,7 +11,7 @@ import {
 import { expect } from 'chai'
 import CBOR from 'cbor'
 import { ethers } from 'ethers'
-import { WebAuthnCredentials } from '../../test/utils/webauthn'
+import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { base64UrlEncode } from '../../src/utils/webauthn'
 
 describe('WebAuthn Shim', () => {

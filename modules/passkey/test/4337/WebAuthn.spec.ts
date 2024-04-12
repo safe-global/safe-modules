@@ -9,7 +9,7 @@ import {
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
 import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
-import { WebAuthnCredentials } from '../../test/utils/webauthn'
+import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
