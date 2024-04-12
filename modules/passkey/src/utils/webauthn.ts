@@ -1,4 +1,3 @@
-import { MaxUint256, encodeABI, encodeBase64, isBytesLike, toHexString } from '../utils/helper'
 import CBOR from 'cbor'
 
 /**
@@ -26,8 +25,8 @@ export function userVerificationFlag(userVerification: UserVerificationRequireme
  * @returns the `base64url` encoded data as a string.
  */
 export function base64UrlEncode(data: string | Uint8Array | ArrayBuffer): string {
-  const bytes = isBytesLike(data) ? data : new Uint8Array(data)
-  return encodeBase64(bytes).replace(/\+/g, '-').replace(/\//g, '_').replace(/=*$/, '')
+  const buffer = typeof data === 'string' ? Buffer.from(data.replace(/^0x/, ''), 'hex') : Buffer.from(data)
+  return buffer.toString('base64url')
 }
 
 /**
@@ -95,7 +94,6 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
     const start = offset + 2
     const end = start + len
     const n = BigInt('0x' + toHexString(new Uint8Array(view.buffer.slice(start, end))))
-    check(n < MaxUint256)
     return [n, end] as const
   }
 
@@ -111,7 +109,10 @@ export function decodeSignature(response: Pick<AuthenticatorAssertionResponse, '
 }
 
 /**
- * Encodes the given WebAuthn signature into a string. Used for testing purposes.
+ * Encodes the given WebAuthn signature into a string. This computes the ABI-encoded signature parameters:
+ * ```solidity
+ * abi.encode(authenticatorData, clientDataFields, r, s);
+ * ```
  *
  * @param authenticatorData - The authenticator data as a Uint8Array.
  * @param clientDataFields - The client data fields as a string.
@@ -125,12 +126,33 @@ export function getSignatureBytes({
   r,
   s,
 }: {
-  authenticatorData: string | Uint8Array
+  authenticatorData: Uint8Array
   clientDataFields: string
-  r: string | bigint
-  s: string | bigint
+  r: bigint
+  s: bigint
 }): string {
-  return encodeABI(['bytes', 'string', 'uint256', 'uint256'], [authenticatorData, clientDataFields, r, s])
+  // Helper functions
+  // Convert a number to a 64-byte hex string with padded upto Hex string with 32 bytes
+  const encodeUint256 = (x: bigint | number) => x.toString(16).padStart(64, '0')
+  // Calculate the byte size of the dynamic data along with the length parameter alligned to 32 bytes
+  const byteSize = (data: Uint8Array) => 32 * (Math.ceil(data.length / 32) + 1) // +1 is for the length parameter
+  // Encode dynamic data padded with zeros if necessary in 32 bytes chunks
+  const encodeBytes = (data: Uint8Array) => `${encodeUint256(data.length)}${toHexString(data)}`.padEnd(byteSize(data) * 2, '0')
+
+  // authenticatorData starts after the first four words.
+  const authenticatorDataOffset = 32 * 4
+  // clientDataFields starts immediately after the authenticator data.
+  const clientDataFieldsOffset = authenticatorDataOffset + byteSize(authenticatorData)
+
+  return (
+    '0x' +
+    encodeUint256(authenticatorDataOffset) +
+    encodeUint256(clientDataFieldsOffset) +
+    encodeUint256(r) +
+    encodeUint256(s) +
+    encodeBytes(authenticatorData) +
+    encodeBytes(new TextEncoder().encode(clientDataFields))
+  )
 }
 
 /**
@@ -169,3 +191,10 @@ export const DUMMY_AUTHENTICATOR_DATA = new Uint8Array(37)
 // We fill it all with `0xfe` and set the appropriate user verification flag.
 DUMMY_AUTHENTICATOR_DATA.fill(0xfe)
 DUMMY_AUTHENTICATOR_DATA[32] = userVerificationFlag('required')
+
+/**
+ *  Returns a Hex from the %%bytes%% (Uint8Array).
+ */
+function toHexString(bytes: Uint8Array) {
+  return Buffer.from(bytes).toString('hex')
+}

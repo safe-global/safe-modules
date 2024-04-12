@@ -96,8 +96,8 @@ describe('SafeWebAuthnSignerFactory', () => {
         origin: 'https://safe.global',
       }
 
-      const r = ethers.id('signature.r')
-      const s = ethers.id('signature.s')
+      const r = BigInt(ethers.id('signature.r'))
+      const s = BigInt(ethers.id('signature.s'))
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
@@ -129,8 +129,8 @@ describe('SafeWebAuthnSignerFactory', () => {
         origin: 'https://safe.global',
       }
 
-      const r = ethers.id('signature.r')
-      const s = ethers.id('signature.s')
+      const r = BigInt(ethers.id('signature.r'))
+      const s = BigInt(ethers.id('signature.s'))
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
@@ -157,17 +157,19 @@ describe('SafeWebAuthnSignerFactory', () => {
       const { factory, mockVerifier } = await setupTests()
 
       const dataHash = ethers.id('some data to sign')
-      const authenticatorData = ethers.solidityPacked(
-        ['bytes32', 'uint8', 'uint32'],
-        [
-          ethers.toBeHex(ethers.MaxUint256),
-          0, // no flags
-          0xffffffff, // signCount
-        ],
+      const authenticatorData = ethers.getBytes(
+        ethers.solidityPacked(
+          ['bytes32', 'uint8', 'uint32'],
+          [
+            ethers.toBeHex(ethers.MaxUint256),
+            0, // no flags
+            0xffffffff, // signCount
+          ],
+        ),
       )
 
-      const r = ethers.id('signature.r')
-      const s = ethers.id('signature.s')
+      const r = BigInt(ethers.id('signature.r'))
+      const s = BigInt(ethers.id('signature.s'))
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 

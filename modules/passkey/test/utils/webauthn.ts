@@ -102,6 +102,7 @@ export interface AuthenticatorAssertionResponse {
 
 class Credential {
   public id: string
+  public rawId: Uint8Array
   public pk: bigint
 
   constructor(
@@ -110,6 +111,7 @@ class Credential {
   ) {
     this.pk = p256.utils.normPrivateKeyToScalar(p256.utils.randomPrivateKey())
     this.id = ethers.dataSlice(ethers.keccak256(ethers.dataSlice(p256.getPublicKey(this.pk, false), 1)), 12)
+    this.rawId = ethers.getBytes(this.id)
   }
 
   /**
@@ -185,8 +187,8 @@ export class WebAuthnCredentials {
     }
 
     return {
-      id: base64UrlEncode(credential.id),
-      rawId: ethers.getBytes(credential.id),
+      id: base64UrlEncode(credential.rawId),
+      rawId: credential.rawId.slice(),
       response: {
         clientDataJSON: b2ab(ethers.toUtf8Bytes(JSON.stringify(clientData))),
         attestationObject: b2ab(CBOR.encode(attestationObject)),
@@ -238,8 +240,8 @@ export class WebAuthnCredentials {
     })
 
     return {
-      id: base64UrlEncode(credential.id),
-      rawId: ethers.getBytes(credential.id),
+      id: base64UrlEncode(credential.rawId),
+      rawId: credential.rawId.slice(),
       response: {
         clientDataJSON: b2ab(ethers.toUtf8Bytes(JSON.stringify(clientData))),
         authenticatorData: b2ab(ethers.getBytes(authenticatorData)),
