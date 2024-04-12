@@ -56,6 +56,12 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       },
     })
 
+    const publicKey = decodePublicKey(credential.response)
+    // Deploy signer contract
+    await signerFactory.createSigner(publicKey.x, publicKey.y, await verifier.getAddress())
+    // Get signer address
+    const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, await verifier.getAddress())
+
     return {
       relayer,
       proxyFactory,
@@ -70,6 +76,7 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
       credential,
       paymaster,
       verifyingSigner,
+      signer,
     }
   })
 
@@ -95,18 +102,11 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         singleton,
         navigator,
         credential,
-        signerFactory,
-        verifier,
         paymaster,
         verifyingSigner,
         SafeL2,
+        signer,
       } = await setupTests()
-
-      const publicKey = decodePublicKey(credential.response)
-      // Deploy signer contract
-      await signerFactory.createSigner(publicKey.x, publicKey.y, await verifier.getAddress())
-      // Get signer address
-      const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, await verifier.getAddress())
 
       // Step 2: Create a userOp with initCode that would deploy a Safe account.
 
@@ -239,16 +239,11 @@ describe('Execute userOps with Paymaster: [@userstory]', () => {
         module,
         entryPoint,
         singleton,
-        verifier,
         credential,
         paymaster,
-        signerFactory,
         navigator,
+        signer,
       } = await generalSetup(deployments)
-
-      const publicKey = decodePublicKey(credential.response)
-      await signerFactory.createSigner(publicKey.x, publicKey.y, verifier.target)
-      const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, verifier.target)
 
       // The initializer data to enable the Safe4337Module as a module on a Safe
       const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
