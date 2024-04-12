@@ -2,7 +2,8 @@ import { expect } from 'chai'
 import { deployments, ethers, network } from 'hardhat'
 import { packGasParameters, unpackUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp'
 import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-4337-local-bundler'
-import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
+import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
+import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
 
 describe('WebAuthn Signers [@4337]', () => {
   before(function () {

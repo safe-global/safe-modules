@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { DUMMY_CLIENT_DATA_FIELDS, base64UrlEncode, getSignatureBytes } from '../utils/webauthn'
+import { DUMMY_CLIENT_DATA_FIELDS, base64UrlEncode, getSignatureBytes } from '../../src/utils/webauthn'
 
 const base64 = {
   encodeFromHex: (h: string) => {

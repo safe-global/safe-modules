@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from '../utils/webauthn'
+import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
+import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 import { buildSafeTransaction, buildSafeTransactionData, SafeDomain } from '../utils/safe'
 

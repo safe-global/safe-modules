@@ -2,7 +2,8 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
 import * as ERC1271 from './utils/erc1271'
-import { WebAuthnCredentials, decodePublicKey, encodeWebAuthnSignature } from './utils/webauthn'
+import { WebAuthnCredentials } from '../test/utils/webauthnShim'
+import { decodePublicKey, encodeWebAuthnSignature } from '../src/utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
 
 describe('Gas Benchmarking [@bench]', function () {
