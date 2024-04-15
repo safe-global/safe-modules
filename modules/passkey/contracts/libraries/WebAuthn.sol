@@ -68,24 +68,6 @@ library WebAuthn {
     AuthenticatorFlags internal constant USER_VERIFICATION = AuthenticatorFlags.wrap(0x04);
 
     /**
-     * @notice Casts calldata bytes to a WebAuthn signature data structure.
-     * @param signature The calldata bytes of the WebAuthn signature.
-     * @return data A pointer to the signature data in calldata.
-     * @dev This method casts the dynamic bytes array to a signature calldata pointer without
-     * additional verification. This is not a security issue for the WebAuthn implementation, as any
-     * signature data that would be represented from an invalid `signature` value, could also be
-     * encoded by a valid one. It does, however, mean that callers into the WebAuthn signature
-     * verification implementation might not validate as much of the data that they pass in as they
-     * would expect. With that in mind, callers should not rely on the encoding being verified.
-     */
-    function castSignature(bytes calldata signature) internal pure returns (Signature calldata data) {
-        // solhint-disable-next-line no-inline-assembly
-        assembly ("memory-safe") {
-            data := signature.offset
-        }
-    }
-
-    /**
      * @notice Encodes the client data JSON string from the specified challenge, and additional
      * client data fields.
      * @dev The client data JSON follows a very specific encoding process outlined in the Web
@@ -256,7 +238,11 @@ library WebAuthn {
         uint256 y,
         P256.Verifiers verifiers
     ) internal view returns (bool success) {
-        success = verifySignature(challenge, castSignature(signature), authenticatorFlags, x, y, verifiers);
+        Signature calldata signatureStruct;
+        (success, signatureStruct) = _castSignature(signature);
+        if (success) {
+            success = verifySignature(challenge, signatureStruct, authenticatorFlags, x, y, verifiers);
+        }
     }
 
     /**
@@ -285,6 +271,78 @@ library WebAuthn {
         bytes memory message = encodeSigningMessage(challenge, signature.authenticatorData, signature.clientDataFields);
         if (checkAuthenticatorFlags(signature.authenticatorData, authenticatorFlags)) {
             success = verifiers.verifySignatureAllowMalleability(_sha256(message), signature.r, signature.s, x, y);
+        }
+    }
+
+    /**
+     * @notice Casts calldata bytes to a WebAuthn signature data structure.
+     * @param signature The calldata bytes of the WebAuthn signature.
+     * @return isValid Whether or not the encoded signature bytes is valid.
+     * @return data A pointer to the signature data in calldata.
+     * @dev This method casts the dynamic bytes array to a signature calldata pointer with some
+     * additional verification. Specifically, we ensure that the signature bytes is encoded in the
+     * standard ABI encoding form, without additional padding bytes, to prevent attacks where valid
+     * signatures are padded with 0s in order to increase signature verifications the costs for
+     * ERC-4337 user operations. Additionally, this means that invalid signatures will cause the
+     * check signature function to return `false` instead of reverting, which is the expected
+     * behaviour for signature verification in ERC-4337.
+     */
+    function _castSignature(bytes calldata signature) private pure returns (bool isValid, Signature calldata data) {
+        uint256 authenticatorDataLength;
+        uint256 clientDataFieldsLength;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            data := signature.offset
+
+            // We read the length of the `bytes calldata` fields of the assembly structure in
+            // assembly, this ensures that Solidity does not revert in cases where we want to return
+            // `false` for incorrectly encoded signatures when accessing a `bytes calldata` field
+            // that points to somewhere outside of calldata (which would generate reverting code).
+            authenticatorDataLength := calldataload(add(data, calldataload(data)))
+            clientDataFieldsLength := calldataload(add(data, calldataload(add(data, 0x20))))
+        }
+
+        // Use of unchecked math so that we can manually check for overflows and return that the
+        // signature is invalid instead of reverting.
+        unchecked {
+            // Allow for signature encodings with and without aligning the bytes to 32-byte
+            // boundaries. This allows for slightly more efficient encoding of the `Signature` data,
+            // and only introducing very small amount of additional gas variance costs.
+            uint256 alignmentMask = ~uint256(0x1f);
+            uint256 authenticatorDataAlignedLength = (authenticatorDataLength + 0x1f) & alignmentMask;
+            uint256 clientDataFieldsAlignedLength = (clientDataFieldsLength + 0x1f) & alignmentMask;
+
+            // The fixed parts of the signature length are 6 32-byte words for a total of 196 bytes:
+            // - offset of the `authenticatorData` bytes
+            // - offset of the `clientDataFields` string
+            // - signature `r` value
+            // - signature `s` value
+            // - length of the `authenticatorData` bytes
+            // - length of the `clientDataFields` string
+            //
+            // This implies that the signature length must be in the range:
+            //      [196 + authenticatorDataLength + clientDataFieldsLength,
+            //       196 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength]
+            // or, with strict inequalities:
+            //      (195 + authenticatorDataLength + clientDataFieldsLength,
+            //       197 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength)
+            uint256 minLengthMinusOne = 195 + authenticatorDataLength + clientDataFieldsLength;
+            uint256 maxLengthPlusOne = 197 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength;
+
+            // Solidity generates conditional jump statements for `&&` and `||`, as they are
+            // short-cutting logical operators. We don't want that here, so use assembly:
+            // solhint-disable-next-line no-inline-assembly
+            uint256 signatureLength = signature.length;
+            assembly ("memory-safe") {
+                isValid := and(
+                    // ensure were no overflows because of the lengths. We don't check overflows in
+                    // individual operations, but just in the final result.
+                    and(gt(minLengthMinusOne, authenticatorDataLength), gt(minLengthMinusOne, clientDataFieldsLength)),
+                    // Check that the signature bytes length is in the valid range.
+                    and(gt(signatureLength, minLengthMinusOne), lt(signatureLength, maxLengthPlusOne))
+                )
+            }
         }
     }
 
