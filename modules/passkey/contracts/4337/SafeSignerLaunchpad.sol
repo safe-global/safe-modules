@@ -41,7 +41,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      *  {address} signerFactory - The custom ECDSA signer factory to use for creating an owner.
      *  {uint256} signerX - The X coordinate of the public key of the custom ECDSA signing scheme.
      *  {uint256} signerY - The Y coordinate of the public key of the custom ECDSA signing scheme.
-     *  {uint256} signerVerifiers - The ECDSA verifier contract used by the custom signing scheme.
+     *  {uint256} signerVerifiers - The P-256 verifiers to use for signature validation.
      *  {address} setupTo - The contract to `DELEGATECALL` during setup.
      *  {bytes} setupData - The calldata for the setup `DELEGATECALL`.
      *  {address} fallbackHandler - The fallback handler to initialize the Safe with.
@@ -132,7 +132,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifiers The address of the contract that verifies the signer's signature.
+     * @param signerVerifiers The P-256 verifiers to use for signature validation.
      * @param setupTo The contract to `DELEGATECALL` during setup.
      * @param setupData The calldata for the setup `DELEGATECALL`.
      * @param fallbackHandler The fallback handler to initialize the Safe with.
@@ -252,7 +252,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifiers The address of the contract that verifies the signer's signature.
+     * @param signerVerifiers The P-256 verifiers to use for signature validation.
      * @param setupTo The contract to `DELEGATECALL` during setup.
      * @param setupData The calldata for the setup `DELEGATECALL`.
      * @param fallbackHandler The fallback handler to initialize the Safe with.
@@ -307,7 +307,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifiers The address of the contract that verifies the signer's signature.
+     * @param signerVerifiers The P-256 verifiers to use for signature validation.
      * @return validationData An integer indicating the result of the validation.
      */
     function _validateSignatures(

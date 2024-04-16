@@ -48,7 +48,7 @@ describe('SafeWebAuthnSignerFactory', () => {
       for (const params of [
         [ethers.id('publicKey.otherX'), y, verifiers],
         [x, ethers.id('publicKey.otherY'), verifiers],
-        [x, y, '0xfefefefefefefefefefefefefefefefefefefefe'],
+        [x, y, `0x${'fe'.repeat(20)}`],
       ] as const) {
         expect(await factory.getSigner(...params)).to.not.equal(signer)
       }

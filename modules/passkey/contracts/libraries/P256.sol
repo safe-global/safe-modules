@@ -155,6 +155,12 @@ library P256 {
         if (precompileVerifier != address(0)) {
             success = verifySignatureAllowMalleability(IP256Verifier(precompileVerifier), message, r, s, x, y);
         }
+
+        // If the precompile verification was not successful, fallback to a configured Solidity {IP256Verifier}
+        // implementation. Note that this means that invalid signatures are potentially checked twice, once with the
+        // precompile and once with the fallback verifier. This is intentional as there is no reliable way to
+        // distinguish between the precompile being unavailable and the signature being invalid, as in both cases the
+        // `STATICCALL` to the precompile contract will return empty bytes.
         if (!success && fallbackVerifier != address(0)) {
             success = verifySignatureAllowMalleability(IP256Verifier(fallbackVerifier), message, r, s, x, y);
         }
