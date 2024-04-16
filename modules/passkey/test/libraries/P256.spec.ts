@@ -1,9 +1,9 @@
 import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
-import { Contract } from 'ethers'
 import { deployments, ethers } from 'hardhat'
 
 import { Account } from '../utils/p256'
+import { MockContract } from '../../typechain-types'
 
 describe('P256', function () {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -164,11 +164,11 @@ describe('P256', function () {
 
       const configurations = [
         // wrong return data length
-        (m: Contract) => m.givenAnyReturn(ethers.AbiCoder.defaultAbiCoder().encode(['bool', 'uint256'], [true, 42])),
+        (m: MockContract) => m.givenAnyReturn(ethers.AbiCoder.defaultAbiCoder().encode(['bool', 'uint256'], [true, 42])),
         // invalid boolean value
-        (m: Contract) => m.givenAnyReturnUint(ethers.MaxUint256),
+        (m: MockContract) => m.givenAnyReturnUint(ethers.MaxUint256),
         // revert
-        (m: Contract) => m.givenAnyRevert(),
+        (m: MockContract) => m.givenAnyRevert(),
       ]
       for (const configurePrecompile of configurations) {
         for (const configureVerifier of configurations) {

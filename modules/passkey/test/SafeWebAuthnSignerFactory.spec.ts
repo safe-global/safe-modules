@@ -127,6 +127,7 @@ describe('SafeWebAuthnSignerFactory', () => {
 
     it('Should return true when the verifier without precompile returns true', async () => {
       const { factory, mockVerifier } = await setupTests()
+      const mockVerifierAddress = await mockVerifier.getAddress()
 
       const dataHash = ethers.id('some data to sign')
       const clientData = {
@@ -155,7 +156,7 @@ describe('SafeWebAuthnSignerFactory', () => {
         true,
       )
 
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier.target)).to.equal(ERC1271.MAGIC_VALUE)
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifierAddress)).to.equal(ERC1271.MAGIC_VALUE)
     })
 
     it('Should return true when the precompile returns true', async () => {

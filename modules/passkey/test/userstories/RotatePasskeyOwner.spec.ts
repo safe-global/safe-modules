@@ -7,9 +7,9 @@ import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
   signSafeOp,
-} from '@safe-global/safe-4337/src/utils/userOp'
-import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
+} from '@safe-global/safe-4337/dist/src/utils/userOp'
+import { buildSignatureBytes } from '@safe-global/safe-4337/dist/src/utils/execution'
+import { chainId } from '@safe-global/safe-4337/dist/test/utils/encoding'
 
 /**
  * User story: Rotate passkey owner
@@ -60,8 +60,8 @@ describe('Rotate passkey owner [@userstory]', () => {
     })
 
     const publicKey = decodePublicKey(credential.response)
-    await signerFactory.createSigner(publicKey.x, publicKey.y, verifier.target)
-    const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, verifier.target)
+    await signerFactory.createSigner(publicKey.x, publicKey.y, FCLP256Verifier.address)
+    const signer = await signerFactory.getSigner(publicKey.x, publicKey.y, FCLP256Verifier.address)
 
     // The initializer data to enable the Safe4337Module as a module on a Safe
     const initializer = safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]])
@@ -103,6 +103,7 @@ describe('Rotate passkey owner [@userstory]', () => {
   it('should execute a userOp with replaced WebAuthn signer as Safe owner', async () => {
     // Step 1: Setup the contracts
     const { user, module, entryPoint, verifier, navigator, SafeL2, signer, signerFactory, safeAddress } = await setupTests()
+    const verifierAddress = await verifier.getAddress()
 
     // Check the owners of the created Safe
     const safeInstance = await ethers.getContractAt(SafeL2.abi, safeAddress)
@@ -128,8 +129,8 @@ describe('Rotate passkey owner [@userstory]', () => {
     })
 
     const publicKeyNew = decodePublicKey(credentialNew.response)
-    await signerFactory.createSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)
-    const signerNew = await signerFactory.getSigner(publicKeyNew.x, publicKeyNew.y, verifier.target)
+    await signerFactory.createSigner(publicKeyNew.x, publicKeyNew.y, verifierAddress)
+    const signerNew = await signerFactory.getSigner(publicKeyNew.x, publicKeyNew.y, verifierAddress)
 
     const data = safeInstance.interface.encodeFunctionData('swapOwner', [user.address, signer, signerNew])
 
