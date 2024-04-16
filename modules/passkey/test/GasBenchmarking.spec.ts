@@ -75,7 +75,7 @@ describe('Gas Benchmarking [@bench]', function () {
         })
 
         const { x, y } = decodePublicKey(credential.response)
-        const verifier = verifiers[key]
+        const verifier = await verifiers[key].getAddress()
 
         await factory.createSigner(x, y, verifier)
         const signer = await ethers.getContractAt('SafeWebAuthnSigner', await factory.getSigner(x, y, verifier))

@@ -6,7 +6,7 @@ import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/Pac
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
 
-import {ICustomECDSASignerFactory} from "../interfaces/ICustomECDSASignerFactory.sol";
+import {ISafeSignerFactory, P256} from "../interfaces/ISafeSignerFactory.sol";
 import {ISafe} from "../interfaces/ISafe.sol";
 import {ERC1271} from "../libraries/ERC1271.sol";
 
@@ -20,7 +20,7 @@ import {ERC1271} from "../libraries/ERC1271.sol";
  * `threshold` during the `setup` phase.
  * @custom:security-contact bounty@safe.global
  */
-contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
+contract SafeSignerLaunchpad is IAccount, SafeStorage {
     /**
      * @notice The EIP-712 type-hash for the domain separator used for verifying Safe initialization signatures.
      * @custom:computed-as keccak256("EIP712Domain(uint256 chainId,address verifyingContract)")
@@ -41,13 +41,13 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
      *  {address} signerFactory - The custom ECDSA signer factory to use for creating an owner.
      *  {uint256} signerX - The X coordinate of the public key of the custom ECDSA signing scheme.
      *  {uint256} signerY - The Y coordinate of the public key of the custom ECDSA signing scheme.
-     *  {uint256} signerVerifier - The ECDSA verifier contract used by the custom signing scheme.
+     *  {uint256} signerVerifiers - The P-256 verifiers to use for signature validation.
      *  {address} setupTo - The contract to `DELEGATECALL` during setup.
      *  {bytes} setupData - The calldata for the setup `DELEGATECALL`.
      *  {address} fallbackHandler - The fallback handler to initialize the Safe with.
-     * @custom:computed-as keccak256("SafeInit(address singleton,address signerFactory,uint256 signerX,uint256 signerY,address signerVerifier,address setupTo,bytes setupData,address fallbackHandler)")
+     * @custom:computed-as keccak256("SafeInit(address singleton,address signerFactory,uint256 signerX,uint256 signerY,uint192 signerVerifiers,address setupTo,bytes setupData,address fallbackHandler)")
      */
-    bytes32 private constant SAFE_INIT_TYPEHASH = 0x7f7af906ef00923ea8f1b598abfc8ac66033c2807e9facdf52353f813dd7c747;
+    bytes32 private constant SAFE_INIT_TYPEHASH = 0xb8b5d6678d8c3ed815330874b6c0a30142f64104b7f6d1361d6775a7dbc5318b;
 
     /**
      * @notice The keccak256 hash of the EIP-712 SafeInitOp struct, representing the user operation to execute alongside initialization.
@@ -132,7 +132,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
      * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifier The address of the contract that verifies the signer's signature.
+     * @param signerVerifiers The P-256 verifiers to use for signature validation.
      * @param setupTo The contract to `DELEGATECALL` during setup.
      * @param setupData The calldata for the setup `DELEGATECALL`.
      * @param fallbackHandler The fallback handler to initialize the Safe with.
@@ -143,7 +143,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
         address signerFactory,
         uint256 signerX,
         uint256 signerY,
-        address signerVerifier,
+        P256.Verifiers signerVerifiers,
         address setupTo,
         bytes memory setupData,
         address fallbackHandler
@@ -160,7 +160,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
                         signerFactory,
                         signerX,
                         signerY,
-                        signerVerifier,
+                        signerVerifiers,
                         setupTo,
                         keccak256(setupData),
                         fallbackHandler
@@ -203,7 +203,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
         address signerFactory;
         uint256 signerX;
         uint256 signerY;
-        address signerVerifier;
+        P256.Verifiers signerVerifiers;
         {
             require(this.initializeThenUserOp.selector == bytes4(userOp.callData[:4]), "invalid user operation data");
 
@@ -211,16 +211,25 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
             address setupTo;
             bytes memory setupData;
             address fallbackHandler;
-            (singleton, signerFactory, signerX, signerY, signerVerifier, setupTo, setupData, fallbackHandler, ) = abi.decode(
+            (singleton, signerFactory, signerX, signerY, signerVerifiers, setupTo, setupData, fallbackHandler, ) = abi.decode(
                 userOp.callData[4:],
-                (address, address, uint256, uint256, address, address, bytes, address, bytes)
+                (address, address, uint256, uint256, P256.Verifiers, address, bytes, address, bytes)
             );
-            bytes32 initHash = getInitHash(singleton, signerFactory, signerX, signerY, signerVerifier, setupTo, setupData, fallbackHandler);
+            bytes32 initHash = getInitHash(
+                singleton,
+                signerFactory,
+                signerX,
+                signerY,
+                signerVerifiers,
+                setupTo,
+                setupData,
+                fallbackHandler
+            );
 
             require(initHash == _initHash(), "invalid init hash");
         }
 
-        validationData = _validateSignatures(userOp, userOpHash, signerFactory, signerX, signerY, signerVerifier);
+        validationData = _validateSignatures(userOp, userOpHash, signerFactory, signerX, signerY, signerVerifiers);
         if (missingAccountFunds > 0) {
             // solhint-disable-next-line no-inline-assembly
             assembly ("memory-safe") {
@@ -243,7 +252,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
      * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifier The address of the contract that verifies the signer's signature.
+     * @param signerVerifiers The P-256 verifiers to use for signature validation.
      * @param setupTo The contract to `DELEGATECALL` during setup.
      * @param setupData The calldata for the setup `DELEGATECALL`.
      * @param fallbackHandler The fallback handler to initialize the Safe with.
@@ -254,7 +263,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
         address signerFactory,
         uint256 signerX,
         uint256 signerY,
-        address signerVerifier,
+        P256.Verifiers signerVerifiers,
         address setupTo,
         bytes calldata setupData,
         address fallbackHandler,
@@ -263,7 +272,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
         SafeStorage.singleton = singleton;
         {
             address[] memory owners = new address[](1);
-            owners[0] = ICustomECDSASignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifier);
+            owners[0] = ISafeSignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifiers);
 
             ISafe(address(this)).setup(owners, 1, setupTo, setupData, fallbackHandler, address(0), 0, payable(address(0)));
         }
@@ -294,6 +303,11 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
      *  - `validUntil`: 6-byte timestamp value, or zero for "infinite". The user operation is valid only up to this time.
      *  - `validAfter`: 6-byte timestamp. The user operation is valid only after this time.
      * @param userOp User operation struct.
+     * @param userOpHash User operation hash.
+     * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
+     * @param signerX The X coordinate of the signer's public key.
+     * @param signerY The Y coordinate of the signer's public key.
+     * @param signerVerifiers The P-256 verifiers to use for signature validation.
      * @return validationData An integer indicating the result of the validation.
      */
     function _validateSignatures(
@@ -302,7 +316,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
         address signerFactory,
         uint256 signerX,
         uint256 signerY,
-        address signerVerifier
+        P256.Verifiers signerVerifiers
     ) internal view returns (uint256 validationData) {
         uint48 validAfter;
         uint48 validUntil;
@@ -316,7 +330,7 @@ contract SafeECDSASignerLaunchpad is IAccount, SafeStorage {
 
         bytes32 operationHash = getOperationHash(userOpHash, validAfter, validUntil);
         try
-            ICustomECDSASignerFactory(signerFactory).isValidSignatureForSigner(operationHash, signature, signerX, signerY, signerVerifier)
+            ISafeSignerFactory(signerFactory).isValidSignatureForSigner(operationHash, signature, signerX, signerY, signerVerifiers)
         returns (bytes4 magicValue) {
             // The timestamps are validated by the entry point, therefore we will not check them again
             validationData = _packValidationData(magicValue != ERC1271.MAGIC_VALUE, validUntil, validAfter);

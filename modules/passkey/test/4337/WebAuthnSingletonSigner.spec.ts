@@ -110,7 +110,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
           {
             op: 0 as const,
             to: signer.target,
-            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifier: verifier.target }]),
+            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifiers: verifier.target }]),
           },
         ]),
       ]),
@@ -167,7 +167,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
     await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
 
     expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.equal(0)
-    expect(await signer.getOwner(safeAddress)).to.deep.equal([0n, 0n, ethers.ZeroAddress])
+    expect(await signer.getOwner(safeAddress)).to.deep.equal([0n, 0n, 0n])
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
     await waitForUserOp(userOp)

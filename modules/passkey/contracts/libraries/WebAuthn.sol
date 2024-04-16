@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IP256Verifier, P256} from "./P256.sol";
+import {P256} from "./P256.sol";
 
 /**
  * @title WebAuthn Signature Verification
@@ -10,7 +10,7 @@ import {IP256Verifier, P256} from "./P256.sol";
  * @custom:security-contact bounty@safe.global
  */
 library WebAuthn {
-    using P256 for IP256Verifier;
+    using P256 for P256.Verifiers;
 
     /**
      * @notice The WebAuthn signature data format.
@@ -245,7 +245,7 @@ library WebAuthn {
      * @param authenticatorFlags The authenticator data flags that must be set.
      * @param x The x-coordinate of the credential's public key.
      * @param y The y-coordinate of the credential's public key.
-     * @param verifier The P-256 verifier implementation to use.
+     * @param verifiers The P-256 verifier configuration to use.
      * @return success Whether the signature is valid.
      */
     function verifySignature(
@@ -254,9 +254,9 @@ library WebAuthn {
         AuthenticatorFlags authenticatorFlags,
         uint256 x,
         uint256 y,
-        IP256Verifier verifier
+        P256.Verifiers verifiers
     ) internal view returns (bool success) {
-        success = verifySignature(challenge, castSignature(signature), authenticatorFlags, x, y, verifier);
+        success = verifySignature(challenge, castSignature(signature), authenticatorFlags, x, y, verifiers);
     }
 
     /**
@@ -266,7 +266,7 @@ library WebAuthn {
      * @param authenticatorFlags The authenticator data flags that must be set.
      * @param x The x-coordinate of the credential's public key.
      * @param y The y-coordinate of the credential's public key.
-     * @param verifier The P-256 verifier implementation to use.
+     * @param verifiers The P-256 verifier configuration to use.
      * @return success Whether the signature is valid.
      */
     function verifySignature(
@@ -275,7 +275,7 @@ library WebAuthn {
         AuthenticatorFlags authenticatorFlags,
         uint256 x,
         uint256 y,
-        IP256Verifier verifier
+        P256.Verifiers verifiers
     ) internal view returns (bool success) {
         // The order of operations here is slightly counter-intuitive (in particular, you do not
         // need to encode the signing message if the expected authenticator flags are missing).
@@ -284,7 +284,7 @@ library WebAuthn {
 
         bytes memory message = encodeSigningMessage(challenge, signature.authenticatorData, signature.clientDataFields);
         if (checkAuthenticatorFlags(signature.authenticatorData, authenticatorFlags)) {
-            success = verifier.verifySignatureAllowMalleability(_sha256(message), signature.r, signature.s, x, y);
+            success = verifiers.verifySignatureAllowMalleability(_sha256(message), signature.r, signature.s, x, y);
         }
     }
 

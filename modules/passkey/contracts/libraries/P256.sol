@@ -18,6 +18,16 @@ library P256 {
     uint256 internal constant _N_DIV_2 = 57896044605178124381348723474703786764998477612067880171211129530534256022184;
 
     /**
+     * @notice P-256 precompile and fallback verifiers.
+     * @dev This is the packed `uint32(precompile) | uint160(fallback)` addresses to use for the
+     * verifiers. This allows both a precompile and a fallback Solidity implementation of the P-256
+     * curve to be specified. For networks where the P-256 precompile is planned to be enabled but
+     * not yet available, this allows for a verifier to seamlessly start using the precompile once
+     * it becomes available.
+     */
+    type Verifiers is uint192;
+
+    /**
      * @notice Verifies the signature of a message using the P256 elliptic curve with signature
      * malleability check.
      * @dev Note that a signature is valid for both `+s` and `-s`, making it trivial to, given a
@@ -48,6 +58,32 @@ library P256 {
         }
 
         success = verifySignatureAllowMalleability(verifier, message, r, s, x, y);
+    }
+
+    /**
+     * @notice Verifies the signature of a message using the P256 elliptic curve with signature
+     * malleability check.
+     * @param verifiers The P-256 verifiers to use.
+     * @param message The signed message.
+     * @param r The r component of the signature.
+     * @param s The s component of the signature.
+     * @param x The x coordinate of the public key.
+     * @param y The y coordinate of the public key.
+     * @return success A boolean indicating whether the signature is valid or not.
+     */
+    function verifySignature(
+        Verifiers verifiers,
+        bytes32 message,
+        uint256 r,
+        uint256 s,
+        uint256 x,
+        uint256 y
+    ) internal view returns (bool success) {
+        if (s > _N_DIV_2) {
+            return false;
+        }
+
+        success = verifySignatureAllowMalleability(verifiers, message, r, s, x, y);
     }
 
     /**
@@ -92,6 +128,41 @@ library P256 {
                 // Call does not revert
                 staticcall(gas(), verifier, input, 160, 0, 32)
             )
+        }
+    }
+
+    /**
+     * @notice Verifies the signature of a message using P256 elliptic curve, without signature
+     * malleability check.
+     * @param verifiers The P-256 verifiers to use.
+     * @param message The signed message.
+     * @param r The r component of the signature.
+     * @param s The s component of the signature.
+     * @param x The x coordinate of the public key.
+     * @param y The y coordinate of the public key.
+     * @return success A boolean indicating whether the signature is valid or not.
+     */
+    function verifySignatureAllowMalleability(
+        Verifiers verifiers,
+        bytes32 message,
+        uint256 r,
+        uint256 s,
+        uint256 x,
+        uint256 y
+    ) internal view returns (bool success) {
+        address precompileVerifier = address(uint160(uint256(Verifiers.unwrap(verifiers)) >> 160));
+        address fallbackVerifier = address(uint160(Verifiers.unwrap(verifiers)));
+        if (precompileVerifier != address(0)) {
+            success = verifySignatureAllowMalleability(IP256Verifier(precompileVerifier), message, r, s, x, y);
+        }
+
+        // If the precompile verification was not successful, fallback to a configured Solidity {IP256Verifier}
+        // implementation. Note that this means that invalid signatures are potentially checked twice, once with the
+        // precompile and once with the fallback verifier. This is intentional as there is no reliable way to
+        // distinguish between the precompile being unavailable and the signature being invalid, as in both cases the
+        // `STATICCALL` to the precompile contract will return empty bytes.
+        if (!success && fallbackVerifier != address(0)) {
+            success = verifySignatureAllowMalleability(IP256Verifier(fallbackVerifier), message, r, s, x, y);
         }
     }
 }

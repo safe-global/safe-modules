@@ -1,3 +1,4 @@
+import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
@@ -12,38 +13,42 @@ describe('SafeWebAuthnSignerFactory', () => {
 
     const MockContract = await ethers.getContractFactory('MockContract')
     const mockVerifier = await MockContract.deploy()
+    const precompileAddress = `0x${'00'.repeat(18)}0100`
+    const mockPrecompile = await ethers.getContractAt('MockContract', precompileAddress)
+    await setCode(precompileAddress, await ethers.provider.getCode(mockVerifier))
+    const verifiers = BigInt(ethers.solidityPacked(['uint32', 'uint160'], [mockPrecompile.target, mockVerifier.target]))
 
-    return { factory, mockVerifier }
+    return { factory, mockPrecompile, mockVerifier, verifiers }
   })
 
   describe('getSigner', function () {
     it('Should return the address that a signer will be created on', async () => {
-      const { factory, mockVerifier } = await setupTests()
+      const { factory, verifiers } = await setupTests()
 
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
-      const signer = await factory.getSigner(x, y, mockVerifier)
+      const signer = await factory.getSigner(x, y, verifiers)
 
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.equal(0)
 
-      await factory.createSigner(x, y, mockVerifier)
+      await factory.createSigner(x, y, verifiers)
 
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.not.equal(0)
     })
 
     it('Should return different signer for different inputs', async () => {
-      const { factory, mockVerifier } = await setupTests()
+      const { factory, verifiers } = await setupTests()
 
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
-      const signer = await factory.getSigner(x, y, mockVerifier)
+      const signer = await factory.getSigner(x, y, verifiers)
 
       for (const params of [
-        [ethers.id('publicKey.otherX'), y, mockVerifier],
-        [x, ethers.id('publicKey.otherY'), mockVerifier],
-        [x, y, '0x0000000000000000000000000000000000000100'],
+        [ethers.id('publicKey.otherX'), y, verifiers],
+        [x, ethers.id('publicKey.otherY'), verifiers],
+        [x, y, `0x${'fe'.repeat(20)}`],
       ] as const) {
         expect(await factory.getSigner(...params)).to.not.equal(signer)
       }
@@ -52,41 +57,75 @@ describe('SafeWebAuthnSignerFactory', () => {
 
   describe('createSigner', function () {
     it('Should create a signer and return its deterministic address', async () => {
-      const { factory, mockVerifier } = await setupTests()
+      const { factory, verifiers } = await setupTests()
 
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
-      const signer = await factory.createSigner.staticCall(x, y, mockVerifier)
+      const signer = await factory.createSigner.staticCall(x, y, verifiers)
 
       const SafeWebAuthnSigner = await ethers.getContractFactory('SafeWebAuthnSigner')
-      const { data: initCode } = await SafeWebAuthnSigner.getDeployTransaction(x, y, mockVerifier)
+      const { data: initCode } = await SafeWebAuthnSigner.getDeployTransaction(x, y, verifiers)
       expect(signer).to.equal(ethers.getCreate2Address(await factory.getAddress(), ethers.ZeroHash, ethers.keccak256(initCode)))
 
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.equal(0)
 
-      await factory.createSigner(x, y, mockVerifier)
+      await factory.createSigner(x, y, verifiers)
 
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.not.equal(0)
     })
 
     it('Should be idempotent', async () => {
-      const { factory, mockVerifier } = await setupTests()
+      const { factory, verifiers } = await setupTests()
 
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
-      const signer = await factory.createSigner.staticCall(x, y, mockVerifier)
+      const signer = await factory.createSigner.staticCall(x, y, verifiers)
 
-      await factory.createSigner(x, y, mockVerifier)
+      await factory.createSigner(x, y, verifiers)
 
-      expect(await factory.createSigner.staticCall(x, y, mockVerifier)).to.eq(signer)
-      await expect(factory.createSigner(x, y, mockVerifier)).to.not.be.reverted
+      expect(await factory.createSigner.staticCall(x, y, verifiers)).to.eq(signer)
+      await expect(factory.createSigner(x, y, verifiers)).to.not.be.reverted
     })
   })
 
   describe('isValidSignatureForSigner', function () {
     it('Should return true when the verifier returns true', async () => {
+      const { factory, mockPrecompile, mockVerifier, verifiers } = await setupTests()
+
+      const dataHash = ethers.id('some data to sign')
+      const clientData = {
+        type: 'webauthn.get' as const,
+        challenge: base64UrlEncode(dataHash),
+        origin: 'https://safe.global',
+      }
+
+      const r = BigInt(ethers.id('signature.r'))
+      const s = BigInt(ethers.id('signature.s'))
+      const x = ethers.id('publicKey.x')
+      const y = ethers.id('publicKey.y')
+
+      const signature = getSignatureBytes({
+        authenticatorData: DUMMY_AUTHENTICATOR_DATA,
+        clientDataFields: '"origin":"https://safe.global"',
+        r,
+        s,
+      })
+
+      await mockPrecompile.givenAnyReturnBool(false)
+      await mockVerifier.givenCalldataReturnBool(
+        ethers.solidityPacked(
+          ['bytes32', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [ethers.sha256(encodeWebAuthnSigningMessage(clientData, DUMMY_AUTHENTICATOR_DATA)), r, s, x, y],
+        ),
+        true,
+      )
+
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, verifiers)).to.equal(ERC1271.MAGIC_VALUE)
+    })
+
+    it('Should return true when the verifier without precompile returns true', async () => {
       const { factory, mockVerifier } = await setupTests()
 
       const dataHash = ethers.id('some data to sign')
@@ -116,11 +155,44 @@ describe('SafeWebAuthnSignerFactory', () => {
         true,
       )
 
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.equal(ERC1271.MAGIC_VALUE)
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier.target)).to.equal(ERC1271.MAGIC_VALUE)
+    })
+
+    it('Should return true when the precompile returns true', async () => {
+      const { factory, mockPrecompile, verifiers } = await setupTests()
+
+      const dataHash = ethers.id('some data to sign')
+      const clientData = {
+        type: 'webauthn.get' as const,
+        challenge: base64UrlEncode(dataHash),
+        origin: 'https://safe.global',
+      }
+
+      const r = BigInt(ethers.id('signature.r'))
+      const s = BigInt(ethers.id('signature.s'))
+      const x = ethers.id('publicKey.x')
+      const y = ethers.id('publicKey.y')
+
+      const signature = getSignatureBytes({
+        authenticatorData: DUMMY_AUTHENTICATOR_DATA,
+        clientDataFields: '"origin":"https://safe.global"',
+        r,
+        s,
+      })
+
+      await mockPrecompile.givenCalldataReturnBool(
+        ethers.solidityPacked(
+          ['bytes32', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [ethers.sha256(encodeWebAuthnSigningMessage(clientData, DUMMY_AUTHENTICATOR_DATA)), r, s, x, y],
+        ),
+        true,
+      )
+
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, verifiers)).to.equal(ERC1271.MAGIC_VALUE)
     })
 
     it('Should return false when the verifier does not return true', async () => {
-      const { factory, mockVerifier } = await setupTests()
+      const { factory, mockVerifier, verifiers } = await setupTests()
 
       const dataHash = ethers.id('some data to sign')
       const clientData = {
@@ -150,11 +222,11 @@ describe('SafeWebAuthnSignerFactory', () => {
         '0xfe',
       )
 
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.not.equal(ERC1271.MAGIC_VALUE)
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, verifiers)).to.not.equal(ERC1271.MAGIC_VALUE)
     })
 
     it('Should return false on non-matching authenticator flags', async () => {
-      const { factory, mockVerifier } = await setupTests()
+      const { factory, mockPrecompile, mockVerifier, verifiers } = await setupTests()
 
       const dataHash = ethers.id('some data to sign')
       const authenticatorData = ethers.getBytes(
@@ -180,8 +252,9 @@ describe('SafeWebAuthnSignerFactory', () => {
         s,
       })
 
+      await mockPrecompile.givenAnyReturnBool(true)
       await mockVerifier.givenAnyReturnBool(true)
-      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, mockVerifier)).to.not.equal(ERC1271.MAGIC_VALUE)
+      expect(await factory.isValidSignatureForSigner(dataHash, signature, x, y, verifiers)).to.not.equal(ERC1271.MAGIC_VALUE)
     })
   })
 })
