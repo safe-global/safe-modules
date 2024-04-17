@@ -33,6 +33,8 @@
     "build:ts": "rimraf dist && tsc",
     "coverage": "hardhat coverage",
     "codesize": "hardhat codesize",
+    "deploy-all": "hardhat deploy-contracts --network",
+    "deploy": "hardhat deploy --network",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "npm run lint:sol && npm run lint:ts",
