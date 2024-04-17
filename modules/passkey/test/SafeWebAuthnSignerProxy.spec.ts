@@ -32,18 +32,19 @@ describe('SafeWebAuthnSignerProxy', () => {
       const [sender] = await ethers.getSigners()
       const mockSingleton = await ethers.getContractAt('MockContract', await (await ethers.getContractFactory('MockContract')).deploy())
 
+      const verifiers = ethers.solidityPacked(['uint32', 'address'], [0, mockVerifier.target])
+
       const signerProxy = await ethers.getContractAt(
         'MockContract',
-        await (await ethers.getContractFactory('SafeWebAuthnSignerProxy')).deploy(mockSingleton, x, y, mockVerifier),
+        await (await ethers.getContractFactory('SafeWebAuthnSignerProxy')).deploy(mockSingleton, x, y, verifiers),
       )
 
       const callData = ethers.hexlify(ethers.randomBytes(36))
       await signerProxy.givenAnyReturnBool(true)
-
       await sender.sendTransaction({ to: signerProxy.target, value: 0, data: callData })
 
       expect(await signerProxy.invocationCount()).to.equal(1)
-      const data = ethers.solidityPacked(['bytes', 'uint256', 'uint256', 'address'], [callData, x, y, mockVerifier.target])
+      const data = ethers.solidityPacked(['bytes', 'uint256', 'uint256', 'uint192'], [callData, x, y, verifiers])
       expect(await signerProxy.invocationCountForCalldata(data)).to.equal(1)
     })
   })

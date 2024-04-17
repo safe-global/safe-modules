@@ -75,7 +75,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = decodePublicKey(credential.response)
-      const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
+
+      const precompileAddress = `0x${'00'.repeat(18)}0100`
+      const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), verifierAddress]))
+      const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifiers)
 
       const safeInit = {
         singleton: singleton.target,
@@ -209,8 +212,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifier } = await setupTests()
-      const verifierAddress = await verifier.getAddress()
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifiers } = await setupTests()
+      const verifierAddress = await verifiers.getAddress()
       const credential = navigator.credentials.create({
         publicKey: {
           rp: {

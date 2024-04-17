@@ -22,7 +22,13 @@ contract SafeWebAuthnSignerProxyFactory is ISafeSignerFactory {
      */
     function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view override returns (address signer) {
         bytes32 codeHash = keccak256(
-            abi.encodePacked(type(SafeWebAuthnSignerProxy).creationCode, uint256(uint160(SINGLETON)), x, y, uint256(P256.Verifiers.unwrap(verifiers)))
+            abi.encodePacked(
+                type(SafeWebAuthnSignerProxy).creationCode,
+                uint256(uint160(SINGLETON)),
+                x,
+                y,
+                uint256(P256.Verifiers.unwrap(verifiers))
+            )
         );
         signer = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
@@ -30,7 +36,7 @@ contract SafeWebAuthnSignerProxyFactory is ISafeSignerFactory {
     /**
      * @inheritdoc ISafeSignerFactory
      */
-    function createSigner(uint256 x, uint256 y,  P256.Verifiers verifiers) external returns (address signer) {
+    function createSigner(uint256 x, uint256 y, P256.Verifiers verifiers) external returns (address signer) {
         signer = getSigner(x, y, verifiers);
 
         if (_hasNoCode(signer)) {
