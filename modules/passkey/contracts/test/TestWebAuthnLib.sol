@@ -4,6 +4,12 @@ pragma solidity ^0.8.0;
 import {P256, WebAuthn} from "../libraries/WebAuthn.sol";
 
 contract TestWebAuthnLib {
+    function castSignature(bytes calldata signature) external pure returns (WebAuthn.Signature calldata data) {
+        bool success;
+        (success, data) = WebAuthn.castSignature(signature);
+        require(success, "WebAuthnLib: invalid signature");
+    }
+
     function encodeClientDataJson(
         bytes32 challenge,
         string calldata clientDataFields

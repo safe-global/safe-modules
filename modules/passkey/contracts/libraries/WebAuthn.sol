@@ -105,7 +105,7 @@ library WebAuthn {
             uint256 authenticatorDataAlignedLength = (authenticatorDataLength + 0x1f) & alignmentMask;
             uint256 clientDataFieldsAlignedLength = (clientDataFieldsLength + 0x1f) & alignmentMask;
 
-            // The fixed parts of the signature length are 6 32-byte words for a total of 196 bytes:
+            // The fixed parts of the signature length are 6 32-byte words for a total of 192 bytes:
             // - offset of the `authenticatorData` bytes
             // - offset of the `clientDataFields` string
             // - signature `r` value
@@ -114,10 +114,10 @@ library WebAuthn {
             // - length of the `clientDataFields` string
             //
             // This implies that the signature length must be less than or equal to:
-            //      196 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength
+            //      192 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength
             // which is equivalent to strictly less than:
-            //      197 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength
-            isValid = signature.length < 197 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength;
+            //      193 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength
+            isValid = signature.length < 193 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength;
         }
     }
 
