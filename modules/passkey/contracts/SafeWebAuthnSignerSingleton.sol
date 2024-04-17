@@ -2,7 +2,6 @@
 pragma solidity >=0.8.0;
 
 import {SignatureValidator} from "./base/SignatureValidator.sol";
-import {IP256Verifier} from "./interfaces/IP256Verifier.sol";
 import {P256, WebAuthn} from "./libraries/WebAuthn.sol";
 /**
  * @title WebAuthn Safe Signature Validator Singleton
