@@ -8,19 +8,18 @@ import {P256, WebAuthn} from "./libraries/WebAuthn.sol";
  * @custom:security-contact bounty@safe.global
  */
 contract SafeWebAuthnSignerProxy {
-        
     /**
      * @notice The X coordinate of the P-256 public key of the WebAuthn credential.
      */
-    uint256 internal immutable X;
+    uint256 public immutable X;
     /**
      * @notice The Y coordinate of the P-256 public key of the WebAuthn credential.
      */
-    uint256 internal immutable Y;
+    uint256 public immutable Y;
     /**
      * @notice The P-256 verifiers used for ECDSA signature validation.
      */
-    P256.Verifiers internal immutable VERIFIERS;
+    P256.Verifiers public immutable VERIFIERS;
     address internal immutable SINGLETON;
     constructor(address implementation, uint256 x, uint256 y, P256.Verifiers verifiers) {
         SINGLETON = implementation;

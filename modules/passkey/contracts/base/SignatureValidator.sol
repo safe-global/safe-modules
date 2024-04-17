@@ -24,7 +24,7 @@ abstract contract SignatureValidator {
         assembly {
             x := calldataload(sub(calldatasize(), 88))
             y := calldataload(sub(calldatasize(), 56))
-            verifiers := shr(96, calldataload(sub(calldatasize(), 24)))
+            verifiers := shr(64, calldataload(sub(calldatasize(), 24)))
         }
         if (_verifySignature(keccak256(data), signature, x, y, verifiers)) {
             magicValue = ERC1271.LEGACY_MAGIC_VALUE;
@@ -45,7 +45,7 @@ abstract contract SignatureValidator {
         assembly {
             x := calldataload(sub(calldatasize(), 88))
             y := calldataload(sub(calldatasize(), 56))
-            verifiers := shr(96, calldataload(sub(calldatasize(), 24)))
+            verifiers := shr(64, calldataload(sub(calldatasize(), 24)))
         }
 
         if (_verifySignature(message, signature, x, y, verifiers)) {

@@ -77,7 +77,7 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
         })
 
         const { x, y } = decodePublicKey(credential.response)
-        const verifier = verifiers[key]
+        const verifier = verifiers[key].target
 
         const isValidSignatureInterface = new ethers.Interface(['function isValidSignature(bytes32,bytes) external view returns (bytes4)'])
         await proxyFactory.createSigner(x, y, verifier)
