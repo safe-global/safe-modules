@@ -9,7 +9,7 @@ import {
   signSafeOp,
 } from '@safe-global/safe-4337/dist/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/dist/src/utils/execution'
-import { chainId } from '@safe-global/safe-4337/dist/test/utils/encoding'
+import { chainId } from '../utils/hardhat'
 
 /**
  * User story: Rotate passkey owner
