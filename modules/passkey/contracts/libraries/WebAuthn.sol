@@ -73,10 +73,9 @@ library WebAuthn {
      * @return isValid Whether or not the encoded signature bytes is valid.
      * @return data A pointer to the signature data in calldata.
      * @dev This method casts the dynamic bytes array to a signature calldata pointer with some
-     * additional verification. Specifically, we ensure that the signature bytes is encoded in the
-     * standard ABI encoding form, without additional padding bytes, to prevent attacks where valid
-     * signatures are padded with 0s in order to increase signature verifications the costs for
-     * ERC-4337 user operations.
+     * additional verification. Specifically, we ensure that the signature bytes encoding is no
+     * larger than standard ABI encoding form, to prevent attacks where valid signatures are padded
+     * with 0s in order to increase signature verifications the costs for ERC-4337 user operations.
      */
     function castSignature(bytes calldata signature) internal pure returns (bool isValid, Signature calldata data) {
         uint256 authenticatorDataLength;
