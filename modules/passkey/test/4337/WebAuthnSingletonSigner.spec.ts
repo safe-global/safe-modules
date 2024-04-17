@@ -78,6 +78,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
       signer,
       navigator,
     } = await setupTests()
+    const verifierAddress = await verifier.getAddress()
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -110,7 +111,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
           {
             op: 0 as const,
             to: signer.target,
-            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifiers: verifier.target }]),
+            data: signer.interface.encodeFunctionData('setOwner', [{ ...publicKey, verifiers: verifierAddress }]),
           },
         ]),
       ]),

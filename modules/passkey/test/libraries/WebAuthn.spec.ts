@@ -25,9 +25,9 @@ describe('WebAuthn Library', () => {
 
       for (let i = 0; i < 50; i++) {
         const challenge = ethers.hexlify(ethers.randomBytes(32))
-        const cliengtData = JSON.parse(await webAuthnLib.encodeClientDataJson(challenge, DUMMY_CLIENT_DATA_FIELDS))
+        const clientData = JSON.parse(await webAuthnLib.encodeClientDataJson(challenge, DUMMY_CLIENT_DATA_FIELDS))
 
-        expect(cliengtData.challenge).to.be.equal(base64.encodeFromHex(challenge))
+        expect(clientData.challenge).to.be.equal(base64.encodeFromHex(challenge))
       }
     })
   })
@@ -56,6 +56,7 @@ describe('WebAuthn Library', () => {
   describe('verifySignature', function () {
     it('Should return false when the verifier returns false', async () => {
       const { webAuthnLib, mockP256Verifier } = await setupTests()
+      const mockP256VerifierAddress = await mockP256Verifier.getAddress()
       await mockP256Verifier.givenAnyReturnBool(false)
 
       const authenticatorData = ethers.randomBytes(100)
@@ -71,13 +72,14 @@ describe('WebAuthn Library', () => {
       }
       const signatureBytes = getSignatureBytes(signature)
 
-      expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
+      expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.false
 
-      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.false
     })
 
     it('Should return false on non-matching authenticator flags', async () => {
       const { webAuthnLib, mockP256Verifier } = await setupTests()
+      const mockP256VerifierAddress = await mockP256Verifier.getAddress()
       // The authenticator check happens on the library level, so false is returned before the verifier is called
       await mockP256Verifier.givenAnyReturnBool(true)
 
@@ -94,13 +96,14 @@ describe('WebAuthn Library', () => {
       }
       const signatureBytes = getSignatureBytes(signature)
 
-      expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
+      expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.false
 
-      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.false
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.false
     })
 
     it('Should return true when the verifier returns true', async () => {
       const { webAuthnLib, mockP256Verifier } = await setupTests()
+      const mockP256VerifierAddress = await mockP256Verifier.getAddress()
       await mockP256Verifier.givenAnyReturnBool(true)
 
       const authenticatorData = ethers.randomBytes(100)
@@ -115,9 +118,9 @@ describe('WebAuthn Library', () => {
       }
       const signatureBytes = getSignatureBytes(signature)
 
-      expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.true
+      expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
 
-      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256Verifier.target)).to.be.true
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
     })
   })
 })
