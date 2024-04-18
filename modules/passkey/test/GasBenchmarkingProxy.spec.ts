@@ -5,6 +5,7 @@ import * as ERC1271 from './utils/erc1271'
 import { WebAuthnCredentials } from './utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../src/utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
+import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
 describe('Gas Benchmarking Proxy [@bench]', function () {
   const navigator = {
@@ -81,8 +82,14 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
         const verifier = verifiers[key].target
 
         const isValidSignatureInterface = new ethers.Interface(['function isValidSignature(bytes32,bytes) external view returns (bytes4)'])
-        await proxyFactory.createSigner(x, y, verifier)
-        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await proxyFactory.getSigner(x, y, verifier))
+
+        const precompileAddress = `0x${'00'.repeat(18)}0100`
+        await setCode(precompileAddress, await ethers.provider.getCode(verifier))
+
+        const verifiersData = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), verifier]))
+
+        await proxyFactory.createSigner(x, y, verifiersData)
+        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await proxyFactory.getSigner(x, y, verifiersData))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(
