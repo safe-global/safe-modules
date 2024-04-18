@@ -48,6 +48,16 @@ function hexStringToUint8Array(hexString: string): Uint8Array {
 }
 
 /**
+ * Returns an absolute value of a BigInt.
+ *
+ * @param n The BigInt to get the absolute value of.
+ * @returns The absolute value of the BigInt.
+ */
+function abs(n: bigint): bigint {
+  return n < 0n ? -n : n
+}
+
+/**
  * Represents the status of a request.
  */
 enum RequestStatus {
@@ -57,4 +67,4 @@ enum RequestStatus {
   ERROR,
 }
 
-export { RequestStatus, numberToUnpaddedHex, getRandomUint256, hexStringToUint8Array }
+export { RequestStatus, numberToUnpaddedHex, getRandomUint256, hexStringToUint8Array, abs }

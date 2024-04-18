@@ -1,4 +1,6 @@
 import { ethers } from 'ethers'
+import { abi as EntryPointAbi } from '@account-abstraction/contracts/artifacts/EntryPoint.json'
+import { IEntryPoint } from '@safe-global/safe-4337/dist/typechain-types'
 import {
   SafeInitializer,
   getExecuteUserOpData,
@@ -8,48 +10,28 @@ import {
   getSafeAddress,
   getSafeDeploymentData,
   getValidateUserOpData,
+  getSignerAddressFromPubkeyCoords,
 } from './safe'
 import {
   APP_CHAIN_ID,
   ENTRYPOINT_ADDRESS,
+  SAFE_4337_MODULE_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
   SAFE_SIGNER_LAUNCHPAD_ADDRESS,
   XANDER_BLAZE_NFT_ADDRESS,
 } from '../config'
 import { encodeSafeMintData } from './erc721'
 import { PasskeyLocalStorageFormat, signWithPasskey } from './passkeys'
+import { calculateSafeOperationHash, unpackGasParameters, SafeUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp.js'
+import {
+  PackedUserOperation as PackedUserOperationOgType,
+  UserOperation as UserOperationOgType,
+} from '@safe-global/safe-4337/dist/src/utils/userOp'
+import { buildSignatureBytes } from '@safe-global/safe-4337/dist/src/utils/execution'
 
-type PackedUserOperation = {
-  sender: string
-  nonce: ethers.BigNumberish
-  initCode: ethers.BytesLike
-  callData: ethers.BytesLike
-  accountGasLimits: ethers.BytesLike
-  preVerificationGas: ethers.BigNumberish
-  gasFees: ethers.BytesLike
-  paymasterAndData: ethers.BytesLike
-  signature: ethers.BytesLike
-}
-
+type UserOperation = UserOperationOgType & { sender: string }
+type PackedUserOperation = PackedUserOperationOgType & { sender: string }
 type UnsignedPackedUserOperation = Omit<PackedUserOperation, 'signature'>
-
-type UserOperation = {
-  sender: string
-  nonce: ethers.BigNumberish
-  factory?: string
-  factoryData?: ethers.BytesLike
-  callData: ethers.BytesLike
-  callGasLimit: ethers.BigNumberish
-  verificationGasLimit: ethers.BigNumberish
-  preVerificationGas: ethers.BigNumberish
-  maxFeePerGas: ethers.BigNumberish
-  maxPriorityFeePerGas: ethers.BigNumberish
-  paymaster?: string
-  paymasterVerificationGasLimit?: ethers.BigNumberish
-  paymasterPostOpGasLimit?: ethers.BigNumberish
-  paymasterData?: ethers.BytesLike
-  signature: ethers.BytesLike
-}
 
 // Dummy signature for gas estimation. We require the 12 bytes of validity timestamp data
 // so that the estimation doesn't revert. But we also want to use a dummy signature for
@@ -57,7 +39,7 @@ type UserOperation = {
 // code) & `preVerificationGas` (The signature length in bytes should be accurate) estimate.
 // The challenge is neither P256 Verification Gas nor signature length are stable, so we make
 // a calculated guess.
-const DUMMY_SIGNATURE = ethers.solidityPacked(
+const DUMMY_SIGNATURE_LAUNCHPAD = ethers.solidityPacked(
   ['uint48', 'uint48', 'bytes'],
   [
     0,
@@ -77,6 +59,9 @@ const DUMMY_SIGNATURE = ethers.solidityPacked(
   ],
 )
 
+const DUMMY_SIGNATURE =
+  '0x000000000000000000000000000000000000000000000000f8b27791e7f90e68ff769ba8fa20ee5fdd3570f30000000000000000000000000000000000000000000000000000000000000041000000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e06e6ef49c05823a567596e35e5838c4cbc1f3bc3565b14192b33d834a4a59e1884c541f13d7fd3ce47716ed030c2f019494c82e6e733cca3d2b1ca8949e310a52000000000000000000000000000000000000000000000000000000000000002549960de5880e8c687434170f6476605b8fe4aeb9a28632c7995cf3ba831d97631d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034226f726967696e223a22687474703a2f2f6c6f63616c686f73743a35313733222c2263726f73734f726967696e223a66616c7365000000000000000000000000'
+
 /**
  * Generates the user operation initialization code.
  * @param proxyFactory - The address of the proxy factory.
@@ -91,7 +76,7 @@ function getUserOpInitCode(proxyFactory: string, deploymentData: string): string
 type UserOpCall = {
   to: string
   data: string
-  value: string
+  value: ethers.BigNumberish
   operation: 0 | 1
 }
 
@@ -143,11 +128,24 @@ function prepareUserOperationWithInitialisation(
     console.log('Safe deployment data: ', safeDeploymentData)
     console.log(
       'validateUserOp data for estimation: ',
-      getValidateUserOpData({ ...userOp, signature: DUMMY_SIGNATURE }, ethers.ZeroHash, 10000000000),
+      getValidateUserOpData({ ...userOp, signature: DUMMY_SIGNATURE_LAUNCHPAD }, ethers.ZeroHash, 10000000000),
     )
   }
 
   return userOp
+}
+
+function getUnsignedUserOperation(call: UserOpCall, safeAddress: string, nonce: ethers.BigNumberish): UnsignedPackedUserOperation {
+  return {
+    sender: safeAddress,
+    nonce,
+    initCode: '0x',
+    callData: getExecuteUserOpData(call.to, call.value, call.data, call.operation),
+    accountGasLimits: ethers.solidityPacked(['uint128', 'uint128'], [2000000, 2000000]),
+    preVerificationGas: 2000000,
+    gasFees: ethers.solidityPacked(['uint128', 'uint128'], [10000000000, 10000000000]),
+    paymasterAndData: '0x',
+  }
 }
 
 /**
@@ -161,10 +159,52 @@ function getEip4337BundlerProvider(): ethers.JsonRpcProvider {
   return provider
 }
 
+/**
+ * Returns an instance of the EntryPoint contract.
+ * @param provider - The ethers.js JsonRpcProvider to use for interacting with the Ethereum network.
+ * @param address - The Ethereum address of the deployed EntryPoint contract.
+ * @returns An instance of the EntryPoint contract.
+ */
+function getEntryPointContract(provider: ethers.JsonRpcApiProvider, address: string): IEntryPoint {
+  return new ethers.Contract(address, EntryPointAbi, provider) as unknown as IEntryPoint
+}
+
+/**
+ * Retrieves the nonce from the entry point.
+ *
+ * @param provider - The ethers.js JsonRpcProvider to use for interacting with the Ethereum network.
+ * @param safeAddress - The Ethereum address of the safe for which to retrieve the nonce.
+ * @param entryPoint - The Ethereum address of the entry point. Defaults to {@link ENTRYPOINT_ADDRESS} if not provided.
+ * @returns A promise that resolves to the nonce for the provided safe address.
+ */
+async function getNonceFromEntryPoint(
+  provider: ethers.JsonRpcApiProvider,
+  safeAddress: string,
+  entryPoint = ENTRYPOINT_ADDRESS,
+): Promise<bigint> {
+  const entrypoint = getEntryPointContract(provider, entryPoint)
+  const nonce = await entrypoint.getNonce(safeAddress, 0)
+
+  return nonce
+}
+
+async function getAccountEntryPointBalance(
+  provider: ethers.JsonRpcApiProvider,
+  safeAddress: string,
+  entryPoint = ENTRYPOINT_ADDRESS,
+): Promise<bigint> {
+  const entrypoint = getEntryPointContract(provider, entryPoint)
+  const balance = await entrypoint.balanceOf(safeAddress)
+
+  return balance
+}
+
 type UserOpGasLimitEstimation = {
   preVerificationGas: string
   callGasLimit: string
   verificationGasLimit: string
+  paymasterVerificationGasLimit: string
+  paymasterPostOpGasLimit: string
 }
 
 /**
@@ -173,13 +213,16 @@ type UserOpGasLimitEstimation = {
  * @param entryPointAddress - The entry point address. Default value is ENTRYPOINT_ADDRESS.
  * @returns A promise that resolves to the estimated gas limit for the user operation.
  */
-function estimateUserOpGasLimit(
+async function estimateUserOpGasLimit(
   userOp: UnsignedPackedUserOperation,
   entryPointAddress = ENTRYPOINT_ADDRESS,
 ): Promise<UserOpGasLimitEstimation> {
   const provider = getEip4337BundlerProvider()
-  const rpcUserOp = unpackUserOperationForRpc(userOp, DUMMY_SIGNATURE)
-  const estimation = provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
+
+  const placeholderSignature = userOp.initCode.length > 0 && userOp.initCode !== '0x' ? DUMMY_SIGNATURE_LAUNCHPAD : DUMMY_SIGNATURE
+
+  const rpcUserOp = unpackUserOperationForRpc(userOp, placeholderSignature)
+  const estimation = await provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
 
   return estimation
 }
@@ -188,7 +231,7 @@ function estimateUserOpGasLimit(
  * Unpacks a user operation for use over the bundler RPC.
  * @param userOp The user operation to unpack.
  * @param signature The signature bytes for the user operation.
- * @returns An unpacked `UserOperation` that can be used over bunlder RPC.
+ * @returns An unpacked `UserOperation` that can be used over bundler RPC.
  */
 function unpackUserOperationForRpc(userOp: UnsignedPackedUserOperation, signature: ethers.BytesLike): UserOperation {
   const initFields =
@@ -223,27 +266,36 @@ function unpackUserOperationForRpc(userOp: UnsignedPackedUserOperation, signatur
 }
 
 /**
- * Calculates the required prefund amount based on the maximum fee per gas,
- * user operation gas limit estimation, and a multiplier.
+ * Calculates the missing funds for an account.
+ * Missing funds is the amount of funds required by the entry point to execute the user operation.
  *
- * @param maxFeePerGas - The maximum fee per gas.
- * @param userOpGasLimitEstimation - The estimation of gas limits for user operation.
- * @param multiplier - The multiplier to apply to the gas limits.
- * @returns The required prefund amount as a bigint.
+ * @param maxFeePerGas - The maximum fee per gas for the user operation.
+ * @param userOpGasLimitEstimation - The gas limit estimation for the user operation.
+ * @param currentEntryPointDeposit - The current deposit at the entry point. Defaults to 0n if not provided.
+ * @param multiplier - The multiplier used in the calculation. Defaults to 12n if not provided.
+ * @returns The missing funds for the account.
  */
-function getRequiredPrefund(maxFeePerGas: bigint, userOpGasLimitEstimation: UserOpGasLimitEstimation, multiplier = 12n): bigint {
+function getMissingAccountFunds(
+  maxFeePerGas: bigint,
+  userOpGasLimitEstimation: UserOpGasLimitEstimation,
+  currentEntryPointDeposit = 0n,
+  multiplier = 12n,
+): bigint {
   return (
     (BigInt(maxFeePerGas) *
       (BigInt(userOpGasLimitEstimation.preVerificationGas) +
         BigInt(userOpGasLimitEstimation.callGasLimit) +
-        BigInt(userOpGasLimitEstimation.verificationGasLimit)) *
+        BigInt(userOpGasLimitEstimation.verificationGasLimit) +
+        BigInt(userOpGasLimitEstimation.paymasterVerificationGasLimit) +
+        BigInt(userOpGasLimitEstimation.paymasterPostOpGasLimit)) *
       multiplier) /
-    10n
+      10n -
+    currentEntryPointDeposit
   )
 }
 
 /**
- * Pasks a user operation gas parameters.
+ * Packs a user operation gas parameters.
  * @param op The UserOperation gas parameters to pack.
  * @returns The packed UserOperation parameters.
  */
@@ -287,13 +339,13 @@ function packUserOpData(op: UnsignedPackedUserOperation): string {
 }
 
 /**
- * Calculates the hash of a user operation.
+ * Off-chain replication of the function to calculate user operation hash from the entrypoint.
  * @param op The user operation.
  * @param entryPoint The entry point.
  * @param chainId The chain ID.
  * @returns The hash of the user operation.
  */
-function getUserOpHash(
+function getEntryPointUserOpHash(
   op: UnsignedPackedUserOperation,
   entryPoint: string = ENTRYPOINT_ADDRESS,
   chainId: ethers.BigNumberish = APP_CHAIN_ID,
@@ -312,13 +364,13 @@ function getUserOpHash(
  * @returns User Operation hash promise.
  * @throws An error if signing the user operation fails.
  */
-async function signAndSendUserOp(
+async function signAndSendDeploymentUserOp(
   userOp: UnsignedPackedUserOperation,
   passkey: PasskeyLocalStorageFormat,
   entryPoint: string = ENTRYPOINT_ADDRESS,
   chainId: ethers.BigNumberish = APP_CHAIN_ID,
 ): Promise<string> {
-  const userOpHash = getUserOpHash(userOp, entryPoint, chainId)
+  const userOpHash = getEntryPointUserOpHash(userOp, entryPoint, chainId)
 
   const safeInitOp = {
     userOpHash,
@@ -348,14 +400,66 @@ async function signAndSendUserOp(
   return await getEip4337BundlerProvider().send('eth_sendUserOperation', [rpcUserOp, entryPoint])
 }
 
+/**
+ * Signs and sends a user operation to the specified entry point on the blockchain.
+ * @param userOp The unsigned user operation to sign and send.
+ * @param passkey The passkey used for signing the user operation.
+ * @param provider The ethers.js JsonRpcProvider to use for interacting with the Ethereum network.
+ * @param entryPoint The entry point address on the blockchain. Defaults to ENTRYPOINT_ADDRESS if not provided.
+ * @param chainId The chain ID of the blockchain. Defaults to APP_CHAIN_ID if not provided.
+ * @returns User Operation hash promise.
+ * @throws An error if signing the user operation fails.
+ */
+async function signAndSendUserOp(
+  provider: ethers.JsonRpcApiProvider,
+  userOp: UnsignedPackedUserOperation,
+  passkey: PasskeyLocalStorageFormat,
+  entryPoint: string = ENTRYPOINT_ADDRESS,
+  chainId: ethers.BigNumberish = APP_CHAIN_ID,
+): Promise<string> {
+  const safeOp: SafeUserOperation = {
+    callData: userOp.callData,
+    nonce: userOp.nonce,
+    initCode: userOp.initCode,
+    paymasterAndData: userOp.paymasterAndData,
+    preVerificationGas: userOp.preVerificationGas,
+    entryPoint,
+    validAfter: 0,
+    validUntil: 0,
+    safe: userOp.sender,
+    ...unpackGasParameters(userOp),
+  }
+
+  const safeOpHash = calculateSafeOperationHash(SAFE_4337_MODULE_ADDRESS, safeOp, chainId)
+  const passkeySignature = await signWithPasskey(passkey.rawId, safeOpHash)
+  const signatureBytes = buildSignatureBytes([
+    {
+      signer: await getSignerAddressFromPubkeyCoords(provider, passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y),
+      data: passkeySignature,
+      dynamic: true,
+    },
+  ])
+
+  const signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [0, 0, signatureBytes])
+  if (import.meta.env.DEV) {
+    console.log('validateUserOp data for estimation: ', getValidateUserOpData({ ...userOp, signature }, ethers.ZeroHash, 10000000000))
+  }
+
+  const rpcUserOp = unpackUserOperationForRpc(userOp, signature)
+  return await getEip4337BundlerProvider().send('eth_sendUserOperation', [rpcUserOp, entryPoint])
+}
+
 export type { PackedUserOperation, UnsignedPackedUserOperation, UserOperation, UserOpGasLimitEstimation }
 
 export {
   prepareUserOperationWithInitialisation,
   packGasParameters,
   getEip4337BundlerProvider,
+  getNonceFromEntryPoint,
+  getUnsignedUserOperation,
   estimateUserOpGasLimit,
-  getRequiredPrefund,
-  getUserOpHash,
+  getMissingAccountFunds,
+  getAccountEntryPointBalance,
+  signAndSendDeploymentUserOp,
   signAndSendUserOp,
 }
