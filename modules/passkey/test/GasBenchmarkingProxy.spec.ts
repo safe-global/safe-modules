@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
+import * as ERC1271 from './utils/erc1271'
 import { WebAuthnCredentials } from './utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../src/utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
@@ -90,7 +91,7 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
         )
 
         const [magicValue] = ethers.AbiCoder.defaultAbiCoder().decode(['bytes4'], returnData)
-        expect(magicValue).to.equal('0x1626ba7e')
+        expect(magicValue).to.equal(ERC1271.MAGIC_VALUE)
 
         console.log(`      ⛽ verification (${name}): ${gas}`)
       })
