@@ -85,9 +85,19 @@ npm test
 npm run test:4337
 ```
 
+### Run benchmark tests:
+
+```bash
+npm run bench
+```
+
 ## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+## User stories
+
+The test cases in [userstories](./test/userstories) directory demonstrates the usage of the passkey module in different scenarios like deploying a Safe account with passkey module enabled, executing a `userOp` with a Safe using Passkey signer, etc.
 
 ## License
 
