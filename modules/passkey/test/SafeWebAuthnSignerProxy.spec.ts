@@ -53,9 +53,9 @@ describe('SafeWebAuthnSignerProxy', () => {
     it('Should set immutables', async () => {
       const { x, y, verifiers, signer } = await setupTests()
 
-      expect(await signer.X()).to.equal(x)
-      expect(await signer.Y()).to.equal(y)
       const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', signer.target)
+      expect(await signerProxy.X()).to.equal(x)
+      expect(await signerProxy.Y()).to.equal(y)
 
       expect(await signerProxy.VERIFIERS()).to.equal(verifiers)
     })
