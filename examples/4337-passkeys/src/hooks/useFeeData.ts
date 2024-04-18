@@ -41,7 +41,6 @@ function useFeeData(provider: ethers.Eip1193Provider): [FeeData | undefined, Req
       .getFeeData()
       .then((feeData) => {
         if (!isMounted) return
-        console.log('fee data before multiplier', feeData)
         setFeeData(applyMultiplier(feeData))
         setStatus(RequestStatus.SUCCESS)
       })

@@ -54,9 +54,10 @@ function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonc
     // @ts-expect-error it is handled in the if statement above
     return getMissingAccountFunds(feeData!.maxFeePerGas, userOpGasLimitEstimation!, 0n)
   }, [feeData, gasParametersReady, userOpGasLimitEstimation])
-  const missingAccountFundsForEntrypoint = userOperationFee - accountEntryPointBalance
+  const missingAccountFundsForEntrypoint =
+    userOperationFee - accountEntryPointBalance > 0 ? userOperationFee - accountEntryPointBalance : 0n
   const missingAccountFundsFromTheBalance = balanceWei - missingAccountFundsForEntrypoint
-  const maxAmount = missingAccountFundsFromTheBalance > 0n ? ethers.formatEther(balanceWei - missingAccountFundsForEntrypoint) : '0'
+  const maxAmount = missingAccountFundsFromTheBalance >= 0n ? ethers.formatEther(balanceWei - missingAccountFundsForEntrypoint) : '0'
 
   const send: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault()

@@ -224,11 +224,11 @@ async function signWithPasskey(passkeyId: string, data: string): Promise<string>
   }
 
   return ethers.AbiCoder.defaultAbiCoder().encode(
-    ['bytes', 'bytes', 'uint256', 'uint256'],
+    ['bytes', 'bytes', 'uint256[2]'],
     [
       new Uint8Array(assertion.response.authenticatorData),
       extractClientDataFields(assertion.response),
-      ...extractSignature(assertion.response),
+      extractSignature(assertion.response),
     ],
   )
 }
