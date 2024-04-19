@@ -24,4 +24,25 @@ contract SafeWebAuthnSignerSingleton is SignatureValidator {
         }
         success = WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, verifiers);
     }
+
+    function getX() external view returns (uint256 x) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            x := calldataload(sub(calldatasize(), 88))
+        }
+    }
+
+    function getY() external view returns (uint256 y) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            y := calldataload(sub(calldatasize(), 56))
+        }
+    }
+
+    function getVerifiers() external view returns (P256.Verifiers verifiers) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            verifiers := shr(64, calldataload(sub(calldatasize(), 24)))
+        }
+    }
 }

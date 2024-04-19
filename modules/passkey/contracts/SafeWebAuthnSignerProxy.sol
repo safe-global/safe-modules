@@ -11,15 +11,15 @@ contract SafeWebAuthnSignerProxy {
     /**
      * @notice The X coordinate of the P-256 public key of the WebAuthn credential.
      */
-    uint256 public immutable X;
+    uint256 internal immutable X;
     /**
      * @notice The Y coordinate of the P-256 public key of the WebAuthn credential.
      */
-    uint256 public immutable Y;
+    uint256 internal immutable Y;
     /**
      * @notice The P-256 verifiers used for ECDSA signature validation.
      */
-    P256.Verifiers public immutable VERIFIERS;
+    P256.Verifiers internal immutable VERIFIERS;
 
     /**
      * @notice The contract address to which proxy contract forwards the call via delegatecall.
