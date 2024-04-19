@@ -25,7 +25,7 @@ contract SafeWebAuthnSignerProxy {
      * @notice The contract address to which proxy contract forwards the call via delegatecall.
      */
     address internal immutable _SINGLETON;
-    constructor(address implementation, uint256 x, uint256 y, P256.Verifiers verifiers) {
+    constructor(address singleton, uint256 x, uint256 y, P256.Verifiers verifiers) {
         _SINGLETON = implementation;
         _X = x;
         _Y = y;
