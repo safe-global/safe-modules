@@ -52,9 +52,10 @@ describe('SafeWebAuthnSignerProxy', () => {
   describe('constructor', function () {
     it('Should set immutables', async () => {
       const { x, y, verifiers, signer } = await setupTests()
-      expect(await signer.getX()).to.equal(x)
-      expect(await signer.getY()).to.equal(y)
-      expect(await signer.getVerifiers()).to.equal(verifiers)
+      const [X, Y, VERIFIERS] = await signer.getConfiguration();
+      expect(X).to.equal(x)
+      expect(Y).to.equal(y)
+      expect(VERIFIERS).to.equal(verifiers)
     })
   })
 
