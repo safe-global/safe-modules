@@ -20,6 +20,10 @@ contract SafeWebAuthnSignerProxy {
      * @notice The P-256 verifiers used for ECDSA signature validation.
      */
     P256.Verifiers public immutable VERIFIERS;
+
+    /**
+     * @notice The contract address to which proxy contract forwards the call via delegatecall.
+     */
     address internal immutable SINGLETON;
     constructor(address implementation, uint256 x, uint256 y, P256.Verifiers verifiers) {
         SINGLETON = implementation;
@@ -28,7 +32,9 @@ contract SafeWebAuthnSignerProxy {
         VERIFIERS = verifiers;
     }
 
-    /// @dev Fallback function forwards all transactions and returns all received return data.
+    /**
+     * @dev Fallback function forwards all transactions and returns all received return data.
+     */
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
         bytes memory data = abi.encodePacked(msg.data, X, Y, VERIFIERS);
