@@ -2,10 +2,9 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
 import * as ERC1271 from './utils/erc1271'
-import { WebAuthnCredentials } from './utils/webauthnShim'
+import { WebAuthnCredentials } from '../test/utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../src/utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
-import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
 describe('Gas Benchmarking [@bench]', function () {
   const navigator = {
@@ -76,22 +75,15 @@ describe('Gas Benchmarking [@bench]', function () {
         })
 
         const { x, y } = decodePublicKey(credential.response)
-        const verifier = verifiers[key].target
+        const verifier = await verifiers[key].getAddress()
 
-        const isValidSignatureInterface = new ethers.Interface(['function isValidSignature(bytes32,bytes) external view returns (bytes4)'])
-
-        const precompileAddress = `0x${'00'.repeat(18)}0100`
-        await setCode(precompileAddress, await ethers.provider.getCode(verifier))
-
-        const verifiersData = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), verifier]))
-
-        await factory.createSigner(x, y, verifiersData)
-        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await factory.getSigner(x, y, verifiersData))
+        await factory.createSigner(x, y, verifier)
+        const signer = await ethers.getContractAt('SafeWebAuthnSignerSingleton', await factory.getSigner(x, y, verifier))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(
-          signerProxy,
-          isValidSignatureInterface.encodeFunctionData('isValidSignature(bytes32,bytes)', [challenge, signature]),
+          signer,
+          signer.interface.encodeFunctionData('isValidSignature(bytes32,bytes)', [challenge, signature]),
         )
 
         const [magicValue] = ethers.AbiCoder.defaultAbiCoder().decode(['bytes4'], returnData)
