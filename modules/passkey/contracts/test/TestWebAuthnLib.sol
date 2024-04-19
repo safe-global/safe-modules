@@ -7,7 +7,7 @@ contract TestWebAuthnLib {
     function castSignature(bytes calldata signature) external pure returns (WebAuthn.Signature calldata data) {
         bool success;
         (success, data) = WebAuthn.castSignature(signature);
-        require(success, "WebAuthnLib: invalid signature");
+        require(success, "WebAuthnLib: invalid signature encoding");
     }
 
     function encodeClientDataJson(
