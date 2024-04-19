@@ -42,19 +42,19 @@ describe('Gas Benchmarking [@bench]', function () {
       dummy: await DummyP256Verifier.deploy(),
     } as Record<string, IP256Verifier>
 
-    return { benchmarker, proxyFactory, verifiers }
+    return { benchmarker, factory, verifiers }
   })
 
   describe('SafeWebAuthnSignerProxy', () => {
     it(`Benchmark signer deployment cost`, async function () {
-      const { benchmarker, proxyFactory } = await setupTests()
+      const { benchmarker, factory } = await setupTests()
 
       const { x, y } = decodePublicKey(credential.response)
       const verifier = `0x${'ee'.repeat(20)}`
 
       const [gas] = await benchmarker.call.staticCall(
-        proxyFactory,
-        proxyFactory.interface.encodeFunctionData('createSigner', [x, y, verifier]),
+        factory,
+        factory.interface.encodeFunctionData('createSigner', [x, y, verifier]),
       )
 
       console.log(`      ⛽ deployment: ${gas}`)
@@ -66,7 +66,7 @@ describe('Gas Benchmarking [@bench]', function () {
       ['Dummy', 'dummy'],
     ]) {
       it(`Benchmark signer verification cost with ${name} verifier`, async function () {
-        const { benchmarker, verifiers, proxyFactory } = await setupTests()
+        const { benchmarker, verifiers, factory } = await setupTests()
 
         const challenge = ethers.id('hello world')
         const assertion = navigator.credentials.get({
@@ -88,8 +88,8 @@ describe('Gas Benchmarking [@bench]', function () {
 
         const verifiersData = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), verifier]))
 
-        await proxyFactory.createSigner(x, y, verifiersData)
-        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await proxyFactory.getSigner(x, y, verifiersData))
+        await factory.createSigner(x, y, verifiersData)
+        const signerProxy = await ethers.getContractAt('SafeWebAuthnSignerProxy', await factory.getSigner(x, y, verifiersData))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(
