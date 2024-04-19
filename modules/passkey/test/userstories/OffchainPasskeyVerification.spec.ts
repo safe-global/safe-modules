@@ -52,7 +52,7 @@ describe('Offchain Passkey Signature Verification [@userstory]', () => {
     const publicKey = decodePublicKey(credential.response)
     await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
     const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
-    const signer = await ethers.getContractAt('SafeWebAuthnSignerProxy', signerAddress)
+    const signer = await ethers.getContractAt('SafeWebAuthnSignerSingleton', signerAddress)
 
     // Deploy Safe with the WebAuthn signer as a single owner.
     const singletonAddress = await singleton.getAddress()
