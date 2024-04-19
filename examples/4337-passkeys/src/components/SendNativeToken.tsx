@@ -135,7 +135,7 @@ function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonc
       {missingAccountFundsFromTheBalance < 0n && (
         <MissingAccountFundsCard
           provider={walletProvider}
-          missingAccountFunds={abs(missingAccountFundsFromTheBalance)}
+          missingAccountFunds={-missingAccountFundsFromTheBalance}
           safeAddress={safeAddress}
         />
       )}
