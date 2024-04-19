@@ -52,10 +52,7 @@ describe('Gas Benchmarking [@bench]', function () {
       const { x, y } = decodePublicKey(credential.response)
       const verifier = `0x${'ee'.repeat(20)}`
 
-      const [gas] = await benchmarker.call.staticCall(
-        factory,
-        factory.interface.encodeFunctionData('createSigner', [x, y, verifier]),
-      )
+      const [gas] = await benchmarker.call.staticCall(factory, factory.interface.encodeFunctionData('createSigner', [x, y, verifier]))
 
       console.log(`      ⛽ deployment: ${gas}`)
     })

@@ -36,5 +36,4 @@ contract SafeWebAuthnSignerSingleton is SignatureValidator {
             verifiers := shr(64, calldataload(sub(calldatasize(), 24)))
         }
     }
-
 }
