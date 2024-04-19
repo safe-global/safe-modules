@@ -54,7 +54,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         uint256 x,
         uint256 y,
         P256.Verifiers verifiers
-    ) external view override returns (bytes4 magicValue) {
+    ) external view override returns (bytes4 /*magicValue*/) {
         address _singleton = SINGLETON;
         bytes memory data = abi.encodePacked(
             abi.encodeWithSignature("isValidSignature(bytes32,bytes)", message, signature),
@@ -70,7 +70,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
 
             let success := staticcall(gas(), _singleton, dataLocation, dataSize, 0, 0)
             if eq(success, 1) {
-                returndatacopy(magicValue, 0, returndatasize())
+                returndatacopy(0, 0, returndatasize())
                 return(0, returndatasize())
             }
         }
