@@ -7,7 +7,7 @@ import { decodePublicKey, encodeWebAuthnSignature } from '../src/utils/webauthn'
 import { IP256Verifier } from '../typechain-types'
 import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
-describe('Gas Benchmarking Proxy [@bench]', function () {
+describe('Gas Benchmarking [@bench]', function () {
   const navigator = {
     credentials: new WebAuthnCredentials(),
   }
