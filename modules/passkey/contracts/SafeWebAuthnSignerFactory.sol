@@ -7,10 +7,10 @@ import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
 import {P256} from "./libraries/WebAuthn.sol";
 
 /**
- * @title SafeWebAuthnSignerProxyFactory
+ * @title SafeWebAuthnSignerFactory
  * @dev A factory contract for creating and managing WebAuthn proxy signers.
  */
-contract SafeWebAuthnSignerProxyFactory is ISafeSignerFactory {
+contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     address public immutable SINGLETON;
 
     constructor() {

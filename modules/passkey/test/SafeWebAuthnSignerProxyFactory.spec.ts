@@ -6,11 +6,11 @@ import * as ERC1271 from './utils/erc1271'
 import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, getSignatureBytes } from '../src/utils/webauthn'
 import { encodeWebAuthnSigningMessage } from './utils/webauthnShim'
 
-describe('SafeWebAuthnSignerProxyFactory', () => {
+describe('SafeWebAuthnSignerFactory', () => {
   const setupTests = deployments.createFixture(async () => {
-    const { SafeWebAuthnSignerProxyFactory } = await deployments.fixture()
+    const { SafeWebAuthnSignerFactory } = await deployments.fixture()
 
-    const factory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
+    const factory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const singletonAddress = await factory.SINGLETON()
     const MockContract = await ethers.getContractFactory('MockContract')

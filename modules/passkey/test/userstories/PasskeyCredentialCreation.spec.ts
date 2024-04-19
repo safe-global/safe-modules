@@ -16,14 +16,13 @@ import { buildSafeTransaction, buildSafeTransactionData, SafeDomain } from '../u
  */
 describe('Passkey Credential Creation for Safe Ownership [@userstory]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { SafeProxyFactory, SafeL2, FCLP256Verifier, SafeWebAuthnSignerProxyFactory, CompatibilityFallbackHandler } =
-      await deployments.run()
+    const { SafeProxyFactory, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory, CompatibilityFallbackHandler } = await deployments.run()
     const [user] = await ethers.getSigners()
 
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const fallbackHandler = await ethers.getContractAt(CompatibilityFallbackHandler.abi, CompatibilityFallbackHandler.address)
-    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
     const verifierAddress = await verifier.getAddress()
 

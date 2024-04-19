@@ -15,7 +15,7 @@ participant CS as CredentialStore
 actor B as Bundler
 participant EP as EntryPoint
 participant SPF as SafeProxyFactory
-participant SWASPF as SafeWebAuthnSignerProxyFactory
+participant SWASPF as SafeWebAuthnSignerFactory
 participant SP as SafeProxy
 participant SSL as SafeSignerLaunchpad
 participant S as Singleton

@@ -28,12 +28,12 @@ describe('Gas Benchmarking Proxy [@bench]', function () {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { DaimoP256Verifier, FCLP256Verifier, SafeWebAuthnSignerProxyFactory } = await deployments.fixture()
+    const { DaimoP256Verifier, FCLP256Verifier, SafeWebAuthnSignerFactory } = await deployments.fixture()
 
     const Benchmarker = await ethers.getContractFactory('Benchmarker')
     const benchmarker = await Benchmarker.deploy()
 
-    const proxyFactory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
+    const proxyFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const DummyP256Verifier = await ethers.getContractFactory('DummyP256Verifier')
     const verifiers = {

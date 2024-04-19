@@ -18,7 +18,7 @@ import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 describe('Create a Safe with Passkey signer as owner: [@userstory]', () => {
   // Create a fixture to setup the contracts and signer(s)
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerProxyFactory } =
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory } =
       await deployments.run()
 
     const [user] = await ethers.getSigners()
@@ -29,7 +29,7 @@ describe('Create a Safe with Passkey signer as owner: [@userstory]', () => {
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerProxyFactory', SafeWebAuthnSignerProxyFactory.address)
+    const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
