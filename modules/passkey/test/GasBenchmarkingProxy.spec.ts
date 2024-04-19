@@ -33,7 +33,7 @@ describe('Gas Benchmarking [@bench]', function () {
     const Benchmarker = await ethers.getContractFactory('Benchmarker')
     const benchmarker = await Benchmarker.deploy()
 
-    const proxyFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
+    const factory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const DummyP256Verifier = await ethers.getContractFactory('DummyP256Verifier')
     const verifiers = {
