@@ -11,25 +11,25 @@ contract SafeWebAuthnSignerProxy {
     /**
      * @notice The X coordinate of the P-256 public key of the WebAuthn credential.
      */
-    uint256 internal immutable X;
+    uint256 internal immutable _X;
     /**
      * @notice The Y coordinate of the P-256 public key of the WebAuthn credential.
      */
-    uint256 internal immutable Y;
+    uint256 internal immutable _Y;
     /**
      * @notice The P-256 verifiers used for ECDSA signature validation.
      */
-    P256.Verifiers internal immutable VERIFIERS;
+    P256.Verifiers internal immutable _VERIFIERS;
 
     /**
      * @notice The contract address to which proxy contract forwards the call via delegatecall.
      */
-    address internal immutable SINGLETON;
+    address internal immutable _SINGLETON;
     constructor(address implementation, uint256 x, uint256 y, P256.Verifiers verifiers) {
-        SINGLETON = implementation;
-        X = x;
-        Y = y;
-        VERIFIERS = verifiers;
+        _SINGLETON = implementation;
+        _X = x;
+        _Y = y;
+        _VERIFIERS = verifiers;
     }
 
     /**
@@ -37,8 +37,8 @@ contract SafeWebAuthnSignerProxy {
      */
     // solhint-disable-next-line no-complex-fallback
     fallback() external payable {
-        bytes memory data = abi.encodePacked(msg.data, X, Y, VERIFIERS);
-        address _singleton = SINGLETON;
+        bytes memory data = abi.encodePacked(msg.data, _X, _Y, _VERIFIERS);
+        address _singleton = _SINGLETON;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
