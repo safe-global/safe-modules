@@ -12,7 +12,6 @@ describe('SafeWebAuthnSignerFactory', () => {
 
     const factory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
-    const singletonAddress = await factory.SINGLETON()
     const MockContract = await ethers.getContractFactory('MockContract')
     const mockVerifier = await MockContract.deploy()
     const precompileAddress = `0x${'00'.repeat(18)}0100`
@@ -20,7 +19,7 @@ describe('SafeWebAuthnSignerFactory', () => {
     await setCode(precompileAddress, await ethers.provider.getCode(mockVerifier))
     const verifiers = BigInt(ethers.solidityPacked(['uint32', 'uint160'], [mockPrecompile.target, mockVerifier.target]))
 
-    return { factory, mockPrecompile, mockVerifier, verifiers, singletonAddress }
+    return { factory, mockPrecompile, mockVerifier, verifiers }
   })
 
   describe('getSigner', function () {
@@ -59,8 +58,9 @@ describe('SafeWebAuthnSignerFactory', () => {
 
   describe('createSigner', function () {
     it('Should create a signer and return its deterministic address', async () => {
-      const { factory, verifiers, singletonAddress } = await setupTests()
+      const { factory, verifiers } = await setupTests()
 
+      const singletonAddress = await factory.SINGLETON()
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
