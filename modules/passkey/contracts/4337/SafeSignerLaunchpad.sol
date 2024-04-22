@@ -41,13 +41,13 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      *  {address} signerFactory - The custom ECDSA signer factory to use for creating an owner.
      *  {uint256} signerX - The X coordinate of the public key of the custom ECDSA signing scheme.
      *  {uint256} signerY - The Y coordinate of the public key of the custom ECDSA signing scheme.
-     *  {uint256} signerVerifiers - The P-256 verifiers to use for signature validation.
+     *  {uint176} signerVerifiers - The P-256 verifiers to use for signature validation.
      *  {address} setupTo - The contract to `DELEGATECALL` during setup.
      *  {bytes} setupData - The calldata for the setup `DELEGATECALL`.
      *  {address} fallbackHandler - The fallback handler to initialize the Safe with.
-     * @custom:computed-as keccak256("SafeInit(address singleton,address signerFactory,uint256 signerX,uint256 signerY,uint192 signerVerifiers,address setupTo,bytes setupData,address fallbackHandler)")
+     * @custom:computed-as keccak256("SafeInit(address singleton,address signerFactory,uint256 signerX,uint256 signerY,uint176 signerVerifiers,address setupTo,bytes setupData,address fallbackHandler)")
      */
-    bytes32 private constant SAFE_INIT_TYPEHASH = 0xb8b5d6678d8c3ed815330874b6c0a30142f64104b7f6d1361d6775a7dbc5318b;
+    bytes32 private constant SAFE_INIT_TYPEHASH = 0xb847e47c00fe4c75163e39c8673522943ada9c9b5a783bc876c85566138a8583;
 
     /**
      * @notice The keccak256 hash of the EIP-712 SafeInitOp struct, representing the user operation to execute alongside initialization.

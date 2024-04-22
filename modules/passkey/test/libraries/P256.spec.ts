@@ -15,13 +15,13 @@ describe('P256', function () {
     await setCode(precompileAddress, await ethers.provider.getCode(verifier))
     const precompile = await ethers.getContractAt('IP256Verifier', precompileAddress)
 
-    const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [precompileAddress, FCLP256Verifier.address]))
+    const verifiers = BigInt(ethers.solidityPacked(['uint16', 'address'], [precompileAddress, FCLP256Verifier.address]))
     const allVerifiers = [
       [precompileAddress, FCLP256Verifier.address],
       [ethers.ZeroAddress, FCLP256Verifier.address],
       [precompileAddress, ethers.ZeroAddress],
       [ethers.ZeroAddress, precompileAddress],
-    ].map(([precompile, fallback]) => BigInt(ethers.solidityPacked(['uint32', 'address'], [precompile, fallback])))
+    ].map(([precompile, fallback]) => BigInt(ethers.solidityPacked(['uint16', 'address'], [precompile, fallback])))
 
     const P256Lib = await ethers.getContractFactory('TestP256Lib')
     const p256Lib = await P256Lib.deploy()
@@ -160,7 +160,7 @@ describe('P256', function () {
       await setCode(await precompile.getAddress(), await ethers.provider.getCode(mockVerifier))
       const mockPrecompile = await ethers.getContractAt('MockContract', precompile)
 
-      const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [mockPrecompile.target, mockVerifier.target]))
+      const verifiers = BigInt(ethers.solidityPacked(['uint16', 'address'], [mockPrecompile.target, mockVerifier.target]))
 
       const configurations = [
         // wrong return data length
