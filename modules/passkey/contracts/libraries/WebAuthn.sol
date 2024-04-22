@@ -100,6 +100,8 @@ library WebAuthn {
             // boundaries. This allows for high interoperability (as this is how Solidity and most
             // tools `abi.encode`s the `Signature` struct) while setting a strict upper bound to how
             // many additional padding bytes can be added to the signature, increasing gas costs.
+            // Note that we compute the aligned lengths with the formula: `l + 0x1f & ~0x1f`, which
+            // rounds `l` up to the next 32-byte boundary.
             uint256 alignmentMask = ~uint256(0x1f);
             uint256 authenticatorDataAlignedLength = (authenticatorDataLength + 0x1f) & alignmentMask;
             uint256 clientDataFieldsAlignedLength = (clientDataFieldsLength + 0x1f) & alignmentMask;
