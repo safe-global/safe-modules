@@ -32,7 +32,7 @@ describe('SafeWebAuthnSignerProxy', () => {
       const [sender] = await ethers.getSigners()
       const mockSingleton = await ethers.getContractAt('MockContract', await (await ethers.getContractFactory('MockContract')).deploy())
 
-      const verifiers = ethers.solidityPacked(['uint32', 'address'], [0, mockVerifier.target])
+      const verifiers = ethers.solidityPacked(['uint32', 'address'], [0x0100, mockVerifier.target])
 
       const signerProxy = await ethers.getContractAt(
         'MockContract',
