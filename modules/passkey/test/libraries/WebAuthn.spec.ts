@@ -114,9 +114,7 @@ describe('WebAuthn Library', () => {
         [signature.authenticatorData, signature.clientDataFields, signature.r, signature.s],
       )
 
-      await expect(webAuthnLib.castSignature(ethers.concat([signatureBytes, '0x00']))).to.be.revertedWith(
-        'WebAuthnLib: invalid signature encoding',
-      )
+      await expect(webAuthnLib.castSignature(ethers.concat([signatureBytes, '0x00']))).to.be.revertedWith('invalid signature encoding')
     })
   })
 
