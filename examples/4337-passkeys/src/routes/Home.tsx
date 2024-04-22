@@ -1,13 +1,6 @@
 import { Navigate, redirect, useLoaderData } from 'react-router-dom'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys.ts'
-import {
-  encodeSafeModuleSetupCall,
-  getInitHash,
-  getLaunchpadInitializer,
-  getSafeAddress,
-  getSignerAddressFromPubkeyCoords,
-  type SafeInitializer,
-} from '../logic/safe.ts'
+import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress, type SafeInitializer } from '../logic/safe.ts'
 import {
   APP_CHAIN_ID,
   P256_VERIFIER_ADDRESS,
@@ -24,7 +17,6 @@ import { useOutletContext } from '../hooks/UseOutletContext.tsx'
 
 type LoaderData = {
   passkey: PasskeyLocalStorageFormat
-  passkeySignerAddress: string
   safeAddress: string
 }
 
@@ -34,14 +26,13 @@ async function loader(): Promise<Response | LoaderData> {
     return redirect(CREATE_PASSKEY_ROUTE)
   }
 
-  const passkeySignerAddress = getSignerAddressFromPubkeyCoords(passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y)
   const initializer: SafeInitializer = {
     singleton: SAFE_SINGLETON_ADDRESS,
     fallbackHandler: SAFE_4337_MODULE_ADDRESS,
     signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
     signerX: passkey.pubkeyCoordinates.x,
     signerY: passkey.pubkeyCoordinates.y,
-    signerVerifier: P256_VERIFIER_ADDRESS,
+    signerVerifiers: P256_VERIFIER_ADDRESS,
     setupTo: SAFE_MODULE_SETUP_ADDRESS,
     setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
   }
@@ -49,7 +40,7 @@ async function loader(): Promise<Response | LoaderData> {
   const launchpadInitializer = getLaunchpadInitializer(initHash)
   const safeAddress = getSafeAddress(launchpadInitializer)
 
-  return { passkey, passkeySignerAddress, safeAddress }
+  return { passkey, safeAddress }
 }
 
 // This page doesn't have a UI, it just determines where to redirect the user based on the state.
@@ -57,6 +48,10 @@ function Home() {
   const { safeAddress, passkey } = useLoaderData() as LoaderData
   const { walletProvider } = useOutletContext()
   const [safeCode, requestStatus] = useCodeAtAddress(walletProvider, safeAddress)
+
+  if (requestStatus === RequestStatus.LOADING) {
+    return <p>Loading...</p>
+  }
 
   if (requestStatus === RequestStatus.SUCCESS && safeCode !== '0x') {
     return <Navigate to={getSafeRoute(safeAddress)} />
