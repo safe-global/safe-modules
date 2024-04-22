@@ -12,6 +12,7 @@ import { useEntryPointAccountBalance } from '../hooks/useEntryPointAccountBalanc
 import { signAndSendUserOp, UnsignedPackedUserOperation } from '../logic/userOp.ts'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys.ts'
 import { getJsonRpcProviderFromEip1193Provider } from '../logic/wallets.ts'
+import { useSignerAddressFromPubkeyCoords } from '../hooks/useSignerAddressFromPubkeyCoords.ts'
 
 const loader: LoaderFunction = async ({ params }) => {
   const { safeAddress } = params
@@ -27,7 +28,12 @@ const loader: LoaderFunction = async ({ params }) => {
 function Safe() {
   const { safeAddress } = useParams<{ safeAddress: string }>()
   const { walletProvider } = useOutletContext()
-  const { passkey } = useLoaderData() as { passkey: PasskeyLocalStorageFormat; passkeySignerAddress: string }
+  const { passkey } = useLoaderData() as { passkey: PasskeyLocalStorageFormat }
+  const [signerAddress, signerAddressStatus] = useSignerAddressFromPubkeyCoords(
+    walletProvider,
+    passkey.pubkeyCoordinates.x,
+    passkey.pubkeyCoordinates.y,
+  )
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress || '')
   const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(walletProvider, safeAddress || '')
   const [safeNonce, safeNonceStatus] = useEntryPointAccountNonce(walletProvider, safeAddress || '')
@@ -52,12 +58,13 @@ function Safe() {
     safeCodeStatus === RequestStatus.ERROR ||
     safeBalanceStatus === RequestStatus.ERROR ||
     safeNonceStatus === RequestStatus.ERROR ||
-    safeEntryPointBalanceStatus === RequestStatus.ERROR
+    safeEntryPointBalanceStatus === RequestStatus.ERROR ||
+    signerAddressStatus === RequestStatus.ERROR
   ) {
     return <div>Error loading Safe data. Please refresh the page.</div>
   }
 
-  if (safeNonce === null || safeEntryPointBalance === null) {
+  if (safeNonce === null || safeEntryPointBalance === null || signerAddress === null) {
     return <div>Loading...</div>
   }
 
@@ -81,6 +88,7 @@ function Safe() {
         nonce={safeNonce}
         accountEntryPointBalance={safeEntryPointBalance}
         safeAddress={safeAddress}
+        signerAddress={signerAddress}
       />
     </div>
   )

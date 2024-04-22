@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import { useFeeData } from '../hooks/useFeeData.ts'
 import { getMissingAccountFunds, getUnsignedUserOperation, packGasParameters, UnsignedPackedUserOperation } from '../logic/userOp.ts'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation.ts'
-import { abs, RequestStatus } from '../utils.ts'
+import { RequestStatus } from '../utils.ts'
 import { MissingAccountFundsCard } from './MissingAccountFundsCard.tsx'
 
 type Props = {
@@ -13,9 +13,10 @@ type Props = {
   safeAddress: string
   nonce: bigint
   accountEntryPointBalance: bigint
+  signerAddress: string
 }
 
-function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonce, accountEntryPointBalance }: Props) {
+function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonce, accountEntryPointBalance, signerAddress }: Props) {
   const [amount, setAmount] = useState('')
   const [to, setTo] = useState('')
   const [error, setError] = useState('')
@@ -37,7 +38,7 @@ function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonc
     [safeAddress, nonce, to, amount],
   )
 
-  const { userOpGasLimitEstimation, status: estimationStatus } = useUserOpGasLimitEstimation(userOp)
+  const { userOpGasLimitEstimation, status: estimationStatus } = useUserOpGasLimitEstimation(userOp, signerAddress)
 
   const gasParametersReady =
     feeDataStatus === RequestStatus.SUCCESS &&
