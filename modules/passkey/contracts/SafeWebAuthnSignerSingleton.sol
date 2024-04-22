@@ -13,11 +13,7 @@ contract SafeWebAuthnSignerSingleton is SignatureValidator {
      * @inheritdoc SignatureValidator
      */
     function _verifySignature(bytes32 message, bytes calldata signature) internal view virtual override returns (bool success) {
-        uint256 x;
-        uint256 y;
-        P256.Verifiers verifiers;
-        // solhint-disable-next-line no-inline-assembly
-        (x, y, verifiers) = getConfiguration();
+        (uint256 x, uint256 y, P256.Verifiers verifiers) = getConfiguration();
 
         success = WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, verifiers);
     }
