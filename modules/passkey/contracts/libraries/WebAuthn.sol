@@ -70,18 +70,55 @@ library WebAuthn {
     /**
      * @notice Casts calldata bytes to a WebAuthn signature data structure.
      * @param signature The calldata bytes of the WebAuthn signature.
+     * @return isValid Whether or not the encoded signature bytes is valid.
      * @return data A pointer to the signature data in calldata.
-     * @dev This method casts the dynamic bytes array to a signature calldata pointer without
-     * additional verification. This is not a security issue for the WebAuthn implementation, as any
-     * signature data that would be represented from an invalid `signature` value, could also be
-     * encoded by a valid one. It does, however, mean that callers into the WebAuthn signature
-     * verification implementation might not validate as much of the data that they pass in as they
-     * would expect. With that in mind, callers should not rely on the encoding being verified.
+     * @dev This method casts the dynamic bytes array to a signature calldata pointer with some
+     * additional verification. Specifically, we ensure that the signature bytes encoding is no
+     * larger than standard ABI encoding form, to prevent attacks where valid signatures are padded
+     * with 0s in order to increase signature verifications the costs for ERC-4337 user operations.
      */
-    function castSignature(bytes calldata signature) internal pure returns (Signature calldata data) {
+    function castSignature(bytes calldata signature) internal pure returns (bool isValid, Signature calldata data) {
+        uint256 authenticatorDataLength;
+        uint256 clientDataFieldsLength;
+
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             data := signature.offset
+
+            // Read the lengths of the dynamic byte arrays in assembly. This is done because
+            // Solidity generates calldata bounds checks which aren't required for the security of
+            // the signature verification, as it can only lead to _shorter_ signatures which are
+            // are less gas expensive anyway.
+            authenticatorDataLength := calldataload(add(data, calldataload(data)))
+            clientDataFieldsLength := calldataload(add(data, calldataload(add(data, 0x20))))
+        }
+
+        // Use of unchecked math as any overflows in dynamic length computations would cause
+        // out-of-gas reverts when computing the WebAuthn signing message.
+        unchecked {
+            // Allow for signature encodings where the dynamic bytes are aligned to 32-byte
+            // boundaries. This allows for high interoperability (as this is how Solidity and most
+            // tools `abi.encode`s the `Signature` struct) while setting a strict upper bound to how
+            // many additional padding bytes can be added to the signature, increasing gas costs.
+            // Note that we compute the aligned lengths with the formula: `l + 0x1f & ~0x1f`, which
+            // rounds `l` up to the next 32-byte boundary.
+            uint256 alignmentMask = ~uint256(0x1f);
+            uint256 authenticatorDataAlignedLength = (authenticatorDataLength + 0x1f) & alignmentMask;
+            uint256 clientDataFieldsAlignedLength = (clientDataFieldsLength + 0x1f) & alignmentMask;
+
+            // The fixed parts of the signature length are 6 32-byte words for a total of 192 bytes:
+            // - offset of the `authenticatorData` bytes
+            // - offset of the `clientDataFields` string
+            // - signature `r` value
+            // - signature `s` value
+            // - length of the `authenticatorData` bytes
+            // - length of the `clientDataFields` string
+            //
+            // This implies that the signature length must be less than or equal to:
+            //      192 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength
+            // which is equivalent to strictly less than:
+            //      193 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength
+            isValid = signature.length < 193 + authenticatorDataAlignedLength + clientDataFieldsAlignedLength;
         }
     }
 
@@ -256,7 +293,11 @@ library WebAuthn {
         uint256 y,
         P256.Verifiers verifiers
     ) internal view returns (bool success) {
-        success = verifySignature(challenge, castSignature(signature), authenticatorFlags, x, y, verifiers);
+        Signature calldata signatureStruct;
+        (success, signatureStruct) = castSignature(signature);
+        if (success) {
+            success = verifySignature(challenge, signatureStruct, authenticatorFlags, x, y, verifiers);
+        }
     }
 
     /**
