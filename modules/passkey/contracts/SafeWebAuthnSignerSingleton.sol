@@ -24,7 +24,7 @@ contract SafeWebAuthnSignerSingleton is SignatureValidator {
      * @return y The y coordinate of the P-256 public key.
      * @return verifiers The P-256 verifiers.
      */
-    function getConfiguration() public view returns (uint256 x, uint256 y, P256.Verifiers verifiers) {
+    function getConfiguration() public pure returns (uint256 x, uint256 y, P256.Verifiers verifiers) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             x := calldataload(sub(calldatasize(), 88))
