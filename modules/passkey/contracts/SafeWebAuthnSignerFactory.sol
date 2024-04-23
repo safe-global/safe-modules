@@ -54,7 +54,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         uint256 x,
         uint256 y,
         P256.Verifiers verifiers
-    ) external view override returns (bytes4 /*magicValue*/) {
+    ) external view override returns (bytes4 magicValue) {
         address singleton = address(SINGLETON);
         bytes memory data = abi.encodePacked(
             abi.encodeWithSignature("isValidSignature(bytes32,bytes)", message, signature),
