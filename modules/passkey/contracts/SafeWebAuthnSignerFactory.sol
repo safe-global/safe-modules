@@ -68,10 +68,8 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
             let dataSize := mload(data)
             let dataLocation := add(data, 0x20)
 
-            let success := staticcall(gas(), singleton, dataLocation, dataSize, 0, 0)
-            if eq(success, 1) {
-                returndatacopy(0, 0, returndatasize())
-                return(0, returndatasize())
+            if staticcall(gas(), singleton, dataLocation, dataSize, 0, 32) {
+                magicValue := mload(0)
             }
         }
     }
