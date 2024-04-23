@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 import {ISafeSignerFactory} from "./interfaces/ISafeSignerFactory.sol";
 import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
 import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
-import {P256} from "./libraries/WebAuthn.sol";
+import {P256} from "./libraries/P256.sol";
 
 /**
  * @title SafeWebAuthnSignerFactory
