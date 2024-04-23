@@ -55,7 +55,7 @@ contract SafeWebAuthnSignerProxy {
 
             let success := delegatecall(gas(), singleton, dataLocation, dataSize, 0, 0)
             returndatacopy(0, 0, returndatasize())
-            if eq(success, 0) {
+            if iszero(success) {
                 revert(0, returndatasize())
             }
             return(0, returndatasize())
