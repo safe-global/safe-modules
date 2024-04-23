@@ -67,7 +67,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         assembly {
             let dataSize := mload(data)
             let dataLocation := add(data, 0x20)
-
+            // staticcall to the singleton contract with return size given as 32 bytes. The singleton contract is known and immutable so, it is safe to specify return size.
             if staticcall(gas(), singleton, dataLocation, dataSize, 0, 32) {
                 magicValue := mload(0)
             }
