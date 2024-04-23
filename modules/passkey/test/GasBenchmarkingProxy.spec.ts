@@ -44,7 +44,7 @@ describe('Gas Benchmarking [@bench]', function () {
     return { benchmarker, factory, verifiers }
   })
 
-  describe('SafeWebAuthnSigner', () => {
+  describe('SafeWebAuthnSignerProxy', () => {
     it(`Benchmark signer deployment cost`, async function () {
       const { benchmarker, factory } = await setupTests()
 
@@ -78,7 +78,7 @@ describe('Gas Benchmarking [@bench]', function () {
         const verifier = await verifiers[key].getAddress()
 
         await factory.createSigner(x, y, verifier)
-        const signer = await ethers.getContractAt('SafeWebAuthnSigner', await factory.getSigner(x, y, verifier))
+        const signer = await ethers.getContractAt('SafeWebAuthnSignerSingleton', await factory.getSigner(x, y, verifier))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(

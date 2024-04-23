@@ -322,7 +322,6 @@ library WebAuthn {
         // need to encode the signing message if the expected authenticator flags are missing).
         // However, ordering things this way helps the Solidity compiler generate meaningfully more
         // optimal code for the "happy path" when Yul optimizations are turned on.
-
         bytes memory message = encodeSigningMessage(challenge, signature.authenticatorData, signature.clientDataFields);
         if (checkAuthenticatorFlags(signature.authenticatorData, authenticatorFlags)) {
             success = verifiers.verifySignatureAllowMalleability(_sha256(message), signature.r, signature.s, x, y);

@@ -11,6 +11,7 @@ import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
 import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
 import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
+import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -34,6 +35,9 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
     const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
+    const precompileAddress = `0x${'00'.repeat(18)}0100`
+    await setCode(precompileAddress, await ethers.provider.getCode(verifier))
+    const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), verifier.target]))
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
@@ -49,15 +53,14 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       singleton,
       signerFactory,
       navigator,
-      verifier,
+      verifiers,
     }
   })
 
   describe('executeUserOp - new account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, safeModuleSetup, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, verifier } =
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, signerLaunchpad, singleton, signerFactory, navigator, verifiers } =
         await setupTests()
-      const verifierAddress = await verifier.getAddress()
 
       const credential = navigator.credentials.create({
         publicKey: {
@@ -75,14 +78,14 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = decodePublicKey(credential.response)
-      const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
+      const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifiers)
 
       const safeInit = {
         singleton: singleton.target,
         signerFactory: signerFactory.target,
         signerX: publicKey.x,
         signerY: publicKey.y,
-        signerVerifiers: verifierAddress,
+        signerVerifiers: verifiers,
         setupTo: safeModuleSetup.target,
         setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
         fallbackHandler: module.target,
@@ -209,8 +212,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
 
   describe('executeUserOp - existing account', () => {
     it('should execute user operation', async () => {
-      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifier } = await setupTests()
-      const verifierAddress = await verifier.getAddress()
+      const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifiers } = await setupTests()
       const credential = navigator.credentials.create({
         publicKey: {
           rp: {
@@ -227,10 +229,10 @@ describe('Safe4337Module - WebAuthn Owner', () => {
         },
       })
       const publicKey = decodePublicKey(credential.response)
-      await signerFactory.createSigner(publicKey.x, publicKey.y, verifierAddress)
+      await signerFactory.createSigner(publicKey.x, publicKey.y, verifiers)
       const signer = await ethers.getContractAt(
-        'SafeWebAuthnSigner',
-        await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress),
+        'SafeWebAuthnSignerProxy',
+        await signerFactory.getSigner(publicKey.x, publicKey.y, verifiers),
       )
 
       const safe = await Safe4337.withSigner(await signer.getAddress(), {

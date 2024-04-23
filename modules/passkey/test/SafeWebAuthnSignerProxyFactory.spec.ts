@@ -9,6 +9,7 @@ import { encodeWebAuthnSigningMessage } from './utils/webauthnShim'
 describe('SafeWebAuthnSignerFactory', () => {
   const setupTests = deployments.createFixture(async () => {
     const { SafeWebAuthnSignerFactory } = await deployments.fixture()
+
     const factory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const MockContract = await ethers.getContractFactory('MockContract')
@@ -59,13 +60,14 @@ describe('SafeWebAuthnSignerFactory', () => {
     it('Should create a signer and return its deterministic address', async () => {
       const { factory, verifiers } = await setupTests()
 
+      const singletonAddress = await factory.SINGLETON()
       const x = ethers.id('publicKey.x')
       const y = ethers.id('publicKey.y')
 
       const signer = await factory.createSigner.staticCall(x, y, verifiers)
 
-      const SafeWebAuthnSigner = await ethers.getContractFactory('SafeWebAuthnSigner')
-      const { data: initCode } = await SafeWebAuthnSigner.getDeployTransaction(x, y, verifiers)
+      const SafeWebAuthnSignerProxy = await ethers.getContractFactory('SafeWebAuthnSignerProxy')
+      const { data: initCode } = await SafeWebAuthnSignerProxy.getDeployTransaction(singletonAddress, x, y, verifiers)
       expect(signer).to.equal(ethers.getCreate2Address(await factory.getAddress(), ethers.ZeroHash, ethers.keccak256(initCode)))
 
       expect(ethers.dataLength(await ethers.provider.getCode(signer))).to.equal(0)

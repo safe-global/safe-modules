@@ -2,21 +2,33 @@
 pragma solidity >=0.8.0;
 
 import {ISafeSignerFactory} from "./interfaces/ISafeSignerFactory.sol";
-import {ERC1271} from "./libraries/ERC1271.sol";
-import {P256, WebAuthn} from "./libraries/WebAuthn.sol";
-import {SafeWebAuthnSigner} from "./SafeWebAuthnSigner.sol";
+import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
+import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
+import {P256} from "./libraries/P256.sol";
 
 /**
- * @title WebAuthnSignerFactory
- * @dev A factory contract for creating and managing WebAuthn signers.
+ * @title SafeWebAuthnSignerFactory
+ * @dev A factory contract for creating and managing WebAuthn proxy signers.
  */
 contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
+    SafeWebAuthnSignerSingleton public immutable SINGLETON;
+
+    constructor() {
+        SINGLETON = new SafeWebAuthnSignerSingleton();
+    }
+
     /**
      * @inheritdoc ISafeSignerFactory
      */
     function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view override returns (address signer) {
         bytes32 codeHash = keccak256(
-            abi.encodePacked(type(SafeWebAuthnSigner).creationCode, x, y, uint256(P256.Verifiers.unwrap(verifiers)))
+            abi.encodePacked(
+                type(SafeWebAuthnSignerProxy).creationCode,
+                uint256(uint160(address(SINGLETON))),
+                x,
+                y,
+                uint256(P256.Verifiers.unwrap(verifiers))
+            )
         );
         signer = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)))));
     }
@@ -28,8 +40,8 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         signer = getSigner(x, y, verifiers);
 
         if (_hasNoCode(signer)) {
-            SafeWebAuthnSigner created = new SafeWebAuthnSigner{salt: bytes32(0)}(x, y, verifiers);
-            assert(address(created) == signer);
+            SafeWebAuthnSignerProxy created = new SafeWebAuthnSignerProxy{salt: bytes32(0)}(address(SINGLETON), x, y, verifiers);
+            require(address(created) == signer);
         }
     }
 
@@ -43,8 +55,22 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         uint256 y,
         P256.Verifiers verifiers
     ) external view override returns (bytes4 magicValue) {
-        if (WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, verifiers)) {
-            magicValue = ERC1271.MAGIC_VALUE;
+        address singleton = address(SINGLETON);
+        bytes memory data = abi.encodePacked(
+            abi.encodeWithSignature("isValidSignature(bytes32,bytes)", message, signature),
+            x,
+            y,
+            verifiers
+        );
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            let dataSize := mload(data)
+            let dataLocation := add(data, 0x20)
+            // staticcall to the singleton contract with return size given as 32 bytes. The singleton contract is known and immutable so, it is safe to specify return size.
+            if staticcall(gas(), singleton, dataLocation, dataSize, 0, 32) {
+                magicValue := mload(0)
+            }
         }
     }
 
