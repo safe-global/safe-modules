@@ -11,10 +11,10 @@ import {P256} from "./libraries/WebAuthn.sol";
  * @dev A factory contract for creating and managing WebAuthn proxy signers.
  */
 contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
-    address public immutable SINGLETON;
+    SafeWebAuthnSignerSingleton public immutable SINGLETON;
 
     constructor() {
-        SINGLETON = address(new SafeWebAuthnSignerSingleton());
+        SINGLETON = new SafeWebAuthnSignerSingleton();
     }
 
     /**
@@ -24,7 +24,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         bytes32 codeHash = keccak256(
             abi.encodePacked(
                 type(SafeWebAuthnSignerProxy).creationCode,
-                uint256(uint160(SINGLETON)),
+                uint256(uint160(address(SINGLETON))),
                 x,
                 y,
                 uint256(P256.Verifiers.unwrap(verifiers))
@@ -40,7 +40,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         signer = getSigner(x, y, verifiers);
 
         if (_hasNoCode(signer)) {
-            SafeWebAuthnSignerProxy created = new SafeWebAuthnSignerProxy{salt: bytes32(0)}(SINGLETON, x, y, verifiers);
+            SafeWebAuthnSignerProxy created = new SafeWebAuthnSignerProxy{salt: bytes32(0)}(address(SINGLETON), x, y, verifiers);
             require(address(created) == signer);
         }
     }
@@ -55,7 +55,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         uint256 y,
         P256.Verifiers verifiers
     ) external view override returns (bytes4 /*magicValue*/) {
-        address singleton = SINGLETON;
+        address singleton = address(SINGLETON);
         bytes memory data = abi.encodePacked(
             abi.encodeWithSignature("isValidSignature(bytes32,bytes)", message, signature),
             x,
