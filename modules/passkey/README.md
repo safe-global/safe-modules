@@ -2,9 +2,29 @@
 
 This package contains a passkey signature verifier, that can be used as an owner for a Safe, compatible with versions 1.3.0+.
 
-## SafeWebAuthnSignerProxy
+## Contracts overview
 
-Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the complete bytecode contract for each signer creation. The `SafeWebAuthnSignerProxy` contract is a proxy contract that forwards calls to the `SafeWebAuthnSignerSingleton` contract which is a singleton contract. Both `SafeWebAuthnSignerProxy` and `SafeWebAuthnSignerSingleton` use no storage slots to avoid storage access violations defined in ERC-4337. The details on gas savings can be found in [this PR](https://github.com/safe-global/safe-modules/pull/370).
+Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://github.com/frangio/eip712-wrapper-for-eip1271) standard and WebAuthn standard to allow signature verification on SECP256K1 curve. The contracts in this package are designed in such a way that they can be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib).
+
+The below sections give a high-level overview of the contracts present in this package.
+
+### [SafeWebAuthnSignerProxy](./contracts/SafeWebAuthnSignerProxy.sol)
+
+A proxy contract is uniquely deployed for each Passkey signer. The signer information i.e, Public key co-ordinates, Verifier address, Singleton address are immutable. All calls to the signer are forwarded to the `SafeWebAuthnSignerSingleton` contract.
+
+Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole contract deployment for each signer creation. The `SafeWebAuthnSignerProxy` contract is a proxy contract that forwards calls to the `SafeWebAuthnSignerSingleton` contract which is a singleton contract. Both `SafeWebAuthnSignerProxy` and `SafeWebAuthnSignerSingleton` use no storage slots to avoid storage access violations defined in ERC-4337. The details on gas savings can be found in [this PR](https://github.com/safe-global/safe-modules/pull/370). This proxy contract appends public key co-ordinates, and verifier information to the calldata before forwarding call to the singleton contract.
+
+### [SafeWebAuthnSignerSingleton](./contracts/SafeWebAuthnSignerSingleton.sol)
+
+`SafeWebAuthnSignerSingleton` implements ERC-1271 interface to support signature verification which enables signature data to be forwarded from a Safe to the `WebAuthn` library. The `SafeWebAuthnSignerSingleton` contract is a singleton contract that forwards calls to the `WebAuthn` library. This contract expects public key co-ordinates, and verifier address to be appended by the caller inspired from [ERC-2771](https://eips.ethereum.org/EIPS/eip-2771).
+
+### [SafeWebAuthnSignerFactory](./contracts/SafeWebAuthnSignerFactory.sol)
+
+The `SafeWebAuthnSignerFactory` contract is used to deploy the `SafeWebAuthnSignerProxy` contract with the public key co-ordinates and verifier information. The factory contract also supports signature verification for the public-key and signature information without deploying the signer contract which is used during the validation of `UserOp`. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed .
+
+### [WebAuthn](./contracts/WebAuthn.sol)
+
+This library is used for generating signing message, hashing it and forwarding the call to the verifier contract.
 
 ## Setup and Execution flow
 
@@ -78,7 +98,7 @@ During the execution phase, the implementation of the `SafeProxy` is set to the 
 npm install
 ```
 
-### Run Hardhat Tests:
+### Run Hardhat tests:
 
 ```bash
 npm test
