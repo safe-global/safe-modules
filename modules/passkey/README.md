@@ -131,6 +131,10 @@ npx hardhat --network <network> etherscan-verify
 npx hardhat --network <network> local-verify
 ```
 
+### Compiler settings
+
+The project uses Solidity compiler version `0.8.24` with 10 million optimizer runs, as we want to optimize for the code execution costs. The EVM version is set to `paris` because not all our target networks support the opcodes introduced in the `Shanghai` EVM upgrade.
+
 #### Custom Networks
 
 It is possible to use the `NODE_URL` env var to connect to any EVM-based network via an RPC endpoint. This connection can then be used with the `custom` network.
