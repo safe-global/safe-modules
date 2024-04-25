@@ -1,7 +1,7 @@
 // Represents a symbolic/dummy ERC20 token
 
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.7.6;
+pragma solidity >=0.7.6;
 
 contract DummyERC20B {
     uint256 t;
