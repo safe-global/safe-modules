@@ -26,6 +26,10 @@ The `SafeWebAuthnSignerFactory` contract is used to deploy the `SafeWebAuthnSign
 
 This library is used for generating signing message, hashing it and forwarding the call to the verifier contract.
 
+### [P256](./contracts/P256.sol)
+
+`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint192`. The first address (4 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime. 
+
 ## Setup and Execution flow
 
 ```mermaid
