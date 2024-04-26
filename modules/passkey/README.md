@@ -20,7 +20,7 @@ Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole cont
 
 ### [SafeWebAuthnSignerFactory](./contracts/SafeWebAuthnSignerFactory.sol)
 
-The `SafeWebAuthnSignerFactory` contract is used to deploy the `SafeWebAuthnSignerProxy` contract with the public key co-ordinates and verifier information. The factory contract also supports signature verification for the public-key and signature information without deploying the signer contract which is used during the validation of `UserOp`. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed .
+The `SafeWebAuthnSignerFactory` contract deploys the `SafeWebAuthnSignerProxy` contract with the public key coordinates and verifier information. The factory contract also supports signature verification for the public key and signature information without deploying the signer contract, which is used during the validation of `UserOp`. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed.
 
 ### [WebAuthn](./contracts/libraries/WebAuthn.sol)
 
