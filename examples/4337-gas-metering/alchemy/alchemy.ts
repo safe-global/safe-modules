@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { getAccountNonce } from 'permissionless'
+import { ENTRYPOINT_ADDRESS_V06, getAccountNonce } from 'permissionless'
 import { Network, Alchemy } from 'alchemy-sdk'
 import { setTimeout } from 'timers/promises'
 import { PublicClient, Hash, Transport, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
@@ -103,9 +103,8 @@ const alchemy = new Alchemy(settings)
 
 const initCode = await getAccountInitCode({
   owner: signer.address,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
-  safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
@@ -115,9 +114,9 @@ const initCode = await getAccountInitCode({
 console.log('\nInit Code Created.')
 
 const senderAddress = await getAccountAddress({
-  publicClient: publicClient,
+  client: publicClient,
   owner: signer.address,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
@@ -141,7 +140,7 @@ if (contractCode) {
 }
 
 const newNonce = await getAccountNonce(publicClient, {
-  entryPoint: entryPointAddress,
+  entryPoint: ENTRYPOINT_ADDRESS_V06,
   sender: senderAddress,
 })
 console.log('\nNonce for the sender received from EntryPoint.')
@@ -160,14 +159,15 @@ const txCallData: `0x${string}` = await createCallData(
 const sponsoredUserOperation: UserOperation = {
   sender: senderAddress,
   nonce: newNonce,
-  initCode: contractCode ? '0x' : initCode,
+  factory: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
+  factoryData: contractCode ? '0x' : initCode,
   callData: txCallData,
   callGasLimit: 1n, // All Gas Values will be filled by Estimation Response Data.
   verificationGasLimit: 1n,
   preVerificationGas: 1n,
   maxFeePerGas: 1n,
   maxPriorityFeePerGas: 1n,
-  paymasterAndData: '0x',
+  paymasterData: '0x',
   signature: '0x',
 }
 

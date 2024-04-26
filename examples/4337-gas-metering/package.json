@@ -54,7 +54,7 @@
     "@alchemy/aa-core": "2.3.1",
     "alchemy-sdk": "3.1.2",
     "dotenv": "16.4.5",
-    "permissionless": "0.0.35",
+    "permissionless": "0.1.16",
     "viem": "2.9.3"
   },
   "devDependencies": {

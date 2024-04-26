@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import type { Address } from 'abitype'
-import { fromHex, parseEther, type Hex, type PrivateKeyAccount, formatEther } from 'viem'
+import { fromHex, parseEther, type PrivateKeyAccount, formatEther, Hex } from 'viem'
 import { encodeCallData } from './safe'
 import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { Alchemy } from 'alchemy-sdk'
@@ -16,15 +16,21 @@ export const txTypes = ['account', 'erc20', 'erc721', 'native-transfer']
 export type UserOperation = {
   sender: Address
   nonce: bigint
-  initCode: Hex
+  factory?: Address
+  factoryData?: Hex
   callData: Hex
   callGasLimit: bigint
   verificationGasLimit: bigint
   preVerificationGas: bigint
   maxFeePerGas: bigint
   maxPriorityFeePerGas: bigint
-  paymasterAndData: Hex
+  paymaster?: Address
+  paymasterVerificationGasLimit?: bigint
+  paymasterPostOpGasLimit?: bigint
+  paymasterData?: Hex
   signature: Hex
+  initCode?: never
+  paymasterAndData?: never
 }
 
 // Sponsored User Operation Data
@@ -57,14 +63,20 @@ export const submitUserOperationPimlico = async (
   console.log(`UserOp Link: https://jiffyscan.xyz/userOpHash/${userOperationHash}?network=` + chain + '\n')
 
   console.log('Querying for receipts...')
-  const receipt = await bundlerClient.waitForUserOperationReceipt({
+  let receipt = await bundlerClient.getUserOperationReceipt({
     hash: userOperationHash,
   })
+  while (receipt == null) {
+    await setTimeout(10000) // Sometimes it takes time to index.
+    receipt = await bundlerClient.getUserOperationReceipt({
+      hash: userOperationHash,
+    })
+  }
   console.log(`Receipt found!\nTransaction hash: ${receipt.receipt.transactionHash}`)
-  if (chain == 'mumbai') {
-    console.log(`Transaction Link: https://mumbai.polygonscan.com/tx/${receipt.receipt.transactionHash}`)
+  if (chain == 'base-sepolia') {
+    console.log(`Transaction Link: https://sepolia.basescan.org/tx/${receipt.receipt.transactionHash}`)
   } else {
-    console.log(`Transaction Link: https://` + chain + `.etherscan.io/tx/${receipt.receipt.transactionHash}`)
+    console.log(`Transaction Link: https://${chain}.etherscan.io/tx/${receipt.receipt.transactionHash}`)
   }
   console.log(`\nGas Used (Account or Paymaster): ${receipt.actualGasUsed}`)
   console.log(`Gas Used (Transaction): ${receipt.receipt.gasUsed}\n`)
@@ -90,14 +102,14 @@ export const signUserOperation = async (
         message: {
           safe: userOperation.sender,
           nonce: userOperation.nonce,
-          initCode: userOperation.initCode,
+          initCode: userOperation.factory ? userOperation.factory + (userOperation.factoryData ?? '').slice(2) : '0x',
           callData: userOperation.callData,
-          callGasLimit: userOperation.callGasLimit,
           verificationGasLimit: userOperation.verificationGasLimit,
+          callGasLimit: userOperation.callGasLimit,
           preVerificationGas: userOperation.preVerificationGas,
-          maxFeePerGas: userOperation.maxFeePerGas,
           maxPriorityFeePerGas: userOperation.maxPriorityFeePerGas,
-          paymasterAndData: userOperation.paymasterAndData,
+          maxFeePerGas: userOperation.maxFeePerGas,
+          paymasterAndData: userOperation.paymasterData,
           validAfter: '0x000000000000',
           validUntil: '0x000000000000',
           entryPoint: entryPointAddress,
@@ -351,7 +363,7 @@ export const createCallData = async (
   } else if (txType == 'erc20') {
     // Token Configurations
     const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10n ** erc20Decimals)
+    const erc20Amount = 10n ** BigInt(erc20Decimals)
     let senderERC20Balance = await getERC20Balance(erc20TokenAddress, publicClient, senderAddress)
     console.log('\nSafe Wallet ERC20 Balance:', Number(senderERC20Balance / erc20Amount))
 

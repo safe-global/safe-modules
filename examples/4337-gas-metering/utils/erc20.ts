@@ -76,6 +76,12 @@ export const mintERC20Token = async (
         chain: polygonMumbai,
         transport: http(pimlicoRPCURL),
       })
+    } else if (chain == 'base-sepolia') {
+      walletClient = createWalletClient({
+        account: signer,
+        chain: baseSepolia,
+        transport: http(pimlicoRPCURL),
+      })
     } else {
       throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
     }

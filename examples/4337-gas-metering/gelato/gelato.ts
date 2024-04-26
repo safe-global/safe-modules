@@ -71,9 +71,9 @@ if (chain == 'sepolia') {
 // Creating the Account Init Code.
 let requestData = await getGelatoAccountInitCode({
   owner: signer.address,
-  publicClient: publicClient,
+  client: publicClient,
   txType: txType,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
@@ -86,9 +86,9 @@ console.log('\nInit Code Created.')
 // Creating the Counterfactual Safe Address.
 const senderAddress = await getAccountAddress({
   owner: signer.address,
-  publicClient: publicClient,
+  client: publicClient,
   txType: txType,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
