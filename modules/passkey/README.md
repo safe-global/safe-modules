@@ -12,7 +12,7 @@ The below sections give a high-level overview of the contracts present in this p
 
 A proxy contract is uniquely deployed for each Passkey signer. The signer information i.e, Public key co-ordinates, Verifier address, Singleton address are immutable. All calls to the signer are forwarded to the `SafeWebAuthnSignerSingleton` contract.
 
-Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole contract deployment for each signer creation. The `SafeWebAuthnSignerProxy` contract is a proxy contract that forwards calls to the `SafeWebAuthnSignerSingleton` contract which is a singleton contract. Both `SafeWebAuthnSignerProxy` and `SafeWebAuthnSignerSingleton` use no storage slots to avoid storage access violations defined in ERC-4337. The details on gas savings can be found in [this PR](https://github.com/safe-global/safe-modules/pull/370). This non-standard proxy contract appends signer information i.e., public key co-ordinates, and verifier data to the calldata before forwarding call to the singleton contract.
+Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole contract deployment for each signer creation. Both `SafeWebAuthnSignerProxy` and `SafeWebAuthnSignerSingleton` use no storage slots to avoid storage access violations defined in ERC-4337. The details on gas savings can be found in [this PR](https://github.com/safe-global/safe-modules/pull/370). This non-standard proxy contract appends signer information i.e., public key co-ordinates, and verifier data to the calldata before forwarding call to the singleton contract.
 
 ### [SafeWebAuthnSignerSingleton](./contracts/SafeWebAuthnSignerSingleton.sol)
 
