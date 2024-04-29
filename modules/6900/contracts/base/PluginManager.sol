@@ -34,18 +34,18 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
             revert PluginInterfaceNotSupported(plugin);
         }
 
-        // 3. Validate manifestHash
-        PluginManifest memory manifest = IPlugin(plugin).pluginManifest();
-        if (!(manifestHash == keccak256(abi.encode(manifest)))) {
-            revert PluginManifestHashMismatch(manifestHash);
-        }
+        // // 3. Validate manifestHash
+        // PluginManifest memory manifest = IPlugin(plugin).pluginManifest();
+        // if (!(manifestHash == keccak256(abi.encode(manifest)))) {
+        //     revert PluginManifestHashMismatch(manifestHash);
+        // }
 
-        // 4. TODO: Check for dependencies
+        // // 4. TODO: Check for dependencies
 
-        // 4.1 Length checks
-        if (dependencies.length != manifest.dependencyInterfaceIds.length) {
-            revert PluginDepenencyCountMismatch();
-        }
+        // // 4.1 Length checks
+        // if (dependencies.length != manifest.dependencyInterfaceIds.length) {
+        //     revert PluginDepenencyCountMismatch();
+        // }
 
         // 4.2 Dependency does not support interface
         // uint256 length = dependencies.length;
@@ -64,10 +64,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         IPlugin(plugin).onInstall(pluginInstallData);
 
         // 7. Emit event
-        emit PluginInstalled(plugin, manifestHash, dependencies);
-
-        // TODO: Remove after complete
-        revert("Safe6900Module: not complete");
+        emit PluginInstalled(plugin, manifestHash, dependencies);        
     }
 
     function uninstallPlugin(address plugin, bytes calldata config, bytes calldata pluginUninstallData) external override onlyAccount {
@@ -82,8 +79,5 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         IPlugin(plugin).onUninstall(pluginUninstallData);
 
         emit PluginUninstalled(plugin, true);
-
-        // TODO: Remove after complete
-        revert("Safe6900Module: not complete");
     }
 }

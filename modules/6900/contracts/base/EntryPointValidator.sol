@@ -6,6 +6,4 @@ abstract contract EntryPointValidator {
     constructor(address entryPoint) {
         supportedEntryPoint = entryPoint;
     }
-
-    
 }
