@@ -16,7 +16,7 @@ Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole cont
 
 ### [SafeWebAuthnSignerSingleton](./contracts/SafeWebAuthnSignerSingleton.sol)
 
-`SafeWebAuthnSignerSingleton` implements ERC-1271 interface to support signature verification which enables signature data to be forwarded from a Safe to the `WebAuthn` library. The `SafeWebAuthnSignerSingleton` contract is a singleton contract that forwards calls to the `WebAuthn` library. This contract expects public key co-ordinates, and verifier address to be appended by the caller inspired from [ERC-2771](https://eips.ethereum.org/EIPS/eip-2771).
+`SafeWebAuthnSignerSingleton` contract is a singleton contract that implements the ERC-1271 interface to support signature verification, enabling signature data to be forwarded from a Safe to the `WebAuthn` library. This contract expects public key co-ordinates, and verifier address to be appended by the caller inspired from [ERC-2771](https://eips.ethereum.org/EIPS/eip-2771).
 
 ### [SafeWebAuthnSignerFactory](./contracts/SafeWebAuthnSignerFactory.sol)
 
