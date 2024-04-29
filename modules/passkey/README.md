@@ -4,7 +4,7 @@ This package contains a passkey signature verifier, that can be used as an owner
 
 ## Contracts overview
 
-Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification on the SECP256R1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib).
+Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification for WebAuthn credentials using the secp256r1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib) and [daimo-eth](https://github.com/daimo-eth/p256-verifier).
 
 The below sections give a high-level overview of the contracts present in this package.
 
@@ -20,7 +20,7 @@ Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole cont
 
 ### [SafeWebAuthnSignerFactory](./contracts/SafeWebAuthnSignerFactory.sol)
 
-The `SafeWebAuthnSignerFactory` contract deploys the `SafeWebAuthnSignerProxy` contract with the public key coordinates and verifier information. The factory contract also supports signature verification for the public key and signature information without deploying the signer contract, which is used during the validation of `UserOp`. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed.
+The `SafeWebAuthnSignerFactory` contract deploys the `SafeWebAuthnSignerProxy` contract with the public key coordinates and verifier information. The factory contract also supports signature verification for the public key and signature information without deploying the signer contract, which is used during the validation of ERC-4337 user operations by the experimental `SafeSignerLaunchpad` contract. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed.
 
 ### [WebAuthn](./contracts/libraries/WebAuthn.sol)
 
@@ -113,7 +113,7 @@ During the execution phase, the implementation of the `SafeProxy` is set to the 
 npm install
 ```
 
-### Run Hardhat tests:
+### Run Hardhat Tests:
 
 ```bash
 npm test
