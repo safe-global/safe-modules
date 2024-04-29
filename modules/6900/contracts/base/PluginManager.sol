@@ -5,10 +5,9 @@ import {IPluginManager, FunctionReference} from "../interfaces/IPluginManager.so
 import {IPlugin} from "../interfaces/IPlugin.sol";
 import {OnlyAccountCallable} from "../base/OnlyAccountCallable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-
 import {PluginManifest} from "../interfaces/DataTypes.sol";
 
-contract PluginManager is IPluginManager, OnlyAccountCallable {
+abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
     /// @dev A mapping containing the installed plugins for an account. Safe address => Plugin address => uint256 (0 = not installed, 1 = installed)
     mapping(address => mapping(address => uint256)) public installedPlugins;
 
@@ -44,19 +43,19 @@ contract PluginManager is IPluginManager, OnlyAccountCallable {
         // 4. TODO: Check for dependencies
 
         // 4.1 Length checks
-        if(dependencies.length != manifest.dependencyInterfaceIds.length){
+        if (dependencies.length != manifest.dependencyInterfaceIds.length) {
             revert PluginDepenencyCountMismatch();
         }
 
         // 4.2 Dependency does not support interface
-         uint256 length = dependencies.length;
-        for (uint256 i = 0; i < length; i++) {
-            (address dependencyAddress) = dependencies[i].unpack();
-            
-            if (!IERC165().supportsInterface(manifest.dependencyInterfaceIds[i])) {
-                revert PluginInterfaceNotSupported(dependencies[i].target);
-            }
-        }
+        // uint256 length = dependencies.length;
+        // for (uint256 i = 0; i < length; i++) {
+        //     (address dependencyAddress,) = dependencies[i].unpack();
+
+        //     if (!IERC165().supportsInterface(manifest.dependencyInterfaceIds[i])) {
+        //         revert PluginInterfaceNotSupported(dependencies[i].target);
+        //     }
+        // }
 
         // 5. Evaluate if state changes are required before calling onInstall
         installedPlugins[msg.sender][plugin] = 1;
