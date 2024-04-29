@@ -102,7 +102,7 @@ During the execution phase, the implementation of the `SafeProxy` is set to the 
 npm install
 ```
 
-### Run Hardhat tests:
+### Run Hardhat Tests:
 
 ```bash
 npm test
