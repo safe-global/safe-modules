@@ -4,7 +4,7 @@ This package contains a passkey signature verifier, that can be used as an owner
 
 ## Contracts overview
 
-Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and WebAuthn standard to allow signature verification on SECP256K1 curve. The contracts in this package are designed in such a way that they can be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib).
+Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification on the SECP256R1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib).
 
 The below sections give a high-level overview of the contracts present in this package.
 
@@ -16,11 +16,11 @@ Use of `SafeWebAuthnSignerProxy` provides gas savings compared to the whole cont
 
 ### [SafeWebAuthnSignerSingleton](./contracts/SafeWebAuthnSignerSingleton.sol)
 
-`SafeWebAuthnSignerSingleton` implements ERC-1271 interface to support signature verification which enables signature data to be forwarded from a Safe to the `WebAuthn` library. The `SafeWebAuthnSignerSingleton` contract is a singleton contract that forwards calls to the `WebAuthn` library. This contract expects public key co-ordinates, and verifier address to be appended by the caller inspired from [ERC-2771](https://eips.ethereum.org/EIPS/eip-2771).
+`SafeWebAuthnSignerSingleton` contract is a singleton contract that implements the ERC-1271 interface to support signature verification, enabling signature data to be forwarded from a Safe to the `WebAuthn` library. This contract expects public key co-ordinates, and verifier address to be appended by the caller inspired from [ERC-2771](https://eips.ethereum.org/EIPS/eip-2771).
 
 ### [SafeWebAuthnSignerFactory](./contracts/SafeWebAuthnSignerFactory.sol)
 
-The `SafeWebAuthnSignerFactory` contract is used to deploy the `SafeWebAuthnSignerProxy` contract with the public key co-ordinates and verifier information. The factory contract also supports signature verification for the public-key and signature information without deploying the signer contract which is used during the validation of `UserOp`. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed .
+The `SafeWebAuthnSignerFactory` contract deploys the `SafeWebAuthnSignerProxy` contract with the public key coordinates and verifier information. The factory contract also supports signature verification for the public key and signature information without deploying the signer contract, which is used during the validation of `UserOp`. Using [ISafeSignerFactory](./contracts/interfaces/ISafeSignerFactory.sol) interface and this factory contract address, new signers can be deployed.
 
 ### [WebAuthn](./contracts/libraries/WebAuthn.sol)
 
@@ -28,7 +28,7 @@ This library is used for generating signing message, hashing it and forwarding t
 
 ### [P256](./contracts/libraries/P256.sol)
 
-`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint192`. The first address (4 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime.
+`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint192`. The first address (4 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile is not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime.
 
 ## Setup and Execution flow
 
