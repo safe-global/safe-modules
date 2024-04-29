@@ -4,7 +4,7 @@ This package contains a passkey signature verifier, that can be used as an owner
 
 ## Contracts overview
 
-Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and WebAuthn standard to allow signature verification on the SECP256R1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib).
+Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification on the SECP256R1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib).
 
 The below sections give a high-level overview of the contracts present in this package.
 
