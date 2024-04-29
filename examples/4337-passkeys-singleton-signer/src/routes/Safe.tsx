@@ -11,8 +11,6 @@ import { useEntryPointAccountNonce } from '../hooks/useEntryPointAccountNonce.ts
 import { useEntryPointAccountBalance } from '../hooks/useEntryPointAccountBalance.ts'
 import { signAndSendUserOp, UnsignedPackedUserOperation } from '../logic/userOp.ts'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys.ts'
-import { getJsonRpcProviderFromEip1193Provider } from '../logic/wallets.ts'
-import { useSignerAddressFromPubkeyCoords } from '../hooks/useSignerAddressFromPubkeyCoords.ts'
 
 const loader: LoaderFunction = async ({ params }) => {
   const { safeAddress } = params
@@ -29,18 +27,13 @@ function Safe() {
   const { safeAddress } = useParams<{ safeAddress: string }>()
   const { walletProvider } = useOutletContext()
   const { passkey } = useLoaderData() as { passkey: PasskeyLocalStorageFormat }
-  const [signerAddress, signerAddressStatus] = useSignerAddressFromPubkeyCoords(
-    walletProvider,
-    passkey.pubkeyCoordinates.x,
-    passkey.pubkeyCoordinates.y,
-  )
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress || '')
   const [safeBalance, safeBalanceStatus] = useNativeTokenBalance(walletProvider, safeAddress || '')
   const [safeNonce, safeNonceStatus] = useEntryPointAccountNonce(walletProvider, safeAddress || '')
   const [safeEntryPointBalance, safeEntryPointBalanceStatus] = useEntryPointAccountBalance(walletProvider, safeAddress || '')
 
   const handleSendFunds = async (userOp: UnsignedPackedUserOperation) => {
-    const userOpHash = signAndSendUserOp(getJsonRpcProviderFromEip1193Provider(walletProvider), userOp, passkey)
+    const userOpHash = signAndSendUserOp(userOp, passkey)
 
     return userOpHash
   }
@@ -58,13 +51,12 @@ function Safe() {
     safeCodeStatus === RequestStatus.ERROR ||
     safeBalanceStatus === RequestStatus.ERROR ||
     safeNonceStatus === RequestStatus.ERROR ||
-    safeEntryPointBalanceStatus === RequestStatus.ERROR ||
-    signerAddressStatus === RequestStatus.ERROR
+    safeEntryPointBalanceStatus === RequestStatus.ERROR 
   ) {
     return <div>Error loading Safe data. Please refresh the page.</div>
   }
 
-  if (safeNonce === null || safeEntryPointBalance === null || signerAddress === null) {
+  if (safeNonce === null || safeEntryPointBalance === null) {
     return <div>Loading...</div>
   }
 
@@ -88,7 +80,6 @@ function Safe() {
         nonce={safeNonce}
         accountEntryPointBalance={safeEntryPointBalance}
         safeAddress={safeAddress}
-        signerAddress={signerAddress}
       />
     </div>
   )

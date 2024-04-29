@@ -1,26 +1,8 @@
 import { ethers } from 'ethers'
 import { abi as EntryPointAbi } from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { IEntryPoint } from '@safe-global/safe-4337/dist/typechain-types'
-import {
-  SafeInitializer,
-  getExecuteUserOpData,
-  getInitHash,
-  getLaunchpadInitializeThenUserOpData,
-  getLaunchpadInitializer,
-  getSafeAddress,
-  getSafeDeploymentData,
-  getValidateUserOpData,
-  getSignerAddressFromPubkeyCoords,
-} from './safe'
-import {
-  APP_CHAIN_ID,
-  ENTRYPOINT_ADDRESS,
-  SAFE_4337_MODULE_ADDRESS,
-  SAFE_PROXY_FACTORY_ADDRESS,
-  SAFE_SIGNER_LAUNCHPAD_ADDRESS,
-  XANDER_BLAZE_NFT_ADDRESS,
-} from '../config'
-import { encodeSafeMintData } from './erc721'
+import { getExecuteUserOpData, getValidateUserOpData } from './safe'
+import { APP_CHAIN_ID, ENTRYPOINT_ADDRESS, SAFE_4337_MODULE_ADDRESS, SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS } from '../config'
 import { PasskeyLocalStorageFormat, signWithPasskey } from './passkeys'
 import { calculateSafeOperationHash, unpackGasParameters, SafeUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp.js'
 import {
@@ -102,36 +84,12 @@ export function getSignatureBytes({
   )
 }
 
-// Dummy signature for gas estimation. We require the 12 bytes of validity timestamp data
-// so that the estimation doesn't revert. But we also want to use a dummy signature for
-// more accurate `verificationGasLimit` (We want to run the P256 signature verification
-// code) & `preVerificationGas` (The signature length in bytes should be accurate) estimate.
-// The challenge is neither P256 Verification Gas nor signature length are stable, so we make
-// a calculated guess.
-const DUMMY_SIGNATURE_LAUNCHPAD = ethers.solidityPacked(
-  ['uint48', 'uint48', 'bytes'],
-  [
-    0,
-    0,
-    ethers.AbiCoder.defaultAbiCoder().encode(
-      ['bytes', 'string', 'uint256', 'uint256'],
-      [
-        DUMMY_AUTHENTICATOR_DATA, // authenticatorData without any extensions/attestated credential data is always 37 bytes long.
-        DUMMY_CLIENT_DATA_FIELDS,
-        `0x${'ec'.repeat(32)}`,
-        `0x${'d5a'.repeat(21)}f`,
-      ],
-    ),
-  ],
-)
-
 /**
  * Generates a dummy signature for a user operation.
  *
- * @param signer - The Ethereum address of the signer.
  * @returns The dummy signature for a user operation.
  */
-function dummySignatureUserOp(signer: string) {
+function dummySignatureUserOp() {
   return ethers.solidityPacked(
     ['uint48', 'uint48', 'bytes'],
     [
@@ -139,7 +97,7 @@ function dummySignatureUserOp(signer: string) {
       0,
       buildSignatureBytes([
         {
-          signer,
+          signer: SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
           data: getSignatureBytes({
             authenticatorData: DUMMY_AUTHENTICATOR_DATA,
             clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
@@ -171,66 +129,16 @@ type UserOpCall = {
   operation: 0 | 1
 }
 
-/**
- * Prepares a user operation with initialization.
- *
- * @param proxyFactoryAddress - The address of the proxy factory.
- * @param initializer - The safe initializer.
- * @param afterInitializationOpCall - Optional user operation call to be executed after initialization.
- * @param saltNonce - The salt nonce.
- * @returns The unsigned user operation.
- */
-function prepareUserOperationWithInitialisation(
-  proxyFactoryAddress: string,
-  initializer: SafeInitializer,
-  afterInitializationOpCall?: UserOpCall,
-  saltNonce = ethers.ZeroHash,
+function getUnsignedUserOperation(
+  call: UserOpCall,
+  safeAddress: string,
+  nonce: ethers.BigNumberish,
+  initCode = '0x',
 ): UnsignedPackedUserOperation {
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
-  const predictedSafeAddress = getSafeAddress(launchpadInitializer, SAFE_PROXY_FACTORY_ADDRESS, SAFE_SIGNER_LAUNCHPAD_ADDRESS, saltNonce)
-  const safeDeploymentData = getSafeDeploymentData(SAFE_SIGNER_LAUNCHPAD_ADDRESS, launchpadInitializer, saltNonce)
-  const userOpCall = afterInitializationOpCall ?? {
-    to: XANDER_BLAZE_NFT_ADDRESS,
-    data: encodeSafeMintData(predictedSafeAddress),
-    value: 0,
-    operation: 0,
-  }
-
-  const userOp = {
-    sender: predictedSafeAddress,
-    nonce: ethers.toBeHex(0),
-    initCode: getUserOpInitCode(proxyFactoryAddress, safeDeploymentData),
-    callData: getLaunchpadInitializeThenUserOpData(
-      initializer,
-      getExecuteUserOpData(userOpCall.to, userOpCall.value, userOpCall.data, userOpCall.operation),
-    ),
-    ...packGasParameters({
-      callGasLimit: ethers.toBeHex(2000000),
-      verificationGasLimit: ethers.toBeHex(2000000),
-      maxFeePerGas: ethers.toBeHex(10000000000),
-      maxPriorityFeePerGas: ethers.toBeHex(10000000000),
-    }),
-    preVerificationGas: ethers.toBeHex(2000000),
-    paymasterAndData: '0x',
-  }
-
-  if (import.meta.env.DEV) {
-    console.log('Safe deployment data: ', safeDeploymentData)
-    console.log(
-      'validateUserOp data for estimation: ',
-      getValidateUserOpData({ ...userOp, signature: DUMMY_SIGNATURE_LAUNCHPAD }, ethers.ZeroHash, 10000000000),
-    )
-  }
-
-  return userOp
-}
-
-function getUnsignedUserOperation(call: UserOpCall, safeAddress: string, nonce: ethers.BigNumberish): UnsignedPackedUserOperation {
   return {
     sender: safeAddress,
     nonce,
-    initCode: '0x',
+    initCode,
     callData: getExecuteUserOpData(call.to, call.value, call.data, call.operation),
     accountGasLimits: ethers.solidityPacked(['uint128', 'uint128'], [2000000, 2000000]),
     preVerificationGas: 2000000,
@@ -307,15 +215,11 @@ type UserOpGasLimitEstimation = {
  */
 async function estimateUserOpGasLimit(
   userOp: UnsignedPackedUserOperation,
-  signerAddress?: string,
   entryPointAddress = ENTRYPOINT_ADDRESS,
 ): Promise<UserOpGasLimitEstimation> {
   const provider = getEip4337BundlerProvider()
 
-  const placeholderSignature =
-    (userOp.initCode.length > 0 && userOp.initCode !== '0x') || !signerAddress
-      ? DUMMY_SIGNATURE_LAUNCHPAD
-      : dummySignatureUserOp(signerAddress)
+  const placeholderSignature = dummySignatureUserOp()
 
   const rpcUserOp = unpackUserOperationForRpc(userOp, placeholderSignature)
   const estimation = await provider.send('eth_estimateUserOperationGas', [rpcUserOp, entryPointAddress])
@@ -405,98 +309,6 @@ function packGasParameters(
 }
 
 /**
- * Packs a UserOperation object into a string using the defaultAbiCoder.
- * @param op The UserOperation object to pack.
- * @returns The packed UserOperation as a string.
- */
-function packUserOpData(op: UnsignedPackedUserOperation): string {
-  return ethers.AbiCoder.defaultAbiCoder().encode(
-    [
-      'address', // sender
-      'uint256', // nonce
-      'bytes32', // initCode
-      'bytes32', // callData
-      'bytes32', // accountGasLimits
-      'uint256', // preVerificationGas
-      'bytes32', // gasFees
-      'bytes32', // paymasterAndData
-    ],
-    [
-      op.sender,
-      op.nonce,
-      ethers.keccak256(op.initCode),
-      ethers.keccak256(op.callData),
-      op.accountGasLimits,
-      op.preVerificationGas,
-      op.gasFees,
-      ethers.keccak256(op.paymasterAndData),
-    ],
-  )
-}
-
-/**
- * Off-chain replication of the function to calculate user operation hash from the entrypoint.
- * @param op The user operation.
- * @param entryPoint The entry point.
- * @param chainId The chain ID.
- * @returns The hash of the user operation.
- */
-function getEntryPointUserOpHash(
-  op: UnsignedPackedUserOperation,
-  entryPoint: string = ENTRYPOINT_ADDRESS,
-  chainId: ethers.BigNumberish = APP_CHAIN_ID,
-): string {
-  const userOpHash = ethers.keccak256(packUserOpData(op))
-  const enc = ethers.AbiCoder.defaultAbiCoder().encode(['bytes32', 'address', 'uint256'], [userOpHash, entryPoint, chainId])
-  return ethers.keccak256(enc)
-}
-
-/**
- * Signs and sends a user operation to the specified entry point on the blockchain.
- * @param userOp The unsigned user operation to sign and send.
- * @param passkey The passkey used for signing the user operation.
- * @param entryPoint The entry point address on the blockchain. Defaults to ENTRYPOINT_ADDRESS if not provided.
- * @param chainId The chain ID of the blockchain. Defaults to APP_CHAIN_ID if not provided.
- * @returns User Operation hash promise.
- * @throws An error if signing the user operation fails.
- */
-async function signAndSendDeploymentUserOp(
-  userOp: UnsignedPackedUserOperation,
-  passkey: PasskeyLocalStorageFormat,
-  entryPoint: string = ENTRYPOINT_ADDRESS,
-  chainId: ethers.BigNumberish = APP_CHAIN_ID,
-): Promise<string> {
-  const userOpHash = getEntryPointUserOpHash(userOp, entryPoint, chainId)
-
-  const safeInitOp = {
-    userOpHash,
-    validAfter: 0,
-    validUntil: 0,
-    entryPoint: ENTRYPOINT_ADDRESS,
-  }
-
-  const safeInitOpHash = ethers.TypedDataEncoder.hash(
-    { verifyingContract: SAFE_SIGNER_LAUNCHPAD_ADDRESS, chainId },
-    {
-      SafeInitOp: [
-        { type: 'bytes32', name: 'userOpHash' },
-        { type: 'uint48', name: 'validAfter' },
-        { type: 'uint48', name: 'validUntil' },
-        { type: 'address', name: 'entryPoint' },
-      ],
-    },
-    safeInitOp,
-  )
-
-  const passkeySignature = await signWithPasskey(passkey.rawId, safeInitOpHash)
-
-  const signature = ethers.solidityPacked(['uint48', 'uint48', 'bytes'], [safeInitOp.validAfter, safeInitOp.validUntil, passkeySignature])
-
-  const rpcUserOp = unpackUserOperationForRpc(userOp, signature)
-  return await getEip4337BundlerProvider().send('eth_sendUserOperation', [rpcUserOp, entryPoint])
-}
-
-/**
  * Signs and sends a user operation to the specified entry point on the blockchain.
  * @param userOp The unsigned user operation to sign and send.
  * @param passkey The passkey used for signing the user operation.
@@ -507,7 +319,6 @@ async function signAndSendDeploymentUserOp(
  * @throws An error if signing the user operation fails.
  */
 async function signAndSendUserOp(
-  provider: ethers.JsonRpcApiProvider,
   userOp: UnsignedPackedUserOperation,
   passkey: PasskeyLocalStorageFormat,
   entryPoint: string = ENTRYPOINT_ADDRESS,
@@ -530,7 +341,7 @@ async function signAndSendUserOp(
   const passkeySignature = await signWithPasskey(passkey.rawId, safeOpHash)
   const signatureBytes = buildSignatureBytes([
     {
-      signer: await getSignerAddressFromPubkeyCoords(provider, passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y),
+      signer: SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
       data: passkeySignature,
       dynamic: true,
     },
@@ -548,14 +359,13 @@ async function signAndSendUserOp(
 export type { PackedUserOperation, UnsignedPackedUserOperation, UserOperation, UserOpGasLimitEstimation }
 
 export {
-  prepareUserOperationWithInitialisation,
   packGasParameters,
   getEip4337BundlerProvider,
   getNonceFromEntryPoint,
+  getUserOpInitCode,
   getUnsignedUserOperation,
   estimateUserOpGasLimit,
   getMissingAccountFunds,
   getAccountEntryPointBalance,
-  signAndSendDeploymentUserOp,
   signAndSendUserOp,
 }

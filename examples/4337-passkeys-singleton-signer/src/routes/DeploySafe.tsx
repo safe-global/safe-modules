@@ -1,23 +1,23 @@
 import { useMemo, useState } from 'react'
-import { LoaderFunction, Navigate, redirect, useLoaderData } from 'react-router-dom'
-import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress } from '../logic/safe'
-import type { SafeInitializer } from '../logic/safe'
+import { Navigate, redirect, useLoaderData } from 'react-router-dom'
+import { encodeSetupCall, getSafeAddress, getSafeDeploymentData, getSafeInitializer } from '../logic/safe'
 import {
   SAFE_4337_MODULE_ADDRESS,
-  SAFE_MODULE_SETUP_ADDRESS,
-  SAFE_PROXY_FACTORY_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
-  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
-  APP_CHAIN_ID,
+  SAFE_MULTISEND_ADDRESS,
+  SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
+  XANDER_BLAZE_NFT_ADDRESS,
+  SAFE_4337_STAKED_FACTORY,
 } from '../config'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
   UnsignedPackedUserOperation,
   getMissingAccountFunds,
+  getUnsignedUserOperation,
+  getUserOpInitCode,
   packGasParameters,
-  prepareUserOperationWithInitialisation,
-  signAndSendDeploymentUserOp,
+  signAndSendUserOp,
 } from '../logic/userOp'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation'
 import { RequestStatus } from '../utils'
@@ -28,27 +28,28 @@ import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
 import { getSafeRoute, HOME_ROUTE } from './constants.ts'
 
 import { useOutletContext } from '../hooks/UseOutletContext.tsx'
+import { encodeSafeMintData } from '../logic/erc721.ts'
 
-const loader: LoaderFunction = async () => {
+type LoaderData = {
+  passkey: PasskeyLocalStorageFormat
+  safeAddress: string
+}
+
+async function loader(): Promise<Response | LoaderData> {
   const passkey = getPasskeyFromLocalStorage()
-
   if (!passkey) {
     return redirect(HOME_ROUTE)
   }
 
-  const initializer: SafeInitializer = {
-    singleton: SAFE_SINGLETON_ADDRESS,
-    fallbackHandler: SAFE_4337_MODULE_ADDRESS,
-    signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-    signerX: passkey.pubkeyCoordinates.x,
-    signerY: passkey.pubkeyCoordinates.y,
-    signerVerifiers: P256_VERIFIER_ADDRESS,
-    setupTo: SAFE_MODULE_SETUP_ADDRESS,
-    setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
-  }
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
-  const safeAddress = getSafeAddress(launchpadInitializer)
+  const setupData = encodeSetupCall([SAFE_4337_MODULE_ADDRESS], { ...passkey.pubkeyCoordinates, verifiers: P256_VERIFIER_ADDRESS })
+  const initializer = getSafeInitializer(
+    [SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS],
+    1,
+    SAFE_4337_MODULE_ADDRESS,
+    SAFE_MULTISEND_ADDRESS,
+    setupData,
+  )
+  const safeAddress = getSafeAddress(initializer)
 
   return { passkey, safeAddress }
 }
@@ -58,23 +59,34 @@ function DeploySafe() {
   const { walletProvider } = useOutletContext()
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
 
-  const initializer: SafeInitializer = useMemo(
-    () => ({
-      singleton: SAFE_SINGLETON_ADDRESS,
-      fallbackHandler: SAFE_4337_MODULE_ADDRESS,
-      signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-      signerX: passkey.pubkeyCoordinates.x,
-      signerY: passkey.pubkeyCoordinates.y,
-      signerVerifiers: P256_VERIFIER_ADDRESS,
-      setupTo: SAFE_MODULE_SETUP_ADDRESS,
-      setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
-    }),
-    [passkey.pubkeyCoordinates.x, passkey.pubkeyCoordinates.y],
+  const setupData = useMemo(
+    () => encodeSetupCall([SAFE_4337_MODULE_ADDRESS], { ...passkey.pubkeyCoordinates, verifiers: P256_VERIFIER_ADDRESS }),
+    [passkey],
+  )
+  const initializer = useMemo(
+    () => getSafeInitializer([SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS], 1, SAFE_4337_MODULE_ADDRESS, SAFE_MULTISEND_ADDRESS, setupData),
+    [setupData],
+  )
+  const callData = useMemo(() => encodeSafeMintData(safeAddress), [safeAddress])
+  const initCode = useMemo(
+    () => getUserOpInitCode(SAFE_4337_STAKED_FACTORY, getSafeDeploymentData(SAFE_SINGLETON_ADDRESS, initializer)),
+    [initializer],
   )
 
   const unsignedUserOperation = useMemo(
-    () => prepareUserOperationWithInitialisation(SAFE_PROXY_FACTORY_ADDRESS, initializer),
-    [initializer],
+    () =>
+      getUnsignedUserOperation(
+        {
+          to: XANDER_BLAZE_NFT_ADDRESS,
+          data: callData,
+          value: 0,
+          operation: 0,
+        },
+        safeAddress,
+        0,
+        initCode,
+      ),
+    [callData, safeAddress, initCode],
   )
 
   const [feeData, feeDataStatus] = useFeeData(walletProvider)
@@ -111,7 +123,7 @@ function DeploySafe() {
       preVerificationGas: userOpGasLimitEstimation.preVerificationGas,
     }
 
-    const bundlerUserOpHash = await signAndSendDeploymentUserOp(userOpToSign, passkey)
+    const bundlerUserOpHash = await signAndSendUserOp(userOpToSign, passkey)
     setUserOpHash(bundlerUserOpHash)
   }
 

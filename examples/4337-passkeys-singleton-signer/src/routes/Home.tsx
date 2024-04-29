@@ -1,13 +1,11 @@
 import { Navigate, redirect, useLoaderData } from 'react-router-dom'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys.ts'
-import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress, type SafeInitializer } from '../logic/safe.ts'
+import { encodeSetupCall, getSafeAddress, getSafeInitializer } from '../logic/safe.ts'
 import {
-  APP_CHAIN_ID,
   P256_VERIFIER_ADDRESS,
   SAFE_4337_MODULE_ADDRESS,
-  SAFE_MODULE_SETUP_ADDRESS,
-  SAFE_SINGLETON_ADDRESS,
-  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
+  SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
+  SAFE_MULTISEND_ADDRESS,
 } from '../config.ts'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress.ts'
 import { RequestStatus } from '../utils.ts'
@@ -26,19 +24,15 @@ async function loader(): Promise<Response | LoaderData> {
     return redirect(CREATE_PASSKEY_ROUTE)
   }
 
-  const initializer: SafeInitializer = {
-    singleton: SAFE_SINGLETON_ADDRESS,
-    fallbackHandler: SAFE_4337_MODULE_ADDRESS,
-    signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-    signerX: passkey.pubkeyCoordinates.x,
-    signerY: passkey.pubkeyCoordinates.y,
-    signerVerifiers: P256_VERIFIER_ADDRESS,
-    setupTo: SAFE_MODULE_SETUP_ADDRESS,
-    setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
-  }
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
-  const safeAddress = getSafeAddress(launchpadInitializer)
+  const setupData = encodeSetupCall([SAFE_4337_MODULE_ADDRESS], { ...passkey.pubkeyCoordinates, verifiers: P256_VERIFIER_ADDRESS })
+  const initializer = getSafeInitializer(
+    [SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS],
+    1,
+    SAFE_4337_MODULE_ADDRESS,
+    SAFE_MULTISEND_ADDRESS,
+    setupData,
+  )
+  const safeAddress = getSafeAddress(initializer)
 
   return { passkey, safeAddress }
 }

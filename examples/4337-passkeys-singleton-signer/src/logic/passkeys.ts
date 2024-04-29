@@ -130,7 +130,7 @@ type Assertion = {
   response: AuthenticatorAssertionResponse
 }
 
-export type PasskeyLocalStorageFormat = {
+type PasskeyLocalStorageFormat = {
   rawId: string
   pubkeyCoordinates: {
     x: string
@@ -242,7 +242,7 @@ function isLocalStoragePasskey(x: unknown): x is PasskeyLocalStorageFormat {
   return typeof x === 'object' && x !== null && 'rawId' in x && 'pubkeyCoordinates' in x
 }
 
-export type { Assertion }
+export type { Assertion, PasskeyLocalStorageFormat }
 export {
   createPasskey,
   toLocalStorageFormat,

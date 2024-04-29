@@ -1,17 +1,18 @@
 import { ethers } from 'ethers'
-import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
-import { abi as SafeWebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSignerFactory.sol/SafeWebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
+import { abi as SafeSingletonAbi } from '@safe-global/safe-contracts/build/artifacts/contracts/Safe.sol/Safe.json'
+import { abi as MultiSendAbi } from '@safe-global/safe-contracts/build/artifacts/contracts/libraries/MultiSend.sol/MultiSend.json'
+import { abi as SafeWebAuthnSingletonSignerAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/test/TestWebAuthnSingletonSigner.sol/TestWebAuthnSingletonSigner.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
-import type { Safe4337Module, SafeModuleSetup, SafeProxyFactory } from '@safe-global/safe-4337/dist/typechain-types/'
-import type { SafeSignerLaunchpad, SafeWebAuthnSignerFactory } from '@safe-global/safe-passkey/dist/typechain-types/'
+import type { Safe4337Module, SafeModuleSetup, SafeProxyFactory, SafeL2, MultiSend } from '@safe-global/safe-4337/dist/typechain-types/'
+import type { TestWebAuthnSingletonSigner } from '@safe-global/safe-passkey/dist/typechain-types/'
 
 import {
-  P256_VERIFIER_ADDRESS,
+  SAFE_MODULE_SETUP_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
-  SAFE_SIGNER_LAUNCHPAD_ADDRESS,
-  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
+  SAFE_SINGLETON_ADDRESS,
+  SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
 } from '../config'
 import { PackedUserOperation } from './userOp'
 
@@ -19,68 +20,71 @@ import { PackedUserOperation } from './userOp'
 const SafeProxyBytecode =
   '0x608060405234801561001057600080fd5b506040516101e63803806101e68339818101604052602081101561003357600080fd5b8101908080519060200190929190505050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156100ca576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260228152602001806101c46022913960400191505060405180910390fd5b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505060ab806101196000396000f3fe608060405273ffffffffffffffffffffffffffffffffffffffff600054167fa619486e0000000000000000000000000000000000000000000000000000000060003514156050578060005260206000f35b3660008037600080366000845af43d6000803e60008114156070573d6000fd5b3d6000f3fea264697066735822122003d1488ee65e08fa41e58e888a9865554c535f2c77126a82cb4c0f917f31441364736f6c63430007060033496e76616c69642073696e676c65746f6e20616464726573732070726f7669646564'
 
-function getWebAuthnSignerFactoryContract(provider: ethers.JsonRpcApiProvider): SafeWebAuthnSignerFactory {
-  return new ethers.Contract(
-    WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-    SafeWebAuthnSignerFactoryAbi,
-    provider,
-  ) as unknown as SafeWebAuthnSignerFactory
+type WebAuthnSingletonSignerData = {
+  x: string
+  y: string
+  verifiers: string
 }
 
 /**
- * Calculates the signer address from the given public key coordinates.
- * @param provider The provider to use for the contract call.
- * @param x The x-coordinate of the public key.
- * @param y The y-coordinate of the public key.
- * @returns The signer address.
+ * Encodes the function data for setting the owner of the WebAuthnSingletonSigner.
+ *
+ * @param signer The WebAuthnSingletonSignerData object containing the signer data.
+ * @returns The encoded function data for setting the owner.
  */
-async function getSignerAddressFromPubkeyCoords(provider: ethers.JsonRpcApiProvider, x: string, y: string): Promise<string> {
-  const WebAuthSignerFactory = getWebAuthnSignerFactoryContract(provider)
-  const signerAddress = await WebAuthSignerFactory.getSigner(x, y, P256_VERIFIER_ADDRESS)
+function encodeWebAuthnSingletonSetOwner(signer: WebAuthnSingletonSignerData): string {
+  const safeWebAuthnSignerSingletonInterface = new ethers.Interface(
+    SafeWebAuthnSingletonSignerAbi,
+  ) as unknown as TestWebAuthnSingletonSigner['interface']
 
-  return signerAddress
+  return safeWebAuthnSignerSingletonInterface.encodeFunctionData('setOwner', [{ ...signer }])
 }
 
-type SafeInitializer = {
-  singleton: string
-  signerFactory: string
-  signerX: string
-  signerY: string
-  signerVerifiers: string
-  setupTo: string
-  setupData: string
-  fallbackHandler: string
-}
+/**
+ * Encodes the function call for setting up the Safe contract with the specified modules and signer.
+ *
+ * @param modules The addresses of the modules to enable.
+ * @param signer The WebAuthnSingletonSignerData object containing the signer data.
+ * @returns The encoded function call data.
+ */
+function encodeSetupCall(modules: string[], signer: WebAuthnSingletonSignerData): string {
+  const multiSend = new ethers.Interface(MultiSendAbi) as unknown as MultiSend['interface']
 
-function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumberish): string {
-  return ethers.TypedDataEncoder.hash(
-    { verifyingContract: SAFE_SIGNER_LAUNCHPAD_ADDRESS, chainId },
-    {
-      SafeInit: [
-        { type: 'address', name: 'singleton' },
-        { type: 'address', name: 'signerFactory' },
-        { type: 'uint256', name: 'signerX' },
-        { type: 'uint256', name: 'signerY' },
-        { type: 'uint192', name: 'signerVerifiers' },
-        { type: 'address', name: 'setupTo' },
-        { type: 'bytes', name: 'setupData' },
-        { type: 'address', name: 'fallbackHandler' },
-      ],
-    },
-    safeInitializer,
-  )
-}
-
-function getLaunchpadInitializer(safeInitHash: string, optionalCallAddress = ethers.ZeroAddress, optionalCalldata = '0x'): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
-
-  const launchpadInitializer = safeSignerLaunchpadInterface.encodeFunctionData('preValidationSetup', [
-    safeInitHash,
-    optionalCallAddress,
-    optionalCalldata,
+  return multiSend.encodeFunctionData('multiSend', [
+    encodeMultiSendTransactions([
+      {
+        op: 1 as const,
+        to: SAFE_MODULE_SETUP_ADDRESS,
+        data: encodeSafeModuleSetupCall(modules),
+      },
+      {
+        op: 0 as const,
+        to: SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
+        data: encodeWebAuthnSingletonSetOwner(signer),
+      },
+    ]),
   ])
+}
 
-  return launchpadInitializer
+function getSafeInitializer(
+  owners: string[],
+  threshold: ethers.BigNumberish,
+  fallbackHandler: ethers.AddressLike,
+  setupTo = ethers.ZeroAddress,
+  setupData = '0x',
+): string {
+  const safeSingletonInterface = new ethers.Interface(SafeSingletonAbi) as unknown as SafeL2['interface']
+
+  return safeSingletonInterface.encodeFunctionData('setup', [
+    owners,
+    threshold,
+    setupTo,
+    setupData,
+    fallbackHandler,
+    ethers.ZeroAddress,
+    0,
+    ethers.ZeroAddress,
+  ])
 }
 
 /**
@@ -108,7 +112,7 @@ function getSafeDeploymentData(singleton: string, initializer = '0x', saltNonce 
 function getSafeAddress(
   initializer: string,
   factoryAddress = SAFE_PROXY_FACTORY_ADDRESS,
-  singleton = SAFE_SIGNER_LAUNCHPAD_ADDRESS,
+  singleton = SAFE_SINGLETON_ADDRESS,
   saltNonce: ethers.BigNumberish = ethers.ZeroHash,
 ): string {
   const deploymentCode = ethers.solidityPacked(['bytes', 'uint256'], [SafeProxyBytecode, singleton])
@@ -125,30 +129,6 @@ function getSafeAddress(
 function encodeSafeModuleSetupCall(modules: string[]): string {
   const safeModuleSetupInterface = new ethers.Interface(SetupModuleSetupAbi) as unknown as SafeModuleSetup['interface']
   return safeModuleSetupInterface.encodeFunctionData('enableModules', [modules])
-}
-
-/**
- * Encodes the necessary data for initializing a Safe contract and performing a user operation.
- * @param initializer - The SafeInitializer object containing the initialization parameters.
- * @param encodedUserOp - The encoded user operation data.
- * @returns The encoded data for initializing the Safe contract and performing the user operation.
- */
-function getLaunchpadInitializeThenUserOpData(initializer: SafeInitializer, encodedUserOp: string): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
-
-  const initializeThenUserOpData = safeSignerLaunchpadInterface.encodeFunctionData('initializeThenUserOp', [
-    initializer.singleton,
-    initializer.signerFactory,
-    initializer.signerX,
-    initializer.signerY,
-    initializer.signerVerifiers,
-    initializer.setupTo,
-    initializer.setupData,
-    initializer.fallbackHandler,
-    encodedUserOp,
-  ])
-
-  return initializeThenUserOpData
 }
 
 /**
@@ -181,16 +161,36 @@ function getValidateUserOpData(userOp: PackedUserOperation, userOpHash: string, 
 
   return validateUserOpData
 }
-export type { SafeInitializer }
+
+export type MultiSendTransaction = {
+  // 0 for CALL, 1 for DELEGATECALL
+  op: 0 | 1
+  to: ethers.AddressLike
+  value?: ethers.BigNumberish
+  data: ethers.BytesLike
+}
+
+/**
+ * Encodes an array of MultiSendTransaction objects into a single concatenated byte array.
+ *
+ * @param transactions - An array of MultiSendTransaction objects.
+ * @returns The concatenated byte array representing the encoded transactions.
+ */
+function encodeMultiSendTransactions(transactions: MultiSendTransaction[]) {
+  return ethers.concat(
+    transactions.map(({ op, to, value, data }) =>
+      ethers.solidityPacked(['uint8', 'address', 'uint256', 'uint256', 'bytes'], [op, to, value ?? 0, ethers.dataLength(data), data]),
+    ),
+  )
+}
 
 export {
   getExecuteUserOpData,
-  getLaunchpadInitializeThenUserOpData,
-  getSignerAddressFromPubkeyCoords,
-  getSafeDeploymentData,
   getSafeAddress,
+  getSafeDeploymentData,
+  getSafeInitializer,
   getValidateUserOpData,
-  getInitHash,
-  getLaunchpadInitializer,
   encodeSafeModuleSetupCall,
+  encodeSetupCall,
+  encodeMultiSendTransactions,
 }
