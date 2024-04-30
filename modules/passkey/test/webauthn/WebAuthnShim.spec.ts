@@ -36,7 +36,7 @@ describe('WebAuthn Shim', () => {
       const options = await generateRegistrationOptions({
         rpName: rp.name,
         rpID: rp.id,
-        userID: base64UrlEncode(user.id),
+        userID: user.id,
         userName: user.name,
         userDisplayName: user.displayName,
         attestationType: 'none',
@@ -128,7 +128,7 @@ describe('WebAuthn Shim', () => {
         expectedRPID: rp.id,
         authenticator: {
           credentialPublicKey,
-          credentialID: new Uint8Array(credential.rawId),
+          credentialID: credential.rawId.toString(),
           counter: 0,
         },
         requireUserVerification: false,
