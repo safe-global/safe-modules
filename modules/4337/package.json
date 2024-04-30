@@ -54,27 +54,27 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@safe-global/safe-4337-local-bundler": "^0.0.0",
     "@safe-global/safe-4337-provider": "^0.0.0",
-    "@simplewebauthn/server": "9.0.3",
+    "@simplewebauthn/server": "10.0.0",
     "@types/chai": "^4.3.14",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^20.11.30",
+    "@types/node": "^20.12.7",
     "@types/yargs": "^17.0.32",
     "cbor": "^9.0.2",
     "debug": "^4.3.4",
     "dotenv": "^16.4.5",
-    "ethers": "^6.11.1",
-    "hardhat": "^2.22.2",
-    "hardhat-deploy": "^0.12.2",
+    "ethers": "^6.12.0",
+    "hardhat": "^2.22.3",
+    "hardhat-deploy": "^0.12.4",
     "husky": "^9.0.11",
     "solc": "^0.8.25",
-    "solhint": "^4.5.2",
+    "solhint": "^4.5.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.3",
+    "typescript": "^5.4.5",
     "yargs": "^17.7.2"
   },
   "overrides": {
     "@safe-global/safe-contracts": {
-      "ethers": "^6.11.1"
+      "ethers": "^6.12.0"
     }
   },
   "dependencies": {
