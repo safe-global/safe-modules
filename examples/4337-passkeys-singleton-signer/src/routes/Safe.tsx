@@ -51,7 +51,7 @@ function Safe() {
     safeCodeStatus === RequestStatus.ERROR ||
     safeBalanceStatus === RequestStatus.ERROR ||
     safeNonceStatus === RequestStatus.ERROR ||
-    safeEntryPointBalanceStatus === RequestStatus.ERROR 
+    safeEntryPointBalanceStatus === RequestStatus.ERROR
   ) {
     return <div>Error loading Safe data. Please refresh the page.</div>
   }

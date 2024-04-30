@@ -184,13 +184,31 @@ function encodeMultiSendTransactions(transactions: MultiSendTransaction[]) {
   )
 }
 
+const SAFE_ADDRESS_LOCALSTORAGE_KEY = 'safeAddress'
+
+function storeSafeAddressInLocalStorage(safeAddress: string): void {
+  localStorage.setItem('safeAddress', safeAddress)
+}
+
+function getSafeAddressFromLocalStorage(): string | null {
+  const value = localStorage.getItem(SAFE_ADDRESS_LOCALSTORAGE_KEY)
+
+  if (ethers.isAddress(value)) {
+    return value
+  }
+
+  return null
+}
+
 export {
   getExecuteUserOpData,
   getSafeAddress,
+  getSafeAddressFromLocalStorage,
   getSafeDeploymentData,
   getSafeInitializer,
   getValidateUserOpData,
   encodeSafeModuleSetupCall,
   encodeSetupCall,
   encodeMultiSendTransactions,
+  storeSafeAddressInLocalStorage,
 }

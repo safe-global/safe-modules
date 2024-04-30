@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Navigate, redirect, useLoaderData } from 'react-router-dom'
-import { encodeSetupCall, getSafeAddress, getSafeDeploymentData, getSafeInitializer } from '../logic/safe'
+import { useWeb3ModalAccount } from '@web3modal/ethers/react'
+import {
+  encodeSetupCall,
+  getSafeAddress,
+  getSafeAddressFromLocalStorage,
+  getSafeDeploymentData,
+  getSafeInitializer,
+  storeSafeAddressInLocalStorage,
+} from '../logic/safe'
 import {
   SAFE_4337_MODULE_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
@@ -32,7 +40,7 @@ import { encodeSafeMintData } from '../logic/erc721.ts'
 
 type LoaderData = {
   passkey: PasskeyLocalStorageFormat
-  safeAddress: string
+  safeAddressFromStorage: string | null
 }
 
 async function loader(): Promise<Response | LoaderData> {
@@ -41,32 +49,27 @@ async function loader(): Promise<Response | LoaderData> {
     return redirect(HOME_ROUTE)
   }
 
-  const setupData = encodeSetupCall([SAFE_4337_MODULE_ADDRESS], { ...passkey.pubkeyCoordinates, verifiers: P256_VERIFIER_ADDRESS })
-  const initializer = getSafeInitializer(
-    [SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS],
-    1,
-    SAFE_4337_MODULE_ADDRESS,
-    SAFE_MULTISEND_ADDRESS,
-    setupData,
-  )
-  const safeAddress = getSafeAddress(initializer)
-
-  return { passkey, safeAddress }
+  const safeAddressFromStorage = getSafeAddressFromLocalStorage()
+  return { passkey, safeAddressFromStorage }
 }
 
 function DeploySafe() {
-  const { passkey, safeAddress } = useLoaderData() as { safeAddress: string; passkey: PasskeyLocalStorageFormat }
-  const { walletProvider } = useOutletContext()
-  const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
-
+  const { passkey, safeAddressFromStorage } = useLoaderData() as LoaderData
+  const { address } = useWeb3ModalAccount()
   const setupData = useMemo(
     () => encodeSetupCall([SAFE_4337_MODULE_ADDRESS], { ...passkey.pubkeyCoordinates, verifiers: P256_VERIFIER_ADDRESS }),
     [passkey],
   )
-  const initializer = useMemo(
-    () => getSafeInitializer([SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS], 1, SAFE_4337_MODULE_ADDRESS, SAFE_MULTISEND_ADDRESS, setupData),
-    [setupData],
-  )
+  const initializer = useMemo(() => {
+    const owners = [SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS]
+    if (address) owners.push(address)
+
+    return getSafeInitializer(owners, 1, SAFE_4337_MODULE_ADDRESS, SAFE_MULTISEND_ADDRESS, setupData)
+  }, [setupData, address])
+  const safeAddress = useMemo(() => safeAddressFromStorage || getSafeAddress(initializer), [initializer, safeAddressFromStorage])
+  
+  const { walletProvider } = useOutletContext()
+  const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
   const callData = useMemo(() => encodeSafeMintData(safeAddress), [safeAddress])
   const initCode = useMemo(
     () => getUserOpInitCode(SAFE_4337_STAKED_FACTORY, getSafeDeploymentData(SAFE_SINGLETON_ADDRESS, initializer)),
@@ -125,6 +128,8 @@ function DeploySafe() {
 
     const bundlerUserOpHash = await signAndSendUserOp(userOpToSign, passkey)
     setUserOpHash(bundlerUserOpHash)
+
+    storeSafeAddressInLocalStorage(safeAddress)
   }
 
   if (deployed) {
