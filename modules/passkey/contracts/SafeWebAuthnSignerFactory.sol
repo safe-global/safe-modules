@@ -11,8 +11,18 @@ import {P256} from "./libraries/P256.sol";
  * @dev A factory contract for creating and managing WebAuthn proxy signers.
  */
 contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
+    /**
+     * @notice The {SafeWebAuthnSignerSingleton} implementation to that is used for signature
+     * verification by this contract and any proxies it deploys.
+     */
     SafeWebAuthnSignerSingleton public immutable SINGLETON;
 
+    /**
+     * @notice Creates a new WebAuthn Safe signer factory contract.
+     * @dev The {SafeWebAuthnSignerSingleton} singleton implementation is created with as part of
+     * this constructor. This ensures that the singleton contract is known, and lets us make certain
+     * assumptions about how it works.
+     */
     constructor() {
         SINGLETON = new SafeWebAuthnSignerSingleton();
     }
@@ -68,7 +78,8 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         assembly {
             let dataSize := mload(data)
             let dataLocation := add(data, 0x20)
-            // staticcall to the singleton contract with return size given as 32 bytes. The singleton contract is known and immutable so, it is safe to specify return size.
+            // staticcall to the singleton contract with return size given as 32 bytes. The
+            // singleton contract is known and immutable so it is safe to specify return size.
             if staticcall(gas(), singleton, dataLocation, dataSize, 0, 32) {
                 magicValue := mload(0)
             }

@@ -1,5 +1,5 @@
 {
-  "name": "@safe-global/safe-modules-example-4337-passkeys",
+  "name": "@safe-global/safe-modules-example-4337-passkeys-singleton-signer",
   "private": true,
   "version": "0.0.0",
   "type": "module",
