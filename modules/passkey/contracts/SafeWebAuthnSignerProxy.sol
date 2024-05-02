@@ -6,8 +6,9 @@ import {P256} from "./libraries/WebAuthn.sol";
 
 /**
  * @title Safe WebAuthn Signer Proxy
- * @dev A proxy to a {SafeWebAuthnSignerSingleton} signature validator implementation for Safe
- * accounts. Using a proxy pattern for the signature validator greatly reduces deployment gas costs.
+ * @dev A specialized proxy to a {SafeWebAuthnSignerSingleton} signature validator implementation
+ * for Safe accounts. Using a proxy pattern for the signature validator greatly reduces deployment
+ * gas costs.
  * @custom:security-contact bounty@safe.global
  */
 contract SafeWebAuthnSignerProxy {
@@ -49,15 +50,26 @@ contract SafeWebAuthnSignerProxy {
      * @dev Fallback function forwards all transactions and returns all received return data.
      */
     fallback() external payable {
-        bytes memory data = abi.encodePacked(msg.data, _X, _Y, _VERIFIERS);
         address singleton = _SINGLETON;
+        uint256 x = _X;
+        uint256 y = _Y;
+        P256.Verifiers verifiers = _VERIFIERS;
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            let dataSize := mload(data)
-            let dataLocation := add(data, 0x20)
+            // Forward the call to the singleton implementation. We append the configuration to the
+            // calldata instead of having the singleton implementation read it from storage. This is
+            // both more gas efficient and required for ERC-4337 compatibility. Note that we append
+            // the configuration fields in reverse order since the fields are packed, and this makes
+            // it so we don't need to mask any bits from the `verifiers` value. This computes `data`
+            // to be `abi.encodePacked(msg.data, x, y, verifiers)`.
+            let data := mload(0x40)
+            mstore(add(data, add(calldatasize(), 0x36)), verifiers)
+            mstore(add(data, add(calldatasize(), 0x20)), y)
+            mstore(add(data, calldatasize()), x)
+            calldatacopy(data, 0x00, calldatasize())
 
-            let success := delegatecall(gas(), singleton, dataLocation, dataSize, 0, 0)
+            let success := delegatecall(gas(), singleton, data, add(calldatasize(), 0x56), 0, 0)
             returndatacopy(0, 0, returndatasize())
             if iszero(success) {
                 revert(0, returndatasize())
