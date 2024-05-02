@@ -11,7 +11,6 @@ import { chainId } from '@safe-global/safe-4337/test/utils/encoding'
 import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
 import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
-import { setCode } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 
 describe('Safe4337Module - WebAuthn Owner', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -33,11 +32,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
     const safeModuleSetup = await ethers.getContractAt(SafeModuleSetup.abi, SafeModuleSetup.address)
     const signerLaunchpad = await ethers.getContractAt('SafeSignerLaunchpad', SafeSignerLaunchpad.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
-    const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
     const signerFactory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
-    const precompileAddress = `0x${'00'.repeat(18)}0100`
-    await setCode(precompileAddress, await ethers.provider.getCode(verifier))
-    const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), verifier.target]))
+    const verifiers = BigInt(FCLP256Verifier.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),
@@ -52,8 +48,8 @@ describe('Safe4337Module - WebAuthn Owner', () => {
       signerLaunchpad,
       singleton,
       signerFactory,
-      navigator,
       verifiers,
+      navigator,
     }
   })
 
@@ -98,7 +94,7 @@ describe('Safe4337Module - WebAuthn Owner', () => {
             { type: 'address', name: 'signerFactory' },
             { type: 'uint256', name: 'signerX' },
             { type: 'uint256', name: 'signerY' },
-            { type: 'uint192', name: 'signerVerifiers' },
+            { type: 'uint176', name: 'signerVerifiers' },
             { type: 'address', name: 'setupTo' },
             { type: 'bytes', name: 'setupData' },
             { type: 'address', name: 'fallbackHandler' },

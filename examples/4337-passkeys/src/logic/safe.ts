@@ -61,7 +61,7 @@ function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumber
         { type: 'address', name: 'signerFactory' },
         { type: 'uint256', name: 'signerX' },
         { type: 'uint256', name: 'signerY' },
-        { type: 'uint192', name: 'signerVerifiers' },
+        { type: 'uint176', name: 'signerVerifiers' },
         { type: 'address', name: 'setupTo' },
         { type: 'bytes', name: 'setupData' },
         { type: 'address', name: 'fallbackHandler' },

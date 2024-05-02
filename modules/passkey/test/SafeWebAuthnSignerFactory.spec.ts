@@ -17,7 +17,7 @@ describe('SafeWebAuthnSignerFactory', () => {
     const precompileAddress = `0x${'00'.repeat(18)}0100`
     const mockPrecompile = await ethers.getContractAt('MockContract', precompileAddress)
     await setCode(precompileAddress, await ethers.provider.getCode(mockVerifier))
-    const verifiers = BigInt(ethers.solidityPacked(['uint32', 'uint160'], [mockPrecompile.target, mockVerifier.target]))
+    const verifiers = BigInt(ethers.solidityPacked(['uint16', 'uint160'], [mockPrecompile.target, mockVerifier.target]))
 
     return { factory, mockPrecompile, mockVerifier, verifiers }
   })

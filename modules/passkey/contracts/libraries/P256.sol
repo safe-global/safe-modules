@@ -19,13 +19,13 @@ library P256 {
 
     /**
      * @notice P-256 precompile and fallback verifiers.
-     * @dev This is the packed `uint32(precompile) | uint160(fallback)` addresses to use for the
+     * @dev This is the packed `uint16(precompile) | uint160(fallback)` addresses to use for the
      * verifiers. This allows both a precompile and a fallback Solidity implementation of the P-256
      * curve to be specified. For networks where the P-256 precompile is planned to be enabled but
      * not yet available, this allows for a verifier to seamlessly start using the precompile once
      * it becomes available.
      */
-    type Verifiers is uint192;
+    type Verifiers is uint176;
 
     /**
      * @notice Verifies the signature of a message using the P256 elliptic curve with signature

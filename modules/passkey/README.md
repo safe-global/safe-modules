@@ -39,7 +39,7 @@ bytes memory signature = abi.encode(authenticatorData, clientDataFields, r, s);
 
 ### [P256](./contracts/libraries/P256.sol)
 
-`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint192`. The first address (4 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile is not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime.
+`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint176`. The first address (2 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile is not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime.
 
 ## Setup and Execution flow
 
