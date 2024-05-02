@@ -52,6 +52,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         if (_hasNoCode(signer)) {
             SafeWebAuthnSignerProxy created = new SafeWebAuthnSignerProxy{salt: bytes32(0)}(address(SINGLETON), x, y, verifiers);
             require(address(created) == signer);
+            emit Created(signer, x, y, verifiers);
         }
     }
 

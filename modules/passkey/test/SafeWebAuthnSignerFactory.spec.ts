@@ -90,6 +90,20 @@ describe('SafeWebAuthnSignerFactory', () => {
       expect(await factory.createSigner.staticCall(x, y, verifiers)).to.eq(signer)
       await expect(factory.createSigner(x, y, verifiers)).to.not.be.reverted
     })
+
+    it('Should emit event only once', async () => {
+      const { factory, verifiers } = await setupTests()
+
+      const x = ethers.id('publicKey.x')
+      const y = ethers.id('publicKey.y')
+
+      const signer = await factory.createSigner.staticCall(x, y, verifiers)
+
+      await expect(factory.createSigner(x, y, verifiers))
+        .to.emit(factory, 'Created')
+        .withArgs(signer, x, y, verifiers)
+      await expect(factory.createSigner(x, y, verifiers)).not.to.emit(factory, 'Created')
+    })
   })
 
   describe('isValidSignatureForSigner', function () {
