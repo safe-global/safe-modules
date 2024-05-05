@@ -183,13 +183,11 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
         address[] memory owners = new address[](1);
         owners[0] = ISafeSignerFactory(signerFactory).getSigner(signerX, signerY, signerVerifiers);
 
-        _delegateCall(
-            singleton,
-            abi.encodeCall(
-                ISafe(singleton).setup,
-                (owners, 1, initializer, initializerData, fallbackHandler, address(0), 0, payable(address(0)))
-            )
-        );
+        // Call the Safe setup function, making sure to replace the `singleton` that the proxy uses. This is important
+        // in order to ensure that the Safe setup function works as expected, in case it calls Safe methods.
+        SafeStorage.singleton = singleton;
+        ISafe(address(this)).setup(owners, 1, initializer, initializerData, fallbackHandler, address(0), 0, payable(address(0)));
+        SafeStorage.singleton = _SELF;
 
         // We need to check that the setup did not change the threshold to an unsupported value. This is to prevent
         // false security assumptions where the `setup` can be used to add owners and increase the threshold. Since
@@ -295,10 +293,10 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
         assembly ("memory-safe") {
             switch operation
             case 0 {
-                success := delegatecall(gas(), to, add(data, 0x20), mload(data), 0, 0)
+                success := call(gas(), to, value, add(data, 0x20), mload(data), 0, 0)
             }
             case 1 {
-                success := call(gas(), to, value, add(data, 0x20), mload(data), 0, 0)
+                success := delegatecall(gas(), to, add(data, 0x20), mload(data), 0, 0)
             }
             default {
                 // The operation does not match one of the expected enum values, revert with the appropriate panic.
@@ -386,21 +384,6 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             sstore(TARGET_SINGLETON_SLOT, value)
-        }
-    }
-
-    /**
-     * @notice `DELEGATECALL`-s a contract with the provided data, propagating any reverts.
-     * @param target The contract address.
-     * @param data The calldata for the `DELEGATECALL`.
-     */
-    function _delegateCall(address target, bytes memory data) internal {
-        // solhint-disable-next-line no-inline-assembly
-        assembly ("memory-safe") {
-            if iszero(delegatecall(gas(), target, add(data, 0x20), mload(data), 0, 0)) {
-                returndatacopy(0x00, 0x00, returndatasize())
-                revert(0x00, returndatasize())
-            }
         }
     }
 }
