@@ -326,6 +326,10 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      *  - `validUntil`: 6-byte timestamp value, or zero for "infinite". The user operation is valid only up to this time.
      *  - `validAfter`: 6-byte timestamp. The user operation is valid only after this time.
      * @param userOp User operation struct.
+     * @param signerFactory The custom ECDSA signer factory to use for creating the owner.
+     * @param signerX The X coordinate of the signer's public key.
+     * @param signerY The Y coordinate of the signer's public key.
+     * @param signerVerifiers The P-256 verifiers to use.
      * @return validationData An integer indicating the result of the validation.
      */
     function _validateSignatures(
@@ -372,7 +376,9 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     function _targetSingleton() internal view returns (address value) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            value := and(sload(TARGET_SINGLETON_SLOT), 0xffffffffffffffffffffffffffffffffffffffff)
+            // Note that we explicitly don't mask the address, as Solidity will generate masking code for every time
+            // the variable is read.
+            value := sload(TARGET_SINGLETON_SLOT)
         }
     }
 
