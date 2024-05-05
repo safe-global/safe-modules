@@ -7,3 +7,4 @@ import "@account-abstraction/contracts/samples/VerifyingPaymaster.sol";
 import "@safe-global/mock-contract/contracts/MockContract.sol";
 import "@safe-global/safe-4337/contracts/test/TestStakedFactory.sol";
 import "@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol";
+import "@safe-global/safe-contracts/contracts/libraries/MultiSend.sol";

@@ -67,10 +67,9 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     error AlreadyInitialized();
 
     /**
-     * @notice An error indicating an attempt to execute a user operation on an account that has already been promoted
-     * to a Safe singleton.
+     * @notice An error indicating an attempt to execute a user operation on an account that has not been initialized.
      */
-    error AlreadyPromoted();
+    error NotInitialized();
 
     /**
      * @notice An error indicating that the account was initialized with an invalid Safe singleton address.
@@ -202,6 +201,14 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     }
 
     /**
+     * @notice Computes the EIP-712 domain separator for Safe launchpad operations.
+     * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
+     */
+    function domainSeparator() public view returns (bytes32) {
+        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, _SELF));
+    }
+
+    /**
      * @notice Compute the {SafeInitOp} hash of the first user operation that initializes the Safe.
      * @dev The hash is generated using the keccak256 hash function and the EIP-712 standard. It is signed by the Safe
      * owner that is specified as part of the {SafeInit}. Using a completely separate hash from the {SafeInit} allows
@@ -280,7 +287,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     ) external onlySupportedEntryPoint {
         address singleton = _targetSingleton();
         if (singleton == address(0)) {
-            revert AlreadyPromoted();
+            revert NotInitialized();
         }
 
         SafeStorage.singleton = singleton;
@@ -303,20 +310,13 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
                 // See <https://docs.soliditylang.org/en/latest/control-structures.html#panic-via-assert-and-error-via-require>.
                 mstore(0x00, hex"4e487b71")
                 mstore(0x04, 0x21)
+                revert(0, 0x24)
             }
         }
 
         if (!success) {
             revert ExecutionFailed();
         }
-    }
-
-    /**
-     * @notice Computes the EIP-712 domain separator for Safe launchpad operations.
-     * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
-     */
-    function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, _SELF));
     }
 
     /**
