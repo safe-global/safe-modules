@@ -7,7 +7,8 @@ import {P256, WebAuthn} from "../libraries/WebAuthn.sol";
 
 /**
  * @title WebAuthn Singleton Signer
- * @dev A contract for verifying WebAuthn signatures for multiple accounts. This contract uses
+ * @dev A contract for verifying WebAuthn signatures shared by all Safe accounts. This contract uses
+ * storage from the Safe account itself for full ERC-4337 compatibility.
  */
 contract TestWebAuthnSingletonSigner is SignatureValidator {
     /**
