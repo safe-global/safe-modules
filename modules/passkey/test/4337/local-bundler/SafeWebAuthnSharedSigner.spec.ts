@@ -8,8 +8,8 @@ import {
   buildRpcUserOperationFromSafeUserOperation,
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { WebAuthnCredentials } from '../utils/webauthnShim'
-import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
+import { WebAuthnCredentials } from '../../utils/webauthnShim'
+import { decodePublicKey, encodeWebAuthnSignature } from '../../../src/utils/webauthn'
 
 describe('WebAuthn Singleton Signers [@4337]', () => {
   before(function () {
@@ -19,7 +19,8 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
   })
 
   const setupTests = deployments.createFixture(async ({ deployments }) => {
-    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, MultiSend, SafeL2, FCLP256Verifier } = await deployments.run()
+    const { EntryPoint, Safe4337Module, SafeProxyFactory, SafeModuleSetup, MultiSend, SafeL2, FCLP256Verifier, SafeWebAuthnSharedSigner } =
+      await deployments.run()
     const [user] = await prepareAccounts()
     const bundler = bundlerRpc()
 
@@ -30,9 +31,7 @@ describe('WebAuthn Singleton Signers [@4337]', () => {
     const multiSend = await ethers.getContractAt(MultiSend.abi, MultiSend.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
-
-    const WebAuthnSingletonSigner = await ethers.getContractFactory('TestWebAuthnSingletonSigner')
-    const signer = await WebAuthnSingletonSigner.deploy()
+    const signer = await ethers.getContractAt('SafeWebAuthnSharedSigner', SafeWebAuthnSharedSigner.address)
 
     const navigator = {
       credentials: new WebAuthnCredentials(),

@@ -6,11 +6,11 @@ import {ISafe} from "../interfaces/ISafe.sol";
 import {P256, WebAuthn} from "../libraries/WebAuthn.sol";
 
 /**
- * @title WebAuthn Singleton Signer
+ * @title Safe WebAuthn Shared Signer
  * @dev A contract for verifying WebAuthn signatures shared by all Safe accounts. This contract uses
  * storage from the Safe account itself for full ERC-4337 compatibility.
  */
-contract TestWebAuthnSingletonSigner is SignatureValidator {
+contract SafeWebAuthnSharedSigner is SignatureValidator {
     /**
      * @notice Data associated with a WebAuthn signer. It represents the X and Y coordinates of the
      * signer's public key. This is stored in a mapping using the account address as the key.
