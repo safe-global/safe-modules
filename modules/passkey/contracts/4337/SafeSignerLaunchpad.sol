@@ -51,7 +51,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     error InvalidEntryPoint();
 
     /**
-     * @notice An error a call to a function that should only be `DELEGATECALL`-ed from an account proxy.
+     * @notice An error indicating a `CALL` to a function that should only be `DELEGATECALL`-ed from an account proxy.
      */
     error NotProxied();
 
