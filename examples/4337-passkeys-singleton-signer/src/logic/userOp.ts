@@ -2,7 +2,7 @@ import { ethers } from 'ethers'
 import { abi as EntryPointAbi } from '@account-abstraction/contracts/artifacts/EntryPoint.json'
 import { IEntryPoint } from '@safe-global/safe-4337/dist/typechain-types'
 import { getExecuteUserOpData, getValidateUserOpData } from './safe'
-import { APP_CHAIN_ID, ENTRYPOINT_ADDRESS, SAFE_4337_MODULE_ADDRESS, SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS } from '../config'
+import { APP_CHAIN_ID, ENTRYPOINT_ADDRESS, SAFE_4337_MODULE_ADDRESS, SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS } from '../config'
 import { PasskeyLocalStorageFormat, signWithPasskey } from './passkeys'
 import { calculateSafeOperationHash, unpackGasParameters, SafeUserOperation } from '@safe-global/safe-4337/dist/src/utils/userOp.js'
 import {
@@ -97,7 +97,7 @@ function dummySignatureUserOp() {
       0,
       buildSignatureBytes([
         {
-          signer: SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
+          signer: SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS,
           data: getSignatureBytes({
             authenticatorData: DUMMY_AUTHENTICATOR_DATA,
             clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
@@ -341,7 +341,7 @@ async function signAndSendUserOp(
   const passkeySignature = await signWithPasskey(passkey.rawId, safeOpHash)
   const signatureBytes = buildSignatureBytes([
     {
-      signer: SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
+      signer: SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS,
       data: passkeySignature,
       dynamic: true,
     },
