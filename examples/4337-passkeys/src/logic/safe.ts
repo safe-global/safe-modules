@@ -52,32 +52,18 @@ type SafeInitializer = {
   fallbackHandler: string
 }
 
-function getInitHash(safeInitializer: SafeInitializer, chainId: ethers.BigNumberish): string {
-  return ethers.TypedDataEncoder.hash(
-    { verifyingContract: SAFE_SIGNER_LAUNCHPAD_ADDRESS, chainId },
-    {
-      SafeInit: [
-        { type: 'address', name: 'singleton' },
-        { type: 'address', name: 'signerFactory' },
-        { type: 'uint256', name: 'signerX' },
-        { type: 'uint256', name: 'signerY' },
-        { type: 'uint176', name: 'signerVerifiers' },
-        { type: 'address', name: 'setupTo' },
-        { type: 'bytes', name: 'setupData' },
-        { type: 'address', name: 'fallbackHandler' },
-      ],
-    },
-    safeInitializer,
-  )
-}
-
-function getLaunchpadInitializer(safeInitHash: string, optionalCallAddress = ethers.ZeroAddress, optionalCalldata = '0x'): string {
+function getLaunchpadInitializer(initializer: SafeInitializer): string {
   const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
 
-  const launchpadInitializer = safeSignerLaunchpadInterface.encodeFunctionData('preValidationSetup', [
-    safeInitHash,
-    optionalCallAddress,
-    optionalCalldata,
+  const launchpadInitializer = safeSignerLaunchpadInterface.encodeFunctionData('setup', [
+    initializer.singleton,
+    initializer.signerFactory,
+    initializer.signerX,
+    initializer.signerY,
+    initializer.signerVerifiers,
+    initializer.setupTo,
+    initializer.setupData,
+    initializer.fallbackHandler,
   ])
 
   return launchpadInitializer
@@ -129,26 +115,49 @@ function encodeSafeModuleSetupCall(modules: string[]): string {
 
 /**
  * Encodes the necessary data for initializing a Safe contract and performing a user operation.
- * @param initializer - The SafeInitializer object containing the initialization parameters.
- * @param encodedUserOp - The encoded user operation data.
+ * @param setup - The SafeInitializer object containing the initialization parameters.
+ * @param to The address of the recipient of the operation.
+ * @param value The amount of value to be transferred in the operation.
+ * @param data The data payload of the operation.
+ * @param operation The type of operation (0 for CALL, 1 for DELEGATECALL).
  * @returns The encoded data for initializing the Safe contract and performing the user operation.
  */
-function getLaunchpadInitializeThenUserOpData(initializer: SafeInitializer, encodedUserOp: string): string {
+function getPromoteAccountAndExecuteUserOpData(
+  initializer: SafeInitializer,
+  to: string,
+  value: ethers.BigNumberish,
+  data: string,
+  operation: 0 | 1,
+): string {
   const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
 
-  const initializeThenUserOpData = safeSignerLaunchpadInterface.encodeFunctionData('initializeThenUserOp', [
-    initializer.singleton,
+  const initializeThenUserOpData = safeSignerLaunchpadInterface.encodeFunctionData('promoteAccountAndExecuteUserOp', [
     initializer.signerFactory,
     initializer.signerX,
     initializer.signerY,
     initializer.signerVerifiers,
-    initializer.setupTo,
-    initializer.setupData,
-    initializer.fallbackHandler,
-    encodedUserOp,
+    to,
+    value,
+    data,
+    operation,
   ])
 
   return initializeThenUserOpData
+}
+
+/**
+ * Encodes the user operation data for validating a user operation.
+ * @param userOp The packed user operation to be validated.
+ * @param userOpHash The hash of the user operation.
+ * @param missingAccountFunds The amount of missing account funds.
+ * @returns The encoded data for validating the user operation.
+ */
+function getValidateUserOpData(userOp: PackedUserOperation, userOpHash: string, missingAccountFunds: ethers.BigNumberish): string {
+  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
+
+  const validateUserOpData = safe4337ModuleInterface.encodeFunctionData('validateUserOp', [userOp, userOpHash, missingAccountFunds])
+
+  return validateUserOpData
 }
 
 /**
@@ -167,30 +176,14 @@ function getExecuteUserOpData(to: string, value: ethers.BigNumberish, data: stri
   return executeUserOpData
 }
 
-/**
- * Encodes the user operation data for validating a user operation.
- * @param userOp The packed user operation to be validated.
- * @param userOpHash The hash of the user operation.
- * @param missingAccountFunds The amount of missing account funds.
- * @returns The encoded data for validating the user operation.
- */
-function getValidateUserOpData(userOp: PackedUserOperation, userOpHash: string, missingAccountFunds: ethers.BigNumberish): string {
-  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
-
-  const validateUserOpData = safe4337ModuleInterface.encodeFunctionData('validateUserOp', [userOp, userOpHash, missingAccountFunds])
-
-  return validateUserOpData
-}
 export type { SafeInitializer }
-
 export {
-  getExecuteUserOpData,
-  getLaunchpadInitializeThenUserOpData,
+  getLaunchpadInitializer,
+  getPromoteAccountAndExecuteUserOpData,
   getSignerAddressFromPubkeyCoords,
   getSafeDeploymentData,
   getSafeAddress,
   getValidateUserOpData,
-  getInitHash,
-  getLaunchpadInitializer,
+  getExecuteUserOpData,
   encodeSafeModuleSetupCall,
 }

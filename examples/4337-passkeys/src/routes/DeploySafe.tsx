@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { LoaderFunction, Navigate, redirect, useLoaderData } from 'react-router-dom'
-import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress } from '../logic/safe'
+import { encodeSafeModuleSetupCall, getLaunchpadInitializer, getSafeAddress } from '../logic/safe'
 import type { SafeInitializer } from '../logic/safe'
 import {
   SAFE_4337_MODULE_ADDRESS,
@@ -9,7 +9,6 @@ import {
   SAFE_SINGLETON_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
-  APP_CHAIN_ID,
 } from '../config'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
@@ -46,8 +45,7 @@ const loader: LoaderFunction = async () => {
     setupTo: SAFE_MODULE_SETUP_ADDRESS,
     setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
   }
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
+  const launchpadInitializer = getLaunchpadInitializer(initializer)
   const safeAddress = getSafeAddress(launchpadInitializer)
 
   return { passkey, safeAddress }

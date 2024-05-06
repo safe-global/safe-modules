@@ -1,8 +1,7 @@
 import { Navigate, redirect, useLoaderData } from 'react-router-dom'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys.ts'
-import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress, type SafeInitializer } from '../logic/safe.ts'
+import { encodeSafeModuleSetupCall, getLaunchpadInitializer, getSafeAddress, type SafeInitializer } from '../logic/safe.ts'
 import {
-  APP_CHAIN_ID,
   P256_VERIFIER_ADDRESS,
   SAFE_4337_MODULE_ADDRESS,
   SAFE_MODULE_SETUP_ADDRESS,
@@ -36,8 +35,7 @@ async function loader(): Promise<Response | LoaderData> {
     setupTo: SAFE_MODULE_SETUP_ADDRESS,
     setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
   }
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
+  const launchpadInitializer = getLaunchpadInitializer(initializer)
   const safeAddress = getSafeAddress(launchpadInitializer)
 
   return { passkey, safeAddress }

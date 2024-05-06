@@ -3,9 +3,8 @@ import { abi as EntryPointAbi } from '@account-abstraction/contracts/artifacts/E
 import { IEntryPoint } from '@safe-global/safe-4337/dist/typechain-types'
 import {
   SafeInitializer,
+  getPromoteAccountAndExecuteUserOpData,
   getExecuteUserOpData,
-  getInitHash,
-  getLaunchpadInitializeThenUserOpData,
   getLaunchpadInitializer,
   getSafeAddress,
   getSafeDeploymentData,
@@ -186,8 +185,7 @@ function prepareUserOperationWithInitialisation(
   afterInitializationOpCall?: UserOpCall,
   saltNonce = ethers.ZeroHash,
 ): UnsignedPackedUserOperation {
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
+  const launchpadInitializer = getLaunchpadInitializer(initializer)
   const predictedSafeAddress = getSafeAddress(launchpadInitializer, SAFE_PROXY_FACTORY_ADDRESS, SAFE_SIGNER_LAUNCHPAD_ADDRESS, saltNonce)
   const safeDeploymentData = getSafeDeploymentData(SAFE_SIGNER_LAUNCHPAD_ADDRESS, launchpadInitializer, saltNonce)
   const userOpCall = afterInitializationOpCall ?? {
@@ -201,10 +199,7 @@ function prepareUserOperationWithInitialisation(
     sender: predictedSafeAddress,
     nonce: ethers.toBeHex(0),
     initCode: getUserOpInitCode(proxyFactoryAddress, safeDeploymentData),
-    callData: getLaunchpadInitializeThenUserOpData(
-      initializer,
-      getExecuteUserOpData(userOpCall.to, userOpCall.value, userOpCall.data, userOpCall.operation),
-    ),
+    callData: getPromoteAccountAndExecuteUserOpData(initializer, userOpCall.to, userOpCall.value, userOpCall.data, userOpCall.operation),
     ...packGasParameters({
       callGasLimit: ethers.toBeHex(2000000),
       verificationGasLimit: ethers.toBeHex(2000000),
