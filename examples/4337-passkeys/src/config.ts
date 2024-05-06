@@ -10,7 +10,7 @@ const APP_CHAIN_SHORTNAME = 'sep'
   the production deployment packages, thus we need to hardcode their addresses here.
   Deployment commit: https://github.com/safe-global/safe-modules/commit/3853f34f31837e0a0aee47a4452564278f8c62ba
 */
-const SAFE_SIGNER_LAUNCHPAD_ADDRESS = '0xEC909139De44e3d1403602B06cc0BB1ab3C143f2'
+const SAFE_SIGNER_LAUNCHPAD_ADDRESS = '0x2804BAA6635d97281FB4d1F011B4BF55DD7A5325'
 
 const SAFE_4337_MODULE_ADDRESS = '0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226'
 
