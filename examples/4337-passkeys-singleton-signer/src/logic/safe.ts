@@ -37,7 +37,7 @@ function encodeWebAuthnSingletonSetOwner(signer: WebAuthnSingletonSignerData): s
     SafeWebAuthnSingletonSignerAbi,
   ) as unknown as TestWebAuthnSingletonSigner['interface']
 
-  return safeWebAuthnSignerSingletonInterface.encodeFunctionData('setOwner', [{ ...signer }])
+  return safeWebAuthnSignerSingletonInterface.encodeFunctionData('configure', [{ ...signer }])
 }
 
 /**
@@ -58,7 +58,7 @@ function encodeSetupCall(modules: string[], signer: WebAuthnSingletonSignerData)
         data: encodeSafeModuleSetupCall(modules),
       },
       {
-        op: 0 as const,
+        op: 1 as const,
         to: SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
         data: encodeWebAuthnSingletonSetOwner(signer),
       },

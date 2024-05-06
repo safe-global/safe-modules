@@ -12,11 +12,11 @@ import {
 import {
   SAFE_4337_MODULE_ADDRESS,
   SAFE_SINGLETON_ADDRESS,
+  SAFE_PROXY_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
   SAFE_MULTISEND_ADDRESS,
   SAFE_SINGLETON_WEBAUTHN_SIGNER_ADDRESS,
   XANDER_BLAZE_NFT_ADDRESS,
-  SAFE_4337_STAKED_FACTORY,
 } from '../config'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
@@ -67,12 +67,12 @@ function DeploySafe() {
     return getSafeInitializer(owners, 1, SAFE_4337_MODULE_ADDRESS, SAFE_MULTISEND_ADDRESS, setupData)
   }, [setupData, address])
   const safeAddress = useMemo(() => safeAddressFromStorage || getSafeAddress(initializer), [initializer, safeAddressFromStorage])
-  
+
   const { walletProvider } = useOutletContext()
   const [safeCode, safeCodeStatus] = useCodeAtAddress(walletProvider, safeAddress)
   const callData = useMemo(() => encodeSafeMintData(safeAddress), [safeAddress])
   const initCode = useMemo(
-    () => getUserOpInitCode(SAFE_4337_STAKED_FACTORY, getSafeDeploymentData(SAFE_SINGLETON_ADDRESS, initializer)),
+    () => getUserOpInitCode(SAFE_PROXY_FACTORY_ADDRESS, getSafeDeploymentData(SAFE_SINGLETON_ADDRESS, initializer)),
     [initializer],
   )
 
