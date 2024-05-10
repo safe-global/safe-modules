@@ -11,7 +11,7 @@ import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
 import { WebAuthnCredentials } from '../../../utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../../../src/utils/webauthn'
 
-describe('WebAuthn Singleton Signers [@4337]', () => {
+describe('Safe WebAuthn Shared Signer [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()

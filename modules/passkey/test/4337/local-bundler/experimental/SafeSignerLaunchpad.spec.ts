@@ -5,7 +5,7 @@ import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-43
 import { WebAuthnCredentials } from '../../../utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../../../src/utils/webauthn'
 
-describe('WebAuthn Signer Launchpad [@4337]', () => {
+describe('Safe WebAuthn Signer Launchpad [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()
