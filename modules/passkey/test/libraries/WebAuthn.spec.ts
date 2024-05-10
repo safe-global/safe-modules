@@ -221,5 +221,27 @@ describe('WebAuthn Library', () => {
 
       expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
     })
+
+    it('Should return false when the signature data has too much padding', async () => {
+      const { webAuthnLib, mockP256Verifier } = await setupTests()
+      const mockP256VerifierAddress = await mockP256Verifier.getAddress()
+      await mockP256Verifier.givenAnyReturnBool(true)
+
+      const authenticatorData = ethers.randomBytes(100)
+      authenticatorData[32] = 0x01
+
+      const challenge = ethers.randomBytes(32)
+      const signature = {
+        authenticatorData,
+        clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
+        r: 0n,
+        s: 0n,
+      }
+      const signatureBytes = getSignatureBytes(signature)
+      const paddedSignatureBytes = ethers.concat([signatureBytes, '0x00'])
+
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, paddedSignatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.false
+    })
   })
 })
