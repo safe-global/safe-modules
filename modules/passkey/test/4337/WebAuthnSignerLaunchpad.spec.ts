@@ -5,7 +5,7 @@ import { bundlerRpc, prepareAccounts, waitForUserOp } from '@safe-global/safe-43
 import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../src/utils/webauthn'
 
-describe('WebAuthn Signers [@4337]', () => {
+describe('WebAuthn Signer Launchpad [@4337]', () => {
   before(function () {
     if (network.name !== 'localhost') {
       this.skip()
@@ -72,7 +72,7 @@ describe('WebAuthn Signers [@4337]', () => {
     } = await setupTests()
 
     const { chainId } = await ethers.provider.getNetwork()
-    const verifierAddress = await verifier.getAddress()
+    const verifiers = ethers.solidityPacked(['uint16', 'address'], [0, await verifier.getAddress()])
 
     const credential = navigator.credentials.create({
       publicKey: {
@@ -90,52 +90,17 @@ describe('WebAuthn Signers [@4337]', () => {
       },
     })
     const publicKey = decodePublicKey(credential.response)
-    const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifierAddress)
+    const signerAddress = await signerFactory.getSigner(publicKey.x, publicKey.y, verifiers)
 
-    const safeInit = {
-      singleton: singleton.target,
-      signerFactory: signerFactory.target,
-      signerX: publicKey.x,
-      signerY: publicKey.y,
-      signerVerifiers: verifierAddress,
-      setupTo: safeModuleSetup.target,
-      setupData: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
-      fallbackHandler: module.target,
-    }
-    const safeInitHash = ethers.TypedDataEncoder.hash(
-      { verifyingContract: await signerLaunchpad.getAddress(), chainId },
-      {
-        SafeInit: [
-          { type: 'address', name: 'singleton' },
-          { type: 'address', name: 'signerFactory' },
-          { type: 'uint256', name: 'signerX' },
-          { type: 'uint256', name: 'signerY' },
-          { type: 'uint176', name: 'signerVerifiers' },
-          { type: 'address', name: 'setupTo' },
-          { type: 'bytes', name: 'setupData' },
-          { type: 'address', name: 'fallbackHandler' },
-        ],
-      },
-      safeInit,
-    )
-
-    expect(
-      await signerLaunchpad.getInitHash(
-        safeInit.singleton,
-        safeInit.signerFactory,
-        safeInit.signerX,
-        safeInit.signerY,
-        safeInit.signerVerifiers,
-        safeInit.setupTo,
-        safeInit.setupData,
-        safeInit.fallbackHandler,
-      ),
-    ).to.equal(safeInitHash)
-
-    const launchpadInitializer = signerLaunchpad.interface.encodeFunctionData('preValidationSetup', [
-      safeInitHash,
-      ethers.ZeroAddress,
-      '0x',
+    const launchpadInitializer = signerLaunchpad.interface.encodeFunctionData('setup', [
+      singleton.target,
+      signerFactory.target,
+      publicKey.x,
+      publicKey.y,
+      verifiers,
+      safeModuleSetup.target,
+      safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
+      module.target,
     ])
     const safeSalt = Date.now()
     const safe = await proxyFactory.createProxyWithNonce.staticCall(signerLaunchpad.target, launchpadInitializer, safeSalt)
@@ -150,16 +115,15 @@ describe('WebAuthn Signers [@4337]', () => {
           proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [signerLaunchpad.target, launchpadInitializer, safeSalt]),
         ],
       ),
-      callData: signerLaunchpad.interface.encodeFunctionData('initializeThenUserOp', [
-        safeInit.singleton,
-        safeInit.signerFactory,
-        safeInit.signerX,
-        safeInit.signerY,
-        safeInit.signerVerifiers,
-        safeInit.setupTo,
-        safeInit.setupData,
-        safeInit.fallbackHandler,
-        module.interface.encodeFunctionData('executeUserOp', [user.address, ethers.parseEther('0.5'), '0x', 0]),
+      callData: signerLaunchpad.interface.encodeFunctionData('promoteAccountAndExecuteUserOp', [
+        signerFactory.target,
+        publicKey.x,
+        publicKey.y,
+        verifiers,
+        user.address,
+        ethers.parseEther('0.5'),
+        '0x',
+        0,
       ]),
       ...packGasParameters({
         verificationGasLimit: 700000,
