@@ -7,8 +7,10 @@ import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
 import {P256} from "./libraries/P256.sol";
 
 /**
- * @title SafeWebAuthnSignerFactory
- * @dev A factory contract for creating and managing WebAuthn proxy signers.
+ * @title Safe WebAuthn Signer Factory
+ * @dev A factory contract for creating WebAuthn signers. Additionally, the factory supports
+ * signature verification without deploying a signer proxies.
+ * @custom:security-contact bounty@safe.global
  */
 contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
@@ -76,11 +78,9 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
 
         // solhint-disable-next-line no-inline-assembly
         assembly {
-            let dataSize := mload(data)
-            let dataLocation := add(data, 0x20)
             // staticcall to the singleton contract with return size given as 32 bytes. The
             // singleton contract is known and immutable so it is safe to specify return size.
-            if staticcall(gas(), singleton, dataLocation, dataSize, 0, 32) {
+            if staticcall(gas(), singleton, add(data, 0x20), mload(data), 0, 32) {
                 magicValue := mload(0)
             }
         }
@@ -89,14 +89,12 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
      * @dev Checks if the provided account has no code.
      * @param account The address of the account to check.
-     * @return True if the account has no code, false otherwise.
+     * @return result True if the account has no code, false otherwise.
      */
-    function _hasNoCode(address account) internal view returns (bool) {
-        uint256 size;
+    function _hasNoCode(address account) internal view returns (bool result) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            size := extcodesize(account)
+            result := iszero(extcodesize(account))
         }
-        return size == 0;
     }
 }
