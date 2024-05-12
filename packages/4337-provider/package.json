@@ -11,6 +11,6 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "ethers": "^6.11.1"
+    "ethers": "^6.12.0"
   }
 }
