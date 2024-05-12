@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { LoaderFunction, Navigate, redirect, useLoaderData } from 'react-router-dom'
-import { encodeSafeModuleSetupCall, getInitHash, getLaunchpadInitializer, getSafeAddress } from '../logic/safe'
+import { encodeSafeModuleSetupCall, getLaunchpadInitializer, getSafeAddress } from '../logic/safe'
 import type { SafeInitializer } from '../logic/safe'
 import {
   SAFE_4337_MODULE_ADDRESS,
@@ -9,19 +9,18 @@ import {
   SAFE_SINGLETON_ADDRESS,
   WEBAUTHN_SIGNER_FACTORY_ADDRESS,
   P256_VERIFIER_ADDRESS,
-  APP_CHAIN_ID,
 } from '../config'
 import { getPasskeyFromLocalStorage, PasskeyLocalStorageFormat } from '../logic/passkeys'
 import {
   UnsignedPackedUserOperation,
-  getRequiredPrefund,
+  getMissingAccountFunds,
   packGasParameters,
   prepareUserOperationWithInitialisation,
-  signAndSendUserOp,
+  signAndSendDeploymentUserOp,
 } from '../logic/userOp'
 import { useUserOpGasLimitEstimation } from '../hooks/useUserOpGasEstimation'
 import { RequestStatus } from '../utils'
-import { PrefundCard } from '../components/OpPrefundCard'
+import { MissingAccountFundsCard } from '../components/MissingAccountFundsCard.tsx'
 import { useFeeData } from '../hooks/useFeeData'
 import { useNativeTokenBalance } from '../hooks/useNativeTokenBalance'
 import { useCodeAtAddress } from '../hooks/useCodeAtAddress'
@@ -42,12 +41,11 @@ const loader: LoaderFunction = async () => {
     signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
     signerX: passkey.pubkeyCoordinates.x,
     signerY: passkey.pubkeyCoordinates.y,
-    signerVerifier: P256_VERIFIER_ADDRESS,
+    signerVerifiers: P256_VERIFIER_ADDRESS,
     setupTo: SAFE_MODULE_SETUP_ADDRESS,
     setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
   }
-  const initHash = getInitHash(initializer, APP_CHAIN_ID)
-  const launchpadInitializer = getLaunchpadInitializer(initHash)
+  const launchpadInitializer = getLaunchpadInitializer(initializer)
   const safeAddress = getSafeAddress(launchpadInitializer)
 
   return { passkey, safeAddress }
@@ -65,7 +63,7 @@ function DeploySafe() {
       signerFactory: WEBAUTHN_SIGNER_FACTORY_ADDRESS,
       signerX: passkey.pubkeyCoordinates.x,
       signerY: passkey.pubkeyCoordinates.y,
-      signerVerifier: P256_VERIFIER_ADDRESS,
+      signerVerifiers: P256_VERIFIER_ADDRESS,
       setupTo: SAFE_MODULE_SETUP_ADDRESS,
       setupData: encodeSafeModuleSetupCall([SAFE_4337_MODULE_ADDRESS]),
     }),
@@ -90,9 +88,9 @@ function DeploySafe() {
   const [userOpHash, setUserOpHash] = useState<string>()
 
   const deployed = safeCodeStatus === RequestStatus.SUCCESS && safeCode !== '0x'
-  const requiredPrefund = gasParametersReady ? getRequiredPrefund(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
-  const needsPrefund = !deployed && safeBalanceStatus === RequestStatus.SUCCESS && safeBalance === 0n
-  const readyToDeploy = !userOpHash && !deployed && gasParametersReady && !needsPrefund
+  const missingFunds = gasParametersReady ? getMissingAccountFunds(feeData?.maxFeePerGas, userOpGasLimitEstimation) : 0n
+  const isMissingFunds = !deployed && safeBalanceStatus === RequestStatus.SUCCESS && safeBalance === 0n
+  const readyToDeploy = !userOpHash && !deployed && gasParametersReady && !isMissingFunds
 
   const gasParametersError = feeDataStatus === RequestStatus.ERROR || estimationStatus === RequestStatus.ERROR
   const gasParametersLoading = feeDataStatus === RequestStatus.LOADING || estimationStatus === RequestStatus.LOADING
@@ -111,7 +109,7 @@ function DeploySafe() {
       preVerificationGas: userOpGasLimitEstimation.preVerificationGas,
     }
 
-    const bundlerUserOpHash = await signAndSendUserOp(userOpToSign, passkey)
+    const bundlerUserOpHash = await signAndSendDeploymentUserOp(userOpToSign, passkey)
     setUserOpHash(bundlerUserOpHash)
   }
 
@@ -131,12 +129,16 @@ function DeploySafe() {
         </p>
       )}
 
-      {needsPrefund ? (
+      {isMissingFunds ? (
         <>
           {gasParametersLoading && <p>Estimating gas parameters...</p>}
           {gasParametersError && <p>Failed to estimate gas limit</p>}
           {gasParametersReady && (
-            <PrefundCard provider={walletProvider} safeAddress={unsignedUserOperation.sender} requiredPrefund={requiredPrefund} />
+            <MissingAccountFundsCard
+              provider={walletProvider}
+              safeAddress={unsignedUserOperation.sender}
+              missingAccountFunds={missingFunds}
+            />
           )}
         </>
       ) : null}

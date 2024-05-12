@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { DUMMY_CLIENT_DATA_FIELDS, base64UrlEncode, getSignatureBytes } from '../../src/utils/webauthn'
+import { DUMMY_AUTHENTICATOR_DATA, DUMMY_CLIENT_DATA_FIELDS, base64UrlEncode, getSignatureBytes } from '../../src/utils/webauthn'
 
 const base64 = {
   encodeFromHex: (h: string) => {
@@ -17,6 +17,105 @@ describe('WebAuthn Library', () => {
     const mockP256Verifier = await (await ethers.getContractFactory('MockContract')).deploy()
 
     return { webAuthnLib, mockP256Verifier }
+  })
+
+  describe('castSignature', function () {
+    it('Should correctly cast an ABI encoded WebAuthn signature', async () => {
+      const { webAuthnLib } = await setupTests()
+
+      const signature = {
+        authenticatorData: DUMMY_AUTHENTICATOR_DATA,
+        clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
+        r: 42n,
+        s: 1337n,
+      }
+
+      expect(
+        await webAuthnLib.castSignature(
+          ethers.AbiCoder.defaultAbiCoder().encode(
+            ['bytes', 'string', 'uint256', 'uint256'],
+            [signature.authenticatorData, signature.clientDataFields, signature.r, signature.s],
+          ),
+        ),
+      ).to.deep.equal([ethers.hexlify(signature.authenticatorData), signature.clientDataFields, signature.r, signature.s])
+    })
+
+    it('Should correctly cast a packed encoded WebAuthn signature', async () => {
+      const { webAuthnLib } = await setupTests()
+
+      const signature = {
+        authenticatorData: DUMMY_AUTHENTICATOR_DATA,
+        clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
+        r: 42n,
+        s: 1337n,
+      }
+
+      expect(
+        await webAuthnLib.castSignature(
+          ethers.solidityPacked(
+            ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes', 'uint256', 'string'],
+            [
+              128, // offset of authenticator data
+              160 + signature.authenticatorData.length, // offset of client data fields
+              signature.r,
+              signature.s,
+              signature.authenticatorData.length,
+              signature.authenticatorData,
+              signature.clientDataFields.length,
+              signature.clientDataFields,
+            ],
+          ),
+        ),
+      ).to.deep.equal([ethers.hexlify(signature.authenticatorData), signature.clientDataFields, signature.r, signature.s])
+    })
+
+    it('Should correctly cast a partially packed encoded WebAuthn signature', async () => {
+      const { webAuthnLib } = await setupTests()
+
+      const signature = {
+        authenticatorData: DUMMY_AUTHENTICATOR_DATA,
+        clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
+        r: 42n,
+        s: 1337n,
+      }
+
+      expect(
+        await webAuthnLib.castSignature(
+          ethers.solidityPacked(
+            ['uint256', 'uint256', 'uint256', 'uint256', 'bytes1', 'uint256', 'bytes', 'bytes2', 'uint256', 'string'],
+            [
+              128 + 1, // offset of authenticator data
+              160 + signature.authenticatorData.length + 3, // offset of client data fields
+              signature.r,
+              signature.s,
+              '0x00', // padding
+              signature.authenticatorData.length,
+              signature.authenticatorData,
+              '0x0000', // padding
+              signature.clientDataFields.length,
+              signature.clientDataFields,
+            ],
+          ),
+        ),
+      ).to.deep.equal([ethers.hexlify(signature.authenticatorData), signature.clientDataFields, signature.r, signature.s])
+    })
+
+    it('Should detect encoded WebAuthn signatures with too much padding', async () => {
+      const { webAuthnLib } = await setupTests()
+
+      const signature = {
+        authenticatorData: DUMMY_AUTHENTICATOR_DATA,
+        clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
+        r: 42n,
+        s: 1337n,
+      }
+      const signatureBytes = ethers.AbiCoder.defaultAbiCoder().encode(
+        ['bytes', 'string', 'uint256', 'uint256'],
+        [signature.authenticatorData, signature.clientDataFields, signature.r, signature.s],
+      )
+
+      await expect(webAuthnLib.castSignature(ethers.concat([signatureBytes, '0x00']))).to.be.revertedWith('invalid signature encoding')
+    })
   })
 
   describe('encodeClientDataJson', function () {
@@ -121,6 +220,28 @@ describe('WebAuthn Library', () => {
       expect(await webAuthnLib.verifySignature(challenge, signature, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
 
       expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
+    })
+
+    it('Should return false when the signature data has too much padding', async () => {
+      const { webAuthnLib, mockP256Verifier } = await setupTests()
+      const mockP256VerifierAddress = await mockP256Verifier.getAddress()
+      await mockP256Verifier.givenAnyReturnBool(true)
+
+      const authenticatorData = ethers.randomBytes(100)
+      authenticatorData[32] = 0x01
+
+      const challenge = ethers.randomBytes(32)
+      const signature = {
+        authenticatorData,
+        clientDataFields: DUMMY_CLIENT_DATA_FIELDS,
+        r: 0n,
+        s: 0n,
+      }
+      const signatureBytes = getSignatureBytes(signature)
+      const paddedSignatureBytes = ethers.concat([signatureBytes, '0x00'])
+
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, signatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.true
+      expect(await webAuthnLib.verifySignatureCastSig(challenge, paddedSignatureBytes, '0x01', 0n, 0n, mockP256VerifierAddress)).to.be.false
     })
   })
 })

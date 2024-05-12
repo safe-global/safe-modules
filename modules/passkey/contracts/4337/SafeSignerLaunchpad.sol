@@ -28,26 +28,12 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     /**
-     * @notice The storage slot used for the initialization hash of account.
-     * @custom:computed-as keccak256("SafeSignerLaunchpad.initHash") - 1
+     * @notice The storage slot used for the target Safe singleton address to promote to.
+     * @custom:computed-as keccak256("SafeSignerLaunchpad.targetSingleton") - 1
      * @dev This value is intentionally computed to be a hash -1 as a precaution to avoid any potential issues from
      * unintended hash collisions.
      */
-    uint256 private constant INIT_HASH_SLOT = 0xf69b06f613646416443af565ceba6ea1636a94376678b14dc8481b819746897f;
-
-    /**
-     * @notice The keccak256 hash of the EIP-712 SafeInit struct, representing the structure of a ERC-4337 compatible deferred Safe initialization.
-     *  {address} singleton - The singleton to evolve into during the setup.
-     *  {address} signerFactory - The custom ECDSA signer factory to use for creating an owner.
-     *  {uint256} signerX - The X coordinate of the public key of the custom ECDSA signing scheme.
-     *  {uint256} signerY - The Y coordinate of the public key of the custom ECDSA signing scheme.
-     *  {uint256} signerVerifiers - The P-256 verifiers to use for signature validation.
-     *  {address} setupTo - The contract to `DELEGATECALL` during setup.
-     *  {bytes} setupData - The calldata for the setup `DELEGATECALL`.
-     *  {address} fallbackHandler - The fallback handler to initialize the Safe with.
-     * @custom:computed-as keccak256("SafeInit(address singleton,address signerFactory,uint256 signerX,uint256 signerY,uint192 signerVerifiers,address setupTo,bytes setupData,address fallbackHandler)")
-     */
-    bytes32 private constant SAFE_INIT_TYPEHASH = 0xb8b5d6678d8c3ed815330874b6c0a30142f64104b7f6d1361d6775a7dbc5318b;
+    uint256 private constant TARGET_SINGLETON_SLOT = 0x610b07c5cf4b478e92ab041de73a412736c750f1bf07a613600b24b3a8bd597e;
 
     /**
      * @notice The keccak256 hash of the EIP-712 SafeInitOp struct, representing the user operation to execute alongside initialization.
@@ -60,10 +46,60 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     bytes32 private constant SAFE_INIT_OP_TYPEHASH = 0x25838d3914a61e3531f21f12b8cd3110a5f9d478292d07dd197859a5c4eaacb2;
 
     /**
+     * @notice An error indicating that the entry point used when deploying a new module instance is invalid.
+     */
+    error InvalidEntryPoint();
+
+    /**
+     * @notice An error a call to a function that should only be `DELEGATECALL`-ed from an account proxy.
+     */
+    error NotProxied();
+
+    /**
+     * @notice An error indicating that the call validating or executing a user operation was not called by the
+     * supported entry point contract.
+     */
+    error UnsupportedEntryPoint();
+
+    /**
+     * @notice An error indicating an attempt to setup an account that has already been initialized.
+     */
+    error AlreadyInitialized();
+
+    /**
+     * @notice An error indicating an attempt to execute a user operation on an account that has already been promoted
+     * to a Safe singleton.
+     */
+    error AlreadyPromoted();
+
+    /**
+     * @notice An error indicating that the account was initialized with an invalid Safe singleton address.
+     */
+    error InvalidSingleton();
+
+    /**
+     * @notice An error indicating that the account was changed to use an invalid threshold value. Accounts initialized
+     * with the Safe launchpad must be initialized with a threshold of 1 as a single owner has complete control of the
+     * account during the first user operation.
+     */
+    error InvalidThreshold();
+
+    /**
+     * @notice An error indicating that the user operation `callData` does not correspond to the supported execution
+     * function `promoteAccountAndExecuteUserOp`.
+     */
+    error UnsupportedExecutionFunction(bytes4 selector);
+
+    /**
+     * @notice An error indicating that the user operation failed to execute successfully.
+     */
+    error ExecutionFailed();
+
+    /**
      * @dev Address of the launchpad contract itself. it is used for determining whether or not the contract is being
      * `DELEGATECALL`-ed from a proxy.
      */
-    address private immutable SELF;
+    address private immutable _SELF;
 
     /**
      * @notice The address of the ERC-4337 entry point contract that this launchpad supports.
@@ -75,9 +111,11 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @param entryPoint The address of the ERC-4337 entry point contract that this launchpad supports.
      */
     constructor(address entryPoint) {
-        require(entryPoint != address(0), "Invalid entry point");
+        if (entryPoint == address(0)) {
+            revert InvalidEntryPoint();
+        }
 
-        SELF = address(this);
+        _SELF = address(this);
         SUPPORTED_ENTRYPOINT = entryPoint;
     }
 
@@ -86,7 +124,9 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * called directly.
      */
     modifier onlyProxy() {
-        require(singleton == SELF, "Not called from proxy");
+        if (address(this) == _SELF) {
+            revert NotProxied();
+        }
         _;
     }
 
@@ -94,80 +134,71 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @notice Validates the call is initiated by the supported entry point.
      */
     modifier onlySupportedEntryPoint() {
-        require(msg.sender == SUPPORTED_ENTRYPOINT, "Unsupported entry point");
+        if (msg.sender != SUPPORTED_ENTRYPOINT) {
+            revert UnsupportedEntryPoint();
+        }
         _;
     }
 
     /**
      * @notice Accept transfers.
      * @dev The launchpad accepts transfers to allow funding of the account in case it was deployed and initialized
-     * without pre-funding.
+     * without pre-funding. Note that it only accepts transfers if it is called via a proxy contract.
      */
-    receive() external payable {}
+    receive() external payable onlyProxy {}
 
     /**
-     * @notice Performs pre-validation setup by storing the hash of the {SafeInit} and optionally `DELEGATECALL`s to a
-     * `preInitializer` contract to perform some initial setup.
-     * @dev Requirements:
-     * - The function can only be called by a proxy contract.
-     * - The `DELEGATECALL` to the `preInitializer` address must succeed.
-     * @param initHash The initialization hash.
-     * @param preInitializer The address to `DELEGATECALL`.
-     * @param preInitializerData The pre-initialization call data.
-     */
-    function preValidationSetup(bytes32 initHash, address preInitializer, bytes calldata preInitializerData) external onlyProxy {
-        _setInitHash(initHash);
-        if (preInitializer != address(0)) {
-            (bool success, ) = preInitializer.delegatecall(preInitializerData);
-            require(success, "Pre-initialization failed");
-        }
-    }
-
-    /**
-     * @notice Compute an {SafeInit} hash that uniquely identifies a Safe configuration.
-     * @dev The hash is generated using the keccak256 hash function and the EIP-712 standard. It includes setup
-     * parameters to ensure that deployments with the Safe proxy factory have a unique and deterministic address for a
-     * given configuration.
+     * @notice Sets up the account with the specified initialization parameters.
+     * @dev This function can only be called by a proxy contract that has not yet been initialized. Internally, it calls
+     * the Safe singleton setup function on the account with some pre-determined parameters. In particular, it uses a
+     * fixed ownership structure for the deployed Safe.
      * @param singleton The singleton to evolve into during the setup.
      * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifiers The P-256 verifiers to use for signature validation.
-     * @param setupTo The contract to `DELEGATECALL` during setup.
-     * @param setupData The calldata for the setup `DELEGATECALL`.
-     * @param fallbackHandler The fallback handler to initialize the Safe with.
-     * @return initHash The unique initialization hash for the Safe.
+     * @param signerVerifiers The P-256 verifiers to use.
+     * @param initializer The Safe setup initializer address.
+     * @param initializerData The calldata for the setup `DELEGATECALL`.
+     * @param fallbackHandler Handler for fallback calls to the Safe.
      */
-    function getInitHash(
+    function setup(
         address singleton,
         address signerFactory,
         uint256 signerX,
         uint256 signerY,
         P256.Verifiers signerVerifiers,
-        address setupTo,
-        bytes memory setupData,
+        address initializer,
+        bytes calldata initializerData,
         address fallbackHandler
-    ) public view returns (bytes32 initHash) {
-        initHash = keccak256(
-            abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
-                domainSeparator(),
-                keccak256(
-                    abi.encode(
-                        SAFE_INIT_TYPEHASH,
-                        singleton,
-                        signerFactory,
-                        signerX,
-                        signerY,
-                        signerVerifiers,
-                        setupTo,
-                        keccak256(setupData),
-                        fallbackHandler
-                    )
-                )
-            )
-        );
+    ) external onlyProxy {
+        if (_targetSingleton() != address(0)) {
+            revert AlreadyInitialized();
+        }
+
+        if (singleton == address(0)) {
+            revert InvalidSingleton();
+        }
+        _setTargetSingleton(singleton);
+
+        address[] memory owners = new address[](1);
+        owners[0] = ISafeSignerFactory(signerFactory).getSigner(signerX, signerY, signerVerifiers);
+
+        // Call the Safe setup function, making sure to replace the `singleton` that the proxy uses. This is important
+        // in order to ensure that the Safe setup function works as expected, in case it calls Safe methods.
+        SafeStorage.singleton = singleton;
+        ISafe(address(this)).setup(owners, 1, initializer, initializerData, fallbackHandler, address(0), 0, payable(address(0)));
+        SafeStorage.singleton = _SELF;
+
+        // We need to check that the setup did not change the threshold to an unsupported value. This is to prevent
+        // false security assumptions where the `setup` can be used to add owners and increase the threshold. Since
+        // the user operation validation in this contract checks only a single signature, a threshold other than 1 would
+        // be ignored for the first user operation before the account gets promoted to a Safe. Since the single owner
+        // can change the ownership structure in that single user operation, it is not safe to assume that a threshold
+        // other than 1 will be respected. In order to change ownership structures during account creation, instead
+        // encode the ownership structure changes in the actual user operation.
+        if (threshold != 1) {
+            revert InvalidThreshold();
+        }
     }
 
     /**
@@ -183,8 +214,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     function getOperationHash(bytes32 userOpHash, uint48 validAfter, uint48 validUntil) public view returns (bytes32 operationHash) {
         operationHash = keccak256(
             abi.encodePacked(
-                bytes1(0x19),
-                bytes1(0x01),
+                bytes2(0x1901),
                 domainSeparator(),
                 keccak256(abi.encode(SAFE_INIT_OP_TYPEHASH, userOpHash, validAfter, validUntil, SUPPORTED_ENTRYPOINT))
             )
@@ -199,35 +229,16 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds
-    ) external override onlyProxy onlySupportedEntryPoint returns (uint256 validationData) {
-        address signerFactory;
-        uint256 signerX;
-        uint256 signerY;
-        P256.Verifiers signerVerifiers;
-        {
-            require(this.initializeThenUserOp.selector == bytes4(userOp.callData[:4]), "invalid user operation data");
-
-            address singleton;
-            address setupTo;
-            bytes memory setupData;
-            address fallbackHandler;
-            (singleton, signerFactory, signerX, signerY, signerVerifiers, setupTo, setupData, fallbackHandler, ) = abi.decode(
-                userOp.callData[4:],
-                (address, address, uint256, uint256, P256.Verifiers, address, bytes, address, bytes)
-            );
-            bytes32 initHash = getInitHash(
-                singleton,
-                signerFactory,
-                signerX,
-                signerY,
-                signerVerifiers,
-                setupTo,
-                setupData,
-                fallbackHandler
-            );
-
-            require(initHash == _initHash(), "invalid init hash");
+    ) external override onlySupportedEntryPoint returns (uint256 validationData) {
+        bytes4 selector = bytes4(userOp.callData[:4]);
+        if (selector != this.promoteAccountAndExecuteUserOp.selector) {
+            revert UnsupportedExecutionFunction(selector);
         }
+
+        (address signerFactory, uint256 signerX, uint256 signerY, P256.Verifiers signerVerifiers) = abi.decode(
+            userOp.callData[4:],
+            (address, uint256, uint256, P256.Verifiers)
+        );
 
         validationData = _validateSignatures(userOp, userOpHash, signerFactory, signerX, signerY, signerVerifiers);
         if (missingAccountFunds > 0) {
@@ -243,49 +254,61 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     }
 
     /**
-     * @notice Completes the account initialization and then executes a user operation.
+     * @notice Completes the account initialization by promoting the account to proxy to the target Safe singleton and
+     * deploying the signer contract, and then executes the user operation.
      * @dev This function is only ever called by the entry point as part of the execution phase of the user operation.
-     * It is responsible for promoting the account into a Safe. Validation of the parameters, that they match the
-     * {SafeInit} hash that was specified at account construction, is done by {validateUserOp} as part of the the
-     * ERC-4337 user operation validation phase.
-     * @param singleton The Safe singleton address to promote the account into.
-     * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
+     * Validation of the parameters, that they match the ones provided at initialization, is done by {validateUserOp}
+     * as part of the the ERC-4337 user operation validation phase.
+     * @param signerFactory The custom ECDSA signer factory to use for creating the owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifiers The P-256 verifiers to use for signature validation.
-     * @param setupTo The contract to `DELEGATECALL` during setup.
-     * @param setupData The calldata for the setup `DELEGATECALL`.
-     * @param fallbackHandler The fallback handler to initialize the Safe with.
-     * @param callData The calldata to `DELEGATECALL` self with in order to actually execute the user operation.
+     * @param signerVerifiers The P-256 verifiers to use.
+     * @param to Destination address of the user operation.
+     * @param value Ether value of the user operation.
+     * @param data Data payload of the user operation.
+     * @param operation Operation type of the user operation.
      */
-    function initializeThenUserOp(
-        address singleton,
+    function promoteAccountAndExecuteUserOp(
         address signerFactory,
         uint256 signerX,
         uint256 signerY,
         P256.Verifiers signerVerifiers,
-        address setupTo,
-        bytes calldata setupData,
-        address fallbackHandler,
-        bytes memory callData
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint8 operation
     ) external onlySupportedEntryPoint {
-        SafeStorage.singleton = singleton;
-        {
-            address[] memory owners = new address[](1);
-            owners[0] = ISafeSignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifiers);
-
-            ISafe(address(this)).setup(owners, 1, setupTo, setupData, fallbackHandler, address(0), 0, payable(address(0)));
+        address singleton = _targetSingleton();
+        if (singleton == address(0)) {
+            revert AlreadyPromoted();
         }
 
-        (bool success, bytes memory returnData) = address(this).delegatecall(callData);
-        if (!success) {
-            // solhint-disable-next-line no-inline-assembly
-            assembly ("memory-safe") {
-                revert(add(returnData, 0x20), mload(returnData))
+        SafeStorage.singleton = singleton;
+        _setTargetSingleton(address(0));
+
+        ISafeSignerFactory(signerFactory).createSigner(signerX, signerY, signerVerifiers);
+
+        bool success;
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            switch operation
+            case 0 {
+                success := call(gas(), to, value, add(data, 0x20), mload(data), 0, 0)
+            }
+            case 1 {
+                success := delegatecall(gas(), to, add(data, 0x20), mload(data), 0, 0)
+            }
+            default {
+                // The operation does not match one of the expected enum values, revert with the appropriate panic.
+                // See <https://docs.soliditylang.org/en/latest/control-structures.html#panic-via-assert-and-error-via-require>.
+                mstore(0x00, hex"4e487b71")
+                mstore(0x04, 0x21)
             }
         }
 
-        _setInitHash(0);
+        if (!success) {
+            revert ExecutionFailed();
+        }
     }
 
     /**
@@ -293,7 +316,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
      */
     function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, SELF));
+        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, _SELF));
     }
 
     /**
@@ -303,11 +326,10 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      *  - `validUntil`: 6-byte timestamp value, or zero for "infinite". The user operation is valid only up to this time.
      *  - `validAfter`: 6-byte timestamp. The user operation is valid only after this time.
      * @param userOp User operation struct.
-     * @param userOpHash User operation hash.
-     * @param signerFactory The custom ECDSA signer factory to use for creating an owner.
+     * @param signerFactory The custom ECDSA signer factory to use for creating the owner.
      * @param signerX The X coordinate of the signer's public key.
      * @param signerY The Y coordinate of the signer's public key.
-     * @param signerVerifiers The P-256 verifiers to use for signature validation.
+     * @param signerVerifiers The P-256 verifiers to use.
      * @return validationData An integer indicating the result of the validation.
      */
     function _validateSignatures(
@@ -329,51 +351,45 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
         }
 
         bytes32 operationHash = getOperationHash(userOpHash, validAfter, validUntil);
-        try
-            ISafeSignerFactory(signerFactory).isValidSignatureForSigner(operationHash, signature, signerX, signerY, signerVerifiers)
-        returns (bytes4 magicValue) {
-            // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(magicValue != ERC1271.MAGIC_VALUE, validUntil, validAfter);
-        } catch {
-            validationData = _packValidationData(true, validUntil, validAfter);
+
+        bool failure;
+        if (owners[ISafeSignerFactory(signerFactory).getSigner(signerX, signerY, signerVerifiers)] == address(0)) {
+            failure = true;
+        } else {
+            try
+                ISafeSignerFactory(signerFactory).isValidSignatureForSigner(operationHash, signature, signerX, signerY, signerVerifiers)
+            returns (bytes4 magicValue) {
+                failure = magicValue != ERC1271.MAGIC_VALUE;
+            } catch {
+                failure = true;
+            }
+        }
+
+        // The timestamps are validated by the entry point, therefore we will not check them again
+        validationData = _packValidationData(failure, validUntil, validAfter);
+    }
+
+    /**
+     * @notice Reads the configured target Safe singleton address to promote to from storage.
+     * @return value The target Safe singleton address.
+     */
+    function _targetSingleton() internal view returns (address value) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            // Note that we explicitly don't mask the address, as Solidity will generate masking code for every time
+            // the variable is read.
+            value := sload(TARGET_SINGLETON_SLOT)
         }
     }
 
     /**
-     * @notice Reads the configured initialization hash from storage.
-     * @return value The value of the init hash read from storage.
+     * @notice Sets an target Safe singleton address to promote to in storage.
+     * @param value The target Safe singleton address.
      */
-    function _initHash() public view returns (bytes32 value) {
+    function _setTargetSingleton(address value) internal {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            value := sload(INIT_HASH_SLOT)
+            sstore(TARGET_SINGLETON_SLOT, value)
         }
-    }
-
-    /**
-     * @notice Sets an initialization hash in storage.
-     * @param value The value of the init hash to set in storage.
-     */
-    function _setInitHash(bytes32 value) internal {
-        // solhint-disable-next-line no-inline-assembly
-        assembly ("memory-safe") {
-            sstore(INIT_HASH_SLOT, value)
-        }
-    }
-
-    /**
-     * @notice Returns whether or not an account is a contract.
-     * @dev The current implementation the accounts code size is non-zero to determine whether or not the account is a
-     * contract.
-     * @param account The account to check.
-     * @return isContract Whether or not the account is a contract.
-     */
-    function _isContract(address account) internal view returns (bool isContract) {
-        uint256 size;
-        // solhint-disable-next-line no-inline-assembly
-        assembly ("memory-safe") {
-            size := extcodesize(account)
-        }
-        isContract = size > 0;
     }
 }
