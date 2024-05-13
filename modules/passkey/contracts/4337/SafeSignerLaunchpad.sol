@@ -25,7 +25,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @notice The EIP-712 type-hash for the domain separator used for verifying Safe initialization signatures.
      * @custom:computed-as keccak256("EIP712Domain(uint256 chainId,address verifyingContract)")
      */
-    bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
+    bytes32 private constant _DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
 
     /**
      * @notice The storage slot used for the target Safe singleton address to promote to.
@@ -33,7 +33,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      * @dev This value is intentionally computed to be a hash -1 as a precaution to avoid any potential issues from
      * unintended hash collisions.
      */
-    uint256 private constant TARGET_SINGLETON_SLOT = 0x610b07c5cf4b478e92ab041de73a412736c750f1bf07a613600b24b3a8bd597e;
+    uint256 private constant _TARGET_SINGLETON_SLOT = 0x610b07c5cf4b478e92ab041de73a412736c750f1bf07a613600b24b3a8bd597e;
 
     /**
      * @notice The keccak256 hash of the EIP-712 SafeInitOp struct, representing the user operation to execute alongside initialization.
@@ -43,7 +43,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
      *  {address} entryPoint - The address of the entry point that will execute the user operation.
      * @custom:computed-as keccak256("SafeInitOp(bytes32 userOpHash,uint48 validAfter,uint48 validUntil,address entryPoint)")
      */
-    bytes32 private constant SAFE_INIT_OP_TYPEHASH = 0x25838d3914a61e3531f21f12b8cd3110a5f9d478292d07dd197859a5c4eaacb2;
+    bytes32 private constant _SAFE_INIT_OP_TYPEHASH = 0x25838d3914a61e3531f21f12b8cd3110a5f9d478292d07dd197859a5c4eaacb2;
 
     /**
      * @notice An error indicating that the entry point used when deploying a new module instance is invalid.
@@ -67,10 +67,9 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     error AlreadyInitialized();
 
     /**
-     * @notice An error indicating an attempt to execute a user operation on an account that has already been promoted
-     * to a Safe singleton.
+     * @notice An error indicating an attempt to execute a user operation on an account that has not been initialized.
      */
-    error AlreadyPromoted();
+    error NotInitialized();
 
     /**
      * @notice An error indicating that the account was initialized with an invalid Safe singleton address.
@@ -202,6 +201,14 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     }
 
     /**
+     * @notice Computes the EIP-712 domain separator for Safe launchpad operations.
+     * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
+     */
+    function domainSeparator() public view returns (bytes32) {
+        return keccak256(abi.encode(_DOMAIN_SEPARATOR_TYPEHASH, block.chainid, _SELF));
+    }
+
+    /**
      * @notice Compute the {SafeInitOp} hash of the first user operation that initializes the Safe.
      * @dev The hash is generated using the keccak256 hash function and the EIP-712 standard. It is signed by the Safe
      * owner that is specified as part of the {SafeInit}. Using a completely separate hash from the {SafeInit} allows
@@ -216,7 +223,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
             abi.encodePacked(
                 bytes2(0x1901),
                 domainSeparator(),
-                keccak256(abi.encode(SAFE_INIT_OP_TYPEHASH, userOpHash, validAfter, validUntil, SUPPORTED_ENTRYPOINT))
+                keccak256(abi.encode(_SAFE_INIT_OP_TYPEHASH, userOpHash, validAfter, validUntil, SUPPORTED_ENTRYPOINT))
             )
         );
     }
@@ -280,7 +287,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     ) external onlySupportedEntryPoint {
         address singleton = _targetSingleton();
         if (singleton == address(0)) {
-            revert AlreadyPromoted();
+            revert NotInitialized();
         }
 
         SafeStorage.singleton = singleton;
@@ -303,20 +310,13 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
                 // See <https://docs.soliditylang.org/en/latest/control-structures.html#panic-via-assert-and-error-via-require>.
                 mstore(0x00, hex"4e487b71")
                 mstore(0x04, 0x21)
+                revert(0, 0x24)
             }
         }
 
         if (!success) {
             revert ExecutionFailed();
         }
-    }
-
-    /**
-     * @notice Computes the EIP-712 domain separator for Safe launchpad operations.
-     * @return domainSeparatorHash The EIP-712 domain separator hash for this contract.
-     */
-    function domainSeparator() public view returns (bytes32) {
-        return keccak256(abi.encode(DOMAIN_SEPARATOR_TYPEHASH, block.chainid, _SELF));
     }
 
     /**
@@ -378,7 +378,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
         assembly ("memory-safe") {
             // Note that we explicitly don't mask the address, as Solidity will generate masking code for every time
             // the variable is read.
-            value := sload(TARGET_SINGLETON_SLOT)
+            value := sload(_TARGET_SINGLETON_SLOT)
         }
     }
 
@@ -389,7 +389,7 @@ contract SafeSignerLaunchpad is IAccount, SafeStorage {
     function _setTargetSingleton(address value) internal {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            sstore(TARGET_SINGLETON_SLOT, value)
+            sstore(_TARGET_SINGLETON_SLOT, value)
         }
     }
 }
