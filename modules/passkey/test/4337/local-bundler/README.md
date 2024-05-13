@@ -5,5 +5,5 @@ ERC-4337 imposes additional restrictions on account creation and signature valid
 ## Usage
 
 ```sh
-npm run test:4337
+pnpm run test:4337
 ```

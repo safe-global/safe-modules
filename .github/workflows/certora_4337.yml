@@ -23,12 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
       - name: Install python
         uses: actions/setup-python@v4
         with: { python-version: 3.11 }
 
       - name: Install certora cli
-        run: pip install -Iv certora-cli==6.1.3
+        run: pip install -Iv certora-cli==7.3.0
 
       - name: Install solc
         run: |
@@ -37,7 +42,7 @@ jobs:
           sudo mv solc-static-linux /usr/local/bin/solc8.23
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install
 
       - name: Verify rule ${{ matrix.rule }}
         working-directory: ./modules/4337

@@ -3,7 +3,7 @@
 ## Safe Deployment with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:account
+pnpm run alchemy:account
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:account
 > tsx ./alchemy/alchemy.ts account
@@ -45,7 +45,7 @@ Gas Used (Transaction): 417074
 ## Safe Deployment + Native Transfer with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:native-transfer
+pnpm run alchemy:native-transfer
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:native-transfer
 > tsx ./alchemy/alchemy.ts native-transfer
@@ -87,7 +87,7 @@ Gas Used (Transaction): 424505
 ## Native Transfer with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:native-transfer
+pnpm run alchemy:native-transfer
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:native-transfer
 > tsx ./alchemy/alchemy.ts native-transfer
@@ -129,7 +129,7 @@ Gas Used (Transaction): 107057
 ## Safe Deployment + ERC20 Transaction with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:erc20
+pnpm run alchemy:erc20
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc20
 > tsx ./alchemy/alchemy.ts erc20
@@ -177,7 +177,7 @@ Gas Used (Transaction): 427599
 ## ERC20 Transaction with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:erc20
+pnpm run alchemy:erc20
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc20
 > tsx ./alchemy/alchemy.ts erc20
@@ -225,7 +225,7 @@ Gas Used (Transaction): 110174
 ## Safe Deployment + ERC721 Transaction with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:erc721
+pnpm run alchemy:erc721
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc721
 > tsx ./alchemy/alchemy.ts erc721
@@ -267,7 +267,7 @@ Gas Used (Transaction): 456870
 ## ERC721 Transaction with Alchemy Paymaster (Own Sponsorship)
 
 ```
-npm run alchemy:erc721
+pnpm run alchemy:erc721
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc721
 > tsx ./alchemy/alchemy.ts erc721
@@ -309,7 +309,7 @@ Gas Used (Transaction): 139420
 ## Safe Deployment with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:account:paymaster
+pnpm run alchemy:account:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:account:paymaster
 > tsx ./alchemy/alchemy.ts account paymaster=true
@@ -345,7 +345,7 @@ Gas Used (Transaction): 411372
 ## Safe Deployment + Native Transfer with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:native-transfer:paymaster
+pnpm run alchemy:native-transfer:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:native-transfer:paymaster
 > tsx ./alchemy/alchemy.ts native-transfer paymaster=true
@@ -381,7 +381,7 @@ Gas Used (Transaction): 418779
 ## Native Transfer with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:native-transfer:paymaster
+pnpm run alchemy:native-transfer:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:native-transfer:paymaster
 > tsx ./alchemy/alchemy.ts native-transfer paymaster=true
@@ -417,7 +417,7 @@ Gas Used (Transaction): 130202
 ## Safe Deployment + ERC20 Transaction with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:erc20:paymaster
+pnpm run alchemy:erc20:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc20:paymaster
 > tsx ./alchemy/alchemy.ts erc20 paymaster=true
@@ -459,7 +459,7 @@ Gas Used (Transaction): 421926
 ## ERC20 Transaction with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:erc20:paymaster
+pnpm run alchemy:erc20:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc20:paymaster
 > tsx ./alchemy/alchemy.ts erc20 paymaster=true
@@ -501,7 +501,7 @@ Gas Used (Transaction): 133394
 ## Safe Deployment + ERC721 Transaction with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:erc721:paymaster
+pnpm run alchemy:erc721:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc721:paymaster
 > tsx ./alchemy/alchemy.ts erc721 paymaster=true
@@ -537,7 +537,7 @@ Gas Used (Transaction): 451200
 ## ERC721 Transaction with Alchemy Paymaster (Gas Policy)
 
 ```
-npm run alchemy:erc721:paymaster
+pnpm run alchemy:erc721:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 alchemy:erc721:paymaster
 > tsx ./alchemy/alchemy.ts erc721 paymaster=true

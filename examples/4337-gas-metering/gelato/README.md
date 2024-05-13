@@ -3,7 +3,7 @@
 ## Safe Deployment with Gelato
 
 ```
-npm run gelato:account:1balance
+pnpm run gelato:account:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:account:1balance
 > tsx ./gelato/gelato.ts account
@@ -35,7 +35,7 @@ Gas Used: 302679
 ## Safe Deployment + Native Transfer with Gelato
 
 ```
-npm run gelato:native-transfer:1balance
+pnpm run gelato:native-transfer:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:native-transfer:1balance
 > tsx ./gelato/gelato.ts native-transfer
@@ -71,7 +71,7 @@ Gas Used: 313228
 ## Native Transfer with Gelato
 
 ```
-npm run gelato:native-transfer:1balance
+pnpm run gelato:native-transfer:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:native-transfer:1balance
 > tsx ./gelato/gelato.ts native-transfer
@@ -115,7 +115,7 @@ Gas Used: 83930
 ## Safe Deployment + ERC20 Transaction with Gelato
 
 ```
-npm run gelato:erc20:1balance
+pnpm run gelato:erc20:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:erc20:1balance
 > tsx ./gelato/gelato.ts erc20
@@ -153,7 +153,7 @@ Gas Used: 315961
 ## ERC20 Transaction with Gelato
 
 ```
-npm run gelato:erc20:1balance
+pnpm run gelato:erc20:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:erc20:1balance
 > tsx ./gelato/gelato.ts erc20
@@ -199,7 +199,7 @@ Gas Used: 86852
 ## Safe Deployment + ERC721 Transaction with Gelato
 
 ```
-npm run gelato:erc721:1balance
+pnpm run gelato:erc721:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:erc721:1balance
 > tsx ./gelato/gelato.ts erc721
@@ -231,7 +231,7 @@ Gas Used: 345284
 ## ERC721 Transaction with Gelato
 
 ```
-npm run gelato:erc721:1balance
+pnpm run gelato:erc721:1balance
 
 > @safe-global/4337-gas-metering@1.0.0 gelato:erc721:1balance
 > tsx ./gelato/gelato.ts erc721

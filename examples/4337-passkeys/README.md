@@ -14,7 +14,7 @@ cd safe-modules
 ### Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Fill in the environment variables
@@ -33,7 +33,7 @@ Helpful links:
 ### Run the app in development mode
 
 ```bash
-npm run dev -w examples/4337-passkeys
+pnpm run -F {examples/4337-passkeys} dev
 ```
 
 ## Config adjustments
