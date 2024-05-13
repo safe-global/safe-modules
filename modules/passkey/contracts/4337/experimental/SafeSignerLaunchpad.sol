@@ -6,9 +6,9 @@ import {PackedUserOperation} from "@account-abstraction/contracts/interfaces/Pac
 import {_packValidationData} from "@account-abstraction/contracts/core/Helpers.sol";
 import {SafeStorage} from "@safe-global/safe-contracts/contracts/libraries/SafeStorage.sol";
 
-import {ISafeSignerFactory, P256} from "../interfaces/ISafeSignerFactory.sol";
-import {ISafe} from "../interfaces/ISafe.sol";
-import {ERC1271} from "../libraries/ERC1271.sol";
+import {ISafeSignerFactory, P256} from "../../interfaces/ISafeSignerFactory.sol";
+import {ISafe} from "../../interfaces/ISafe.sol";
+import {ERC1271} from "../../libraries/ERC1271.sol";
 
 /**
  * @title Safe Launchpad for Custom ECDSA Signing Schemes.

@@ -2,8 +2,8 @@ import { setBalance } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 
-import { SafeSignerLaunchpad, PackedUserOperationStruct } from '../../typechain-types/contracts/4337/SafeSignerLaunchpad'
-import * as ERC1271 from '../utils/erc1271'
+import { SafeSignerLaunchpad, PackedUserOperationStruct } from '../../../typechain-types/contracts/4337/experimental/SafeSignerLaunchpad'
+import * as ERC1271 from '../../utils/erc1271'
 
 describe('SafeSignerLaunchpad', () => {
   const setupTests = deployments.createFixture(async () => {

@@ -2,7 +2,12 @@
 
 This package contains a passkey signature verifier, that can be used as an owner for a Safe, compatible with versions 1.3.0+.
 
-## Contracts overview
+Passkey support with the Safe is provided by implementing [`SignatureValidator`s](./contracts/base/SignatureValidator.sol) that can verify WebAuthn signatures on-chain, the underlying standard used by passkeys, and be used as owners for Safe accounts. At a high level, this works by:
+
+1. Deploying a signer instance using the [SafeWebAuthnSignerFactory](./contracts/SafeWebAuthnSignerFactory.sol), this will create a contract instance at a deterministic address using `CREATE2` based the parameters of the WebAuthn credential: the public key coordinates and which `ecverify` implementations to use.
+2. Set the deployed signer as an owner for a Safe.
+
+## Contracts Overview
 
 Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification for WebAuthn credentials using the secp256r1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib) and [daimo-eth](https://github.com/daimo-eth/p256-verifier).
 
@@ -39,71 +44,18 @@ bytes memory signature = abi.encode(authenticatorData, clientDataFields, r, s);
 
 ### [P256](./contracts/libraries/P256.sol)
 
-`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint176`. The first address (2 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile is not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime.
+`P256` is a library for P256 signature verification with contracts that follows the EIP-7212 EC verify precompile interface. This library defines a custom type `Verifiers`, which encodes two addresses into a single `uint176`. The first address (2 bytes) is a precompile address dedicated to verification, and the second (20 bytes) is a fallback address. This setup allows the library to support networks where the precompile is not yet available, seamlessly transitioning to the precompile when it becomes active, while relying on a fallback contract address in the meantime. Note that only 2 bytes are needed to represent the precompile address, as the reserved range for precompile contracts is between address 0x0000 and 0xffff which fits into 2 bytes.
 
-## Setup and Execution flow
+The `verifiers` value can be computed with the following code:
 
-```mermaid
-sequenceDiagram
-actor U as User
-participant CS as CredentialStore
-actor B as Bundler
-participant EP as EntryPoint
-participant SPF as SafeProxyFactory
-participant SWASPF as SafeWebAuthnSignerFactory
-participant SP as SafeProxy
-participant SSL as SafeSignerLaunchpad
-participant S as Singleton
-participant M as Module
-participant SWASS as SafeWebAuthnSignerSingleton
-participant WAV as WebAuthn library
-participant PV as P256Verifier
-actor T as Target
+```solidity
+uint16 precompile = ...;
+address fallbackVerifier = ...;
 
-U->>+CS: Create Credential (User calls `create(...)`)
-CS->>U: Decode public key from the return value
-U->>+SWASPF: Get signer address (signer might not be deployed yet)
-SWASPF->>U: Signer address
-U->>+B: Submit UserOp payload that deploys SafeProxy address with SafeSignerLaunchpad as singleton in initCode and corresponding call data that calls `initializeThenUserOp(...)` ands sets implementation to Safe Singleton
-
-B->>+EP: Submit User Operations
-EP->>+SP: Validate UserOp
-SP-->>SSL: Load SignerLaunchpad logic
-SSL-->>SWASPF: Forward validation
-SWASPF-->>SWASS: call isValidSignature(bytes32,bytes) with x,y values and verifier address added to the call data
-SWASS-->>WAV: call verifyWebAuthnSignatureAllowMalleability
-WAV->>+PV: Verify signature
-PV->>WAV: Signature verification result
-WAV->>SWASS: Signature verification result
-SWASS->>SWASPF: Signature verification result
-SWASPF-->>SSL: Return magic value
-    opt Pay required fee
-        SP->>EP: Perform fee payment
-    end
-SP-->>-EP: Validation response
-
-EP->>+SP: Execute User Operation with call to `initializeThenUserOp(...)`
-SP-->>SSL: Load SignerLaunchpad logic
-SP->>+SWASPF: Create Signer
-SWASPF-->>SP: Return owner address
-SP->>SP: Setup Safe
-SP-->>SP: delegatecall with calldata received in `initializeThenUserOp(...)`
-SP-->>S: Load Safe logic
-SP->>+M: Forward execution
-M->>SP: Execute From Module
-SP-->>S: Load Safe logic
-SP->>+T: Perform transaction
-    opt Bubble up return data
-        T-->>-SP: Call Return Data
-        SP-->>M: Call Return Data
-        M-->>-SP: Call return data
-        SP-->>-EP: Call return data
-    end
+P256.Verifiers = P256.Verifiers.wrap(
+    (uint176(precompile) << 160) + uint176(uint160(fallbackVerifier))
+);
 ```
-
-ERC-4337 outlines specific storage access rules for the validation phase, which limits the deployment of SafeProxy for use with the passkey flow. To navigate this restriction, in the `initCode` of UserOp, a `SafeProxy` is deployed with `SafeSignerLaunchpad` as a singleton. The `SafeSignerLaunchpad` is used to validate the signature of the UserOp. The `SafeSignerLaunchpad` forwards the signature validation to the `SafeWebAuthnSignerSingleton`, which in turn forwards the signature validation to the `WebAuthn` library. `WebAuthn` forwards the call to `P256Verifier`. The `P256Verifier` is used to validate the signature. In the validation, phase the launchpad stores the Safe's setup hash (owners, threshold, modules, etc) which is then verified during the execution phase.
-
-During the execution phase, the implementation of the `SafeProxy` is set to the Safe Singleton along with the owner as signer contract deployed by SafeSignerLaunchpad.
 
 ## Usage
 
