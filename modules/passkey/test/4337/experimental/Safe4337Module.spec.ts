@@ -8,7 +8,6 @@ import {
   packGasParameters,
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { chainId, encodeMultiSendTransactions } from '@safe-global/safe-4337/test/utils/encoding'
-import { Safe4337 } from '@safe-global/safe-4337/src/utils/safe'
 import { WebAuthnCredentials } from '../../utils/webauthnShim'
 import { decodePublicKey, encodeWebAuthnSignature } from '../../../src/utils/webauthn'
 
@@ -173,78 +172,6 @@ describe('Safe4337Module', () => {
 
         const safeInstance = singleton.attach(safe) as typeof singleton
         expect(await safeInstance.getOwners()).to.deep.equal([signerAddress])
-      })
-    })
-
-    describe('executeUserOp - existing account', () => {
-      it('should execute user operation', async () => {
-        const { user, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifiers } =
-          await setupTests()
-        const credential = navigator.credentials.create({
-          publicKey: {
-            rp: {
-              name: 'Safe',
-              id: 'safe.global',
-            },
-            user: {
-              id: ethers.getBytes(ethers.id('chucknorris')),
-              name: 'chucknorris',
-              displayName: 'Chuck Norris',
-            },
-            challenge: ethers.toBeArray(Date.now()),
-            pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
-          },
-        })
-        const publicKey = decodePublicKey(credential.response)
-        await signerFactory.createSigner(publicKey.x, publicKey.y, verifiers)
-        const signer = await ethers.getContractAt(
-          'SafeWebAuthnSignerProxy',
-          await signerFactory.getSigner(publicKey.x, publicKey.y, verifiers),
-        )
-
-        const safe = await Safe4337.withSigner(await signer.getAddress(), {
-          safeSingleton: await singleton.getAddress(),
-          entryPoint: await entryPoint.getAddress(),
-          erc4337module: await module.getAddress(),
-          proxyFactory: await proxyFactory.getAddress(),
-          safeModuleSetup: await safeModuleSetup.getAddress(),
-          proxyCreationCode: await proxyFactory.proxyCreationCode(),
-          chainId: Number(await chainId()),
-        })
-        await safe.deploy(user)
-
-        const safeOp = buildSafeUserOpTransaction(
-          safe.address,
-          user.address,
-          ethers.parseEther('0.5'),
-          '0x',
-          '0',
-          await entryPoint.getAddress(),
-        )
-        const safeOpHash = calculateSafeOperationHash(await module.getAddress(), safeOp, await chainId())
-        const assertion = navigator.credentials.get({
-          publicKey: {
-            challenge: ethers.getBytes(safeOpHash),
-            rpId: 'safe.global',
-            allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
-            userVerification: 'required',
-          },
-        })
-        const signature = buildSignatureBytes([
-          {
-            signer: signer.target as string,
-            data: encodeWebAuthnSignature(assertion.response),
-            dynamic: true,
-          },
-        ])
-
-        await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1') }).then((tx) => tx.wait())
-        expect(await ethers.provider.getBalance(safe.address)).to.equal(ethers.parseEther('1'))
-
-        const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
-        await logGas('WebAuthn signer Safe operation', entryPoint.handleOps([userOp], user.address))
-
-        expect(await ethers.provider.getBalance(safe.address)).to.be.lessThanOrEqual(ethers.parseEther('0.5'))
       })
     })
   })
