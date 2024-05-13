@@ -57,7 +57,7 @@
     "dotenv": "^16.4.5",
     "hardhat": "^2.22.3",
     "hardhat-deploy": "^0.12.4",
-    "solhint": "^4.5.4"
+    "solhint": "^5.0.1"
   },
   "overrides": {
     "@safe-global/safe-contracts": {
