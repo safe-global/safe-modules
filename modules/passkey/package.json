@@ -23,7 +23,6 @@
   "files": [
     "contracts",
     "dist",
-    "src",
     "build"
   ],
   "scripts": {
@@ -50,7 +49,7 @@
     "@noble/curves": "^1.4.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/mock-contract": "^4.1.0",
-    "@safe-global/safe-4337": "^0.3.0",
+    "@safe-global/safe-4337": "workspace:^0.3.0",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@simplewebauthn/server": "^10.0.0",
     "dotenv": "^16.4.5",

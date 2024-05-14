@@ -9,8 +9,6 @@
   "files": [
     "contracts",
     "dist",
-    "src",
-    "test",
     "build"
   ],
   "scripts": {
