@@ -11,13 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
-          cache: npm
-          cache-dependency-path: package-lock.json
+          cache: pnpm
       - run: |
-          npm ci
+          pnpm install
           npm run lint -w examples/4337-passkeys
           npm run build -w examples/4337-passkeys
         env:

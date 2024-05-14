@@ -91,8 +91,8 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@safe-global/safe-passkey':
-        specifier: 0.2.0-alpha.1
-        version: 0.2.0-alpha.1(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+        specifier: workspace:0.2.0-alpha.2
+        version: link:../../modules/passkey
       '@web3modal/ethers':
         specifier: ^4.1.11
         version: 4.1.11(@types/react@18.3.2)(bufferutil@4.0.8)(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
