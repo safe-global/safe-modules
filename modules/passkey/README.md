@@ -69,7 +69,7 @@ npm install
 
 ```bash
 npm test
-npm run test:4337
+pnpm run test:4337
 ```
 
 ### Deployments
@@ -86,13 +86,13 @@ Preparation:
 - Set `ETHERSCAN_API_KEY` in `.env`
 
 ```bash
-npm run deploy-all <network>
+pnpm run deploy-all <network>
 ```
 
 This will perform the following steps
 
 ```bash
-npm run build
+pnpm run build
 npx hardhat --network <network> deploy
 npx hardhat --network <network> etherscan-verify
 npx hardhat --network <network> local-verify
@@ -129,7 +129,7 @@ npx hardhat --network <network> etherscan-verify
 ### Run benchmark tests
 
 ```bash
-npm run bench
+pnpm run bench
 ```
 
 ## Security and Liability

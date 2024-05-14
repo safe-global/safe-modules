@@ -6,7 +6,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
-    "4337-local-bundler-test": "dist/bin/test.js"
+    "4337-local-bundler-test": "dist/src/bin/test.js"
   },
   "scripts": {
     "build": "rimraf dist && tsc && chmod +x dist/src/bin/*.js",
@@ -17,7 +17,7 @@
     "@safe-global/safe-contracts" : "^1.4.1-build.0",
     "@account-abstraction/contracts": "^0.7.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@safe-global/safe-4337-provider": "^0.0.0",
+    "@safe-global/safe-4337-provider": "workspace:^0.0.0",
     "hardhat": "^2.22.3",
     "hardhat-deploy": "^0.12.4",
     "ethers": "^6.12.1",

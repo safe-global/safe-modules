@@ -28,7 +28,7 @@
   ],
   "scripts": {
     "bench": "hardhat test --grep @bench",
-    "build": "npm run build:sol && npm run build:ts",
+    "build": "pnpm run build:sol && pnpm run build:ts",
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
     "coverage": "hardhat coverage",
@@ -37,24 +37,24 @@
     "deploy": "hardhat deploy --network",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
-    "lint": "npm run lint:sol && npm run lint:ts",
+    "lint": "pnpm run lint:sol && pnpm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint .",
     "test": "hardhat test",
     "test:4337": "4337-local-bundler-test",
     "test:4337:upstream": "USE_UPSTREAM_BUNDLER=1 4337-local-bundler-test",
-    "test:all": "npm run test && npm run test:4337",
-    "prepare": "npm run build -w ../4337 && npm run build"
+    "test:all": "pnpm run test && pnpm run test:4337",
+    "prepare": "pnpm run build"
   },
   "devDependencies": {
-    "@account-abstraction/contracts": "^0.7.0",
     "@noble/curves": "^1.4.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "^0.3.0",
-    "@safe-global/safe-4337-local-bundler": "^0.0.0",
+    "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@simplewebauthn/server": "^10.0.0",
     "dotenv": "^16.4.5",
+    "ethers": "^6.12.1",
     "hardhat": "^2.22.3",
     "hardhat-deploy": "^0.12.4",
     "solhint": "^5.0.1"
@@ -65,6 +65,8 @@
     }
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "@account-abstraction/contracts": "^0.7.0",
     "@safe-global/safe-contracts": "^1.4.1-build.0",
     "cbor": "^9.0.2"
   }

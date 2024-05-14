@@ -33,7 +33,7 @@ Helpful links:
 ### Run the app in development mode
 
 ```bash
-npm run dev -w examples/4337-passkeys-singleton-signer
+pnpm run dev -w examples/4337-passkeys-singleton-signer
 ```
 
 ## Config adjustments

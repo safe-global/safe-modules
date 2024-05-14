@@ -152,13 +152,13 @@ End-to-end tests with the reference bundler implementation are also provided. Th
 Note: Geth is used as the RPC because the reference bundler implementation relies on Geth-specific tracing APIs.
 
 ```bash
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ### Run Hardhat Integration and End-to-end Tests:
 
 ```bash
-npm run test:all
+pnpm run test:all
 ```
 
 ### Deployments
@@ -179,13 +179,13 @@ Preparation:
 - Set `INFURA_KEY` in `.env`
 
 ```bash
-npm run deploy-all <network>
+pnpm run deploy-all <network>
 ```
 
 This will perform the following steps
 
 ```bash
-npm run build
+pnpm run build
 npx hardhat --network <network> deploy
 npx hardhat --network <network> etherscan-verify
 npx hardhat --network <network> local-verify
