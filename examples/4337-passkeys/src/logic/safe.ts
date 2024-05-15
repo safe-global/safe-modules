@@ -1,5 +1,5 @@
 import { ethers } from 'ethers'
-import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
+import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
 import { abi as SafeWebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSignerFactory.sol/SafeWebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
