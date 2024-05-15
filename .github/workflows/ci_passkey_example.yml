@@ -21,8 +21,8 @@ jobs:
           cache: pnpm
       - run: |
           pnpm install
-          npm run lint -w examples/4337-passkeys
-          npm run build -w examples/4337-passkeys
+          pnpm run -F "{examples/4337-passkeys}" lint
+          pnpm run -F "{examples/4337-passkeys}" build
         env:
           VITE_WC_CLOUD_PROJECT_ID: ${{ secrets.VITE_WC_CLOUD_PROJECT_ID }}
           VITE_WC_4337_BUNDLER_URL: ${{ secrets.VITE_WC_4337_BUNDLER_URL }}

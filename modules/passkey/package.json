@@ -60,11 +60,6 @@
     "hardhat-deploy": "^0.12.4",
     "solhint": "^5.0.1"
   },
-  "overrides": {
-    "@safe-global/safe-contracts": {
-      "ethers": "^6.11.1"
-    }
-  },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
     "@account-abstraction/contracts": "^0.7.0",

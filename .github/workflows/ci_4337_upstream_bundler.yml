@@ -27,5 +27,4 @@ jobs:
           cache: pnpm
       - run: |
           pnpm install
-          pnpm run --filter "@safe-global/safe-4337" test:4337:upstream  
-          pnpm run --filter "@safe-global/safe-passkey" test:4337:upstream
+          pnpm run --filter "{modules/4337}" --filter "{modules/passkey}" test:4337:upstream

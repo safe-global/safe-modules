@@ -33,7 +33,7 @@ Helpful links:
 ### Run the app in development mode
 
 ```bash
-pnpm run dev -w examples/4337-passkeys
+pnpm run -F {examples/4337-passkeys} dev
 ```
 
 ## Config adjustments
