@@ -19,3 +19,4 @@
 18. WebAuthn - encodeClientDataJson Integrity
 19. WebAuthn - encodeSigningMessage Integrity
 20. WebAuthn - verifySignature Integrity
+21. DDOS on verifySignature
