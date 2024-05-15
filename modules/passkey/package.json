@@ -48,6 +48,8 @@
   "devDependencies": {
     "@noble/curves": "^1.4.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "workspace:^0.3.0",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
