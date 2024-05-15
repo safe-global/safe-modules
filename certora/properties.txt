@@ -9,3 +9,13 @@
 8.  Factory - Correctness of Signer Creation. (Cant called twice, override)
 9.  Factory - Signature Validation (isValidSignatureForSigner Integrity)
 10. Factory - Code Presence Check (_hasNoCode Integrity)
+11. Proxy   - Immutability of Configuration Parameters (x, y, Singleton, verifier)
+12. Proxy   - Delegate Call Integrity (calls the _verifySignature implementation in the Singleton)
+13. Proxy   - Fallback data corruption (uses data appending that needed to be verified)
+14. Proxy   - verify return data from Delegatecall.
+15. Singleton - Implementation of _verifySignature Function (Integrity)
+16. Singleton - getConfiguration Function (Integrity)
+17. WebAuthn - castSignature Integrity
+18. WebAuthn - encodeClientDataJson Integrity
+19. WebAuthn - encodeSigningMessage Integrity
+20. WebAuthn - verifySignature Integrity
