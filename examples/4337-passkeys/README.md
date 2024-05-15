@@ -14,7 +14,7 @@ cd safe-modules
 ### Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Fill in the environment variables

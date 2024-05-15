@@ -133,16 +133,16 @@ where `validUntil` and `validAfter` are two 48 bit timestamps for signature vali
 
 ## Usage
 
-### Install Requirements With NPM:
+### Install Requirements With PNPM:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Run Hardhat Integration Tests:
 
 ```bash
-npm test
+pnpm test
 ```
 
 ### Run End-to-end Tests:

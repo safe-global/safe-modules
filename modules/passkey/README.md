@@ -62,13 +62,13 @@ P256.Verifiers = P256.Verifiers.wrap(
 ### Install Requirements With NPM:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Run Hardhat Tests:
 
 ```bash
-npm test
+pnpm test
 pnpm run test:4337
 ```
 
