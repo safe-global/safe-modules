@@ -1,0 +1,11 @@
+1.  Factory - isValidSignaure will return the same as create signer
+2.	Integrity for Proxy <- this is not a standard implementation
+3.	WebAuthn - encodeSigningMessage compute presage which needs to get hashed
+		Given data should be able to to produce only 1 valid message.
+4.  Factory - Immutability of Singleton Contract.
+5.  Factory - getSigner is unique for every x,y and verifier combination (need to make sure it is required)
+6.  Factory - createSigner and getSigner always returns the same address.
+7.  Factory - Deterministic Address Calculation for Signers.
+8.  Factory - Correctness of Signer Creation. (Cant called twice, override)
+9.  Factory - Signature Validation (isValidSignatureForSigner Integrity)
+10. Factory - Code Presence Check (_hasNoCode Integrity)
