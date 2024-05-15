@@ -5,11 +5,11 @@ import "ERC1967/erc1967.spec";
 import "PriceAggregators/chainlink.spec";
 import "PriceAggregators/tellor.spec";
 
-import "problems.spec";
-import "unresolved.spec";
-import "optimizations.spec";
+import "spec_utils/problems.spec";
+import "spec_utils/unresolved.spec";
+import "spec_utils/optimizations.spec";
 
-import "generic.spec"; // pick additional rules from here
+import "spec_utils/generic.spec"; // pick additional rules from here
 
 use builtin rule sanity filtered { f -> f.contract == currentContract }
 
