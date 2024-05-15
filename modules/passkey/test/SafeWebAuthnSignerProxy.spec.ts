@@ -6,7 +6,7 @@ import * as ERC1271 from './utils/erc1271'
 import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, getSignatureBytes } from '../src/utils/webauthn'
 import { encodeWebAuthnSigningMessage } from './utils/webauthnShim'
 
-describe('SafeWebAuthnSigner', () => {
+describe('SafeWebAuthnSignerProxy', () => {
   const setupTests = deployments.createFixture(async () => {
     const x = ethers.id('publicKey.x')
     const y = ethers.id('publicKey.y')
@@ -15,20 +15,47 @@ describe('SafeWebAuthnSigner', () => {
     const precompileAddress = `0x${'00'.repeat(18)}0100`
     const mockPrecompile = await ethers.getContractAt('MockContract', precompileAddress)
     await setCode(precompileAddress, await ethers.provider.getCode(mockVerifier))
-    const SafeWebAuthnSigner = await ethers.getContractFactory('SafeWebAuthnSigner')
-    const verifiers = BigInt(ethers.solidityPacked(['uint32', 'address'], [Number(precompileAddress), mockVerifier.target]))
-    const signer = await SafeWebAuthnSigner.deploy(x, y, verifiers)
+    const verifiers = BigInt(ethers.solidityPacked(['uint16', 'address'], [Number(precompileAddress), mockVerifier.target]))
+    const singleton = await (await ethers.getContractFactory('SafeWebAuthnSignerSingleton')).deploy()
+    const SafeWebAuthnSignerProxy = await ethers.getContractFactory('SafeWebAuthnSignerProxy')
+    const signer = await ethers.getContractAt(
+      'SafeWebAuthnSignerSingleton',
+      (await SafeWebAuthnSignerProxy.deploy(singleton, x, y, verifiers)).target,
+    )
 
     return { x, y, mockPrecompile, mockVerifier, verifiers, signer }
+  })
+
+  describe('fallback', function () {
+    it('Should forward call to singleton with additional information', async () => {
+      const { x, y, mockVerifier } = await setupTests()
+      const [sender] = await ethers.getSigners()
+      const mockSingleton = await ethers.getContractAt('MockContract', await (await ethers.getContractFactory('MockContract')).deploy())
+
+      const verifiers = ethers.solidityPacked(['uint16', 'address'], [0x0100, mockVerifier.target])
+
+      const signerProxy = await ethers.getContractAt(
+        'MockContract',
+        await (await ethers.getContractFactory('SafeWebAuthnSignerProxy')).deploy(mockSingleton, x, y, verifiers),
+      )
+
+      const callData = ethers.hexlify(ethers.randomBytes(36))
+      await signerProxy.givenAnyReturnBool(true)
+      await sender.sendTransaction({ to: signerProxy.target, value: 0, data: callData })
+
+      expect(await signerProxy.invocationCount()).to.equal(1)
+      const data = ethers.solidityPacked(['bytes', 'uint256', 'uint256', 'uint176'], [callData, x, y, verifiers])
+      expect(await signerProxy.invocationCountForCalldata(data)).to.equal(1)
+    })
   })
 
   describe('constructor', function () {
     it('Should set immutables', async () => {
       const { x, y, verifiers, signer } = await setupTests()
-
-      expect(await signer.X()).to.equal(x)
-      expect(await signer.Y()).to.equal(y)
-      expect(await signer.VERIFIERS()).to.equal(verifiers)
+      const [X, Y, VERIFIERS] = await signer.getConfiguration()
+      expect(X).to.equal(x)
+      expect(Y).to.equal(y)
+      expect(VERIFIERS).to.equal(verifiers)
     })
   })
 
@@ -102,7 +129,7 @@ describe('SafeWebAuthnSigner', () => {
     })
 
     it('Should return false when the verifier does not return true', async () => {
-      const { x, y, mockVerifier, signer } = await setupTests()
+      const { x, y, mockPrecompile, mockVerifier, signer } = await setupTests()
 
       const data = ethers.toUtf8Bytes('some data to sign')
       const dataHash = ethers.keccak256(data)
@@ -123,6 +150,7 @@ describe('SafeWebAuthnSigner', () => {
         s,
       })
 
+      await mockPrecompile.givenAnyReturnBool(false)
       await mockVerifier.givenAnyReturnBool(true)
       await mockVerifier.givenCalldataReturn(
         ethers.solidityPacked(

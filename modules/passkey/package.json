@@ -53,11 +53,11 @@
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "^0.3.0",
     "@safe-global/safe-4337-local-bundler": "^0.0.0",
-    "@simplewebauthn/server": "^9.0.3",
+    "@simplewebauthn/server": "^10.0.0",
     "dotenv": "^16.4.5",
-    "hardhat": "^2.22.2",
-    "hardhat-deploy": "^0.12.2",
-    "solhint": "^4.5.2"
+    "hardhat": "^2.22.3",
+    "hardhat-deploy": "^0.12.4",
+    "solhint": "^4.5.4"
   },
   "overrides": {
     "@safe-global/safe-contracts": {

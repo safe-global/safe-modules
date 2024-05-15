@@ -1,0 +1,31 @@
+{
+  "name": "@safe-global/safe-modules-example-4337-passkeys-singleton-signer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "npm run lint -- --fix",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@account-abstraction/contracts": "0.7.0",
+    "@safe-global/safe-4337": "0.3.0",
+    "@safe-global/safe-passkey": "0.2.0-alpha.1",
+    "@web3modal/ethers": "^4.1.11",
+    "ethers": "^6.12.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react-swc": "^3.6.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.10",
+    "vite-plugin-commonjs": "^0.10.1"
+  }
+}

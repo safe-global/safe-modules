@@ -11,6 +11,15 @@ import {P256} from "../libraries/P256.sol";
  */
 interface ISafeSignerFactory {
     /**
+     * @notice Emitted when a new signer is created.
+     * @param signer The signer address.
+     * @param x The x-coordinate of the public key.
+     * @param y The y-coordinate of the public key.
+     * @param verifiers The P-256 verifiers to use.
+     */
+    event Created(address signer, uint256 x, uint256 y, P256.Verifiers verifiers);
+
+    /**
      * @notice Gets the unique signer address for the specified data.
      * @dev The unique signer address must be unique for some given data. The signer is not
      * guaranteed to be created yet.
