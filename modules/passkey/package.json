@@ -47,9 +47,9 @@
   },
   "devDependencies": {
     "@noble/curves": "^1.4.0",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "workspace:^0.3.0",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
@@ -58,11 +58,12 @@
     "ethers": "^6.12.1",
     "hardhat": "^2.22.3",
     "hardhat-deploy": "^0.12.4",
-    "solhint": "^5.0.1"
+    "solhint": "^5.0.1",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.0",
     "@account-abstraction/contracts": "^0.7.0",
+    "@openzeppelin/contracts": "^5.0.0",
     "@safe-global/safe-contracts": "^1.4.1-build.0",
     "cbor": "^9.0.2"
   }

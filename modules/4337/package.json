@@ -48,9 +48,9 @@
   "devDependencies": {
     "@account-abstraction/contracts": "^0.7.0",
     "@noble/curves": "^1.4.0",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.0.2",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@safe-global/safe-4337-provider": "workspace:^0.0.0",
