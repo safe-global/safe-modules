@@ -24,3 +24,7 @@
 23. WebAuthn - verifySignature Integrity
 24. WebAuthn - Both verifySignature behave the same way.
 25. DDOS on verifySignature.
+
+// Optional
+Checks for Revert condition on critical Functions (isValidSignaure,
+ verifySignature, Proxy Fallback, createSigner, getSigner)
