@@ -13,6 +13,7 @@
 12. Proxy   - Delegate Call Integrity (calls the _verifySignature implementation in the Singleton)
 13. Proxy   - Fallback data corruption (uses data appending that needed to be verified)
 14. Proxy   - verify return data from Delegatecall.
+15. Proxy - No buffer overflow when appending Parameters.
 15. Singleton - Implementation of _verifySignature Function (Integrity)
 16. Singleton - getConfiguration Function (Integrity)
 17. WebAuthn - castSignature Integrity
