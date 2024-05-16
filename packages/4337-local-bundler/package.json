@@ -3,21 +3,26 @@
   "version": "0.0.0",
   "private": true,
   "license": "LGPL-3.0-only",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
-    "4337-local-bundler-test": "dist/bin/test.js"
+    "4337-local-bundler-test": "dist/src/bin/test.js"
   },
   "scripts": {
-    "build": "rimraf dist && tsc && chmod +x dist/bin/*.js",
+    "build": "rimraf dist && tsc && chmod +x dist/src/bin/*.js",
     "lint": "eslint .",
-    "prepare": "npm run build -w ../4337-provider && npm run build"
+    "lint:fix": "eslint . --fix",
+    "prepare": "pnpm run build"
   },
   "dependencies": {
+    "@account-abstraction/contracts": "^0.7.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@safe-global/safe-4337-provider": "^0.0.0",
+    "@safe-global/safe-4337-provider": "workspace:^0.0.0",
+    "@safe-global/safe-contracts" : "^1.4.1-build.0",
+    "ethers": "^6.12.1",
+    "hardhat": "^2.22.3",
     "hardhat-deploy": "^0.12.4",
-    "ethers": "^6.12.0",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.4.5"
   }
 }

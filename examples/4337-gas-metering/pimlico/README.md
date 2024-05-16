@@ -3,7 +3,7 @@
 ## Safe Deployment with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:account
+pnpm run pimlico:account
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:account
 > tsx ./pimlico/pimlico.ts account
@@ -41,7 +41,7 @@ Gas Used (Transaction): 506573
 ## Safe Deployment + Native Transfer with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:native-transfer
+pnpm run pimlico:native-transfer
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer
 > tsx ./pimlico/pimlico.ts native-transfer
@@ -79,7 +79,7 @@ Gas Used (Transaction): 511055
 ## Native Transfer with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:native-transfer
+pnpm run pimlico:native-transfer
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer
 > tsx ./pimlico/pimlico.ts native-transfer
@@ -117,7 +117,7 @@ Gas Used (Transaction): 199262
 ## Safe Deployment + ERC20 Transaction with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:erc20
+pnpm run pimlico:erc20
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc20
 > tsx ./pimlico/pimlico.ts erc20
@@ -161,7 +161,7 @@ Gas Used (Transaction): 514156
 ## ERC20 Transaction with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:erc20
+pnpm run pimlico:erc20
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc20
 > tsx ./pimlico/pimlico.ts erc20
@@ -205,7 +205,7 @@ Gas Used (Transaction): 202387
 ## Safe Deployment + ERC721 Transaction with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:erc721
+pnpm run pimlico:erc721
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc721
 > tsx ./pimlico/pimlico.ts erc721
@@ -243,7 +243,7 @@ Gas Used (Transaction): 543411
 ## ERC721 Transaction with Pimlico Paymaster (Own Sponsorship)
 
 ```
-npm run pimlico:erc721
+pnpm run pimlico:erc721
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc721
 > tsx ./pimlico/pimlico.ts erc721
@@ -281,7 +281,7 @@ Gas Used (Transaction): 231619
 ## Safe Deployment with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:account:paymaster
+pnpm run pimlico:account:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:account:paymaster
 > tsx ./pimlico/pimlico.ts account paymaster=true
@@ -313,7 +313,7 @@ Gas Used (Transaction): 448172
 ## Safe Deployment + Native Transfer with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:native-transfer:paymaster
+pnpm run pimlico:native-transfer:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer:paymaster
 > tsx ./pimlico/pimlico.ts native-transfer paymaster=true
@@ -345,7 +345,7 @@ Gas Used (Transaction): 455615
 ## Native Transfer with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:native-transfer:paymaster
+pnpm run pimlico:native-transfer:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer:paymaster
 > tsx ./pimlico/pimlico.ts native-transfer paymaster=true
@@ -377,7 +377,7 @@ Gas Used (Transaction): 123064
 ## Safe Deployment + ERC20 Transaction with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:erc20:paymaster
+pnpm run pimlico:erc20:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc20:paymaster
 > tsx ./pimlico/pimlico.ts erc20 paymaster=true
@@ -415,7 +415,7 @@ Gas Used (Transaction): 459014
 ## ERC20 Transaction with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:erc20:paymaster
+pnpm run pimlico:erc20:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc20:paymaster
 > tsx ./pimlico/pimlico.ts erc20 paymaster=true
@@ -453,7 +453,7 @@ Gas Used (Transaction): 126461
 ## Safe Deployment + ERC721 Transaction with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:erc721:paymaster
+pnpm run pimlico:erc721:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc721:paymaster
 > tsx ./pimlico/pimlico.ts erc721 paymaster=true
@@ -485,7 +485,7 @@ Gas Used (Transaction): 488186
 ## ERC721 Transaction with Pimlico Paymaster (Gas Policy)
 
 ```
-npm run pimlico:erc721:paymaster
+pnpm run pimlico:erc721:paymaster
 
 > @safe-global/4337-gas-metering@1.0.0 pimlico:erc721:paymaster
 > tsx ./pimlico/pimlico.ts erc721 paymaster=true

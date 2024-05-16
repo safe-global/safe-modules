@@ -114,12 +114,12 @@ Using `delegates` and `tokens` it is possible to query all available allowances 
 ## Running tests
 
 ```bash
-yarn
-yarn test
+pnpm i
+pnpm test
 ```
 
 ## Compiling contracts
 ```bash
-yarn
-yarn build
+pnpm i
+pnpm build
 ```

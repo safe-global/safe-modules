@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox'
+import '@nomicfoundation/hardhat-ethers'
 import dotenv from 'dotenv'
 import type { HardhatUserConfig } from 'hardhat/config'
 import 'hardhat-deploy'

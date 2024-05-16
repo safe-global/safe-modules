@@ -10,13 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
-          node-version: 20.x
-          cache: npm
-          cache-dependency-path: package-lock.json
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
       - run: |
-          npm ci
-          npm run fmt:check -w examples/4337-gas-metering
-          npm run lint -w examples/4337-gas-metering
-          npm run build -w examples/4337-gas-metering
+          pnpm run --filter "@safe-global/safe-modules-example-4337-gas-metering" fmt:check
+          pnpm run --filter "@safe-global/safe-modules-example-4337-gas-metering" lint
+          pnpm run --filter "@safe-global/safe-modules-example-4337-gas-metering" build
