@@ -51,7 +51,8 @@ if (argv.length < 1 || argv.length > 2) {
   if (policyID) {
     usePaymaster = true
   } else {
-    throw new Error('Paymaster requires policyID to be set.')
+    // throw new Error('Paymaster requires policyID to be set.')
+    usePaymaster = true
   }
 }
 
@@ -77,51 +78,33 @@ if (!privateKey) {
   throw new Error('Please populate .env file with demo Private Key. Recommended to not use your personal private key.')
 }
 
+// Check if the network is supported.
+if (chain != 'sepolia' && chain != 'base-sepolia') {
+  throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
+}
+
 // Extract Signer from Private Key.
 const signer = privateKeyToAccount(privateKey as Hash)
 console.log('Signer Extracted from Private Key.')
 
 // Create a public, bundler and paymaster Client for the Chain.
-let bundlerClient
-let publicClient
-let pimlicoPaymasterClient
-if (chain == 'sepolia') {
-  bundlerClient = createClient({
-    transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
-    chain: sepolia,
-  })
-    .extend(bundlerActions(ENTRYPOINT_ADDRESS_V07))
-    .extend(pimlicoBundlerActions(ENTRYPOINT_ADDRESS_V07))
+const viemChain = chain == 'sepolia' ? sepolia : baseSepolia
+const bundlerClient = createClient({
+  transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
+  chain: viemChain,
+})
+  .extend(bundlerActions(ENTRYPOINT_ADDRESS_V07))
+  .extend(pimlicoBundlerActions(ENTRYPOINT_ADDRESS_V07))
 
-  publicClient = createPublicClient({
-    transport: http(rpcURL),
-    chain: sepolia,
-  })
+const publicClient = createPublicClient({
+  transport: http(rpcURL),
+  chain: viemChain,
+})
 
-  pimlicoPaymasterClient = createClient({
-    transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
-    chain: sepolia,
-  }).extend(pimlicoPaymasterActions(ENTRYPOINT_ADDRESS_V07))
-} else if (chain == 'base-sepolia') {
-  bundlerClient = createClient({
-    transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
-    chain: baseSepolia,
-  })
-    .extend(bundlerActions(ENTRYPOINT_ADDRESS_V07))
-    .extend(pimlicoBundlerActions(ENTRYPOINT_ADDRESS_V07))
-
-  publicClient = createPublicClient({
-    transport: http(rpcURL),
-    chain: baseSepolia,
-  })
-
-  pimlicoPaymasterClient = createClient({
-    transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
-    chain: baseSepolia,
-  }).extend(pimlicoPaymasterActions(ENTRYPOINT_ADDRESS_V07))
-} else {
-  throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-}
+const pimlicoPaymasterClient = createClient({
+  transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
+  chain: viemChain,
+}).extend(pimlicoPaymasterActions(ENTRYPOINT_ADDRESS_V07))
 
 // Get Safe Init Code.
 const initCode = await getAccountInitCode({

@@ -52,7 +52,7 @@ export type gasData = {
 export const submitUserOperationPimlico = async (
   userOperation: UserOperation,
   bundlerClient: any,
-  entryPointAddress: any,
+  entryPointAddress: string,
   chain: string,
 ) => {
   const userOperationHash = await bundlerClient.sendUserOperation({
@@ -85,9 +85,9 @@ export const submitUserOperationPimlico = async (
 export const signUserOperation = async (
   userOperation: UserOperation,
   signer: PrivateKeyAccount,
-  chainID: any,
-  entryPointAddress: any,
-  safe4337ModuleAddress: any,
+  chainID: number,
+  entryPointAddress: `0x${string}`,
+  safe4337ModuleAddress: `0x${string}`,
 ) => {
   const signatures = [
     {

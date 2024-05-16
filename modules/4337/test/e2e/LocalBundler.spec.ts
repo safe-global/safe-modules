@@ -108,9 +108,10 @@ describe('Local Bundler [@4337]', () => {
       signature,
     })
 
-    await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
+    const userOpHash = await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
     await waitForUserOp(userOp)
+    console.log(await bundler.send("eth_getUserOperationReceipt", [userOpHash]))
     expect(await token.balanceOf(safe.address)).to.equal(0n)
     expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
   })
