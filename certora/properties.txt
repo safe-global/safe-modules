@@ -15,9 +15,10 @@
 14. Proxy   - verify return data from Delegatecall.
 15. Proxy - No buffer overflow when appending Parameters. //(Maybe for Dravee)
 15. Singleton - Implementation of _verifySignature Function (Integrity)
-16. Singleton - getConfiguration Function (Integrity)
-17. WebAuthn - castSignature Integrity
-18. WebAuthn - encodeClientDataJson Integrity
-19. WebAuthn - encodeSigningMessage Integrity
-20. WebAuthn - verifySignature Integrity
-21. DDOS on verifySignature
+16. Singleton - getConfiguration Function (Integrity).
+17. Singleton - Both is valid Signature behave the same way.
+18. WebAuthn - castSignature Integrity
+19. WebAuthn - encodeClientDataJson Integrity
+20. WebAuthn - encodeSigningMessage Integrity
+21. WebAuthn - verifySignature Integrity
+22. DDOS on verifySignature
