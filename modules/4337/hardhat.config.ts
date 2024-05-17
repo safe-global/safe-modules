@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox'
+import '@nomicfoundation/hardhat-ethers'
 import 'hardhat-deploy'
 import dotenv from 'dotenv'
 import type { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'

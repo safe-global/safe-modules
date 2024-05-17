@@ -1,6 +1,5 @@
 import dotenv from 'dotenv'
-import type { Address } from 'abitype'
-import { fromHex, parseEther, type PrivateKeyAccount, formatEther, Hex } from 'viem'
+import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther } from 'viem'
 import { encodeCallData } from './safe'
 import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { Alchemy } from 'alchemy-sdk'

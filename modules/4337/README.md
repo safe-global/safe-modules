@@ -133,16 +133,16 @@ where `validUntil` and `validAfter` are two 48 bit timestamps for signature vali
 
 ## Usage
 
-### Install Requirements With NPM:
+### Install Requirements With PNPM:
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### Run Hardhat Integration Tests:
 
 ```bash
-npm test
+pnpm test
 ```
 
 ### Run End-to-end Tests:
@@ -152,13 +152,13 @@ End-to-end tests with the reference bundler implementation are also provided. Th
 Note: Geth is used as the RPC because the reference bundler implementation relies on Geth-specific tracing APIs.
 
 ```bash
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ### Run Hardhat Integration and End-to-end Tests:
 
 ```bash
-npm run test:all
+pnpm run test:all
 ```
 
 ### Deployments
@@ -179,13 +179,13 @@ Preparation:
 - Set `INFURA_KEY` in `.env`
 
 ```bash
-npm run deploy-all <network>
+pnpm run deploy-all <network>
 ```
 
 This will perform the following steps
 
 ```bash
-npm run build
+pnpm run build
 npx hardhat --network <network> deploy
 npx hardhat --network <network> etherscan-verify
 npx hardhat --network <network> local-verify
