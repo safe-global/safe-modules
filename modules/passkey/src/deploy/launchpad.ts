@@ -14,12 +14,6 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
     log: true,
     deterministicDeployment: true,
   })
-  await deploy('SafeWebAuthnSharedSigner', {
-    from: deployer,
-    args: [],
-    log: true,
-    deterministicDeployment: true,
-  })
 }
 
 deploy.dependencies = ['entrypoint']
