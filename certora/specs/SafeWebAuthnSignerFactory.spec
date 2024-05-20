@@ -12,6 +12,7 @@ import "spec_utils/generic.spec"; // pick additional rules from here
 methods{
     function getSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
     function createSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
+    function hasNoCode(address) external returns (bool) envfree;
 }
 
 
@@ -27,8 +28,19 @@ use rule alwaysRevert filtered { f -> f.contract == currentContract }
 
 
 /*
+Factory   - Immutability of Singleton Contract.	 (Proved) [Critical]
+Factory   - getSigner is unique for every x,y and verifier combination (Bug in prover CERT-6182) [High] 
+Factory   - createSigner and getSigner always returns the same address.	 (Bug in prover CERT-6182) [Medium]
+Factory   - Deterministic Address Calculation for Signers.													[High]
+Factory   - Correctness of Signer Creation. (Cant called twice, override)									[Cannot understand the risk]
+Factory   - Code Presence Check (_hasNoCode Integrity)	                                                    [Low]
+Factory   - Signature Validation (isValidSignatureForSigner Integrity)										[Critical]
+
+*/
+
+/*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Singleton implementation never change                                                                               │
+│ Singleton implementation never change (Proved)                                                                      │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule singletonNeverChanges()
@@ -47,7 +59,7 @@ rule singletonNeverChanges()
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ getSigner is unique for every x,y and verifier combination                                                          │
+│ getSigner is unique for every x,y and verifier combination    (Bug in prover CERT-6182)                             │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -69,7 +81,7 @@ rule uniqueSigner(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ createSigner and getSigner always returns the same address                                                          │
+│ createSigner and getSigner always returns the same address   (Bug in prover CERT-6182)                              │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -87,4 +99,46 @@ rule createAndGetSignerEquivalence(){
     address signer2 = getSigner(getX, getY, getVerifier);
     
     assert signer1 == signer2 <=> (createX == getX && createY == getY && createVerifier == getVerifier);
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Deterministic address in get signer (Proved)                                                                        │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule deterministicSigner()
+{
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+
+    address signer = getSigner(x, y, verifier);
+
+    assert signer == getSigner(x, y, verifier);
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Correctness of Signer Creation. (Cant called twice and override) (Proved)                                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+ghost mathint numOfCreation;
+
+hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
+    require numOfCreation == numOfCreation + 1;
+}
+
+rule SignerCreationCantOverride()
+{
+    require numOfCreation == 0;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+
+    createSigner(x, y, verifier);
+    createSigner(x, y, verifier);
+
+    assert numOfCreation < 2;
 }
