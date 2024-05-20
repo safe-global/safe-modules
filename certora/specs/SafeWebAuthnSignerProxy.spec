@@ -21,3 +21,30 @@ use rule timeoutChecker filtered { f -> f.contract == currentContract }
 use rule simpleFrontRunning filtered { f -> f.contract == currentContract }
 use rule noRevert filtered { f -> f.contract == currentContract }
 use rule alwaysRevert filtered { f -> f.contract == currentContract }
+
+
+/*
+Rule: Proxy Configuration Paramateres Never Change -- Passed
+*/
+rule configParametersImmutability {
+    env e;
+    method f;
+    calldataarg args;
+
+    address singletonBefore = currentContract._SINGLETON;
+    uint256 xBefore = currentContract._X;
+    uint256 yBefore = currentContract._Y;
+    P256.Verifiers verifiersBefore = currentContract._VERIFIERS;
+
+    f(e, args);
+
+    address singletonAfter = currentContract._SINGLETON;
+    uint256 xAfter = currentContract._X;
+    uint256 yAfter = currentContract._Y;
+    P256.Verifiers verifiersAfter = currentContract._VERIFIERS;
+    
+    assert singletonBefore == singletonAfter &&
+           xBefore == xAfter &&
+           yBefore == yAfter &&
+           verifiersBefore == verifiersAfter;
+}
