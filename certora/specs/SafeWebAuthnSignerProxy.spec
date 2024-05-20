@@ -23,6 +23,9 @@ use rule noRevert filtered { f -> f.contract == currentContract }
 use rule alwaysRevert filtered { f -> f.contract == currentContract }
 
 
+/*
+Rule: Proxy Configuration Paramateres Never Change -- Passed
+*/
 rule configParametersImmutability {
     env e;
     method f;
