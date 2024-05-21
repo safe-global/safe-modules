@@ -9,10 +9,17 @@ import "spec_utils/unresolved.spec";
 import "spec_utils/optimizations.spec";
 import "spec_utils/generic.spec"; // pick additional rules from here
 
+using SafeWebAuthnSignerProxy as proxy;
+using SafeWebAuthnSignerSingleton as singleton;
+
 methods{
     function getSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
     function createSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
     function hasNoCode(address) external returns (bool) envfree;
+    function _._ external => DISPATCH [
+        proxy._,
+        singleton.isValidSignature(bytes32, bytes)
+   ] default NONDET;
 }
 
 
@@ -26,17 +33,6 @@ use rule simpleFrontRunning filtered { f -> f.contract == currentContract }
 use rule noRevert filtered { f -> f.contract == currentContract }
 use rule alwaysRevert filtered { f -> f.contract == currentContract }
 
-
-/*
-Factory   - Immutability of Singleton Contract.	 (Proved) [Critical]
-Factory   - getSigner is unique for every x,y and verifier combination (Bug in prover CERT-6182) [High] 
-Factory   - createSigner and getSigner always returns the same address.	 (Bug in prover CERT-6182) [Medium]
-Factory   - Deterministic Address Calculation for Signers.													[High]
-Factory   - Correctness of Signer Creation. (Cant called twice, override)									[Cannot understand the risk]
-Factory   - Code Presence Check (_hasNoCode Integrity)	                                                    [Low]
-Factory   - Signature Validation (isValidSignatureForSigner Integrity)										[Critical]
-
-*/
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -59,7 +55,7 @@ rule singletonNeverChanges()
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ getSigner is unique for every x,y and verifier combination    (Bug in prover CERT-6182)                             │
+│ getSigner is unique for every x,y and verifier combination    (Violated but low prob)                               │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -81,7 +77,7 @@ rule uniqueSigner(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ createSigner and getSigner always returns the same address   (Bug in prover CERT-6182)                              │
+│ createSigner and getSigner always returns the same address   (Violated but low prob)                                │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -141,4 +137,39 @@ rule SignerCreationCantOverride()
     createSigner(x, y, verifier);
 
     assert numOfCreation < 2;
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Has no code integrity  (Proved)                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule hasNoCodeIntegrity()
+{
+    address a;
+    assert (a == proxy) => !hasNoCode(a);
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ isValidSignatureForSigner equiv to first deploying the signer with the factory, and then                            |
+|     verifying the signature with it directly (CERT-6221)                                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule createAndVerifyEQtoIsValidSignatureForSigner()
+{
+    env e;
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+    bytes signature;
+    bytes32 message;
+
+    storage s = lastStorage;
+
+    bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
+
+    bytes4 magic2 = createAndVerify(e, message, signature, x, y, verifier) at s;
+
+    assert magic1 == magic2;
 }
