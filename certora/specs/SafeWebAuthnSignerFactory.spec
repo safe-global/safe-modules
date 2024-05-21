@@ -115,14 +115,14 @@ rule deterministicSigner()
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Correctness of Signer Creation. (Cant called twice and override) (Proved)                                           │
+│ Correctness of Signer Creation. (Cant called twice and override) (Violated)                                           │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
 ghost mathint numOfCreation;
 
 hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
-    require numOfCreation == numOfCreation + 1;
+    numOfCreation = numOfCreation + 1;
 }
 
 rule SignerCreationCantOverride()
