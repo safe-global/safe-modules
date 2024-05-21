@@ -58,6 +58,7 @@ rule singletonNeverChanges()
 │ getSigner is unique for every x,y and verifier combination    (Violated but low prob)                               │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
+// consider adding the following munging after the creationcode to get a more clear dump 01234567891011121314152546
 
 rule uniqueSigner(){
     uint256 firstX;
