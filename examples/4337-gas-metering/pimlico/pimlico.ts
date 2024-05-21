@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import { getAccountNonce, bundlerActions, ENTRYPOINT_ADDRESS_V07, getRequiredPrefund } from 'permissionless'
 import { pimlicoBundlerActions, pimlicoPaymasterActions } from 'permissionless/actions/pimlico'
 import { setTimeout } from 'timers/promises'
-import { Client, Hash, createClient, createPublicClient, http, parseEther } from 'viem'
+import { Client, Hash, createClient, createPublicClient, http, parseEther, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getAccountInitCode } from '../utils/safe'
@@ -44,15 +44,14 @@ const erc721TokenAddress = process.env.PIMLICO_ERC721_TOKEN_CONTRACT as `0x${str
 
 // Detecting Paymaster based transaction or not.
 const argv = process.argv.slice(2)
-let usePaymaster!: boolean
+let usePaymaster = false
 if (argv.length < 1 || argv.length > 2) {
   throw new Error('TX Type Argument not passed.')
 } else if (argv.length == 2 && argv[1] == 'paymaster=true') {
   if (policyID) {
     usePaymaster = true
   } else {
-    // throw new Error('Paymaster requires policyID to be set.')
-    usePaymaster = true
+    throw new Error('Paymaster requires policyID to be set.')
   }
 }
 
@@ -114,8 +113,8 @@ const initCode = await getAccountInitCode({
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
-  erc20TokenAddress: usdcTokenAddress,
-  paymasterAddress: erc20PaymasterAddress,
+  erc20TokenAddress: usePaymaster ? usdcTokenAddress : zeroAddress,
+  paymasterAddress: usePaymaster ? erc20PaymasterAddress : zeroAddress,
 })
 console.log('\nInit Code Created.')
 
@@ -129,8 +128,8 @@ const senderAddress = await getAccountAddress({
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
-  erc20TokenAddress: usdcTokenAddress,
-  paymasterAddress: erc20PaymasterAddress,
+  erc20TokenAddress: usePaymaster ? usdcTokenAddress : zeroAddress,
+  paymasterAddress: usePaymaster ? erc20PaymasterAddress : zeroAddress,
 })
 console.log('\nCounterfactual Sender Address Created:', senderAddress)
 if (chain == 'base-sepolia') {
@@ -234,11 +233,11 @@ if (usePaymaster) {
 
   // Check Sender ETH Balance.
   let senderETHBalance = await publicClient.getBalance({ address: senderAddress })
-  console.log('\nSender ETH Balance:', ethers.utils.formatEther(senderETHBalance))
+  console.log('\nSender ETH Balance:', ethers.formatEther(senderETHBalance))
 
   // Checking required preFund.
   const requiredPrefund = getRequiredPrefund({ userOperation: userOp, entryPoint: ENTRYPOINT_ADDRESS_V07 })
-  console.log('\nRequired Prefund:', ethers.utils.formatEther(requiredPrefund))
+  console.log('\nRequired Prefund:', ethers.formatEther(requiredPrefund))
 
   const requiredBalance = requiredPrefund + (txType == 'native-transfer' ? parseEther('0.000001') : 0n)
 

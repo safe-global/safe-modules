@@ -164,12 +164,13 @@ const getInitializerCode = async ({
     })
   }
 
-  const multiSendCallData = encodeMultiSend(setupTxs)
+  const recipient = setupTxs.length > 1 ? multiSendAddress : safeModuleSetupAddress
+  const calldata = setupTxs.length > 1 ? encodeMultiSend(setupTxs) : setupTxs[0].data
 
   return encodeFunctionData({
     abi: SAFE_SETUP_ABI,
     functionName: 'setup',
-    args: [[owner], 1n, multiSendAddress, multiSendCallData, safe4337ModuleAddress, zeroAddress, 0n, zeroAddress],
+    args: [[owner], 1n, recipient, calldata, safe4337ModuleAddress, zeroAddress, 0n, zeroAddress],
   })
 }
 
