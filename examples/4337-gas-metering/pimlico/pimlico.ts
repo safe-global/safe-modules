@@ -9,7 +9,7 @@ import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getAccountInitCode } from '../utils/safe'
 import { SAFE_ADDRESSES_MAP } from '../utils/address'
 import { UserOperation, submitUserOperationPimlico, signUserOperation, txTypes, createCallData } from '../utils/userOps'
-import { transferETH } from '../utils/nativeTransfer'
+import { getERC20Decimals, getERC20Balance, transferERC20Token } from '../utils/erc20'
 
 dotenv.config()
 // For Paymaster Identification.
@@ -171,7 +171,7 @@ const txCallData: `0x${string}` = await createCallData(
 )
 
 // Create User Operation Object.
-const userOp: UserOperation = {
+const sponsoredUserOperation: UserOperation = {
   sender: senderAddress,
   nonce: newNonce,
   factory: contractCode ? undefined : chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
@@ -190,68 +190,70 @@ const userOp: UserOperation = {
 }
 
 // Sign the User Operation.
-userOp.signature = await signUserOperation(userOp, signer, chainID, ENTRYPOINT_ADDRESS_V07, chainAddresses.SAFE_4337_MODULE_ADDRESS)
+sponsoredUserOperation.signature = await signUserOperation(
+  sponsoredUserOperation,
+  signer,
+  chainID,
+  ENTRYPOINT_ADDRESS_V07,
+  chainAddresses.SAFE_4337_MODULE_ADDRESS,
+)
 
-// Fetch Max Gas Price from Bundler.
+// Estimate gas and gas price for the User Operation.
+const gasEstimate = await bundlerClient.estimateUserOperationGas({
+  userOperation: sponsoredUserOperation,
+})
 const maxGasPriceResult = await bundlerClient.getUserOperationGasPrice()
-userOp.maxFeePerGas = maxGasPriceResult.fast.maxFeePerGas
-userOp.maxPriorityFeePerGas = maxGasPriceResult.fast.maxPriorityFeePerGas
+sponsoredUserOperation.maxFeePerGas = maxGasPriceResult.fast.maxFeePerGas
+sponsoredUserOperation.maxPriorityFeePerGas = maxGasPriceResult.fast.maxPriorityFeePerGas
+
+sponsoredUserOperation.callGasLimit = gasEstimate.callGasLimit
+sponsoredUserOperation.verificationGasLimit = gasEstimate.verificationGasLimit
+sponsoredUserOperation.preVerificationGas = gasEstimate.preVerificationGas
+sponsoredUserOperation.paymasterVerificationGasLimit = gasEstimate.paymasterVerificationGasLimit
+sponsoredUserOperation.paymasterPostOpGasLimit = gasEstimate.paymasterPostOpGasLimit
 
 // If Paymaster is used, then sponsor the User Operation.
 if (usePaymaster) {
   const sponsorResult = await pimlicoPaymasterClient.sponsorUserOperation({
     userOperation: {
-      sender: userOp.sender,
-      nonce: userOp.nonce,
-      factory: userOp.factory,
-      factoryData: userOp.factoryData,
-      callData: userOp.callData,
-      maxFeePerGas: userOp.maxFeePerGas,
-      maxPriorityFeePerGas: userOp.maxPriorityFeePerGas,
-      signature: userOp.signature,
+      sender: sponsoredUserOperation.sender,
+      nonce: sponsoredUserOperation.nonce,
+      factory: sponsoredUserOperation.factory,
+      factoryData: sponsoredUserOperation.factoryData,
+      callData: sponsoredUserOperation.callData,
+      maxFeePerGas: sponsoredUserOperation.maxFeePerGas,
+      maxPriorityFeePerGas: sponsoredUserOperation.maxPriorityFeePerGas,
+      signature: sponsoredUserOperation.signature,
     },
     sponsorshipPolicyId: policyID,
   })
 
-  userOp.callGasLimit = sponsorResult.callGasLimit
-  userOp.verificationGasLimit = sponsorResult.verificationGasLimit
-  userOp.preVerificationGas = sponsorResult.preVerificationGas
-  userOp.paymasterData = sponsorResult.paymasterData
-  userOp.paymasterVerificationGasLimit = sponsorResult.paymasterVerificationGasLimit
-  userOp.paymasterPostOpGasLimit = sponsorResult.paymasterPostOpGasLimit
+  sponsoredUserOperation.callGasLimit = sponsorResult.callGasLimit
+  sponsoredUserOperation.verificationGasLimit = sponsorResult.verificationGasLimit
+  sponsoredUserOperation.preVerificationGas = sponsorResult.preVerificationGas
+  sponsoredUserOperation.paymasterData = sponsorResult.paymasterData
+  sponsoredUserOperation.paymasterVerificationGasLimit = sponsorResult.paymasterVerificationGasLimit
+  sponsoredUserOperation.paymasterPostOpGasLimit = sponsorResult.paymasterPostOpGasLimit
 } else {
-  userOp.paymaster = undefined
+  // Fetch USDC balance of sender
+  const usdcDecimals = BigInt(await getERC20Decimals(usdcTokenAddress, publicClient))
+  const usdcAmount = 10n ** usdcDecimals
+  let senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
+  console.log('\nSafe Wallet USDC Balance:', Number(senderUSDCBalance / usdcAmount))
 
-  // Estimate Gas for the User Operation.
-  const gasEstimate = await bundlerClient.estimateUserOperationGas({
-    userOperation: userOp,
-  })
-
-  userOp.callGasLimit = gasEstimate.callGasLimit
-  userOp.verificationGasLimit = gasEstimate.verificationGasLimit
-  userOp.preVerificationGas = gasEstimate.preVerificationGas
-
-  // Check Sender ETH Balance.
-  let senderETHBalance = await publicClient.getBalance({ address: senderAddress })
-  console.log('\nSender ETH Balance:', ethers.formatEther(senderETHBalance))
-
-  // Checking required preFund.
-  const requiredPrefund = getRequiredPrefund({ userOperation: userOp, entryPoint: ENTRYPOINT_ADDRESS_V07 })
-  console.log('\nRequired Prefund:', ethers.formatEther(requiredPrefund))
-
-  const requiredBalance = requiredPrefund + (txType == 'native-transfer' ? parseEther('0.000001') : 0n)
-
-  if (senderETHBalance < requiredBalance) {
-    await transferETH(publicClient, signer, senderAddress, requiredBalance - senderETHBalance, chain, paymaster)
-    while (senderETHBalance < requiredBalance) {
+  if (senderUSDCBalance < BigInt(1) * usdcAmount) {
+    console.log('\nTransferring 1 USDC Token for paying the Paymaster from Sender to Safe.')
+    await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, BigInt(1) * usdcAmount, chain, paymaster)
+    while (senderUSDCBalance < BigInt(1) * usdcAmount) {
       await setTimeout(15000)
-      senderETHBalance = await publicClient.getBalance({ address: senderAddress })
+      senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
     }
+    console.log('\nUpdated Safe Wallet USDC Balance:', Number(senderUSDCBalance / usdcAmount))
   }
 }
 
 // Sign the User Operation.
-userOp.signature = await signUserOperation(userOp, signer, chainID, ENTRYPOINT_ADDRESS_V07, chainAddresses.SAFE_4337_MODULE_ADDRESS)
+sponsoredUserOperation.signature = await signUserOperation(sponsoredUserOperation, signer, chainID, ENTRYPOINT_ADDRESS_V07, chainAddresses.SAFE_4337_MODULE_ADDRESS)
 
 // Submit the User Operation.
-await submitUserOperationPimlico(userOp, bundlerClient, ENTRYPOINT_ADDRESS_V07, chain)
+await submitUserOperationPimlico(sponsoredUserOperation, bundlerClient, ENTRYPOINT_ADDRESS_V07, chain)

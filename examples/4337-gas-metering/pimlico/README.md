@@ -36,7 +36,6 @@ Gas Used (Account or Paymaster): 423757
 Gas Used (Transaction): 409872
 ```
 
-
 ## Safe Deployment with Pimlico Paymaster (Own Sponsorship)
 
 ```

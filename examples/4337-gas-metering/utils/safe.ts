@@ -1,8 +1,10 @@
 import {
   Address,
+  Chain,
   Hex,
   PrivateKeyAccount,
   PublicClient,
+  Transport,
   encodeFunctionData,
   encodePacked,
   formatEther,
@@ -46,7 +48,7 @@ export const getGelatoCallData = async ({
 }: {
   safe: Address
   owner: PrivateKeyAccount
-  publicClient: PublicClient
+  publicClient: PublicClient<Transport<"http">, Chain>
   txType: string
   erc20TokenAddress: Address
   erc721TokenAddress: Address

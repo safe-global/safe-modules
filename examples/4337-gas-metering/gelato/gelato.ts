@@ -53,7 +53,7 @@ if (!privateKey) {
 const signer = privateKeyToAccount(privateKey as Hash)
 console.log('Signer Extracted from Private Key.')
 
-let publicClient
+let publicClient: PublicClient
 if (chain == 'sepolia') {
   publicClient = createPublicClient({
     transport: http(rpcURL),
