@@ -17,6 +17,7 @@ import {
 import { InternalTx, encodeMultiSend } from './multisend'
 import { generateApproveCallData, generateTransferCallData, getERC20Balance, getERC20Decimals, mintERC20Token } from './erc20'
 import { setTimeout } from 'timers/promises'
+import { baseSepolia, sepolia } from 'viem/chains'
 import { generateMintingCallData } from './erc721'
 import { transferETH } from './nativeTransfer'
 import {
@@ -48,7 +49,7 @@ export const getGelatoCallData = async ({
 }: {
   safe: Address
   owner: PrivateKeyAccount
-  publicClient: PublicClient<Transport<"http">, Chain>
+  publicClient:  PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
   txType: string
   erc20TokenAddress: Address
   erc721TokenAddress: Address
@@ -187,7 +188,7 @@ const getGelatoInitializerCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  client: PublicClient
+  client: PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
   txType: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
@@ -252,7 +253,7 @@ export const prepareForGelatoTx = async ({
 }: {
   signer: PrivateKeyAccount
   chain: string
-  publicClient: PublicClient
+  publicClient: PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
   txType: string
   senderAddress: Address
   erc20TokenAddress: Address
@@ -354,7 +355,7 @@ export const getGelatoAccountInitCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  client: PublicClient
+  client: PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
   txType: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
