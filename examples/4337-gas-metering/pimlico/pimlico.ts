@@ -1,9 +1,8 @@
 import dotenv from 'dotenv'
-import { ethers } from 'ethers'
-import { getAccountNonce, bundlerActions, ENTRYPOINT_ADDRESS_V07, getRequiredPrefund } from 'permissionless'
+import { getAccountNonce, bundlerActions, ENTRYPOINT_ADDRESS_V07 } from 'permissionless'
 import { pimlicoBundlerActions, pimlicoPaymasterActions } from 'permissionless/actions/pimlico'
 import { setTimeout } from 'timers/promises'
-import { Client, Hash, createClient, createPublicClient, http, parseEther, zeroAddress } from 'viem'
+import { Client, Hash, createClient, createPublicClient, http, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getAccountInitCode } from '../utils/safe'
@@ -42,19 +41,24 @@ const usdcTokenAddress = process.env.PIMLICO_USDC_TOKEN_ADDRESS as `0x${string}`
 const erc20TokenAddress = process.env.PIMLICO_ERC20_TOKEN_CONTRACT as `0x${string}`
 const erc721TokenAddress = process.env.PIMLICO_ERC721_TOKEN_CONTRACT as `0x${string}`
 
-// Detecting Paymaster based transaction or not.
+enum UserOperationType {
+  ERC20Paymaster = 'erc20-paymaster',
+  VerifyingPaymaster = 'verifying-paymaster',
+}
+
+// Detecting which paymaster to use
 const argv = process.argv.slice(2)
-let usePaymaster = false
+let transactionType = UserOperationType.ERC20Paymaster
 if (argv.length < 1 || argv.length > 2) {
   throw new Error('TX Type Argument not passed.')
-} else if (argv.length == 2 && argv[1] == 'paymaster=true') {
+} else if (argv.length == 2 && argv[1] == 'verifyingPaymaster=true') {
   if (policyID) {
-    usePaymaster = true
+    transactionType = UserOperationType.VerifyingPaymaster
   } else {
     throw new Error('Paymaster requires policyID to be set.')
   }
 }
-
+console.log({transactionType})
 // Transaction Type detection.
 const txType: string = argv[0]
 if (!txTypes.includes(txType)) {
@@ -110,8 +114,8 @@ const initCode = await getAccountInitCode({
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
-  erc20TokenAddress: usePaymaster ? usdcTokenAddress : zeroAddress,
-  paymasterAddress: usePaymaster ? erc20PaymasterAddress : zeroAddress,
+  erc20TokenAddress: transactionType === UserOperationType.ERC20Paymaster ? usdcTokenAddress : zeroAddress,
+  paymasterAddress: transactionType === UserOperationType.ERC20Paymaster ? erc20PaymasterAddress : zeroAddress,
 })
 console.log('\nInit Code Created.')
 
@@ -125,8 +129,8 @@ const senderAddress = await getAccountAddress({
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
   multiSendAddress: multiSendAddress,
-  erc20TokenAddress: usePaymaster ? usdcTokenAddress : zeroAddress,
-  paymasterAddress: usePaymaster ? erc20PaymasterAddress : zeroAddress,
+  erc20TokenAddress: transactionType === UserOperationType.ERC20Paymaster ? usdcTokenAddress : zeroAddress,
+  paymasterAddress: transactionType === UserOperationType.ERC20Paymaster ? erc20PaymasterAddress : zeroAddress,
 })
 console.log('\nCounterfactual Sender Address Created:', senderAddress)
 if (chain == 'base-sepolia') {
@@ -196,21 +200,21 @@ sponsoredUserOperation.signature = await signUserOperation(
 )
 
 // Estimate gas and gas price for the User Operation.
-const gasEstimate = await pimlicoPaymasterClient.estimateUserOperationGas({
-  userOperation: sponsoredUserOperation,
-})
 const maxGasPriceResult = await pimlicoPaymasterClient.getUserOperationGasPrice()
 sponsoredUserOperation.maxFeePerGas = maxGasPriceResult.fast.maxFeePerGas
 sponsoredUserOperation.maxPriorityFeePerGas = maxGasPriceResult.fast.maxPriorityFeePerGas
 
+const gasEstimate = await pimlicoPaymasterClient.estimateUserOperationGas({
+  userOperation: sponsoredUserOperation,
+})
 sponsoredUserOperation.callGasLimit = gasEstimate.callGasLimit
 sponsoredUserOperation.verificationGasLimit = gasEstimate.verificationGasLimit
 sponsoredUserOperation.preVerificationGas = gasEstimate.preVerificationGas
 sponsoredUserOperation.paymasterVerificationGasLimit = gasEstimate.paymasterVerificationGasLimit
 sponsoredUserOperation.paymasterPostOpGasLimit = gasEstimate.paymasterPostOpGasLimit
 
-// If Paymaster is used, then sponsor the User Operation.
-if (usePaymaster) {
+// If Verifying Paymaster, then sponsor the User Operation.
+if (transactionType === UserOperationType.VerifyingPaymaster) {
   const sponsorResult = await pimlicoPaymasterClient.sponsorUserOperation({
     userOperation: {
       sender: sponsoredUserOperation.sender,
@@ -234,18 +238,19 @@ if (usePaymaster) {
 } else {
   // Fetch USDC balance of sender
   const usdcDecimals = BigInt(await getERC20Decimals(usdcTokenAddress, publicClient))
-  const usdcAmount = 10n ** usdcDecimals
+  const usdcDenomination = 10n ** usdcDecimals
+  const usdcAmount = 5n * usdcDenomination
   let senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
-  console.log('\nSafe Wallet USDC Balance:', Number(senderUSDCBalance / usdcAmount))
+  console.log('\nSafe Wallet USDC Balance:', Number(senderUSDCBalance / usdcDenomination))
 
-  if (senderUSDCBalance < BigInt(1) * usdcAmount) {
+  if (senderUSDCBalance < usdcAmount) {
     console.log('\nTransferring 1 USDC Token for paying the Paymaster from Sender to Safe.')
-    await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, BigInt(1) * usdcAmount, chain, paymaster)
-    while (senderUSDCBalance < BigInt(1) * usdcAmount) {
+    await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, usdcAmount, chain, paymaster)
+    while (senderUSDCBalance < usdcAmount) {
       await setTimeout(15000)
       senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
     }
-    console.log('\nUpdated Safe Wallet USDC Balance:', Number(senderUSDCBalance / usdcAmount))
+    console.log('\nUpdated Safe Wallet USDC Balance:', Number(senderUSDCBalance / usdcDenomination))
   }
 }
 

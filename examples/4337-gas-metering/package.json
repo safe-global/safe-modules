@@ -24,15 +24,14 @@
     "gelato:native-transfer:1balance": "tsx ./gelato/gelato.ts native-transfer",
     "gelato:erc20:1balance": "tsx ./gelato/gelato.ts erc20",
     "gelato:erc721:1balance": "tsx ./gelato/gelato.ts erc721",
-    "pimlico:account": "tsx ./pimlico/pimlico.ts account",
-    "pimlico:account:paymaster": "tsx ./pimlico/pimlico.ts account paymaster=true",
-    "pimlico:native-transfer": "tsx ./pimlico/pimlico.ts native-transfer",
-    "pimlico:native-transfer:paymaster": "tsx ./pimlico/pimlico.ts native-transfer paymaster=true",
-    "pimlico:erc20": "tsx ./pimlico/pimlico.ts erc20",
-    "pimlico:erc20:paymaster": "tsx ./pimlico/pimlico.ts erc20 paymaster=true",
-    "pimlico:erc721": "tsx ./pimlico/pimlico.ts erc721",
-    "pimlico:erc721:paymaster": "tsx ./pimlico/pimlico.ts erc721 paymaster=true",
-    "pimlico": "tsx ./pimlico/pimlico.ts"
+    "pimlico:account:erc20-paymaster": "tsx ./pimlico/pimlico.ts account",
+    "pimlico:account:verifying-paymaster": "tsx ./pimlico/pimlico.ts account verifyingPaymaster=true",
+    "pimlico:native-transfer:erc20-paymaster": "tsx ./pimlico/pimlico.ts native-transfer",
+    "pimlico:native-transfer:verifying-paymaster": "tsx ./pimlico/pimlico.ts native-transfer verifyingPaymaster=true",
+    "pimlico:erc20:erc20-paymaster": "tsx ./pimlico/pimlico.ts erc20",
+    "pimlico:erc20:verifying-paymaster": "tsx ./pimlico/pimlico.ts erc20 verifyingPaymaster=true",
+    "pimlico:erc721:erc20-paymaster": "tsx ./pimlico/pimlico.ts erc721",
+    "pimlico:erc721:verifying-paymaster": "tsx ./pimlico/pimlico.ts erc721 verifyingPaymaster=true"
   },
   "repository": {
     "type": "git",
