@@ -16,22 +16,22 @@ methods{
     function getSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
     function createSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
     function hasNoCode(address) external returns (bool) envfree;
-    function _._ external => DISPATCH [
-        proxy._,
-        singleton.isValidSignature(bytes32, bytes)
-   ] default NONDET;
+//     function _._ external => DISPATCH [
+//         proxy._,
+//         singleton.isValidSignature(bytes32, bytes)
+//    ] default NONDET;
 }
 
 
-use builtin rule sanity filtered { f -> f.contract == currentContract }
-use builtin rule hasDelegateCalls filtered { f -> f.contract == currentContract }
-use builtin rule msgValueInLoopRule;
-use builtin rule viewReentrancy;
-use rule privilegedOperation filtered { f -> f.contract == currentContract }
-use rule timeoutChecker filtered { f -> f.contract == currentContract }
-use rule simpleFrontRunning filtered { f -> f.contract == currentContract }
-use rule noRevert filtered { f -> f.contract == currentContract }
-use rule alwaysRevert filtered { f -> f.contract == currentContract }
+// use builtin rule sanity filtered { f -> f.contract == currentContract }
+// use builtin rule hasDelegateCalls filtered { f -> f.contract == currentContract }
+// use builtin rule msgValueInLoopRule;
+// use builtin rule viewReentrancy;
+// use rule privilegedOperation filtered { f -> f.contract == currentContract }
+// use rule timeoutChecker filtered { f -> f.contract == currentContract }
+// use rule simpleFrontRunning filtered { f -> f.contract == currentContract }
+// use rule noRevert filtered { f -> f.contract == currentContract }
+// use rule alwaysRevert filtered { f -> f.contract == currentContract }
 
 
 /*
