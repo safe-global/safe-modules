@@ -121,9 +121,15 @@ rule deterministicSigner()
 */
 
 ghost mathint numOfCreation;
+ghost mapping(address => uint) address_map;
+
+hook EXTCODESIZE(address addr) uint v{
+    require address_map[addr] == v;
+}
 
 hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
     numOfCreation = numOfCreation + 1;
+    address_map[v] = length;
 }
 
 rule SignerCreationCantOverride()
@@ -133,6 +139,9 @@ rule SignerCreationCantOverride()
     uint x;
     uint y;
     P256.Verifiers verifier;
+
+    address a = getSigner(x, y, verifier);
+    require address_map[a] == 0;
 
     createSigner(x, y, verifier);
     createSigner(x, y, verifier);
