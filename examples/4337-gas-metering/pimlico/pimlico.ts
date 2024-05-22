@@ -100,10 +100,7 @@ const publicClient = createPublicClient({
   chain: viemChain,
 })
 
-const pimlicoPaymasterClient = createClient({
-  transport: http(`https://api.pimlico.io/v2/${chain}/rpc?apikey=${apiKey}`),
-  chain: viemChain,
-}).extend(pimlicoPaymasterActions(ENTRYPOINT_ADDRESS_V07))
+const pimlicoPaymasterClient = bundlerClient.extend(pimlicoPaymasterActions(ENTRYPOINT_ADDRESS_V07))
 
 // Get Safe Init Code.
 const initCode = await getAccountInitCode({
@@ -180,8 +177,8 @@ const sponsoredUserOperation: UserOperation = {
   callGasLimit: 0n, // All Gas Values will be filled by Estimation Response Data.
   verificationGasLimit: 0n,
   preVerificationGas: 0n,
-  maxFeePerGas: 0n,
-  maxPriorityFeePerGas: 0n,
+  maxFeePerGas: 1n,
+  maxPriorityFeePerGas: 1n,
   paymaster: erc20PaymasterAddress,
   paymasterVerificationGasLimit: 0n,
   paymasterPostOpGasLimit: 0n,
@@ -199,10 +196,10 @@ sponsoredUserOperation.signature = await signUserOperation(
 )
 
 // Estimate gas and gas price for the User Operation.
-const gasEstimate = await bundlerClient.estimateUserOperationGas({
+const gasEstimate = await pimlicoPaymasterClient.estimateUserOperationGas({
   userOperation: sponsoredUserOperation,
 })
-const maxGasPriceResult = await bundlerClient.getUserOperationGasPrice()
+const maxGasPriceResult = await pimlicoPaymasterClient.getUserOperationGasPrice()
 sponsoredUserOperation.maxFeePerGas = maxGasPriceResult.fast.maxFeePerGas
 sponsoredUserOperation.maxPriorityFeePerGas = maxGasPriceResult.fast.maxPriorityFeePerGas
 
@@ -253,7 +250,13 @@ if (usePaymaster) {
 }
 
 // Sign the User Operation.
-sponsoredUserOperation.signature = await signUserOperation(sponsoredUserOperation, signer, chainID, ENTRYPOINT_ADDRESS_V07, chainAddresses.SAFE_4337_MODULE_ADDRESS)
+sponsoredUserOperation.signature = await signUserOperation(
+  sponsoredUserOperation,
+  signer,
+  chainID,
+  ENTRYPOINT_ADDRESS_V07,
+  chainAddresses.SAFE_4337_MODULE_ADDRESS,
+)
 
 // Submit the User Operation.
 await submitUserOperationPimlico(sponsoredUserOperation, bundlerClient, ENTRYPOINT_ADDRESS_V07, chain)

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 import { HttpTransport, http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount, PublicClient } from 'viem'
-import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { baseSepolia, goerli, sepolia } from 'viem/chains'
 import {
   ERC20_TOKEN_APPROVE_ABI,
   ERC20_TOKEN_BALANCE_OF_ABI,
@@ -71,16 +71,10 @@ export const mintERC20Token = async (
 ) => {
   let walletClient
   if (paymaster == 'pimlico') {
-    if (chain == 'goerli') {
+    if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: goerli,
-        transport: http(pimlicoRPCURL),
-      })
-    } else if (chain == 'mumbai') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: polygonMumbai,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
     } else if (chain == 'base-sepolia') {
@@ -148,16 +142,16 @@ export const transferERC20Token = async (
 ) => {
   let walletClient
   if (paymaster == 'pimlico') {
-    if (chain == 'goerli') {
+    if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: goerli,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'base-sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: baseSepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {

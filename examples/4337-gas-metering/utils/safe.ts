@@ -49,7 +49,7 @@ export const getGelatoCallData = async ({
 }: {
   safe: Address
   owner: PrivateKeyAccount
-  publicClient:  PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
+  publicClient: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
   erc20TokenAddress: Address
   erc721TokenAddress: Address
@@ -188,7 +188,7 @@ const getGelatoInitializerCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  client: PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
+  client: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
@@ -253,7 +253,7 @@ export const prepareForGelatoTx = async ({
 }: {
   signer: PrivateKeyAccount
   chain: string
-  publicClient: PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
+  publicClient: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
   senderAddress: Address
   erc20TokenAddress: Address
@@ -355,7 +355,7 @@ export const getGelatoAccountInitCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  client: PublicClient<Transport<"http">, typeof sepolia | typeof baseSepolia>
+  client: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address

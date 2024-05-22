@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { Address, Hash, PublicClient, createPublicClient, http, zeroAddress, type Transport } from 'viem'
+import { Address, Hash, createPublicClient, http, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getGelatoAccountInitCode, getGelatoCallData, prepareForGelatoTx } from '../utils/safe'
