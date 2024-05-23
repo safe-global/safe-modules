@@ -22,6 +22,8 @@ methods{
 //    ] default NONDET;
 }
 
+definition MAGIC_VALUE() returns bytes4 = to_bytes4(0x1626ba7e);
+
 
 // use builtin rule sanity filtered { f -> f.contract == currentContract }
 // use builtin rule hasDelegateCalls filtered { f -> f.contract == currentContract }
@@ -122,9 +124,11 @@ rule deterministicSigner()
 
 ghost mathint numOfCreation;
 ghost mapping(address => uint) address_map;
+ghost bool validValue;
 
 hook EXTCODESIZE(address addr) uint v{
-    require address_map[addr] == v && addr <= max_uint160;
+    require address_map[addr] == v;
+    validValue = addr <= max_uint160;
 }
 
 hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
@@ -147,6 +151,20 @@ rule SignerCreationCantOverride()
     createSigner@withrevert(x, y, verifier);
 
     assert numOfCreation < 2;
+}
+
+rule ValidValue()
+{
+    require !validValue;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+
+    createSigner(x, y, verifier);
+    createSigner@withrevert(x, y, verifier);
+    
+    satisfy validValue;
 }
 
 /*
@@ -182,4 +200,31 @@ rule createAndVerifyEQtoIsValidSignatureForSigner()
     bytes4 magic2 = createAndVerify(e, message, signature, x, y, verifier) at s;
 
     assert magic1 == magic2;
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ isValidSignatureForSigner Consistency                                                                               │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule isValidSignatureForSignerConsistency()
+{
+    env e;
+    method f;
+    calldataarg args;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+    
+    bytes signature;
+    bytes32 message;
+
+    bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
+
+    f(e, args);
+
+    bytes4 magic2 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
+
+    assert (magic1 == MAGIC_VALUE()) <=> (magic2 == MAGIC_VALUE());
 }

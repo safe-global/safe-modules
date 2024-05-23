@@ -5,7 +5,7 @@ import {P256, WebAuthn} from "../../modules/passkey/contracts/libraries/WebAuthn
 
 contract WebAuthnHarness {
     
-    function castSignature(bytes calldata signature) internal pure returns (bool isValid, WebAuthn.Signature calldata data){
+    function castSignature(bytes calldata signature) external pure returns (bool isValid, WebAuthn.Signature calldata data){
         return WebAuthn.castSignature(signature);
     }
 
@@ -51,6 +51,11 @@ contract WebAuthnHarness {
         P256.Verifiers verifiers
     ) public view returns (bool success) {
         return WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifiers);
+    }
+
+    function getSha256(bytes32 input) public view returns (bytes32 digest) {
+        bytes memory m = abi.encodePacked(input);
+        return WebAuthn._sha256(m);
     }
     
 }
