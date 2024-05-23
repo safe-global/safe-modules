@@ -116,7 +116,7 @@ rule deterministicSigner()
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Correctness of Signer Creation. (Cant called twice and override) (Violated)                                           │
+│ Correctness of Signer Creation. (Cant called twice and override) (Bug CERT-6252)                                           │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -144,7 +144,7 @@ rule SignerCreationCantOverride()
     require address_map[a] == 0;
 
     createSigner(x, y, verifier);
-    createSigner(x, y, verifier);
+    createSigner@withrevert(x, y, verifier);
 
     assert numOfCreation < 2;
 }
