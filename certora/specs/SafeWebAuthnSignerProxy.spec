@@ -1,3 +1,4 @@
+/* Setup Artifacts
 import "ERC20/erc20cvl.spec";
 import "ERC20/WETHcvl.spec";
 import "ERC721/erc721.spec";
@@ -21,7 +22,26 @@ use rule timeoutChecker filtered { f -> f.contract == currentContract }
 use rule simpleFrontRunning filtered { f -> f.contract == currentContract }
 use rule noRevert filtered { f -> f.contract == currentContract }
 use rule alwaysRevert filtered { f -> f.contract == currentContract }
+*/
 
+using SafeWebAuthnSignerSingleton as SafeWebAuthnSignerSingleton;
+
+hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
+    // DELEGATECALL is used in this contract, but it only ever calls into the singleton.
+    assert (executingContract != currentContract || addr == SafeWebAuthnSignerSingleton,
+        "we should only `delegatecall` into the singleton."
+    );
+}
+
+rule delegateCallsOnlyToSingleton {
+    env e;
+    method f;
+    calldataarg args;
+
+    f(e, args);
+
+    assert true;
+}
 
 /*
 Rule: Proxy Configuration Paramateres Never Change -- Passed
