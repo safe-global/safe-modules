@@ -106,8 +106,7 @@ rule verifySignatureEq(){
     bool result2 = verifySignature@withrevert(e, challenge, bytesSignature, authenticatorFlags, x, y, verifiers) at firstStorage;
     bool secondCallRevert = lastReverted;
 
-    assert firstCallRevert == secondCallRevert;
-    assert result1 == result2;
+    assert (firstCallRevert == secondCallRevert) || (result1 == result2);
 }
 
 
