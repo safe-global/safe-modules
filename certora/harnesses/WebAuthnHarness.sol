@@ -4,9 +4,31 @@ pragma solidity ^0.8.0;
 import {P256, WebAuthn} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
 
 contract WebAuthnHarness {
-    
+
+    mapping(bytes32 => mapping(bytes32 => string)) summaryMap;
+
+    function getEncodeClientDataJsonSummary(bytes32 message, string calldata signature) public view returns (string memory){
+        bytes32 hashed_signature = keccak256(abi.encodePacked(signature));
+        string memory string_mapping = summaryMap[message][hashed_signature];
+        bytes32 hashed_mapping = keccak256(abi.encodePacked(string_mapping));
+
+        require (encodeAxiom(message, hashed_signature, hashed_mapping));
+
+        return string_mapping;
+    }
+
+    function encodeAxiom(bytes32 message, bytes32 signature, bytes32 result) internal pure returns (bool){
+        return true;
+    }
+
     function castSignature(bytes calldata signature) external pure returns (bool isValid, WebAuthn.Signature calldata data){
         return WebAuthn.castSignature(signature);
+    }
+
+    function compareStrings(string memory str1, string memory str2) public view returns (bool) {
+        bytes memory str1Bytes = bytes(str1);
+        bytes memory str2Bytes = bytes(str2);
+        return getSha256(str1Bytes) == getSha256(str2Bytes);
     }
 
     function encodeClientDataJson(
@@ -31,6 +53,14 @@ contract WebAuthnHarness {
         return WebAuthn.checkAuthenticatorFlags(authenticatorData, authenticatorFlags);
     }
 
+    function prepareSignature(bytes calldata authenticatorData,
+        string calldata clientDataFields,
+        uint256 r,
+        uint256 s) public pure returns(bytes memory signature, WebAuthn.Signature memory structSignature){
+        signature = abi.encode(authenticatorData, clientDataFields, r, s);
+        structSignature = WebAuthn.Signature(authenticatorData, clientDataFields, r, s);
+    }
+
     function verifySignature(
         bytes32 challenge,
         bytes calldata signature,
@@ -53,9 +83,8 @@ contract WebAuthnHarness {
         return WebAuthn.verifySignature(challenge, signature, authenticatorFlags, x, y, verifiers);
     }
 
-    function getSha256(bytes32 input) public view returns (bytes32 digest) {
-        bytes memory m = abi.encodePacked(input);
-        return WebAuthn._sha256(m);
+    function getSha256(bytes memory input) public view returns (bytes32 digest) {
+        return WebAuthn._sha256(input);
     }
     
 }
