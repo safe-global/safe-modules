@@ -50,7 +50,7 @@ describe('Safe WebAuthn Signer [@4337]', () => {
     }
   })
 
-  it('should execute a user op and deploy a WebAuthn signer', async () => {
+  it('should execute a user op with a deployed WebAuthn signer', async () => {
     const { user, bundler, proxyFactory, safeModuleSetup, module, entryPoint, singleton, signerFactory, navigator, verifier } =
       await setupTests()
 

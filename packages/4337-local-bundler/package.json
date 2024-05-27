@@ -9,7 +9,7 @@
     "4337-local-bundler-test": "dist/src/bin/test.js"
   },
   "scripts": {
-    "build": "rimraf dist && tsc && chmod +x dist/src/bin/*.js",
+    "build": "rimraf dist && tsc && cp -r docker docker-compose.yaml dist && chmod +x dist/src/bin/*.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prepare": "pnpm run build"
