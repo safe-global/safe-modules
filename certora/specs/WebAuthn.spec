@@ -169,6 +169,6 @@ rule castSignatureUniqueness(){
 
     secondIsValid, secondData = castSignature(e, signature2);
 
-    assert (getSha256(e, signature1) != getSha256(e, signature2)) &&
-    ((firstIsValid && secondIsValid)) => !compareSignatures(e, firstData, secondData);
+    assert ((getSha256(e, signature1) != getSha256(e, signature2)) &&
+    ((firstIsValid && secondIsValid))) => !compareSignatures(e, firstData, secondData);
 }
