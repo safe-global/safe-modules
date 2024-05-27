@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther } from 'viem'
+import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther, concat, pad, toHex } from 'viem'
 import { encodeCallData } from './safe'
 import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { Alchemy } from 'alchemy-sdk'
@@ -415,4 +415,55 @@ export const createCallData = async (
 
   console.log('\nAppropriate calldata created.')
   return txCallData
+}
+
+export function getInitCode(unpackedUserOperation: UserOperation) {
+  return unpackedUserOperation.factory ? concat([unpackedUserOperation.factory, unpackedUserOperation.factoryData || ('0x' as Hex)]) : '0x'
+}
+
+export function getAccountGasLimits(unpackedUserOperation: UserOperation) {
+  return concat([
+    pad(toHex(unpackedUserOperation.verificationGasLimit), {
+      size: 16,
+    }),
+    pad(toHex(unpackedUserOperation.callGasLimit), { size: 16 }),
+  ])
+}
+
+export function getGasLimits(unpackedUserOperation: UserOperation) {
+  return concat([
+    pad(toHex(unpackedUserOperation.maxPriorityFeePerGas), {
+      size: 16,
+    }),
+    pad(toHex(unpackedUserOperation.maxFeePerGas), { size: 16 }),
+  ])
+}
+
+export function getPaymasterAndData(unpackedUserOperation: UserOperationV07) {
+  return unpackedUserOperation.paymaster
+    ? concat([
+        unpackedUserOperation.paymaster,
+        pad(toHex(unpackedUserOperation.paymasterVerificationGasLimit || 0n), {
+          size: 16,
+        }),
+        pad(toHex(unpackedUserOperation.paymasterPostOpGasLimit || 0n), {
+          size: 16,
+        }),
+        unpackedUserOperation.paymasterData || ('0x' as Hex),
+      ])
+    : '0x'
+}
+
+export function toPackedUserOperation(unpackedUserOperation: UserOperation): Record<string, any> {
+  return {
+    sender: unpackedUserOperation.sender,
+    nonce: unpackedUserOperation.nonce,
+    initCode: getInitCode(unpackedUserOperation),
+    callData: unpackedUserOperation.callData,
+    accountGasLimits: getAccountGasLimits(unpackedUserOperation),
+    preVerificationGas: unpackedUserOperation.preVerificationGas,
+    gasFees: getGasLimits(unpackedUserOperation),
+    paymasterAndData: getPaymasterAndData(unpackedUserOperation),
+    signature: unpackedUserOperation.signature,
+  }
 }

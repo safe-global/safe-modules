@@ -2,13 +2,21 @@ import dotenv from 'dotenv'
 import { getAccountNonce, bundlerActions, ENTRYPOINT_ADDRESS_V07 } from 'permissionless'
 import { pimlicoBundlerActions, pimlicoPaymasterActions } from 'permissionless/actions/pimlico'
 import { setTimeout } from 'timers/promises'
-import { Client, Hash, createClient, createPublicClient, http, zeroAddress } from 'viem'
+import { Client, Hash, createClient, createPublicClient, encodeFunctionData, http, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getAccountInitCode } from '../utils/safe'
 import { SAFE_ADDRESSES_MAP } from '../utils/address'
-import { UserOperation, submitUserOperationPimlico, signUserOperation, txTypes, createCallData } from '../utils/userOps'
+import {
+  UserOperation,
+  submitUserOperationPimlico,
+  signUserOperation,
+  txTypes,
+  createCallData,
+  toPackedUserOperation,
+} from '../utils/userOps'
 import { getERC20Decimals, getERC20Balance, transferERC20Token } from '../utils/erc20'
+import { EntryPointV07SimulationsAbi } from './entrypointAbi'
 
 dotenv.config()
 // For Paymaster Identification.
@@ -58,7 +66,7 @@ if (argv.length < 1 || argv.length > 2) {
     throw new Error('Paymaster requires policyID to be set.')
   }
 }
-console.log({transactionType})
+console.log({ transactionType })
 // Transaction Type detection.
 const txType: string = argv[0]
 if (!txTypes.includes(txType)) {
@@ -178,14 +186,14 @@ const sponsoredUserOperation: UserOperation = {
   factory: contractCode ? undefined : chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   factoryData: contractCode ? '0x' : initCode,
   callData: txCallData,
-  callGasLimit: 0n, // All Gas Values will be filled by Estimation Response Data.
-  verificationGasLimit: 0n,
-  preVerificationGas: 0n,
+  callGasLimit: 1n, // All Gas Values will be filled by Estimation Response Data.
+  verificationGasLimit: 1n,
+  preVerificationGas: 1n,
   maxFeePerGas: 1n,
   maxPriorityFeePerGas: 1n,
   paymaster: erc20PaymasterAddress,
-  paymasterVerificationGasLimit: 0n,
-  paymasterPostOpGasLimit: 0n,
+  paymasterVerificationGasLimit: 1n,
+  paymasterPostOpGasLimit: 1n,
   paymasterData: '0x',
   signature: '0x',
 }
@@ -239,7 +247,7 @@ if (transactionType === UserOperationType.VerifyingPaymaster) {
   // Fetch USDC balance of sender
   const usdcDecimals = BigInt(await getERC20Decimals(usdcTokenAddress, publicClient))
   const usdcDenomination = 10n ** usdcDecimals
-  const usdcAmount = 5n * usdcDenomination
+  const usdcAmount = 1n * usdcDenomination
   let senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
   console.log('\nSafe Wallet USDC Balance:', Number(senderUSDCBalance / usdcDenomination))
 
@@ -262,6 +270,13 @@ sponsoredUserOperation.signature = await signUserOperation(
   ENTRYPOINT_ADDRESS_V07,
   chainAddresses.SAFE_4337_MODULE_ADDRESS,
 )
+
+const entryPointSimulationsSimulateHandleOpCallData = encodeFunctionData({
+  abi: EntryPointV07SimulationsAbi,
+  functionName: 'simulateHandleOp',
+  args: [toPackedUserOperation(sponsoredUserOperation)],
+})
+console.log('\nEncoded Call Data for simulateHandleOp:', entryPointSimulationsSimulateHandleOpCallData)
 
 // Submit the User Operation.
 await submitUserOperationPimlico(sponsoredUserOperation, bundlerClient, ENTRYPOINT_ADDRESS_V07, chain)
