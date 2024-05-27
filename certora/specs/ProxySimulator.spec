@@ -1,5 +1,6 @@
 using SafeWebAuthnSignerProxy as SafeWebAuthnSignerProxy;
 
+// This is the same MAGIC_VALUE constant used in ERC1271.
 definition MAGIC_VALUE() returns bytes4 = to_bytes4(0x1626ba7e);
 
 methods {

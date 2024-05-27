@@ -2,15 +2,16 @@
 /* solhint-disable no-complex-fallback */
 pragma solidity >=0.8.0;
 
-import {P256} from "./libraries/WebAuthn.sol";
-import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
+import {P256} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
+import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
 
 /**
- * @title Safe WebAuthn Signer Proxy
- * @dev A specialized proxy to a {SafeWebAuthnSignerSingleton} signature validator implementation
- * for Safe accounts. Using a proxy pattern for the signature validator greatly reduces deployment
- * gas costs.
- * @custom:security-contact bounty@safe.global
+ * @title Safe WebAuthn Signer Proxy Harness
+ * @dev This harness is written to be able to prove a certain property on the fallback function.
+ * The property we are proving using this harness is that no combination of x, y and verifiers can make the fallback revert
+ * due the problems with the untrivial data appanding.
+ * It adds another function `fallbackButNotDelegating which has the exact same functionality as the original fallback
+ * but it gets the x, y, and verifiers parameters instead of reading the immutable ones and does not make a delegatecall.
  */
 contract SafeWebAuthnSignerProxyHarness is SafeWebAuthnSignerProxy { 
     /**

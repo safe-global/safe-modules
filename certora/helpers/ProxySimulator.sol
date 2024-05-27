@@ -2,7 +2,7 @@
 /* solhint-disable no-complex-fallback */
 pragma solidity >=0.8.0;
 
-import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
+import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
 
 contract ProxySimulator {
 
