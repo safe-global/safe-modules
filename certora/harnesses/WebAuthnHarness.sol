@@ -21,6 +21,22 @@ contract WebAuthnHarness {
         return true;
     }
 
+    function compareSignatures(WebAuthn.Signature memory sig1, WebAuthn.Signature memory sig2) public pure returns (bool) {
+        if (sig1.r != sig2.r || sig1.s != sig2.s) {
+            return false;
+        }
+
+        if (keccak256(abi.encodePacked(sig1.clientDataFields)) != keccak256(abi.encodePacked(sig2.clientDataFields))) {
+            return false;
+        }
+
+        if (keccak256(sig1.authenticatorData) != keccak256(sig2.authenticatorData)) {
+            return false;
+        }
+
+        return true;
+    }
+
     function castSignature(bytes calldata signature) external pure returns (bool isValid, WebAuthn.Signature calldata data){
         return WebAuthn.castSignature(signature);
     }

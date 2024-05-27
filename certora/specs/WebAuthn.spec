@@ -8,6 +8,7 @@ methods{
         encodeAxiomSummary(message, signature, result);
 
     //function encodeSigningMessage(bytes32,bytes calldata,string calldata) internal returns(bytes memory) => NONDET;
+    function castSignature(bytes calldata signature) external returns (bool, WebAuthn.Signature calldata);
 }
 
 function getEncodeClientDataJsonSummaryCVL(bytes32 message, string signature) returns string
@@ -75,7 +76,7 @@ rule uniqueMessagePerChallenge(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ verifySignature functions are equivalent                                                                            │
+│ verifySignature functions are equivalent (Vacuity check timeout cert-6290)                                          │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule verifySignatureEq(){
@@ -109,5 +110,65 @@ rule verifySignatureEq(){
     assert (firstCallRevert == secondCallRevert) || (result1 == result2);
 }
 
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CastSignature Consistent (Once valid always valid, Once failed always failed, includes revert cases and middle call)|
+│   (Proved)                                                                                                          |
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+rule castSignatureConsistent(){
+    env e;
+    method f;
+    calldataarg args;
+
+    bytes signature;
+    
+    bool firstIsValid;
+    WebAuthn.Signature firstData;
+    
+    bool secondIsValid;
+    WebAuthn.Signature secondData;
+
+    firstIsValid, firstData = castSignature@withrevert(e, signature);
+    bool firstRevert = lastReverted;
+
+    f(e, args);
+
+    secondIsValid, secondData = castSignature@withrevert(e, signature);
+    bool secondRevert = lastReverted;
+
+    if (!firstRevert && !secondRevert) {
+        assert compareSignatures(e, firstData, secondData) && firstIsValid == secondIsValid;
+    }
+
+    assert firstRevert == secondRevert;
+}
 
 
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CastSignature uniqueness (violated)                                                                                 |
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+rule castSignatureUniqueness(){
+    
+    env e;
+
+    bytes signature1;
+    bytes signature2;
+    
+    bool firstIsValid;
+    WebAuthn.Signature firstData;
+    
+    bool secondIsValid;
+    WebAuthn.Signature secondData;
+
+    firstIsValid, firstData = castSignature(e, signature1);
+
+    secondIsValid, secondData = castSignature(e, signature2);
+
+    assert (getSha256(e, signature1) != getSha256(e, signature2)) &&
+    ((firstIsValid && secondIsValid)) => !compareSignatures(e, firstData, secondData);
+}
