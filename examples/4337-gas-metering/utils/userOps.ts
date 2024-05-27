@@ -439,7 +439,7 @@ export function getGasLimits(unpackedUserOperation: UserOperation) {
   ])
 }
 
-export function getPaymasterAndData(unpackedUserOperation: UserOperationV07) {
+export function getPaymasterAndData(unpackedUserOperation: UserOperation) {
   return unpackedUserOperation.paymaster
     ? concat([
         unpackedUserOperation.paymaster,

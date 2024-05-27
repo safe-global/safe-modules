@@ -16,7 +16,7 @@ import {
   toPackedUserOperation,
 } from '../utils/userOps'
 import { getERC20Decimals, getERC20Balance, transferERC20Token } from '../utils/erc20'
-import { EntryPointV07SimulationsAbi } from './entrypointAbi'
+import { EntryPointV07SimulationsAbi, PimlicoEntryPointSimulationsAbi } from './entrypointAbi'
 
 dotenv.config()
 // For Paymaster Identification.
@@ -271,12 +271,26 @@ sponsoredUserOperation.signature = await signUserOperation(
   chainAddresses.SAFE_4337_MODULE_ADDRESS,
 )
 
+const packedUserOperation = toPackedUserOperation(sponsoredUserOperation)
 const entryPointSimulationsSimulateHandleOpCallData = encodeFunctionData({
   abi: EntryPointV07SimulationsAbi,
   functionName: 'simulateHandleOp',
-  args: [toPackedUserOperation(sponsoredUserOperation)],
+  args: [packedUserOperation],
+})
+const entryPointSimulationsSimulateTargetCallData = encodeFunctionData({
+  abi: EntryPointV07SimulationsAbi,
+  functionName: "simulateCallData",
+  args: [packedUserOperation, zeroAddress, "0x"]
 })
 console.log('\nEncoded Call Data for simulateHandleOp:', entryPointSimulationsSimulateHandleOpCallData)
+console.log('\nEncoded Call Data for simulateCallData:', entryPointSimulationsSimulateTargetCallData)
+
+const pimlicoSimulationsCallData = encodeFunctionData({
+  abi: PimlicoEntryPointSimulationsAbi,
+  functionName: "simulateEntryPoint",
+  args: [ENTRYPOINT_ADDRESS_V07, [entryPointSimulationsSimulateHandleOpCallData, entryPointSimulationsSimulateTargetCallData]]
+})
+console.log('\nEncoded Call Data for simulateEntryPoint:', pimlicoSimulationsCallData)
 
 // Submit the User Operation.
 await submitUserOperationPimlico(sponsoredUserOperation, bundlerClient, ENTRYPOINT_ADDRESS_V07, chain)
