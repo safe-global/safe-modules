@@ -1,7 +1,7 @@
 methods{
     function getEncodeClientDataJsonSummary(bytes32 message, string calldata signature) external returns (string memory);
     
-    function encodeClientDataJson(bytes32 message, string calldata signature) internal returns (string memory) => 
+    function WebAuthn.encodeClientDataJson(bytes32 message, string calldata signature) internal returns (string memory) => 
         getEncodeClientDataJsonSummaryCVL(message, signature);
     
     function encodeAxiom(bytes32 message, bytes32 signature, bytes32 result) internal returns (bool) =>
@@ -35,6 +35,7 @@ rule encodeClientDataJsonIntegrity(){
     string b1 = encodeClientDataJson(e, challenge2, clientDataFields);
 
     assert (challenge1 != challenge2) <=> !compareStrings(e, a1, b1);
+    satisfy true;
 }
 
 /*
