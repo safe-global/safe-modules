@@ -278,116 +278,128 @@ Gas Used (Account or Paymaster): 229741
 Gas Used (Transaction): 231619
 ```
 
-## Safe Deployment with Pimlico Paymaster (Gas Policy)
+## Safe Deployment with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:account:paymaster
+pnpm run pimlico:account:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:account:paymaster
-> tsx ./pimlico/pimlico.ts account paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:account:verifying-paymaster
+> tsx ./pimlico/pimlico.ts account verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x8ac55DeB4a707BDD62f63D98570B82736b3FBC64
-Address Link: https://mumbai.polygonscan.com/address/0x8ac55DeB4a707BDD62f63D98570B82736b3FBC64
+Counterfactual Sender Address Created: 0x28A293Cc8E2F8705A2896b76d55A701677faf0DC
+Address Link: https://sepolia.etherscan.io/address/0x28A293Cc8E2F8705A2896b76d55A701677faf0DC
 
 Deploying a new Safe and executing calldata passed with it (if any).
 
 Nonce for the sender received from EntryPoint.
 
 Appropriate calldata created.
-UserOperation submitted. Hash: 0xbf6edac0683e35c855467cb9822eb6d151d7826ee15404ddb618d906800092dc
-UserOp Link: https://jiffyscan.xyz/userOpHash/0xbf6edac0683e35c855467cb9822eb6d151d7826ee15404ddb618d906800092dc?network=mumbai
+UserOperation submitted. Hash: 0xa3ac4b8694bac34ffdbb5b3f12839b3fb18005081b926f67df32bb09a422c9ba
+UserOp Link: https://jiffyscan.xyz/userOpHash/0xa3ac4b8694bac34ffdbb5b3f12839b3fb18005081b926f67df32bb09a422c9ba?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0xd51d026ecfa6dbafa8aac8a138badc6e3b397683117878e360bae9051a3b733a
-Transaction Link: https://mumbai.polygonscan.com/tx/0xd51d026ecfa6dbafa8aac8a138badc6e3b397683117878e360bae9051a3b733a
+Transaction hash: 0x5a9119d67f76203ebfbdb641d7620d41242502cffa4a10b801a79a463ef60893
+Transaction Link: https://sepolia.etherscan.io/tx/0x5a9119d67f76203ebfbdb641d7620d41242502cffa4a10b801a79a463ef60893
 
-Gas Used (Account or Paymaster): 446245
-Gas Used (Transaction): 448172
+Gas Used (Account or Paymaster): 414071
+Gas Used (Transaction): 396009
 ```
 
-## Safe Deployment + Native Transfer with Pimlico Paymaster (Gas Policy)
+## Safe Deployment + Native Transfer with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:native-transfer:paymaster
+pnpm run pimlico:native-transfer:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer:paymaster
-> tsx ./pimlico/pimlico.ts native-transfer paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:native-transfer:verifying-paymaster
+> tsx ./pimlico/pimlico.ts native-transfer verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x8fE158E24Aa2330F002aabB967815a817FE4F478
-Address Link: https://mumbai.polygonscan.com/address/0x8fE158E24Aa2330F002aabB967815a817FE4F478
+Counterfactual Sender Address Created: 0x805fa5CC045E7E51eba67F9A0b3737249eB06D75
+Address Link: https://sepolia.etherscan.io/address/0x805fa5CC045E7E51eba67F9A0b3737249eB06D75
 
 Deploying a new Safe and executing calldata passed with it (if any).
 
 Nonce for the sender received from EntryPoint.
 
+Transferring 0.000001 ETH to Safe for native transfer.
+
+Transferred required ETH for the native transfer.
+
 Appropriate calldata created.
-UserOperation submitted. Hash: 0x7d2ca6fba592799c4c9aa5e38ea24bd31d4516a53030b09b263341912bf819bc
-UserOp Link: https://jiffyscan.xyz/userOpHash/0x7d2ca6fba592799c4c9aa5e38ea24bd31d4516a53030b09b263341912bf819bc?network=mumbai
+UserOperation submitted. Hash: 0x2131d9b4c75da72f6c00dc3db49629e06d2baa110b4a94715cedf0cdd5c90f87
+UserOp Link: https://jiffyscan.xyz/userOpHash/0x2131d9b4c75da72f6c00dc3db49629e06d2baa110b4a94715cedf0cdd5c90f87?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0xdd966b95b6625be33ae37f6c5bb1ad33798afbbd899089acad1180005d0637c4
-Transaction Link: https://mumbai.polygonscan.com/tx/0xdd966b95b6625be33ae37f6c5bb1ad33798afbbd899089acad1180005d0637c4
+Transaction hash: 0x9c92c03c6f6abee15c8b7857d1dfa0d3aec517b7d116ae6f8b1034e192667a75
+Transaction Link: https://sepolia.etherscan.io/tx/0x9c92c03c6f6abee15c8b7857d1dfa0d3aec517b7d116ae6f8b1034e192667a75
 
-Gas Used (Account or Paymaster): 453652
-Gas Used (Transaction): 455615
+Gas Used (Account or Paymaster): 421350
+Gas Used (Transaction): 403404
 ```
 
-## Native Transfer with Pimlico Paymaster (Gas Policy)
+## Native Transfer with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:native-transfer:paymaster
+pnpm run pimlico:native-transfer:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:native-transfer:paymaster
-> tsx ./pimlico/pimlico.ts native-transfer paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:native-transfer:verifying-paymaster
+> tsx ./pimlico/pimlico.ts native-transfer verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x8fE158E24Aa2330F002aabB967815a817FE4F478
-Address Link: https://mumbai.polygonscan.com/address/0x8fE158E24Aa2330F002aabB967815a817FE4F478
+Counterfactual Sender Address Created: 0x805fa5CC045E7E51eba67F9A0b3737249eB06D75
+Address Link: https://sepolia.etherscan.io/address/0x805fa5CC045E7E51eba67F9A0b3737249eB06D75
 
 The Safe is already deployed.
 
 Nonce for the sender received from EntryPoint.
 
+Transferring 0.000001 ETH to Safe for native transfer.
+
+Transferred required ETH for the native transfer.
+
 Appropriate calldata created.
-UserOperation submitted. Hash: 0x38fd87397a93359b50265f3bf388b0a03a5f1845b977a0a7b1fb6ac053241eb9
-UserOp Link: https://jiffyscan.xyz/userOpHash/0x38fd87397a93359b50265f3bf388b0a03a5f1845b977a0a7b1fb6ac053241eb9?network=mumbai
+UserOperation submitted. Hash: 0x74445f733932717618715fe3d202521653246fcdf4a5f91d9504f4e54189c327
+UserOp Link: https://jiffyscan.xyz/userOpHash/0x74445f733932717618715fe3d202521653246fcdf4a5f91d9504f4e54189c327?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0xca2e41e24c6206011fe0d932f27a2786c7d9486c93f63d96c131c5007e2b275e
-Transaction Link: https://mumbai.polygonscan.com/tx/0xca2e41e24c6206011fe0d932f27a2786c7d9486c93f63d96c131c5007e2b275e
+Transaction hash: 0xb01f64d8db284a6f05fa7083a242bb238f44a70e49a55d6046e99c2f9029dc3f
+Transaction Link: https://sepolia.etherscan.io/tx/0xb01f64d8db284a6f05fa7083a242bb238f44a70e49a55d6046e99c2f9029dc3f
 
-Gas Used (Account or Paymaster): 120998
-Gas Used (Transaction): 123064
+Gas Used (Account or Paymaster): 137723
+Gas Used (Transaction): 120355
 ```
 
-## Safe Deployment + ERC20 Transaction with Pimlico Paymaster (Gas Policy)
+## Safe Deployment + ERC20 Transaction with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:erc20:paymaster
+pnpm run pimlico:erc20:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:erc20:paymaster
-> tsx ./pimlico/pimlico.ts erc20 paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:erc20:verifying-paymaster
+> tsx ./pimlico/pimlico.ts erc20 verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x8aaADBe50a15e1aFfe7D4363D4e00540E8e0db7D
-Address Link: https://mumbai.polygonscan.com/address/0x8aaADBe50a15e1aFfe7D4363D4e00540E8e0db7D
+Counterfactual Sender Address Created: 0xaaD0B5bC7a1981aE9712F13db47Fa420283E892E
+Address Link: https://sepolia.etherscan.io/address/0xaaD0B5bC7a1981aE9712F13db47Fa420283E892E
 
 Deploying a new Safe and executing calldata passed with it (if any).
 
@@ -400,32 +412,33 @@ Minting ERC20 Tokens to Safe Wallet.
 Updated Safe Wallet ERC20 Balance: 1
 
 Appropriate calldata created.
-UserOperation submitted. Hash: 0xaa85e8c6f94695fb829541e55eda8b5b5f23a8cca4541f4a53d62b1280861736
-UserOp Link: https://jiffyscan.xyz/userOpHash/0xaa85e8c6f94695fb829541e55eda8b5b5f23a8cca4541f4a53d62b1280861736?network=mumbai
+UserOperation submitted. Hash: 0xd9689b262cfcbc30993cec3c4c0a4e192c971ff2886ad7094065e4b9cdf016cb
+UserOp Link: https://jiffyscan.xyz/userOpHash/0xd9689b262cfcbc30993cec3c4c0a4e192c971ff2886ad7094065e4b9cdf016cb?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0xbd4c79d876ae928bbc721501029b01dbc5fc94d91d6299f548f19289f7c1c271
-Transaction Link: https://mumbai.polygonscan.com/tx/0xbd4c79d876ae928bbc721501029b01dbc5fc94d91d6299f548f19289f7c1c271
+Transaction hash: 0x2c23f209eb25208bb977fb81992dbc072201ab8d4d7dd2a2c527558c6d22a6b6
+Transaction Link: https://sepolia.etherscan.io/tx/0x2c23f209eb25208bb977fb81992dbc072201ab8d4d7dd2a2c527558c6d22a6b6
 
-Gas Used (Account or Paymaster): 461859
-Gas Used (Transaction): 459014
+Gas Used (Account or Paymaster): 446477
+Gas Used (Transaction): 423670
 ```
 
-## ERC20 Transaction with Pimlico Paymaster (Gas Policy)
+## ERC20 Transaction with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:erc20:paymaster
+pnpm run pimlico:erc20:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:erc20:paymaster
-> tsx ./pimlico/pimlico.ts erc20 paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:erc20:verifying-paymaster
+> tsx ./pimlico/pimlico.ts erc20 verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x8aaADBe50a15e1aFfe7D4363D4e00540E8e0db7D
-Address Link: https://mumbai.polygonscan.com/address/0x8aaADBe50a15e1aFfe7D4363D4e00540E8e0db7D
+Counterfactual Sender Address Created: 0xaaD0B5bC7a1981aE9712F13db47Fa420283E892E
+Address Link: https://sepolia.etherscan.io/address/0xaaD0B5bC7a1981aE9712F13db47Fa420283E892E
 
 The Safe is already deployed.
 
@@ -438,78 +451,80 @@ Minting ERC20 Tokens to Safe Wallet.
 Updated Safe Wallet ERC20 Balance: 1
 
 Appropriate calldata created.
-UserOperation submitted. Hash: 0xbc1283f136edac0ea47d140c2ab11568a33584021cd0530eec3a2a5515136822
-UserOp Link: https://jiffyscan.xyz/userOpHash/0xbc1283f136edac0ea47d140c2ab11568a33584021cd0530eec3a2a5515136822?network=mumbai
+UserOperation submitted. Hash: 0x78ef12748b94bdc1c39e646196ae9dbfc02404924f0b6839d2f9de74262f3238
+UserOp Link: https://jiffyscan.xyz/userOpHash/0x78ef12748b94bdc1c39e646196ae9dbfc02404924f0b6839d2f9de74262f3238?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0xd2b130bc2f26cfe43041f7102601425674e2cd22a6b74672b907b28e70686496
-Transaction Link: https://mumbai.polygonscan.com/tx/0xd2b130bc2f26cfe43041f7102601425674e2cd22a6b74672b907b28e70686496
+Transaction hash: 0x556a93d3481866744217adacc930c05544293053068ce3bba81d6af81b18d12e
+Transaction Link: https://sepolia.etherscan.io/tx/0x556a93d3481866744217adacc930c05544293053068ce3bba81d6af81b18d12e
 
-Gas Used (Account or Paymaster): 129190
-Gas Used (Transaction): 126461
+Gas Used (Account or Paymaster): 145721
+Gas Used (Transaction): 123494
 ```
 
-## Safe Deployment + ERC721 Transaction with Pimlico Paymaster (Gas Policy)
+## Safe Deployment + ERC721 Transaction with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:erc721:paymaster
+pnpm run pimlico:erc721:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:erc721:paymaster
-> tsx ./pimlico/pimlico.ts erc721 paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:erc721:verifying-paymaster
+> tsx ./pimlico/pimlico.ts erc721 verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x07a49F28A360B7799AeEBC9907bE605daFc13a30
-Address Link: https://mumbai.polygonscan.com/address/0x07a49F28A360B7799AeEBC9907bE605daFc13a30
+Counterfactual Sender Address Created: 0xaFdEf274B5f68fa12f7d5D9dF99De16a974ec697
+Address Link: https://sepolia.etherscan.io/address/0xaFdEf274B5f68fa12f7d5D9dF99De16a974ec697
 
 Deploying a new Safe and executing calldata passed with it (if any).
 
 Nonce for the sender received from EntryPoint.
 
 Appropriate calldata created.
-UserOperation submitted. Hash: 0x9b917c637eed529c8ae13eeb00ed8fdf3aac711dea7efdac7c048ba16bd9c8e3
-UserOp Link: https://jiffyscan.xyz/userOpHash/0x9b917c637eed529c8ae13eeb00ed8fdf3aac711dea7efdac7c048ba16bd9c8e3?network=mumbai
+UserOperation submitted. Hash: 0xbe821b819192a32ccd468226abcc2775e9bbb212cbde104d2a725aa38d1879bc
+UserOp Link: https://jiffyscan.xyz/userOpHash/0xbe821b819192a32ccd468226abcc2775e9bbb212cbde104d2a725aa38d1879bc?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0x454a3a5a39432f7b01a70fcddfef948d20c70d2d719aea30d402d693447fa535
-Transaction Link: https://mumbai.polygonscan.com/tx/0x454a3a5a39432f7b01a70fcddfef948d20c70d2d719aea30d402d693447fa535
+Transaction hash: 0x45ee84ab39fed43d2d2399aaa3e9aa9ebe2a65691d80d4e169b0c6efd21ec3cb
+Transaction Link: https://sepolia.etherscan.io/tx/0x45ee84ab39fed43d2d2399aaa3e9aa9ebe2a65691d80d4e169b0c6efd21ec3cb
 
-Gas Used (Account or Paymaster): 486237
-Gas Used (Transaction): 488186
+Gas Used (Account or Paymaster): 470905
+Gas Used (Transaction): 452929
 ```
 
-## ERC721 Transaction with Pimlico Paymaster (Gas Policy)
+## ERC721 Transaction with Pimlico Verifying Paymaster
 
 ```
-pnpm run pimlico:erc721:paymaster
+pnpm run pimlico:erc721:verifying-paymaster
 
-> @safe-global/4337-gas-metering@1.0.0 pimlico:erc721:paymaster
-> tsx ./pimlico/pimlico.ts erc721 paymaster=true
+> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:erc721:verifying-paymaster
+> tsx ./pimlico/pimlico.ts erc721 verifyingPaymaster=true
 
+Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.
 Signer Extracted from Private Key.
 
 Init Code Created.
 
-Counterfactual Sender Address Created: 0x07a49F28A360B7799AeEBC9907bE605daFc13a30
-Address Link: https://mumbai.polygonscan.com/address/0x07a49F28A360B7799AeEBC9907bE605daFc13a30
+Counterfactual Sender Address Created: 0xaFdEf274B5f68fa12f7d5D9dF99De16a974ec697
+Address Link: https://sepolia.etherscan.io/address/0xaFdEf274B5f68fa12f7d5D9dF99De16a974ec697
 
 The Safe is already deployed.
 
 Nonce for the sender received from EntryPoint.
 
 Appropriate calldata created.
-UserOperation submitted. Hash: 0x8a82cfc2396e1031f09e8f9725e276ded8e2a741a70264d6b23aaafc314e7105
-UserOp Link: https://jiffyscan.xyz/userOpHash/0x8a82cfc2396e1031f09e8f9725e276ded8e2a741a70264d6b23aaafc314e7105?network=mumbai
+UserOperation submitted. Hash: 0xd75a2f1f5572866f1f80adae7d27b7d15764eba9bc64c7819b0ea474c548cd24
+UserOp Link: https://jiffyscan.xyz/userOpHash/0xd75a2f1f5572866f1f80adae7d27b7d15764eba9bc64c7819b0ea474c548cd24?network=sepolia
 
 Querying for receipts...
 Receipt found!
-Transaction hash: 0xa148a4938de9883b2fbcd512e3c7161e78ca695843b6e535fdb5054b88872652
-Transaction Link: https://mumbai.polygonscan.com/tx/0xa148a4938de9883b2fbcd512e3c7161e78ca695843b6e535fdb5054b88872652
+Transaction hash: 0x22b94bd700109d5d46b5f1da1414e5c582cc1bedc9418371d24e320bfc0d44eb
+Transaction Link: https://sepolia.etherscan.io/tx/0x22b94bd700109d5d46b5f1da1414e5c582cc1bedc9418371d24e320bfc0d44eb
 
-Gas Used (Account or Paymaster): 153569
-Gas Used (Transaction): 155645
+Gas Used (Account or Paymaster): 170150
+Gas Used (Transaction): 152766
 ```
