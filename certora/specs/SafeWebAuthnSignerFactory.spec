@@ -2,8 +2,8 @@ using SafeWebAuthnSignerProxy as proxy;
 using SafeWebAuthnSignerSingleton as singleton;
 
 methods{
-    function getSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
-    function createSigner(uint256, uint256, P256.Verifiers) external returns (address) envfree;
+    function getSigner(uint256, uint256, P256.Verifiers) external returns (address);
+    function createSigner(uint256, uint256, P256.Verifiers) external returns (address);
     function hasNoCode(address) external returns (bool) envfree;
 }
 
@@ -36,17 +36,19 @@ rule singletonNeverChanges()
 // consider adding the following munging after the creationcode to get a more clear dump 01234567891011121314152546
 
 rule uniqueSigner(){
+    env e;
+
     uint256 firstX;
     uint256 firstY;
     P256.Verifiers firstVerifier;
 
-    address firstSigner = getSigner(firstX, firstY, firstVerifier);
+    address firstSigner = getSigner(e, firstX, firstY, firstVerifier);
 
     uint256 secondX;
     uint256 secondY;
     P256.Verifiers secondVerifier;
 
-    address secondSigner = getSigner(secondX, secondY, secondVerifier);
+    address secondSigner = getSigner(e, secondX, secondY, secondVerifier);
 
     assert firstSigner == secondSigner <=> (firstX == secondX && firstY == secondY && firstVerifier == secondVerifier);
 }
@@ -58,17 +60,19 @@ rule uniqueSigner(){
 */
 
 rule createAndGetSignerEquivalence(){
+    env e;
+
     uint256 createX;
     uint256 createY;
     P256.Verifiers createVerifier;
 
-    address signer1 = createSigner(createX, createY, createVerifier);
+    address signer1 = createSigner(e, createX, createY, createVerifier);
 
     uint256 getX;
     uint256 getY;
     P256.Verifiers getVerifier;
     
-    address signer2 = getSigner(getX, getY, getVerifier);
+    address signer2 = getSigner(e, getX, getY, getVerifier);
     
     assert signer1 == signer2 <=> (createX == getX && createY == getY && createVerifier == getVerifier);
 }
@@ -80,13 +84,16 @@ rule createAndGetSignerEquivalence(){
 */
 rule deterministicSigner()
 {
+    env e1;
+    env e2;
+
     uint x;
     uint y;
     P256.Verifiers verifier;
 
-    address signer = getSigner(x, y, verifier);
+    address signer = getSigner(e1, x, y, verifier);
 
-    assert signer == getSigner(x, y, verifier);
+    assert signer == getSigner(e2, x, y, verifier);
 }
 
 /*
@@ -111,31 +118,33 @@ hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
 
 rule SignerCreationCantOverride()
 {
+    env e;
     require numOfCreation == 0;
 
     uint x;
     uint y;
     P256.Verifiers verifier;
 
-    address a = getSigner(x, y, verifier);
+    address a = getSigner(e, x, y, verifier);
     require address_map[a] == 0;
 
-    createSigner(x, y, verifier);
-    createSigner@withrevert(x, y, verifier);
+    createSigner(e, x, y, verifier);
+    createSigner@withrevert(e, x, y, verifier);
 
     assert numOfCreation < 2;
 }
 
 rule ValidValue()
 {
+    env e;
     require !validValue;
 
     uint x;
     uint y;
     P256.Verifiers verifier;
 
-    createSigner(x, y, verifier);
-    createSigner@withrevert(x, y, verifier);
+    createSigner(e, x, y, verifier);
+    createSigner@withrevert(e, x, y, verifier);
     
     satisfy validValue;
 }
