@@ -157,7 +157,7 @@ const getInitializerCode = async ({
       operation: 1, // 1 = DelegateCall required for enabling the module
     },
   ]
-  console.log({ erc20TokenAddress, paymasterAddress })
+
   if (erc20TokenAddress != zeroAddress && paymasterAddress != zeroAddress) {
     setupTxs.push({
       to: erc20TokenAddress,
@@ -166,7 +166,7 @@ const getInitializerCode = async ({
       operation: 0, // 0 = Call
     })
   }
-  console.log({ setupTxs, setuptxslength: setupTxs.length })
+
   const recipient = setupTxs.length > 1 ? multiSendAddress : safeModuleSetupAddress
   const calldata = setupTxs.length > 1 ? encodeMultiSend(setupTxs) : setupTxs[0].data
 

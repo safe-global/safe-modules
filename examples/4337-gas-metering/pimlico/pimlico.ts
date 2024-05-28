@@ -64,10 +64,12 @@ let transactionType = UserOperationType.ERC20Paymaster
 if (argv.length < 1 || argv.length > 2) {
   throw new Error('TX Type Argument not passed.')
 } else if (argv.length == 2 && argv[1] == 'verifyingPaymaster=true') {
+  transactionType = UserOperationType.VerifyingPaymaster
   if (policyID) {
-    transactionType = UserOperationType.VerifyingPaymaster
+    console.log(`Using sponsorship policy. Leave it empty if you're using testnets, 
+      Pimlico has a weird bug where it requires positive fiat balance if policy id is provided`)
   } else {
-    throw new Error('Paymaster requires policyID to be set.')
+    console.warn(`Sponsorship Policy ID is not provided. This will only work for testnets, as pimlico are sponsoring the operations.`)
   }
 }
 
@@ -241,6 +243,7 @@ if (transactionType === UserOperationType.VerifyingPaymaster) {
     sponsorshipPolicyId: policyID,
   })
 
+  sponsoredUserOperation.paymaster = sponsorResult.paymaster
   sponsoredUserOperation.callGasLimit = sponsorResult.callGasLimit
   sponsoredUserOperation.verificationGasLimit = sponsorResult.verificationGasLimit
   sponsoredUserOperation.preVerificationGas = sponsorResult.preVerificationGas

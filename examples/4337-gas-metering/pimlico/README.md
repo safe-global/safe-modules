@@ -1,42 +1,6 @@
 # Pimlico
 
-## Safe Deployment With Pimlico (No Paymaster)
-
-```
-pnpm run pimlico:account
-
-> @safe-global/safe-modules-example-4337-gas-metering@1.0.0 pimlico:account
-> tsx ./pimlico/pimlico.ts account
-
-Signer Extracted from Private Key.
-
-Init Code Created.
-
-Counterfactual Sender Address Created: 0x90BFbCEf51C6b170D309C0A80B6062ffDfc8FbB8
-Address Link: https://sepolia.etherscan.io/address/0x90BFbCEf51C6b170D309C0A80B6062ffDfc8FbB8
-
-Deploying a new Safe and executing calldata passed with it (if any).
-
-Nonce for the sender received from EntryPoint.
-
-Appropriate calldata created.
-
-Sender ETH Balance: 0.0
-
-Required Prefund: 0.071222563201076969
-UserOperation submitted. Hash: 0x1a2644dfcb8ba01986faf3fb7b6adde6945e7aa2410405541032a312071e6f8a
-UserOp Link: https://jiffyscan.xyz/userOpHash/0x1a2644dfcb8ba01986faf3fb7b6adde6945e7aa2410405541032a312071e6f8a?network=sepolia
-
-Querying for receipts...
-Receipt found!
-Transaction hash: 0xe3656d4b26c17871350e3c589d6afee340c538cfd4636c68dedd76706dbd08fd
-Transaction Link: https://sepolia.etherscan.io/tx/0xe3656d4b26c17871350e3c589d6afee340c538cfd4636c68dedd76706dbd08fd
-
-Gas Used (Account or Paymaster): 423757
-Gas Used (Transaction): 409872
-```
-
-## Safe Deployment with Pimlico Paymaster (Own Sponsorship)
+## Safe Deployment with Pimlico ERC20 Paymaster
 
 ```
 pnpm run pimlico:account:paymaster
