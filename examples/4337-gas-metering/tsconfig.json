@@ -16,5 +16,5 @@
     "noImplicitReturns": true /* Report error when not all code paths in function return a value. */
   },
   "include": ["./alchemy/**/*", "./gelato/**/*", "./pimlico/**/*", "./utils/**/*"],
-    "exclude": ["node_modules"]
+  "exclude": ["node_modules"]
 }

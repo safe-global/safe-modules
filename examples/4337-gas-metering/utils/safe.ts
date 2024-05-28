@@ -1,6 +1,5 @@
 import {
   Address,
-  Chain,
   Hex,
   PrivateKeyAccount,
   PublicClient,
