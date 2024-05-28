@@ -24,7 +24,7 @@ describe('Local Bundler [@4337]', () => {
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
 
-    const safe = await Safe4337.withSigner(user.address, {
+    const safe = Safe4337.withSigner(user.address, {
       safeSingleton: SafeL2.address,
       entryPoint: EntryPoint.address,
       erc4337module: Safe4337Module.address,
@@ -108,10 +108,9 @@ describe('Local Bundler [@4337]', () => {
       signature,
     })
 
-    const userOpHash = await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
+    await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
 
     await waitForUserOp(userOp)
-    console.log(await bundler.send("eth_getUserOperationReceipt", [userOpHash]))
     expect(await token.balanceOf(safe.address)).to.equal(0n)
     expect(await ethers.provider.getBalance(safe.address)).to.be.lessThan(ethers.parseEther('0.5'))
   })

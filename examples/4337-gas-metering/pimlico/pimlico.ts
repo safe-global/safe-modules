@@ -17,6 +17,7 @@ import {
 } from '../utils/userOps'
 import { getERC20Decimals, getERC20Balance, transferERC20Token } from '../utils/erc20'
 import { EntryPointV07SimulationsAbi, PimlicoEntryPointSimulationsAbi } from './entrypointAbi'
+import { SAFE_4337_MODULE_ABI } from '../utils/abi'
 
 dotenv.config()
 // For Paymaster Identification.
@@ -49,6 +50,9 @@ const usdcTokenAddress = process.env.PIMLICO_USDC_TOKEN_ADDRESS as `0x${string}`
 const erc20TokenAddress = process.env.PIMLICO_ERC20_TOKEN_CONTRACT as `0x${string}`
 const erc721TokenAddress = process.env.PIMLICO_ERC721_TOKEN_CONTRACT as `0x${string}`
 
+// Logging preference
+const VERBOSE = process.env.VERBOSE === 'true'
+
 enum UserOperationType {
   ERC20Paymaster = 'erc20-paymaster',
   VerifyingPaymaster = 'verifying-paymaster',
@@ -66,7 +70,7 @@ if (argv.length < 1 || argv.length > 2) {
     throw new Error('Paymaster requires policyID to be set.')
   }
 }
-console.log({ transactionType })
+
 // Transaction Type detection.
 const txType: string = argv[0]
 if (!txTypes.includes(txType)) {
@@ -247,12 +251,12 @@ if (transactionType === UserOperationType.VerifyingPaymaster) {
   // Fetch USDC balance of sender
   const usdcDecimals = BigInt(await getERC20Decimals(usdcTokenAddress, publicClient))
   const usdcDenomination = 10n ** usdcDecimals
-  const usdcAmount = 1n * usdcDenomination
+  const usdcAmount = 7n * usdcDenomination
   let senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
   console.log('\nSafe Wallet USDC Balance:', Number(senderUSDCBalance / usdcDenomination))
 
   if (senderUSDCBalance < usdcAmount) {
-    console.log('\nTransferring 1 USDC Token for paying the Paymaster from Sender to Safe.')
+    console.log('\nTransferring 7 USDC Token for paying the Paymaster from Sender to Safe.')
     await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, usdcAmount, chain, paymaster)
     while (senderUSDCBalance < usdcAmount) {
       await setTimeout(15000)
@@ -260,6 +264,18 @@ if (transactionType === UserOperationType.VerifyingPaymaster) {
     }
     console.log('\nUpdated Safe Wallet USDC Balance:', Number(senderUSDCBalance / usdcDenomination))
   }
+}
+
+if (VERBOSE) {
+  console.log(
+    'User operation hash (from the 4337 module): ',
+    await publicClient.readContract({
+      abi: SAFE_4337_MODULE_ABI,
+      address: chainAddresses.SAFE_4337_MODULE_ADDRESS,
+      functionName: 'getOperationHash',
+      args: [toPackedUserOperation(sponsoredUserOperation)],
+    }),
+  )
 }
 
 // Sign the User Operation.
@@ -271,26 +287,29 @@ sponsoredUserOperation.signature = await signUserOperation(
   chainAddresses.SAFE_4337_MODULE_ADDRESS,
 )
 
-const packedUserOperation = toPackedUserOperation(sponsoredUserOperation)
-const entryPointSimulationsSimulateHandleOpCallData = encodeFunctionData({
-  abi: EntryPointV07SimulationsAbi,
-  functionName: 'simulateHandleOp',
-  args: [packedUserOperation],
-})
-const entryPointSimulationsSimulateTargetCallData = encodeFunctionData({
-  abi: EntryPointV07SimulationsAbi,
-  functionName: "simulateCallData",
-  args: [packedUserOperation, zeroAddress, "0x"]
-})
-console.log('\nEncoded Call Data for simulateHandleOp:', entryPointSimulationsSimulateHandleOpCallData)
-console.log('\nEncoded Call Data for simulateCallData:', entryPointSimulationsSimulateTargetCallData)
+if (VERBOSE) {
+  const packedUserOperation = toPackedUserOperation(sponsoredUserOperation)
+  const entryPointSimulationsSimulateHandleOpCallData = encodeFunctionData({
+    abi: EntryPointV07SimulationsAbi,
+    functionName: 'simulateHandleOp',
+    args: [packedUserOperation],
+  })
+  const entryPointSimulationsSimulateTargetCallData = encodeFunctionData({
+    abi: EntryPointV07SimulationsAbi,
+    functionName: 'simulateCallData',
+    args: [packedUserOperation, zeroAddress, '0x'],
+  })
 
-const pimlicoSimulationsCallData = encodeFunctionData({
-  abi: PimlicoEntryPointSimulationsAbi,
-  functionName: "simulateEntryPoint",
-  args: [ENTRYPOINT_ADDRESS_V07, [entryPointSimulationsSimulateHandleOpCallData, entryPointSimulationsSimulateTargetCallData]]
-})
-console.log('\nEncoded Call Data for simulateEntryPoint:', pimlicoSimulationsCallData)
+  const pimlicoSimulationsCallData = encodeFunctionData({
+    abi: PimlicoEntryPointSimulationsAbi,
+    functionName: 'simulateEntryPoint',
+    args: [ENTRYPOINT_ADDRESS_V07, [entryPointSimulationsSimulateHandleOpCallData, entryPointSimulationsSimulateTargetCallData]],
+  })
+  console.log('\nEncoded Call Data for simulateEntryPoint: ', pimlicoSimulationsCallData)
+  console.log(
+    `\nYou can use the call data above to simulate the User Operation on the Pimlico EntryPointSimulations contract at 0xb02456a0ec77837b22156cba2ff53e662b326713 and Tenderly: https://tenderly.co.`,
+  )
+}
 
 // Submit the User Operation.
 await submitUserOperationPimlico(sponsoredUserOperation, bundlerClient, ENTRYPOINT_ADDRESS_V07, chain)

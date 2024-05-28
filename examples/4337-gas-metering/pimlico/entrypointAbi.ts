@@ -1,35 +1,33 @@
-export const ENTRYPOINT_SIMULATIONS_ADDRESS = '0xda121459aefc83948c76345e27551f1269b7853b'
-
 export const PimlicoEntryPointSimulationsAbi = [
   {
-      inputs: [],
-      stateMutability: "nonpayable",
-      type: "constructor"
+    inputs: [],
+    stateMutability: 'nonpayable',
+    type: 'constructor',
   },
   {
-      inputs: [
-          {
-              internalType: "address payable",
-              name: "ep",
-              type: "address"
-          },
-          {
-              internalType: "bytes[]",
-              name: "data",
-              type: "bytes[]"
-          }
-      ],
-      name: "simulateEntryPoint",
-      outputs: [
-          {
-              internalType: "bytes[]",
-              name: "",
-              type: "bytes[]"
-          }
-      ],
-      stateMutability: "nonpayable",
-      type: "function"
-  }
+    inputs: [
+      {
+        internalType: 'address payable',
+        name: 'ep',
+        type: 'address',
+      },
+      {
+        internalType: 'bytes[]',
+        name: 'data',
+        type: 'bytes[]',
+      },
+    ],
+    name: 'simulateEntryPoint',
+    outputs: [
+      {
+        internalType: 'bytes[]',
+        name: '',
+        type: 'bytes[]',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
 ]
 
 export const EntryPointV07SimulationsAbi = [

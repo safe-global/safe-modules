@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther, concat, pad, toHex } from 'viem'
+import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther, concat, pad, toHex, hashTypedData } from 'viem'
 import { encodeCallData } from './safe'
 import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { Alchemy } from 'alchemy-sdk'
@@ -101,14 +101,14 @@ export const signUserOperation = async (
         message: {
           safe: userOperation.sender,
           nonce: userOperation.nonce,
-          initCode: userOperation.factory ? userOperation.factory + (userOperation.factoryData ?? '').slice(2) : '0x',
+          initCode: getInitCode(userOperation),
           callData: userOperation.callData,
           verificationGasLimit: userOperation.verificationGasLimit,
           callGasLimit: userOperation.callGasLimit,
           preVerificationGas: userOperation.preVerificationGas,
           maxPriorityFeePerGas: userOperation.maxPriorityFeePerGas,
           maxFeePerGas: userOperation.maxFeePerGas,
-          paymasterAndData: userOperation.paymasterData,
+          paymasterAndData: getPaymasterAndData(userOperation),
           validAfter: '0x000000000000',
           validUntil: '0x000000000000',
           entryPoint: entryPointAddress,
