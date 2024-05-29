@@ -1,28 +1,9 @@
-methods{
-    function getEncodeClientDataJsonSummary(bytes32 message, string calldata signature) external returns (string memory);
-    
-    function WebAuthn.encodeClientDataJson(bytes32 message, string calldata signature) internal returns (string memory) => 
-        getEncodeClientDataJsonSummaryCVL(message, signature);
-    
-    function encodeAxiom(bytes32 message, bytes32 signature, bytes32 result) internal returns (bool) =>
-        encodeAxiomSummary(message, signature, result);
 
-    //function encodeSigningMessage(bytes32,bytes calldata,string calldata) internal returns(bytes memory) => NONDET;
-    function castSignature(bytes calldata signature) external returns (bool, WebAuthn.Signature calldata);
-}
-
-function getEncodeClientDataJsonSummaryCVL(bytes32 message, string signature) returns string
-{
-    env e;
-    return getEncodeClientDataJsonSummary(e, message, signature);
-}
-
-ghost encodeAxiomSummary(bytes32, bytes32, bytes32) returns bool {
-    axiom forall bytes32 x1. forall bytes32 y1. forall bytes32 x2. forall bytes32 y2. forall bytes32 z.
-    (x1 != x2 || y1 != y2) => !(encodeAxiomSummary(x1, y1, z) && encodeAxiomSummary(x2, y2, z));
-}
-
-// Inner Check for Summarization
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ encodeClientDataJsonIntegrity 2 different challenges results in 2 different clientDataJson (Violated)               │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
 rule encodeClientDataJsonIntegrity(){
 
     env e;

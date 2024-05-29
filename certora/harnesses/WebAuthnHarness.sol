@@ -4,23 +4,6 @@ pragma solidity ^0.8.0;
 import {P256, WebAuthn} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
 
 contract WebAuthnHarness {
-
-    mapping(bytes32 => mapping(bytes32 => string)) summaryMap;
-
-    function getEncodeClientDataJsonSummary(bytes32 message, string calldata signature) public view returns (string memory){
-        bytes32 hashed_signature = keccak256(abi.encodePacked(signature));
-        string memory string_mapping = summaryMap[message][hashed_signature];
-        bytes32 hashed_mapping = keccak256(abi.encodePacked(string_mapping));
-
-        require (encodeAxiom(message, hashed_signature, hashed_mapping));
-
-        return string_mapping;
-    }
-
-    function encodeAxiom(bytes32 message, bytes32 signature, bytes32 result) internal pure returns (bool){
-        return true;
-    }
-
     function compareSignatures(WebAuthn.Signature memory sig1, WebAuthn.Signature memory sig2) public pure returns (bool) {
         if (sig1.r != sig2.r || sig1.s != sig2.s) {
             return false;
