@@ -101,6 +101,11 @@ rule verifySignatureEq(){
 
 rule castSignatureConsistent(){
     env e;
+    env e1;
+    env e2;
+
+    require (e1.msg.value == e2.msg.value) && (e1.msg.value == e.msg.value) && (e.msg.value == 0);
+
     method f;
     calldataarg args;
 
@@ -112,19 +117,19 @@ rule castSignatureConsistent(){
     bool secondIsValid;
     WebAuthn.Signature secondData;
 
-    firstIsValid, firstData = castSignature@withrevert(e, signature);
+    firstIsValid, firstData = castSignature@withrevert(e1, signature);
     bool firstRevert = lastReverted;
 
     f(e, args);
 
-    secondIsValid, secondData = castSignature@withrevert(e, signature);
+    secondIsValid, secondData = castSignature@withrevert(e2, signature);
     bool secondRevert = lastReverted;
 
     if (!firstRevert && !secondRevert) {
         assert compareSignatures(e, firstData, secondData) && firstIsValid == secondIsValid;
     }
 
-    assert firstRevert == secondRevert;
+    assert (firstRevert == secondRevert);
 }
 
 
