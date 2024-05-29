@@ -1,3 +1,4 @@
+/* Setup Artifacts
 import "ERC20/erc20cvl.spec";
 import "ERC20/WETHcvl.spec";
 import "ERC721/erc721.spec";
@@ -21,10 +22,35 @@ use rule timeoutChecker filtered { f -> f.contract == currentContract }
 use rule simpleFrontRunning filtered { f -> f.contract == currentContract }
 use rule noRevert filtered { f -> f.contract == currentContract }
 use rule alwaysRevert filtered { f -> f.contract == currentContract }
+*/
+using SafeWebAuthnSignerSingleton as SafeWebAuthnSignerSingleton;
 
+hook DELEGATECALL(uint g, address addr, uint argsOffset, uint argsLength, uint retOffset, uint retLength) uint rc {
+    // DELEGATECALL is used in this contract, but it only ever calls into the singleton.
+    assert (executingContract != currentContract || addr == SafeWebAuthnSignerSingleton,
+        "we should only `delegatecall` into the singleton."
+    );
+}
 
 /*
-Rule: Proxy Configuration Paramateres Never Change -- Passed
+Property 12. Proxy - Delegate Call Integrity (calls the Singleton)
+Hooking on delegate calls will make sure we'll get a violation if the singleton isn't the contract called.
+Rule verified.
+*/
+rule delegateCallsOnlyToSingleton {
+    env e;
+    method f;
+    calldataarg args;
+
+    f(e, args);
+
+    assert true;
+}
+
+/*
+Property 11. Proxy - Immutability of Configuration Parameters (x, y, Singleton, verifier)
+x, y, singleton and verifiers never changes after any function call.
+Rule verified.
 */
 rule configParametersImmutability {
     env e;
