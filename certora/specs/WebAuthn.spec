@@ -132,30 +132,45 @@ rule castSignatureConsistent(){
     assert (firstRevert == secondRevert);
 }
 
-
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CastSignature uniqueness (violated)                                                                                 |
+│ CastSignature Canonical Deterministic Decoding (Violated)                                                           |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-rule castSignatureUniqueness(){
-    
+rule castSignatureDeterministicDecoding(){
     env e;
 
-    bytes signature1;
-    bytes signature2;
-    
-    bool firstIsValid;
-    WebAuthn.Signature firstData;
-    
-    bool secondIsValid;
-    WebAuthn.Signature secondData;
+    WebAuthn.Signature structSignature;
+    bytes encodeSig = encodeSignature(e, structSignature);
 
-    firstIsValid, firstData = castSignature(e, signature1);
+    WebAuthn.Signature decodedSignature;
+    bool isValid;
 
-    secondIsValid, secondData = castSignature(e, signature2);
+    isValid, decodedSignature = castSignature(e, encodeSig);
 
-    assert ((getSha256(e, signature1) != getSha256(e, signature2)) &&
-    ((firstIsValid && secondIsValid))) => !compareSignatures(e, firstData, secondData);
+    assert isValid <=> compareSignatures(e, structSignature, decodedSignature);
+}
+
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ CastSignature Length Check Validity                                                                                 |
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+rule castSignatureLengthCheckValidity(){
+    env e;
+
+    WebAuthn.Signature structSignature;
+    bytes encodeSig;
+
+    WebAuthn.Signature decodedSignature;
+    bool isValid;
+
+    isValid, decodedSignature = castSignature(e, encodeSig);
+
+    assert compareSignatures(e, structSignature, decodedSignature) => (
+        isValid <=> encodeSig.length <= encodeSignature(e, structSignature).length
+    );
 }
