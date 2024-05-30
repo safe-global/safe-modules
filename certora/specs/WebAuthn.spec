@@ -134,7 +134,7 @@ rule castSignatureConsistent(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CastSignature Canonical Deterministic Decoding (Violated)                                                           |
+│ CastSignature Canonical Deterministic Decoding (Violated (Timeout CERT-6341))                                       |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 

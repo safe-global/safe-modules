@@ -21,7 +21,7 @@ contract WebAuthnHarness {
     }
 
     function encodeSignature(WebAuthn.Signature calldata sig) external pure returns (bytes memory signature){
-        signature = abi.encode(sig);
+        signature = abi.encode(sig.authenticatorData, sig.clientDataFields, sig.r, sig.s);
     }
 
     function castSignature(bytes calldata signature) external pure returns (bool isValid, WebAuthn.Signature calldata data){
