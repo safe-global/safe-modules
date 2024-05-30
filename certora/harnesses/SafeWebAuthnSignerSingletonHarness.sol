@@ -19,4 +19,8 @@ contract SafeWebAuthnSignerSingletonHarness is SafeWebAuthnSignerSingleton {
         (uint256 x, uint256 y, P256.Verifiers verifiers) = getConfiguration();
         success = WebAuthn.verifySignature(message, signature, WebAuthn.USER_VERIFICATION, x, y, verifiers);
     }
+
+    function getConfigurationHarnessed(bytes32 message, bytes calldata signature) public pure returns (uint256 new_x, uint256 new_y, P256.Verifiers new_verifiers) {
+        (uint256 new_x, uint256 new_y, P256.Verifiers new_verifiers) = getConfiguration();
+    }
 }

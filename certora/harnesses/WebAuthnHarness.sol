@@ -89,5 +89,22 @@ contract WebAuthnHarness {
     function getSha256(bytes memory input) public view returns (bytes32 digest) {
         return WebAuthn._sha256(input);
     }
+
+    mapping (bytes32 => mapping (bytes32 => mapping (bytes32 => bytes)))  symbolicMessageSummary;
+
+    function GETencodeSigningMessageSummary(bytes32 challenge, bytes calldata authenticatorData, string calldata clientDataFields) public returns (bytes memory){
+        bytes32 hashed_authenticatorData = keccak256(authenticatorData);
+        bytes32 hashed_clientDataFields = keccak256(abi.encodePacked(clientDataFields));
+
+        bytes memory bytes_mapping = symbolicMessageSummary[challenge][hashed_authenticatorData][hashed_clientDataFields];
+
+        require (checkInjective(challenge, hashed_authenticatorData, hashed_clientDataFields, keccak256(bytes_mapping)));
+
+        return bytes_mapping;
+    }
+
+    function checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal view returns (bool){
+        return true;
+    }
     
 }
