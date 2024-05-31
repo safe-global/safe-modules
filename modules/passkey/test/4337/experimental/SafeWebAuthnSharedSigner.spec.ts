@@ -123,6 +123,7 @@ describe('SafeWebAuthnSharedSigner', () => {
       expect(await ethers.provider.getStorage(account, SIGNER_STORAGE_SLOT)).to.equal(config.x)
       expect(await ethers.provider.getStorage(account, BigInt(SIGNER_STORAGE_SLOT) + 1n)).to.equal(config.y)
       expect(await ethers.provider.getStorage(account, BigInt(SIGNER_STORAGE_SLOT) + 2n)).to.equal(config.verifiers)
+      expect(await ethers.provider.getStorage(account, ethers.id('SafeWebAuthnSharedSigner.signer'))).to.equal(ethers.ZeroHash)
     })
 
     it('Should revert if not DELEGATECALL-ed', async () => {

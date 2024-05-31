@@ -13,7 +13,8 @@ import {P256, WebAuthn} from "../../libraries/WebAuthn.sol";
 contract SafeWebAuthnSharedSigner is SignatureValidator {
     /**
      * @notice Data associated with a WebAuthn signer. It represents the X and Y coordinates of the
-     * signer's public key. This is stored in a mapping using the account address as the key.
+     * signer's public key as well as the P256 verifiers to use. This is stored in account storage
+     * starting at the storage slot {_SIGNER_SLOT}.
      */
     struct Signer {
         uint256 x;
