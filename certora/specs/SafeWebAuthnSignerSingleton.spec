@@ -1,4 +1,3 @@
-using SafeWebAuthnSignerProxy as proxy;
 using WebAuthnHarness as WebAuthnHarness;
 
 methods {
