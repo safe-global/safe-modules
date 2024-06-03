@@ -26,7 +26,7 @@
     "build"
   ],
   "scripts": {
-    "bench": "hardhat test --grep @bench",
+    "bench": "ts-node bin/bench.ts",
     "build": "pnpm run build:sol && pnpm run build:ts",
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
@@ -54,11 +54,13 @@
     "@safe-global/safe-4337": "workspace:^0.3.0",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@simplewebauthn/server": "^10.0.0",
+    "@types/node": "^20.14.0",
     "dotenv": "^16.4.5",
     "ethers": "^6.12.1",
     "hardhat": "^2.22.3",
     "hardhat-deploy": "^0.12.4",
     "solhint": "^5.0.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   },
   "dependencies": {

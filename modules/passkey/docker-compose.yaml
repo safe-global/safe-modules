@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  geth:
+    build:
+      context: .
+      dockerfile: docker/geth/Dockerfile
+    restart: always
+    environment:
+      GETH_DEV: 'true'
+      GETH_HTTP: 'true'
+      GETH_HTTP_ADDR: '0.0.0.0'
+      GETH_HTTP_API: 'personal,eth,net,web3,debug'
+      GETH_HTTP_VHOSTS: '*'
+      GETH_OVERRIDE_FJORD: '0'
+      GETH_RPC_ALLOW_UNPROTECTED_TXS: 'true'
+    ports:
+      - 8545:8545
