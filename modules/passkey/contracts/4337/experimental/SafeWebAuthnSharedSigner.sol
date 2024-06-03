@@ -14,7 +14,7 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
     /**
      * @notice Data associated with a WebAuthn signer. It represents the X and Y coordinates of the
      * signer's public key as well as the P256 verifiers to use. This is stored in account storage
-     * starting at the storage slot {_SIGNER_SLOT}.
+     * starting at the storage slot {SIGNER_SLOT}.
      */
     struct Signer {
         uint256 x;
@@ -23,13 +23,14 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
     }
 
     /**
-     * @notice The starting storage slot containing the signer data.
-     * @custom:computed-as keccak256("SafeWebAuthnSharedSigner.signer") - 3
-     * @dev This value is intentionally computed to be a hash -3 as a precaution to avoid any
+     * @notice The storage slot of the mapping from shared WebAuthn signer address to signer data.
+     * @custom:computed-as keccak256("SafeWebAuthnSharedSigner.signer") - 1
+     * @dev This value is intentionally computed to be a hash -1 as a precaution to avoid any
      * potential issues from unintended hash collisions, and have enough space for all the signer
-     * fields.
+     * fields. Also, this is the slot of a `mapping(address self => Signer)` to ensure that multiple
+     * {SafeWebAuthnSharedSigner} instances can coexist with the same account.
      */
-    uint256 private constant _SIGNER_SLOT = 0x2e0aed53485dc2290ceb5ce14725558ad3e3a09d38c69042410ad15c2b4ea4e6;
+    uint256 private constant _SIGNER_MAPPING_SLOT = 0x2e0aed53485dc2290ceb5ce14725558ad3e3a09d38c69042410ad15c2b4ea4e8;
 
     /**
      * @notice An error indicating a `CALL` to a function that should only be `DELEGATECALL`-ed.
@@ -37,16 +38,23 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
     error NotDelegateCalled();
 
     /**
-     * @dev Address of the launchpad contract itself. it is used for determining whether or not the
-     * contract is being `DELEGATECALL`-ed when setting signer data.
+     * @notice Address of the shared signer contract itself.
+     * @dev This is used for determining whether or not the contract is being `DELEGATECALL`-ed when
+     * setting signer data.
      */
     address private immutable _SELF;
+
+    /**
+     * @notice The starting storage slot on the account containing the signer data.
+     */
+    uint256 public immutable SIGNER_SLOT;
 
     /**
      * @notice Create a new shared WebAuthn signer instance.
      */
     constructor() {
         _SELF = address(this);
+        SIGNER_SLOT = uint256(keccak256(abi.encode(address(this), _SIGNER_MAPPING_SLOT)));
     }
 
     /**
@@ -66,7 +74,7 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
      * @param account The account to request signer data for.
      */
     function getConfiguration(address account) public view returns (Signer memory signer) {
-        bytes memory getStorageAtData = abi.encodeCall(ISafe(account).getStorageAt, (_SIGNER_SLOT, 3));
+        bytes memory getStorageAtData = abi.encodeCall(ISafe(account).getStorageAt, (SIGNER_SLOT, 3));
 
         // Call the {StorageAccessible.getStorageAt} with assembly. This allows us to return a
         // zeroed out signer configuration instead of reverting for `account`s that are not Safes.
@@ -114,16 +122,17 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
      * @param signer The new signer data to set for the calling account.
      */
     function configure(Signer memory signer) external onlyDelegateCall {
-        Signer storage signerSlot;
+        uint256 signerSlot = SIGNER_SLOT;
+        Signer storage signerStorage;
 
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
-            signerSlot.slot := _SIGNER_SLOT
+            signerStorage.slot := signerSlot
         }
 
-        signerSlot.x = signer.x;
-        signerSlot.y = signer.y;
-        signerSlot.verifiers = signer.verifiers;
+        signerStorage.x = signer.x;
+        signerStorage.y = signer.y;
+        signerStorage.verifiers = signer.verifiers;
     }
 
     /**
