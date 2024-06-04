@@ -134,7 +134,7 @@ rule castSignatureConsistent(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CastSignature Canonical Deterministic Decoding (Violated (Timeout CERT-6341))                                       |
+│ CastSignature Canonical Deterministic Decoding                                                                      |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -172,4 +172,105 @@ rule castSignatureLengthCheckValidity(){
     bool length_is_correct = encodeSig.length <= encodeSignature(e, decodedSignature).length;
 
     assert isValid <=> length_is_correct;
+}
+
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ castSignature Reverting Conditions                                                                                                       |
+| Will only revert if function was paid.                                                                                                   |
+| Passes - https://prover.certora.com/output/15800/9d6be0f24e094ffe94b9faf1ed8bfc8f?anonymousKey=517b64e4e1693de5294f836400a5581fc7ec0bcf  |
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule castSignatureRevertingConditions {
+    env e;
+    bytes signature;
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    castSignature_notreturns@withrevert(e, signature);
+
+    assert lastReverted <=> triedTransferringEth;
+}
+
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ encodeClientDataJson Reverting Conditions                                                                                                |
+| Will only revert if function was paid.                                                                                                   |
+| Passes - https://prover.certora.com/output/15800/ccc8d2fd45b04cf5ac8efdf263820324?anonymousKey=68d9ae2e6f4f22dd7aae9f8bddbc5faf7de12df1  |
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule encodeClientDataJsonRevertingConditions {
+    env e;
+    bytes32 challenge;
+    string clientDataFields;
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    encodeClientDataJson@withrevert(e, challenge, clientDataFields);
+
+    assert lastReverted <=> triedTransferringEth;
+}
+
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ encodeSigningMessage Reverting Conditions                                                                                                |
+| Will only revert if function was paid.                                                                                                   |
+| Passes - https://prover.certora.com/output/15800/93685eaf7e7146eabaa38125dc32f29b?anonymousKey=eaf6d4135849f0476d8e9e6a758cca8818a96b94  |
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule encodeSigningMessageRevertingConditions {
+    env e;
+    bytes32 challenge;
+    bytes authenticatorData;
+    string clientDataFields;
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    encodeSigningMessage@withrevert(e, challenge, authenticatorData, clientDataFields);
+
+    assert lastReverted <=> triedTransferringEth;
+}
+
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ checkAuthenticatorFlags Reverting Conditions                                                                                             |
+| Will only revert if function was paid or the bytes array `authenticatorData`'s length is too small (<= 32 bytes).                        |
+| Passes - https://prover.certora.com/output/15800/d2d34792998c479db5f38430efc7dc8b?anonymousKey=7e68511768f3da35bdb9f75c9f86d40d2e07e2aa  |
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule checkAuthenticatorFlagsRevertingConditions {
+    env e;
+    bytes authenticatorData;
+    WebAuthn.AuthenticatorFlags authenticatorFlags;
+
+    bool triedTransferringEth = e.msg.value != 0;
+    bool dataLengthInsufficient = authenticatorData.length <= 32;
+
+    checkAuthenticatorFlags@withrevert(e, authenticatorData, authenticatorFlags);
+
+    assert lastReverted <=> (triedTransferringEth || dataLengthInsufficient);
+}
+
+/*
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ verifySignature Reverting Conditions                                                                                                     |
+| Will only revert if function was paid or the bytes array `authenticatorData`'s in `signature` length is too small (<= 32 bytes).         |
+| Passes - https://prover.certora.com/output/15800/d2d34792998c479db5f38430efc7dc8b?anonymousKey=7e68511768f3da35bdb9f75c9f86d40d2e07e2aa  |
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule verifySignatureRevertingConditions {
+    env e;
+    bytes32 challenge;
+    WebAuthn.Signature signature;
+    WebAuthn.AuthenticatorFlags authenticatorFlags;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+
+    bool triedTransferringEth = e.msg.value != 0;
+    bool dataLengthInsufficient = signature.authenticatorData.length <= 32;
+
+    verifySignature@withrevert(e, challenge, signature, authenticatorFlags, x, y, verifiers);
+
+    assert lastReverted <=> (triedTransferringEth || dataLengthInsufficient);
 }
