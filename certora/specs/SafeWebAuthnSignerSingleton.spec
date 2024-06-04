@@ -39,12 +39,10 @@ rule verifySignatureUniqueness(env e){
     bytes32 second_message;
     bytes signature;
 
-    require (first_message != second_message);
-
     bool first_message_verified = verifySignatureHarnessed(e, first_message, signature);
     bool second_message_verified = verifySignatureHarnessed(e, second_message, signature);
 
-    assert !(first_message_verified && second_message_verified);
+    assert (first_message != second_message) => !(first_message_verified && second_message_verified);
 }
 
 rule verifySignatureIntegrity(env e){
@@ -104,7 +102,7 @@ rule verifyIsValidSignatureAreEqual(env e){
 
     assert (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e)) => message == keccak256(data);
     assert message == keccak256(data) => (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e)) || 
-                                         (magicValue_hashed != to_bytes4(0x20c13b0b) && magicValue_message != to_bytes4(0x1626ba7e));
+                                         (magicValue_hashed == to_bytes4(0) && magicValue_message == to_bytes4(0));
 }
 
 /*
@@ -119,18 +117,20 @@ rule verifyIsValidSignatureWillContinueToSucceed(env e){
     bytes32 message;
     bytes signature;
 
-    bool first_verified = verifySignatureHarnessed(e, message, signature);
-    require first_verified == true;
+    bool first_verified = verifySignatureHarnessed@withrevert(e, message, signature);
+    bool first_revert = lastReverted;
 
     f(e, args);
 
-    bool second_verified = verifySignatureHarnessed(e, message, signature);
-    assert second_verified;
+    bool second_verified = verifySignatureHarnessed@withrevert(e, message, signature);
+
+    assert !first_revert && !lastReverted;
+    assert first_verified => second_verified;
 }
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Once isValidSignature failed, it will never pass before createSigner called                                         │
+│ If isValidSignature failed, the only method that can make it pass is createSigner                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
