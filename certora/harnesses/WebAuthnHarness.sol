@@ -28,6 +28,10 @@ contract WebAuthnHarness {
         return WebAuthn.castSignature(signature);
     }
 
+    function castSignature_notreturns(bytes calldata signature) external pure {
+        WebAuthn.castSignature(signature);
+    }
+
     function compareStrings(string memory str1, string memory str2) public view returns (bool) {
         bytes memory str1Bytes = bytes(str1);
         bytes memory str2Bytes = bytes(str2);
