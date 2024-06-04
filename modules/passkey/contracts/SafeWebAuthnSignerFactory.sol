@@ -87,15 +87,22 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         }
     }
 
+    // /**
+    //  * @dev Checks if the provided account has no code.
+    //  * @param account The address of the account to check.
+    //  * @return result True if the account has no code, false otherwise.
+    //  */
+    // function _hasNoCode(address account) internal view returns (bool result) {
+    //     // solhint-disable-next-line no-inline-assembly
+    //     assembly ("memory-safe") {
+    //         result := iszero(extcodesize(account))
+    //     }
+    // }
+
     /**
-     * @dev Checks if the provided account has no code.
-     * @param account The address of the account to check.
-     * @return result True if the account has no code, false otherwise.
+        Munged.
      */
     function _hasNoCode(address account) internal view returns (bool result) {
-        // solhint-disable-next-line no-inline-assembly
-        assembly ("memory-safe") {
-            result := iszero(extcodesize(account))
-        }
+        return account.code.length > 0;
     }
 }

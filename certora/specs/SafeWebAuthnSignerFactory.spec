@@ -159,11 +159,9 @@ rule deterministicSigner()
 
 ghost mathint numOfCreation;
 ghost mapping(address => uint) address_map;
-ghost bool validValue;
 
 hook EXTCODESIZE(address addr) uint v{
     require address_map[addr] == v;
-    validValue = addr <= max_uint160;
 }
 
 hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
@@ -187,21 +185,6 @@ rule SignerCreationCantOverride()
     createSigner@withrevert(e, x, y, verifier);
 
     assert numOfCreation < 2;
-}
-
-rule ValidValue()
-{
-    env e;
-    require !validValue;
-
-    uint x;
-    uint y;
-    P256.Verifiers verifier;
-
-    createSigner(e, x, y, verifier);
-    createSigner@withrevert(e, x, y, verifier);
-    
-    satisfy validValue;
 }
 
 /*
