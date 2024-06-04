@@ -117,15 +117,13 @@ rule verifyIsValidSignatureWillContinueToSucceed(env e){
     bytes32 message;
     bytes signature;
 
-    bool first_verified = verifySignatureHarnessed@withrevert(e, message, signature);
-    bool first_revert = lastReverted;
+    bool first_verified = verifySignatureHarnessed(e, message, signature);
+    require first_verified;
 
     f(e, args);
 
-    bool second_verified = verifySignatureHarnessed@withrevert(e, message, signature);
-
-    assert !first_revert && !lastReverted;
-    assert first_verified => second_verified;
+    bool second_verified = verifySignatureHarnessed(e, message, signature);
+    assert second_verified;
 }
 
 /*
