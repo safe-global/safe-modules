@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
-import { http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount, PublicClient } from 'viem'
-import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { HttpTransport, http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount, PublicClient } from 'viem'
+import { baseSepolia, goerli, sepolia } from 'viem/chains'
 import {
   ERC20_TOKEN_APPROVE_ABI,
   ERC20_TOKEN_BALANCE_OF_ABI,
@@ -32,7 +32,10 @@ export const generateTransferCallData = (to: Address, value: bigint) => {
   return transferData
 }
 
-export const getERC20Decimals = async (erc20TokenAddress: Address, publicClient: PublicClient): Promise<bigint> => {
+export const getERC20Decimals = async (
+  erc20TokenAddress: Address,
+  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
+): Promise<bigint> => {
   const erc20Decimals = (await publicClient.readContract({
     abi: ERC20_TOKEN_DECIMALS_ABI,
     address: erc20TokenAddress,
@@ -42,7 +45,11 @@ export const getERC20Decimals = async (erc20TokenAddress: Address, publicClient:
   return erc20Decimals
 }
 
-export const getERC20Balance = async (erc20TokenAddress: Address, publicClient: PublicClient, owner: Address): Promise<bigint> => {
+export const getERC20Balance = async (
+  erc20TokenAddress: Address,
+  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
+  owner: Address,
+): Promise<bigint> => {
   const senderERC20Balance = (await publicClient.readContract({
     abi: ERC20_TOKEN_BALANCE_OF_ABI,
     address: erc20TokenAddress,
@@ -55,7 +62,7 @@ export const getERC20Balance = async (erc20TokenAddress: Address, publicClient: 
 
 export const mintERC20Token = async (
   erc20TokenAddress: Address,
-  publicClient: PublicClient,
+  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
   signer: PrivateKeyAccount,
   to: Address,
   amount: bigint,
@@ -64,16 +71,16 @@ export const mintERC20Token = async (
 ) => {
   let walletClient
   if (paymaster == 'pimlico') {
-    if (chain == 'goerli') {
+    if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: goerli,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'base-sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: baseSepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {
@@ -126,7 +133,7 @@ export const mintERC20Token = async (
 
 export const transferERC20Token = async (
   erc20TokenAddress: Address,
-  publicClient: PublicClient,
+  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
   signer: PrivateKeyAccount,
   to: Address,
   amount: bigint,
@@ -135,16 +142,16 @@ export const transferERC20Token = async (
 ) => {
   let walletClient
   if (paymaster == 'pimlico') {
-    if (chain == 'goerli') {
+    if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: goerli,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'base-sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: baseSepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {

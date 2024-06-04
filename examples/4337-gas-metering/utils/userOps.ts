@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther } from 'viem'
+import { fromHex, parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther, concat, pad, toHex } from 'viem'
 import { encodeCallData } from './safe'
 import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { Alchemy } from 'alchemy-sdk'
@@ -15,15 +15,21 @@ export const txTypes = ['account', 'erc20', 'erc721', 'native-transfer']
 export type UserOperation = {
   sender: Address
   nonce: bigint
-  initCode: Hex
+  factory?: Address
+  factoryData?: Hex
   callData: Hex
   callGasLimit: bigint
   verificationGasLimit: bigint
   preVerificationGas: bigint
   maxFeePerGas: bigint
   maxPriorityFeePerGas: bigint
-  paymasterAndData: Hex
+  paymaster?: Address
+  paymasterVerificationGasLimit?: bigint
+  paymasterPostOpGasLimit?: bigint
+  paymasterData?: Hex
   signature: Hex
+  initCode?: never
+  paymasterAndData?: never
 }
 
 // Sponsored User Operation Data
@@ -45,7 +51,7 @@ export type gasData = {
 export const submitUserOperationPimlico = async (
   userOperation: UserOperation,
   bundlerClient: any,
-  entryPointAddress: any,
+  entryPointAddress: string,
   chain: string,
 ) => {
   const userOperationHash = await bundlerClient.sendUserOperation({
@@ -56,14 +62,20 @@ export const submitUserOperationPimlico = async (
   console.log(`UserOp Link: https://jiffyscan.xyz/userOpHash/${userOperationHash}?network=` + chain + '\n')
 
   console.log('Querying for receipts...')
-  const receipt = await bundlerClient.waitForUserOperationReceipt({
+  let receipt = await bundlerClient.getUserOperationReceipt({
     hash: userOperationHash,
   })
+  while (receipt == null) {
+    await setTimeout(10000) // Sometimes it takes time to index.
+    receipt = await bundlerClient.getUserOperationReceipt({
+      hash: userOperationHash,
+    })
+  }
   console.log(`Receipt found!\nTransaction hash: ${receipt.receipt.transactionHash}`)
-  if (chain == 'mumbai') {
-    console.log(`Transaction Link: https://mumbai.polygonscan.com/tx/${receipt.receipt.transactionHash}`)
+  if (chain == 'base-sepolia') {
+    console.log(`Transaction Link: https://sepolia.basescan.org/tx/${receipt.receipt.transactionHash}`)
   } else {
-    console.log(`Transaction Link: https://` + chain + `.etherscan.io/tx/${receipt.receipt.transactionHash}`)
+    console.log(`Transaction Link: https://${chain}.etherscan.io/tx/${receipt.receipt.transactionHash}`)
   }
   console.log(`\nGas Used (Account or Paymaster): ${receipt.actualGasUsed}`)
   console.log(`Gas Used (Transaction): ${receipt.receipt.gasUsed}\n`)
@@ -72,9 +84,9 @@ export const submitUserOperationPimlico = async (
 export const signUserOperation = async (
   userOperation: UserOperation,
   signer: PrivateKeyAccount,
-  chainID: any,
-  entryPointAddress: any,
-  safe4337ModuleAddress: any,
+  chainID: number,
+  entryPointAddress: `0x${string}`,
+  safe4337ModuleAddress: `0x${string}`,
 ) => {
   const signatures = [
     {
@@ -89,14 +101,14 @@ export const signUserOperation = async (
         message: {
           safe: userOperation.sender,
           nonce: userOperation.nonce,
-          initCode: userOperation.initCode,
+          initCode: getInitCode(userOperation),
           callData: userOperation.callData,
-          callGasLimit: userOperation.callGasLimit,
           verificationGasLimit: userOperation.verificationGasLimit,
+          callGasLimit: userOperation.callGasLimit,
           preVerificationGas: userOperation.preVerificationGas,
-          maxFeePerGas: userOperation.maxFeePerGas,
           maxPriorityFeePerGas: userOperation.maxPriorityFeePerGas,
-          paymasterAndData: userOperation.paymasterAndData,
+          maxFeePerGas: userOperation.maxFeePerGas,
+          paymasterAndData: getPaymasterAndData(userOperation),
           validAfter: '0x000000000000',
           validUntil: '0x000000000000',
           entryPoint: entryPointAddress,
@@ -350,7 +362,7 @@ export const createCallData = async (
   } else if (txType == 'erc20') {
     // Token Configurations
     const erc20Decimals = await getERC20Decimals(erc20TokenAddress, publicClient)
-    const erc20Amount = BigInt(10n ** erc20Decimals)
+    const erc20Amount = 10n ** BigInt(erc20Decimals)
     let senderERC20Balance = await getERC20Balance(erc20TokenAddress, publicClient, senderAddress)
     console.log('\nSafe Wallet ERC20 Balance:', Number(senderERC20Balance / erc20Amount))
 
@@ -400,6 +412,58 @@ export const createCallData = async (
       value: weiToSend,
     })
   }
+
   console.log('\nAppropriate calldata created.')
   return txCallData
+}
+
+export function getInitCode(unpackedUserOperation: UserOperation) {
+  return unpackedUserOperation.factory ? concat([unpackedUserOperation.factory, unpackedUserOperation.factoryData || ('0x' as Hex)]) : '0x'
+}
+
+export function getAccountGasLimits(unpackedUserOperation: UserOperation) {
+  return concat([
+    pad(toHex(unpackedUserOperation.verificationGasLimit), {
+      size: 16,
+    }),
+    pad(toHex(unpackedUserOperation.callGasLimit), { size: 16 }),
+  ])
+}
+
+export function getGasLimits(unpackedUserOperation: UserOperation) {
+  return concat([
+    pad(toHex(unpackedUserOperation.maxPriorityFeePerGas), {
+      size: 16,
+    }),
+    pad(toHex(unpackedUserOperation.maxFeePerGas), { size: 16 }),
+  ])
+}
+
+export function getPaymasterAndData(unpackedUserOperation: UserOperation) {
+  return unpackedUserOperation.paymaster
+    ? concat([
+        unpackedUserOperation.paymaster,
+        pad(toHex(unpackedUserOperation.paymasterVerificationGasLimit || 0n), {
+          size: 16,
+        }),
+        pad(toHex(unpackedUserOperation.paymasterPostOpGasLimit || 0n), {
+          size: 16,
+        }),
+        unpackedUserOperation.paymasterData || ('0x' as Hex),
+      ])
+    : '0x'
+}
+
+export function toPackedUserOperation(unpackedUserOperation: UserOperation): Record<string, any> {
+  return {
+    sender: unpackedUserOperation.sender,
+    nonce: unpackedUserOperation.nonce,
+    initCode: getInitCode(unpackedUserOperation),
+    callData: unpackedUserOperation.callData,
+    accountGasLimits: getAccountGasLimits(unpackedUserOperation),
+    preVerificationGas: unpackedUserOperation.preVerificationGas,
+    gasFees: getGasLimits(unpackedUserOperation),
+    paymasterAndData: getPaymasterAndData(unpackedUserOperation),
+    signature: unpackedUserOperation.signature,
+  }
 }

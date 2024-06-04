@@ -15,5 +15,6 @@
     "outDir": "./dist" /* Redirect output structure to the directory. */,
     "noImplicitReturns": true /* Report error when not all code paths in function return a value. */
   },
+  "include": ["./alchemy/**/*", "./gelato/**/*", "./pimlico/**/*", "./utils/**/*"],
   "exclude": ["node_modules"]
 }

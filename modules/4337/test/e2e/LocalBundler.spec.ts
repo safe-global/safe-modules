@@ -24,7 +24,7 @@ describe('Local Bundler [@4337]', () => {
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
 
-    const safe = await Safe4337.withSigner(user.address, {
+    const safe = Safe4337.withSigner(user.address, {
       safeSingleton: SafeL2.address,
       entryPoint: EntryPoint.address,
       erc4337module: Safe4337Module.address,

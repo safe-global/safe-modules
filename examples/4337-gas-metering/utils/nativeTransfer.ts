@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
-import { http, createWalletClient, PrivateKeyAccount, PublicClient, Address, WalletClient, HttpTransport, Chain, Account } from 'viem'
-import { baseSepolia, goerli, polygonMumbai, sepolia } from 'viem/chains'
+import { http, createWalletClient, PrivateKeyAccount, Address, WalletClient, HttpTransport, Chain, Account, PublicClient } from 'viem'
+import { baseSepolia, goerli, sepolia } from 'viem/chains'
 import { setTimeout } from 'timers/promises'
 
 dotenv.config()
@@ -9,7 +9,7 @@ const alchemyRPCURL = process.env.ALCHEMY_RPC_URL
 const gelatoRPCURL = process.env.GELATO_RPC_URL
 
 export const transferETH = async (
-  publicClient: PublicClient,
+  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia | typeof goerli>,
   signer: PrivateKeyAccount,
   receiver: Address,
   amount: bigint,
@@ -18,16 +18,16 @@ export const transferETH = async (
 ) => {
   let walletClient: WalletClient<HttpTransport, Chain, Account>
   if (paymaster == 'pimlico') {
-    if (chain == 'goerli') {
+    if (chain == 'sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: goerli,
+        chain: sepolia,
         transport: http(pimlicoRPCURL),
       })
-    } else if (chain == 'mumbai') {
+    } else if (chain == 'base-sepolia') {
       walletClient = createWalletClient({
         account: signer,
-        chain: polygonMumbai,
+        chain: baseSepolia,
         transport: http(pimlicoRPCURL),
       })
     } else {

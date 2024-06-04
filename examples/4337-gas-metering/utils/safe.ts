@@ -3,7 +3,7 @@ import {
   Hex,
   PrivateKeyAccount,
   PublicClient,
-  concatHex,
+  Transport,
   encodeFunctionData,
   encodePacked,
   formatEther,
@@ -16,6 +16,7 @@ import {
 import { InternalTx, encodeMultiSend } from './multisend'
 import { generateApproveCallData, generateTransferCallData, getERC20Balance, getERC20Decimals, mintERC20Token } from './erc20'
 import { setTimeout } from 'timers/promises'
+import { baseSepolia, sepolia } from 'viem/chains'
 import { generateMintingCallData } from './erc721'
 import { transferETH } from './nativeTransfer'
 import {
@@ -47,7 +48,7 @@ export const getGelatoCallData = async ({
 }: {
   safe: Address
   owner: PrivateKeyAccount
-  publicClient: PublicClient
+  publicClient: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
   erc20TokenAddress: Address
   erc721TokenAddress: Address
@@ -134,14 +135,14 @@ export const getGelatoCallData = async ({
 
 const getInitializerCode = async ({
   owner,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   multiSendAddress,
   erc20TokenAddress,
   paymasterAddress,
 }: {
   owner: Address
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   multiSendAddress: Address
   erc20TokenAddress: Address
@@ -149,7 +150,7 @@ const getInitializerCode = async ({
 }) => {
   const setupTxs: InternalTx[] = [
     {
-      to: addModuleLibAddress,
+      to: safeModuleSetupAddress,
       data: enableModuleCallData(safe4337ModuleAddress),
       value: 0n,
       operation: 1, // 1 = DelegateCall required for enabling the module
@@ -165,29 +166,30 @@ const getInitializerCode = async ({
     })
   }
 
-  const multiSendCallData = encodeMultiSend(setupTxs)
+  const recipient = setupTxs.length > 1 ? multiSendAddress : safeModuleSetupAddress
+  const calldata = setupTxs.length > 1 ? encodeMultiSend(setupTxs) : setupTxs[0].data
 
   return encodeFunctionData({
     abi: SAFE_SETUP_ABI,
     functionName: 'setup',
-    args: [[owner], 1n, multiSendAddress, multiSendCallData, safe4337ModuleAddress, zeroAddress, 0n, zeroAddress],
+    args: [[owner], 1n, recipient, calldata, safe4337ModuleAddress, zeroAddress, 0n, zeroAddress],
   })
 }
 
 const getGelatoInitializerCode = async ({
   owner,
-  publicClient,
+  client,
   txType,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   multiSendAddress,
   erc20TokenAddress,
   erc721TokenAddress,
 }: {
   owner: Address
-  publicClient: PublicClient
+  client: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   multiSendAddress: Address
   erc20TokenAddress: Address
@@ -195,7 +197,7 @@ const getGelatoInitializerCode = async ({
 }) => {
   const setupTxs: InternalTx[] = [
     {
-      to: addModuleLibAddress,
+      to: safeModuleSetupAddress,
       data: enableModuleCallData(safe4337ModuleAddress),
       value: 0n,
       operation: 1, // 1 = DelegateCall required for enabling the module
@@ -203,7 +205,7 @@ const getGelatoInitializerCode = async ({
   ]
   if (txType == 'erc20') {
     // Token Configurations
-    const erc20Decimals = BigInt(await getERC20Decimals(erc20TokenAddress, publicClient))
+    const erc20Decimals = BigInt(await getERC20Decimals(erc20TokenAddress, client))
     const erc20Amount = 10n ** erc20Decimals
 
     setupTxs.push({
@@ -250,7 +252,7 @@ export const prepareForGelatoTx = async ({
 }: {
   signer: PrivateKeyAccount
   chain: string
-  publicClient: PublicClient
+  publicClient: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
   senderAddress: Address
   erc20TokenAddress: Address
@@ -303,9 +305,8 @@ export const enableModuleCallData = (safe4337ModuleAddress: `0x${string}`) => {
 
 export const getAccountInitCode = async ({
   owner,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
-  safeProxyFactoryAddress,
   safeSingletonAddress,
   saltNonce = 0n,
   multiSendAddress,
@@ -313,9 +314,8 @@ export const getAccountInitCode = async ({
   paymasterAddress,
 }: {
   owner: Address
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
-  safeProxyFactoryAddress: Address
   safeSingletonAddress: Address
   saltNonce?: bigint
   multiSendAddress: Address
@@ -325,7 +325,7 @@ export const getAccountInitCode = async ({
   if (!owner) throw new Error('Owner account not found')
   const initializer = await getInitializerCode({
     owner,
-    addModuleLibAddress,
+    safeModuleSetupAddress,
     safe4337ModuleAddress,
     multiSendAddress,
     erc20TokenAddress,
@@ -338,14 +338,14 @@ export const getAccountInitCode = async ({
     args: [safeSingletonAddress, initializer, saltNonce],
   })
 
-  return concatHex([safeProxyFactoryAddress, initCodeCallData])
+  return initCodeCallData
 }
 
 export const getGelatoAccountInitCode = async ({
   owner,
-  publicClient,
+  client,
   txType,
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   safeSingletonAddress,
   saltNonce = 0n,
@@ -354,9 +354,9 @@ export const getGelatoAccountInitCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  publicClient: PublicClient
+  client: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
   txType: string
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   safeSingletonAddress: Address
   saltNonce?: bigint
@@ -367,9 +367,9 @@ export const getGelatoAccountInitCode = async ({
   if (!owner) throw new Error('Owner account not found')
   const initializer = await getGelatoInitializerCode({
     owner,
-    publicClient,
+    client,
     txType,
-    addModuleLibAddress,
+    safeModuleSetupAddress,
     safe4337ModuleAddress,
     multiSendAddress,
     erc20TokenAddress,
@@ -395,9 +395,9 @@ export const encodeCallData = (params: { to: Address; value: bigint; data: `0x${
 
 export const getAccountAddress = async ({
   owner,
-  publicClient,
+  client,
   txType = '',
-  addModuleLibAddress,
+  safeModuleSetupAddress,
   safe4337ModuleAddress,
   safeProxyFactoryAddress,
   safeSingletonAddress,
@@ -409,9 +409,9 @@ export const getAccountAddress = async ({
   isGelato = false,
 }: {
   owner: Address
-  publicClient: PublicClient
+  client: any
   txType?: string
-  addModuleLibAddress: Address
+  safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
   safeProxyFactoryAddress: Address
   safeSingletonAddress: Address
@@ -422,7 +422,7 @@ export const getAccountAddress = async ({
   paymasterAddress: Address
   isGelato?: boolean
 }): Promise<Address> => {
-  const proxyCreationCode = (await publicClient.readContract({
+  const proxyCreationCode = (await client.readContract({
     abi: SAFE_FACTORY_PROXY_CREATION_CODE_ABI,
     address: safeProxyFactoryAddress,
     functionName: 'proxyCreationCode',
@@ -434,9 +434,9 @@ export const getAccountAddress = async ({
   if (isGelato) {
     initializer = await getGelatoInitializerCode({
       owner,
-      publicClient,
+      client,
       txType,
-      addModuleLibAddress,
+      safeModuleSetupAddress,
       safe4337ModuleAddress,
       multiSendAddress,
       erc20TokenAddress,
@@ -445,7 +445,7 @@ export const getAccountAddress = async ({
   } else {
     initializer = await getInitializerCode({
       owner,
-      addModuleLibAddress,
+      safeModuleSetupAddress,
       safe4337ModuleAddress,
       multiSendAddress,
       erc20TokenAddress,

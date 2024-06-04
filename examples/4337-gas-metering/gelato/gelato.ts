@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { Address, Hash, PublicClient, createPublicClient, http, zeroAddress } from 'viem'
+import { Address, Hash, createPublicClient, http, zeroAddress } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { baseSepolia, sepolia } from 'viem/chains'
 import { getAccountAddress, getGelatoAccountInitCode, getGelatoCallData, prepareForGelatoTx } from '../utils/safe'
@@ -50,30 +50,26 @@ if (!privateKey) {
   throw new Error('Please populate .env file with demo Private Key. Recommended to not use your personal private key.')
 }
 
+// Check if the network is supported.
+if (chain != 'sepolia' && chain != 'base-sepolia') {
+  throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
+}
+
 const signer = privateKeyToAccount(privateKey as Hash)
 console.log('Signer Extracted from Private Key.')
 
-let publicClient
-if (chain == 'sepolia') {
-  publicClient = createPublicClient({
-    transport: http(rpcURL),
-    chain: sepolia,
-  })
-} else if (chain == 'base-sepolia') {
-  publicClient = createPublicClient({
-    transport: http(rpcURL),
-    chain: baseSepolia,
-  }) as PublicClient
-} else {
-  throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-}
+const viemChain = chain === 'sepolia' ? sepolia : baseSepolia
+const publicClient = createPublicClient({
+  transport: http(rpcURL),
+  chain: viemChain,
+})
 
 // Creating the Account Init Code.
 let requestData = await getGelatoAccountInitCode({
   owner: signer.address,
-  publicClient: publicClient,
+  client: publicClient,
   txType: txType,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
   saltNonce: saltNonce,
@@ -86,9 +82,9 @@ console.log('\nInit Code Created.')
 // Creating the Counterfactual Safe Address.
 const senderAddress = await getAccountAddress({
   owner: signer.address,
-  publicClient: publicClient,
+  client: publicClient,
   txType: txType,
-  addModuleLibAddress: chainAddresses.ADD_MODULES_LIB_ADDRESS,
+  safeModuleSetupAddress: chainAddresses.SAFE_MODULE_SETUP_ADDRESS,
   safe4337ModuleAddress: chainAddresses.SAFE_4337_MODULE_ADDRESS,
   safeProxyFactoryAddress: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   safeSingletonAddress: chainAddresses.SAFE_SINGLETON_ADDRESS,
