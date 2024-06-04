@@ -2,8 +2,7 @@ using SafeWebAuthnSignerProxy as proxy;
 using SafeWebAuthnSignerSingleton as singleton;
 
 methods{
-    // function getSigner(uint256, uint256, P256.Verifiers) external returns (address);
-    // function getSigner(uint256 x, uint256 y, P256.Verifiers v) internal returns (address) => getSignerGhost(x, y, v);
+    function getSigner(uint256 x, uint256 y, P256.Verifiers v) internal returns (address) => getSignerGhost(x, y, v);
     function createSigner(uint256, uint256, P256.Verifiers) external returns (address);
     function hasNoCode(address) external returns (bool) envfree;
 }
