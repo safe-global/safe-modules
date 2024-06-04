@@ -36,6 +36,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         bytes32 codeHash = keccak256(
             abi.encodePacked(
                 type(SafeWebAuthnSignerProxy).creationCode,
+                "01234567891011121314152546", // munged for word alignment workaround (32 bytes)
                 uint256(uint160(address(SINGLETON))),
                 x,
                 y,

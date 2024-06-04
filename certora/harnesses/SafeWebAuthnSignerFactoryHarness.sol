@@ -29,4 +29,21 @@ contract SafeWebAuthnSignerFactoryHarness is SafeWebAuthnSignerFactory {
         require(success);
         magicValue = abi.decode(result, (bytes4));
     }
+
+    function getSignerHarnessed(uint256 x, uint256 y, P256.Verifiers verifiers) public view returns (uint256 value) {
+        bytes32 codeHash = keccak256(
+            abi.encodePacked(
+                type(SafeWebAuthnSignerProxy).creationCode,
+                "01234567891011121314152546",
+                uint256(uint160(address(SINGLETON))),
+                x,
+                y,
+                uint256(P256.Verifiers.unwrap(verifiers))
+            )
+        );
+        value = uint256(keccak256(abi.encodePacked(hex"ff", address(this), bytes32(0), codeHash)));
+    }
+    function castToAddress(uint256 value) public pure returns (address addr){
+        addr = address(uint160(value));
+    }
 }
