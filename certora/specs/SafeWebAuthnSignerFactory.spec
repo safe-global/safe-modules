@@ -49,7 +49,7 @@ rule singletonNeverChanges()
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-// helper rule to justify the use of the munged implementation (proved)
+// helper rule to justify the use of the munged implementation (proved) need to drop getSigner summary before execution.
 rule mungedEquivalence()
 {
     env e1;
