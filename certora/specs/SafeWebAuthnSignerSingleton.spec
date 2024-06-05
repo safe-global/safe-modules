@@ -1,3 +1,34 @@
+using WebAuthnHarness as WebAuthnHarness;
+
+methods {
+    function P256.verifySignatureAllowMalleability(P256.Verifiers a, bytes32 b, uint256 c, uint256 d, uint256 e, uint256 f) internal returns (bool) => 
+        verifySignatureAllowMalleabilityGhost(a, b, c, d, e, f);
+
+    function WebAuthn.encodeSigningMessage(bytes32 challenge, bytes calldata authenticatorData, string calldata clientDataFields) internal returns (bytes memory) =>
+        GETencodeSigningMessageCVL(challenge, authenticatorData, clientDataFields);
+
+    function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
+        checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
+}
+
+function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
+{
+    env e;
+    return WebAuthnHarness.GETencodeSigningMessageSummary(e, challenge, authenticatorData, clientDataFields);
+}
+
+ghost checkInjectiveSummary(bytes32, bytes32, bytes32, bytes32) returns bool {
+    axiom forall bytes32 x1. forall bytes32 y1. forall bytes32 z1. forall bytes32 x2. forall bytes32 y2. forall bytes32 z2. forall bytes32 result.
+    checkInjectiveSummary(x1, y1, z1, result) && checkInjectiveSummary(x2, y2, z2, result) => x1 == x2;
+}
+
+ghost verifySignatureAllowMalleabilityGhost(P256.Verifiers, bytes32, uint256, uint256, uint256, uint256) returns bool {
+    axiom forall P256.Verifiers a. forall bytes32 message1. forall bytes32 message2. forall uint256 c. forall uint256 d. forall uint256 e. forall uint256 f.
+        verifySignatureAllowMalleabilityGhost(a, message1, c, d, e, f) && 
+        verifySignatureAllowMalleabilityGhost(a, message2, c, d, e, f) => message1 == message2;
+}
+
+definition MAGIC_VALUE() returns bytes4 = to_bytes4(0x1626ba7e);
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -5,46 +36,31 @@
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-rule verifySignatureIntegrity(env e){
+rule verifySignatureUniqueness(env e){
     bytes32 first_message;
-    bytes signature;
-
-    bool first_message_verified = verifySignatureHarnessed(e, first_message, signature);
-
     bytes32 second_message;
-    bool second_message_verified = verifySignatureHarnessed(e, second_message, signature);
+    WebAuthn.Signature sigStruct;
+    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
 
-    assert (first_message_verified == true && second_message_verified == true) => first_message == second_message;
-    assert first_message == second_message => first_message_verified == second_message_verified;
+    bytes4 first_message_verified = isValidSignature(e, first_message, signature);
+    bytes4 second_message_verified = isValidSignature(e, second_message, signature);
+
+    assert (first_message != second_message) => !(first_message_verified == MAGIC_VALUE() && second_message_verified == MAGIC_VALUE());
 }
 
+rule verifySignatureIntegrity(env e){
+    bytes32 first_message;
+    bytes32 second_message;
+    WebAuthn.Signature sigStruct;
+    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
 
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ getConfiguration Function (Integrity)                                                                               │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-// TODO Not Completed Yet
-// rule verifyGetConfigurationIntegrity(env e){
+    bytes4 first_message_verified = isValidSignature(e, first_message, signature);
+    require (first_message_verified == MAGIC_VALUE());
 
-//     uint256 x;
-//     uint256 y;
-//     P256.Verifiers verifiers;
-//     uint256 new_x; uint256 new_y; P256.Verifiers new_verifiers;
-//     bytes32 message;
+    bytes4 second_message_verified = isValidSignature(e, second_message, signature);
 
-//     // bytes data = assignValues(e, x, y, verifiers);
-//     (new_x, new_y, new_verifiers) = temp(e, x, y, verifiers);
-
-//     // (x, y, verifiers) = getConfiguration(e);
-//     // (new_x, new_y, new_verifiers) = getConfigurationHarnessed(e, data);
-
-//     assert x == new_x;
-//     assert y == new_y;
-//     assert verifiers == new_verifiers;
-//     satisfy true;
-// }
-
+    assert (second_message_verified == MAGIC_VALUE()) <=> (first_message == second_message);
+}
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -55,17 +71,18 @@ rule verifySignatureIntegrity(env e){
 rule verifyIsValidSignatureAreEqual(env e){
     bytes data;
     bytes first_signature;
+    WebAuthn.Signature sigStruct;
+    first_signature = WebAuthnHarness.encodeSignature(e, sigStruct);
 
-    bool hashed_data_verified = verifySignatureHarnessed(e, keccak256(data), first_signature);
+    bytes4 magicValue_hashed = isValidSignature(e, data, first_signature);
 
-    bytes second_signature;
     bytes32 message;
-    bool message_verified = verifySignatureHarnessed(e, message, second_signature);
+    bytes4 magicValue_message = isValidSignature(e, message, first_signature);
 
-    assert (hashed_data_verified == true && message_verified == true) => message == keccak256(data);
-    assert message == keccak256(data) => hashed_data_verified == message_verified;
+    assert (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e)) => message == keccak256(data);
+    assert message == keccak256(data) => (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e)) || 
+                                         (magicValue_hashed == to_bytes4(0) && magicValue_message == to_bytes4(0));
 }
-
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -73,38 +90,34 @@ rule verifyIsValidSignatureAreEqual(env e){
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-rule verifyIsValidSignatureWillContinueToSucceed(env e){
-    bytes32 message;
-    bytes signature;
+rule verifyIsValidSignatureWillContinueToSucceed(){
+    env e;
+    env e1;
+    env e2;
+    env e3;
+    require e1.msg.value == 0 && e2.msg.value == 0 && e3.msg.value == 0;
 
-    bool first_verified = verifySignatureHarnessed(e, message, signature);
-    require first_verified == true;
-
-    bool second_verified = verifySignatureHarnessed(e, message, signature);
-    assert second_verified;
-}
-
-
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Once isValidSignature failed, it will never pass before createSigner called                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-
-rule IsValidSignatureMustSucceedAfterCreation(env e){
     method f;
     calldataarg args;
 
     bytes32 message;
-    bytes signature;
+    WebAuthn.Signature sigStruct;
+    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
 
-    bool first_verified = verifySignatureHarnessed(e, message, signature);
-    require !first_verified;
+    bytes32 message3;
+    WebAuthn.Signature sigStruct3;
+    bytes signature3 = WebAuthnHarness.encodeSignature(e, sigStruct3);
+
+    bytes4 firstVerified = isValidSignature@withrevert(e1, message, signature);
+    bool firstReverted = lastReverted;
 
     f(e, args);
+    // isValidSignature(e3, message3, signature3);
 
+    bytes4 secondVerify = isValidSignature@withrevert(e2, message, signature);
+    bool secondRevert = lastReverted;
 
-    bool second_verified = verifySignatureHarnessed(e, message, signature);
-    assert second_verified => f.selector == sig:SafeWebAuthnSignerFactory.createSigner(uint256, uint256, P256.Verifiers).selector;
+    assert firstReverted == secondRevert;
+    assert (!firstReverted && !secondRevert) => (firstVerified == secondVerify);
+    satisfy true;
 }
-

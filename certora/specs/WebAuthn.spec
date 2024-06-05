@@ -134,7 +134,7 @@ rule castSignatureConsistent(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CastSignature Canonical Deterministic Decoding (Violated)                                                           |
+│ CastSignature Canonical Deterministic Decoding                                                                      |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -169,10 +169,9 @@ rule castSignatureLengthCheckValidity(){
     bool isValid;
 
     isValid, decodedSignature = castSignature(e, encodeSig);
+    bool length_is_correct = encodeSig.length <= encodeSignature(e, decodedSignature).length;
 
-    assert compareSignatures(e, structSignature, decodedSignature) => (
-        isValid <=> encodeSig.length <= encodeSignature(e, structSignature).length
-    );
+    assert isValid <=> length_is_correct;
 }
 
 /*
