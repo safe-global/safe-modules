@@ -1,4 +1,4 @@
-version: '3.8'
+name: safe-4337-local-bundler
 
 services:
   geth:
