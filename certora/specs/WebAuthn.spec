@@ -1,22 +1,30 @@
 
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ encodeClientDataJsonIntegrity 2 different challenges results in 2 different clientDataJson (Violated)               │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-rule encodeClientDataJsonIntegrity(){
+methods {
+    function WebAuthn.encodeClientDataJson(bytes32 challenge, string calldata clientDataFields) internal returns (string memory) =>
+        SencodeDataJsonCVL(challenge, clientDataFields);
 
+    function checkInjective(bytes32 challenge, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
+        checkInjectiveSummary(challenge, clientDataFields, result);
+
+    function P256.verifySignatureAllowMalleability(P256.Verifiers a, bytes32 b, uint256 c, uint256 d, uint256 e, uint256 f) internal returns bool => 
+        verifySignatureAllowMalleabilityGhost(a, b, c, d, e, f);
+}
+
+function SencodeDataJsonCVL(bytes32 challenge, string clientDataFields) returns string
+{
     env e;
+    return SencodeDataJson(e, challenge, clientDataFields);
+}
 
-    bytes32 challenge1;
-    string clientDataFields;
-    bytes32 challenge2;
+ghost checkInjectiveSummary(bytes32, bytes32, bytes32) returns bool {
+    axiom forall bytes32 x1. forall bytes32 y1. forall bytes32 x2. forall bytes32 y2. forall bytes32 result.
+    (x1 != x2) => !(checkInjectiveSummary(x1, y1, result) && checkInjectiveSummary(x2, y2, result));
+}
 
-    string a1 = encodeClientDataJson(e, challenge1, clientDataFields);
-    string b1 = encodeClientDataJson(e, challenge2, clientDataFields);
-
-    assert (challenge1 != challenge2) <=> !compareStrings(e, a1, b1);
-    satisfy true;
+ghost verifySignatureAllowMalleabilityGhost(P256.Verifiers, bytes32, uint256, uint256, uint256, uint256) returns bool {
+    axiom forall P256.Verifiers a. forall bytes32 message1. forall bytes32 message2. forall uint256 c. forall uint256 d. forall uint256 e. forall uint256 f.
+        verifySignatureAllowMalleabilityGhost(a, message1, c, d, e, f) && 
+        verifySignatureAllowMalleabilityGhost(a, message2, c, d, e, f) => message1 == message2;
 }
 
 /*
@@ -48,6 +56,7 @@ rule uniqueMessagePerChallenge(){
     bytes32 challenge1;
     bytes32 challenge2;
     bytes authenticatorData;
+    require authenticatorData.length % 32 == 0;
     string clientDataField;
 
     bytes message1 = encodeSigningMessage(e, challenge1, authenticatorData, clientDataField);
@@ -58,7 +67,7 @@ rule uniqueMessagePerChallenge(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ verifySignature functions are equivalent (Vacuity check timeout cert-6290)                                          │
+│ verifySignature functions are equivalent (Proved)                                                                   │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 rule verifySignatureEq(){

@@ -4,6 +4,23 @@ pragma solidity ^0.8.0;
 import {P256, WebAuthn} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
 
 contract WebAuthnHarness {
+
+    mapping (bytes32 => mapping (bytes32 => string))  symbolicClientDataJson;
+
+    function SencodeDataJson(bytes32 challenge, string calldata clientDataFields) public returns (string memory){
+        bytes32 hashClientDataFields = keccak256(abi.encodePacked(clientDataFields));
+        string memory stringResult = symbolicClientDataJson[challenge][hashClientDataFields];
+        bytes32 hashResult = keccak256(abi.encodePacked(stringResult));
+
+        require (checkInjective(challenge, hashClientDataFields, hashResult));
+ 
+        return stringResult;
+    }
+
+    function checkInjective(bytes32 challenge, bytes32 clientDataFields, bytes32 result) internal view returns (bool){
+        return true;
+    }
+
     function compareSignatures(WebAuthn.Signature memory sig1, WebAuthn.Signature memory sig2) public pure returns (bool) {
         if (sig1.r != sig2.r || sig1.s != sig2.s) {
             return false;
