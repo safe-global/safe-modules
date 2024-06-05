@@ -144,7 +144,7 @@ rule castSignatureConsistent(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CastSignature Canonical Deterministic Decoding (Violated)                                                           |
+│ CastSignature Canonical Deterministic Decoding (Proved)                                                             |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -165,7 +165,7 @@ rule castSignatureDeterministicDecoding(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ CastSignature Length Check Validity                                                                                 |
+│ CastSignature Length Check Validity (Proved)                                                                        |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
