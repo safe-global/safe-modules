@@ -149,9 +149,10 @@ rule createAndVerifyEQtoIsValidSignatureForSigner()
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ isValidSignatureForSigner Consistency Proved                                                                        │
+│ isValidSignatureForSigner Consistency (Proved)                                                                        │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
+
 rule isValidSignatureForSignerConsistency()
 {
     env e;
