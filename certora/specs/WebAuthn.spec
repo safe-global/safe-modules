@@ -102,6 +102,40 @@ rule verifySignatureEq(){
     assert (!firstCallRevert && !secondCallRevert) => result1 == result2;
 }
 
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ verifySignature consistent                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule verifySignatureConsistent(){
+    env e;
+    env e1;
+    env e2;
+    require e1.msg.value == 0 && e2.msg.value == 0;
+    method f;
+    calldataarg args;
+
+    bytes32 challenge;
+    WebAuthn.AuthenticatorFlags authenticatorFlags;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+    bytes bytesSignature;
+
+
+    bool result1 = verifySignature@withrevert(e1, challenge, bytesSignature, authenticatorFlags, x, y, verifiers);
+    bool firstCallRevert = lastReverted;
+
+    f(e, args);
+
+    bool result2 = verifySignature@withrevert(e2, challenge, bytesSignature, authenticatorFlags, x, y, verifiers);
+    bool secondCallRevert = lastReverted;
+
+    assert firstCallRevert == secondCallRevert;
+    assert (!firstCallRevert && !secondCallRevert) => result1 == result2;
+}
+
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ CastSignature Consistent (Once valid always valid, Once failed always failed, includes revert cases and middle call)|
