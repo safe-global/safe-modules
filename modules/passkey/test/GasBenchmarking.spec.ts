@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { deployments, ethers } from 'hardhat'
+import { deployments, ethers, network } from 'hardhat'
 
 import * as ERC1271 from './utils/erc1271'
 import { WebAuthnCredentials } from '../test/utils/webauthnShim'
@@ -35,13 +35,14 @@ describe('Gas Benchmarking [@bench]', function () {
     const factory = await ethers.getContractAt('SafeWebAuthnSignerFactory', SafeWebAuthnSignerFactory.address)
 
     const DummyP256Verifier = await ethers.getContractFactory('DummyP256Verifier')
-    const verifiers = {
-      fcl: await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address),
-      daimo: await ethers.getContractAt('IP256Verifier', DaimoP256Verifier.address),
-      dummy: await DummyP256Verifier.deploy(),
-    } as Record<string, IP256Verifier>
+    const verifiersConfig = {
+      fcl: [0, await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)],
+      daimo: [0, await ethers.getContractAt('IP256Verifier', DaimoP256Verifier.address)],
+      dummy: [0, await DummyP256Verifier.deploy()],
+      precompile: [0x0100, null],
+    } as Record<string, [number, IP256Verifier | null]>
 
-    return { benchmarker, factory, verifiers }
+    return { benchmarker, factory, verifiersConfig }
   })
 
   describe('SafeWebAuthnSignerProxy', () => {
@@ -56,13 +57,18 @@ describe('Gas Benchmarking [@bench]', function () {
       console.log(`      ⛽ deployment: ${gas}`)
     })
 
-    for (const [name, key] of [
-      ['FreshCryptoLib', 'fcl'],
-      ['daimo-eth', 'daimo'],
-      ['Dummy', 'dummy'],
-    ]) {
+    for (const [name, key, networkName] of [
+      ['FreshCryptoLib', 'fcl', null],
+      ['daimo-eth', 'daimo', null],
+      ['Dummy', 'dummy', null],
+      ['Precompile', 'precompile', 'localhost'],
+    ] as [string, string, string | null][]) {
       it(`Benchmark signer verification cost with ${name} verifier`, async function () {
-        const { benchmarker, verifiers, factory } = await setupTests()
+        if (networkName && network.name !== networkName) {
+          this.skip()
+        }
+
+        const { benchmarker, verifiersConfig, factory } = await setupTests()
 
         const challenge = ethers.id('hello world')
         const assertion = navigator.credentials.get({
@@ -75,10 +81,11 @@ describe('Gas Benchmarking [@bench]', function () {
         })
 
         const { x, y } = decodePublicKey(credential.response)
-        const verifier = await verifiers[key].getAddress()
+        const [precompile, verifier] = verifiersConfig[key]
+        const verifiers = ethers.solidityPacked(['uint16', 'address'], [precompile, (await verifier?.getAddress()) ?? ethers.ZeroAddress])
 
-        await factory.createSigner(x, y, verifier)
-        const signer = await ethers.getContractAt('SafeWebAuthnSignerSingleton', await factory.getSigner(x, y, verifier))
+        await factory.createSigner(x, y, verifiers)
+        const signer = await ethers.getContractAt('SafeWebAuthnSignerSingleton', await factory.getSigner(x, y, verifiers))
         const signature = encodeWebAuthnSignature(assertion.response)
 
         const [gas, returnData] = await benchmarker.call.staticCall(
