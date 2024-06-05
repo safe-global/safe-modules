@@ -298,6 +298,7 @@ describe('Safe WebAuthn Shared Signer [@4337]', () => {
     await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
 
     expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.equal(0)
+    expect(ethers.dataLength(await ethers.provider.getCode(signerAddress))).to.equal(0)
     expect(await sharedSigner.getConfiguration(safeAddress)).to.deep.equal([0n, 0n, 0n])
 
     await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
@@ -310,5 +311,149 @@ describe('Safe WebAuthn Shared Signer [@4337]', () => {
 
     const safeInstance = singleton.attach(safeAddress) as typeof singleton
     expect(await safeInstance.getOwners()).to.deep.equal([signerAddress])
+  })
+
+  it('should execute a user op with multiple passkey owners', async () => {
+    const {
+      user,
+      proxyFactory,
+      safeModuleSetup,
+      module,
+      entryPoint,
+      multiSend,
+      singleton,
+      verifier,
+      sharedSigner: singletonSharedSigner,
+      navigator,
+    } = await setupTests()
+    const verifierAddress = await verifier.getAddress()
+
+    const credentials = [
+      navigator.credentials.create({
+        publicKey: {
+          rp: {
+            name: 'Safe',
+            id: 'safe.global',
+          },
+          user: {
+            id: ethers.getBytes(ethers.id('chucknorris')),
+            name: 'chucknorris',
+            displayName: 'Chuck Norris',
+          },
+          challenge: ethers.toBeArray(Date.now()),
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        },
+      }),
+      navigator.credentials.create({
+        publicKey: {
+          rp: {
+            name: 'Safe',
+            id: 'safe.global',
+          },
+          user: {
+            id: ethers.getBytes(ethers.id('kratos')),
+            name: 'kratos',
+            displayName: 'Kratos of Sparta',
+          },
+          challenge: ethers.toBeArray(Date.now()),
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        },
+      }),
+    ]
+    const publicKeys = credentials.map((credential) => decodePublicKey(credential.response))
+
+    const SafeWebAuthnSharedSigner = await ethers.getContractFactory('SafeWebAuthnSharedSigner')
+    const sharedSigners = [
+      singletonSharedSigner,
+      ...(await Promise.all([...Array(credentials.length - 1)].map(() => SafeWebAuthnSharedSigner.deploy()))),
+    ]
+
+    const initializer = singleton.interface.encodeFunctionData('setup', [
+      sharedSigners.map((sharedSigner) => sharedSigner.target),
+      sharedSigners.length,
+      multiSend.target,
+      multiSend.interface.encodeFunctionData('multiSend', [
+        encodeMultiSendTransactions([
+          {
+            op: 1 as const,
+            to: safeModuleSetup.target,
+            data: safeModuleSetup.interface.encodeFunctionData('enableModules', [[module.target]]),
+          },
+          ...sharedSigners.map((sharedSigner, i) => ({
+            op: 1 as const,
+            to: sharedSigner.target,
+            data: sharedSigner.interface.encodeFunctionData('configure', [{ ...publicKeys[i], verifiers: verifierAddress }]),
+          })),
+        ]),
+      ]),
+      module.target,
+      ethers.ZeroAddress,
+      0,
+      ethers.ZeroAddress,
+    ])
+    const safeSalt = Date.now()
+    const safeAddress = await proxyFactory.createProxyWithNonce.staticCall(singleton.target, initializer, safeSalt)
+    const deployData = proxyFactory.interface.encodeFunctionData('createProxyWithNonce', [singleton.target, initializer, safeSalt])
+    const initCode = ethers.solidityPacked(['address', 'bytes'], [proxyFactory.target, deployData])
+
+    const safeOp = buildSafeUserOpTransaction(
+      safeAddress,
+      user.address,
+      ethers.parseEther('0.1'),
+      '0x',
+      await entryPoint.getNonce(safeAddress, 0),
+      await entryPoint.getAddress(),
+      false,
+      false,
+      {
+        initCode,
+        verificationGasLimit: 1500000,
+      },
+    )
+    const opHash = await module.getOperationHash(
+      buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: '0x',
+      }),
+    )
+    const assertions = credentials.map((credential) =>
+      navigator.credentials.get({
+        publicKey: {
+          challenge: ethers.getBytes(opHash),
+          rpId: 'safe.global',
+          allowCredentials: [{ type: 'public-key', id: new Uint8Array(credential.rawId) }],
+          userVerification: 'required',
+        },
+      }),
+    )
+    const signature = buildSignatureBytes(
+      assertions.map((assertion, i) => ({
+        signer: sharedSigners[i].target as string,
+        data: encodeWebAuthnSignature(assertion.response),
+        dynamic: true,
+      })),
+    )
+    const packedUserOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
+    const userOp = await buildRpcUserOperationFromSafeUserOperation({ safeOp, signature })
+
+    await user.sendTransaction({ to: safeAddress, value: ethers.parseEther('0.5') }).then((tx) => tx.wait())
+
+    expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.equal(0)
+    for (const sharedSigner of sharedSigners) {
+      expect(await sharedSigner.getConfiguration(safeAddress)).to.deep.equal([0n, 0n, 0n])
+    }
+
+    // We cannot send this directly to the bundler because the tracing logic times out :/. For now,
+    // just execute the user operation directly as the relayer to show that the signature
+    // verification with two signers works.
+    //await bundler.sendUserOperation(userOp, await entryPoint.getAddress())
+    await entryPoint.handleOps([packedUserOp], user.address)
+    await waitForUserOp(userOp)
+
+    expect(ethers.dataLength(await ethers.provider.getCode(safeAddress))).to.not.equal(0)
+    expect(await ethers.provider.getBalance(safeAddress)).to.be.lessThan(ethers.parseEther('0.4'))
+    for (const [sharedSigner, publicKey] of sharedSigners.map((sharedSigner, i) => [sharedSigner, publicKeys[i]] as const)) {
+      expect(await sharedSigner.getConfiguration(safeAddress)).to.deep.equal([publicKey.x, publicKey.y, verifier.target])
+    }
   })
 })
