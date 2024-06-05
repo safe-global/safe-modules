@@ -87,22 +87,22 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         }
     }
 
-    // /**
-    //  * @dev Checks if the provided account has no code.
-    //  * @param account The address of the account to check.
-    //  * @return result True if the account has no code, false otherwise.
-    //  */
-    // function _hasNoCode(address account) internal view returns (bool result) {
-    //     // solhint-disable-next-line no-inline-assembly
-    //     assembly ("memory-safe") {
-    //         result := iszero(extcodesize(account))
-    //     }
-    // }
-
     /**
-        Munged.
+     * @dev Checks if the provided account has no code.
+     * @param account The address of the account to check.
+     * @return result True if the account has no code, false otherwise.
      */
     function _hasNoCode(address account) internal view returns (bool result) {
-        return account.code.length > 0;
+        // solhint-disable-next-line no-inline-assembly
+        assembly ("memory-safe") {
+            result := iszero(extcodesize(account))
+        }
     }
+
+    // /**
+    //    possible munge to pass the SignerCreationCantOverride rule, wait for concusion.
+    //  */
+    // function _hasNoCode(address account) internal view returns (bool result) {
+    //     return account.code.length > 0;
+    // }
 }
