@@ -32,11 +32,11 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
      * @inheritdoc ISafeSignerFactory
      */
-    function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view override returns (address signer) {
+     // funtion is not really virtual, Munged!
+    function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view virtual override returns (address signer) {
         bytes32 codeHash = keccak256(
             abi.encodePacked(
                 type(SafeWebAuthnSignerProxy).creationCode,
-                "01234567891011121314152546", // munged for word alignment workaround (32 bytes)
                 uint256(uint160(address(SINGLETON))),
                 x,
                 y,
@@ -92,17 +92,11 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
      * @param account The address of the account to check.
      * @return result True if the account has no code, false otherwise.
      */
-    function _hasNoCode(address account) internal view returns (bool result) {
+     // funtion is not really virtual, munged!
+    function _hasNoCode(address account) internal view virtual returns (bool result) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             result := iszero(extcodesize(account))
         }
     }
-
-    // /**
-    //    possible munge to pass the SignerCreationCantOverride rule, wait for concusion.
-    //  */
-    // function _hasNoCode(address account) internal view returns (bool result) {
-    //     return account.code.length > 0;
-    // }
 }
