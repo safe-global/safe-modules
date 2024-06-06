@@ -254,12 +254,12 @@ if (transactionType === UserOperationType.VerifyingPaymaster) {
   // Fetch USDC balance of sender
   const usdcDecimals = BigInt(await getERC20Decimals(usdcTokenAddress, publicClient))
   const usdcDenomination = 10n ** usdcDecimals
-  const usdcAmount = 7n * usdcDenomination
+  const usdcAmount = 1n * usdcDenomination
   let senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)
   console.log('\nSafe Wallet USDC Balance:', Number(senderUSDCBalance / usdcDenomination))
 
   if (senderUSDCBalance < usdcAmount) {
-    console.log('\nTransferring 7 USDC Token for paying the Paymaster from Sender to Safe.')
+    console.log(`\nTransferring ${usdcAmount / usdcDenomination} USDC Token for paying the Paymaster from Sender to Safe.`)
     await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, usdcAmount, chain, paymaster)
     while (senderUSDCBalance < usdcAmount) {
       await setTimeout(15000)
