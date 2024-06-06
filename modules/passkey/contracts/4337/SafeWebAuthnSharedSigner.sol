@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {SignatureValidator} from "../../base/SignatureValidator.sol";
-import {ISafe} from "../../interfaces/ISafe.sol";
-import {P256, WebAuthn} from "../../libraries/WebAuthn.sol";
+import {SignatureValidator} from "../base/SignatureValidator.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
+import {P256, WebAuthn} from "../libraries/WebAuthn.sol";
 
 /**
  * @title Safe WebAuthn Shared Signer

@@ -8,8 +8,8 @@ import {
   buildRpcUserOperationFromSafeUserOperation,
 } from '@safe-global/safe-4337/src/utils/userOp'
 import { buildSignatureBytes } from '@safe-global/safe-4337/src/utils/execution'
-import { WebAuthnCredentials } from '../../../utils/webauthnShim'
-import { decodePublicKey, encodeWebAuthnSignature } from '../../../../src/utils/webauthn'
+import { WebAuthnCredentials } from '../../utils/webauthnShim'
+import { decodePublicKey, encodeWebAuthnSignature } from '../../../src/utils/webauthn'
 
 const SENTINEL = ethers.getAddress('0x0000000000000000000000000000000000000001')
 
