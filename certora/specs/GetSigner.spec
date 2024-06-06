@@ -68,3 +68,22 @@ rule uniqueSigner(){
 
     assert firstSigner == secondSigner <=> (firstX == secondX && firstY == secondY && firstVerifier == secondVerifier);
 }
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Deterministic address in get signer (Proved)                                                                        │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule deterministicSigner()
+{
+    env e1;
+    env e2;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+
+    address signer = getSigner(e1, x, y, verifier);
+
+    assert signer == getSigner(e2, x, y, verifier);
+}
