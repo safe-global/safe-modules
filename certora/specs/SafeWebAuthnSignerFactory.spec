@@ -59,6 +59,61 @@ rule createAndGetSignerEquivalence(){
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Deterministic address in get signer (Proved)                                                                        │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule deterministicSigner()
+{
+    env e1;
+    env e2;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+
+    address signer = getSigner(e1, x, y, verifier);
+
+    assert signer == getSigner(e2, x, y, verifier);
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Correctness of Signer Creation. (Cant called twice and override) (Bug CERT-6252)                                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+ghost mathint numOfCreation;
+ghost mapping(address => uint) address_map;
+
+hook EXTCODESIZE(address addr) uint v{
+    require address_map[addr] == v;
+}
+
+hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
+    numOfCreation = numOfCreation + 1;
+    address_map[v] = length;
+}
+
+rule SignerCreationCantOverride()
+{
+    env e;
+    require numOfCreation == 0;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+
+    address a = getSigner(e, x, y, verifier);
+    require address_map[a] == 0;
+
+    createSigner(e, x, y, verifier);
+    createSigner@withrevert(e, x, y, verifier);
+
+    assert numOfCreation < 2;
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ Has no code integrity  (Proved)                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
@@ -66,6 +121,30 @@ rule hasNoCodeIntegrity()
 {
     address a;
     assert (a == proxy) => !hasNoCode(a);
+}
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ isValidSignatureForSigner equiv to first deploying the signer with the factory, and then                            |
+|     verifying the signature with it directly (CERT-6221)                                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule createAndVerifyEQtoIsValidSignatureForSigner()
+{
+    env e;
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+    bytes signature;
+    bytes32 message;
+
+    storage s = lastStorage;
+
+    bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
+
+    bytes4 magic2 = createAndVerify(e, message, signature, x, y, verifier) at s;
+
+    assert magic1 == magic2;
 }
 
 /*
@@ -101,4 +180,26 @@ rule isValidSignatureForSignerConsistency()
 
     assert firstRevert == secondRevert;
     assert (!firstRevert && !secondRevert) => (magic1 == MAGIC_VALUE()) <=> (magic2 == MAGIC_VALUE());
+}
+
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ isValidSignatureForSigner Integrity (Violated)                                                                      │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+
+rule isValidSignatureForSignerIntegrity()
+{
+    env e;
+
+    uint x;
+    uint y;
+    P256.Verifiers verifier;
+    bytes signature;
+    bytes32 message;
+
+    bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
+    
+    satisfy magic1 == MAGIC_VALUE();
 }
