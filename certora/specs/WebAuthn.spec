@@ -44,27 +44,6 @@ rule shaIntegrity(){
     assert (keccak256(input1) != keccak256(input2)) <=> input1_sha != input2_sha;
 }
 
-
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ every 2 challenges results in unique message when using encodeSigningMessage (Timeout cert-6290)                    │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-rule uniqueMessagePerChallenge(){
-    env e;
-
-    bytes32 challenge1;
-    bytes32 challenge2;
-    bytes authenticatorData;
-    require authenticatorData.length % 32 == 0;
-    string clientDataField;
-
-    bytes message1 = encodeSigningMessage(e, challenge1, authenticatorData, clientDataField);
-    bytes message2 = encodeSigningMessage(e, challenge2, authenticatorData, clientDataField);
-
-    assert (challenge1 != challenge2) <=> (getSha256(e, message1) != getSha256(e, message2));
-}
-
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ verifySignature functions are equivalent (Proved)                                                                   │

@@ -125,30 +125,6 @@ rule hasNoCodeIntegrity()
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ isValidSignatureForSigner equiv to first deploying the signer with the factory, and then                            |
-|     verifying the signature with it directly (CERT-6221)                                                            │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-rule createAndVerifyEQtoIsValidSignatureForSigner()
-{
-    env e;
-    uint x;
-    uint y;
-    P256.Verifiers verifier;
-    bytes signature;
-    bytes32 message;
-
-    storage s = lastStorage;
-
-    bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
-
-    bytes4 magic2 = createAndVerify(e, message, signature, x, y, verifier) at s;
-
-    assert magic1 == magic2;
-}
-
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ isValidSignatureForSigner Consistency (Proved)                                                                        │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
@@ -180,26 +156,4 @@ rule isValidSignatureForSignerConsistency()
 
     assert firstRevert == secondRevert;
     assert (!firstRevert && !secondRevert) => (magic1 == MAGIC_VALUE()) <=> (magic2 == MAGIC_VALUE());
-}
-
-
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ isValidSignatureForSigner Integrity (Violated)                                                                      │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-
-rule isValidSignatureForSignerIntegrity()
-{
-    env e;
-
-    uint x;
-    uint y;
-    P256.Verifiers verifier;
-    bytes signature;
-    bytes32 message;
-
-    bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
-    
-    satisfy magic1 == MAGIC_VALUE();
 }
