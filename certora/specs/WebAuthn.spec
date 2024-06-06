@@ -18,7 +18,7 @@ function SencodeDataJsonCVL(bytes32 challenge, string clientDataFields) returns 
 
 ghost checkInjectiveSummary(bytes32, bytes32, bytes32) returns bool {
     axiom forall bytes32 x1. forall bytes32 y1. forall bytes32 x2. forall bytes32 y2. forall bytes32 result.
-    (x1 != x2) => !(checkInjectiveSummary(x1, y1, result) && checkInjectiveSummary(x2, y2, result));
+    (checkInjectiveSummary(x1, y1, result) && checkInjectiveSummary(x2, y2, result)) => (x1 == x2);
 }
 
 ghost verifySignatureAllowMalleabilityGhost(P256.Verifiers, bytes32, uint256, uint256, uint256, uint256) returns bool {

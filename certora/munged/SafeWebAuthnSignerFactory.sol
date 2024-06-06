@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {ISafeSignerFactory} from "./interfaces/ISafeSignerFactory.sol";
-import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
-import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
-import {P256} from "./libraries/P256.sol";
+import {ISafeSignerFactory} from "../../modules/passkey/contracts/interfaces/ISafeSignerFactory.sol";
+import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
+import {SafeWebAuthnSignerSingleton} from "../../modules/passkey/contracts/SafeWebAuthnSignerSingleton.sol";
+import {P256} from "../../modules/passkey/contracts/libraries/P256.sol";
 
 /**
  * @title Safe WebAuthn Signer Factory
@@ -32,7 +32,8 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
      * @inheritdoc ISafeSignerFactory
      */
-    function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view override returns (address signer) {
+     // funtion is not really virtual, Munged!
+    function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view virtual override returns (address signer) {
         bytes32 codeHash = keccak256(
             abi.encodePacked(
                 type(SafeWebAuthnSignerProxy).creationCode,
@@ -91,7 +92,8 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
      * @param account The address of the account to check.
      * @return result True if the account has no code, false otherwise.
      */
-    function _hasNoCode(address account) internal view returns (bool result) {
+     // funtion is not really virtual, munged!
+    function _hasNoCode(address account) internal view virtual returns (bool result) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             result := iszero(extcodesize(account))
