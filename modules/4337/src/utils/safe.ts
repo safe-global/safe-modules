@@ -3,7 +3,14 @@ import { Provider, Signer, ethers } from 'ethers'
 
 // Import from Safe contracts repo once it is upgraded to ethers v6 and can be installed via npm
 import { MetaTransaction, SafeSignature, SignedSafeTransaction, buildSignatureBytes } from './execution'
-import { PackedUserOperation, UserOperation, EIP712_SAFE_OPERATION_TYPE, packGasParameters, unpackUserOperation } from './userOp'
+import {
+  PackedUserOperation,
+  UserOperation,
+  EIP712_SAFE_OPERATION_TYPE,
+  packGasParameters,
+  unpackUserOperation,
+  unpackInitCode,
+} from './userOp'
 
 export { MultiProvider4337 }
 
@@ -86,7 +93,6 @@ const callInterface = async (provider: Provider, contract: string, method: strin
     to: contract,
     data: INTERFACES.encodeFunctionData(method, params),
   })
-  console.log(result)
   return INTERFACES.decodeFunctionResult(method, result)
 }
 
@@ -115,6 +121,7 @@ export class Safe4337Operation {
       {
         safe: this.safe.address,
         callData: actionCalldata(this.action),
+        paymasterAndData: '0x',
         entryPoint: this.globalConfig.entryPoint,
         ...this.params,
       },
@@ -160,12 +167,13 @@ export class Safe4337Operation {
         {
           safe: this.safe.address,
           callData: actionCalldata(this.action),
+          paymasterAndData: '0x',
           entryPoint: this.globalConfig.entryPoint,
           ...this.params,
         },
       ),
     })
-    console.log(this.signatures)
+    console.log({ signatures: this.signatures })
   }
 
   static async build(
@@ -179,17 +187,20 @@ export class Safe4337Operation {
     const estimateOperation = {
       sender: safe.address,
       callData: actionCalldata(action),
-      paymasterAndData: '0x',
       nonce: ethers.toBeHex(nonce),
-      initCode,
-      signature: '0x'.padEnd(130, 'a'),
+      ...unpackInitCode({ initCode }),
       // For some providers we need to set some really high values to allow estimation
-      preVerificationGas: ethers.toBeHex(1000000),
-      verificationGasLimit: ethers.toBeHex(1000000),
       callGasLimit: ethers.toBeHex(10000000),
-      // To keep the required funds low, the gas fee is set close to the minimum
+      verificationGasLimit: ethers.toBeHex(1000000),
+      preVerificationGas: ethers.toBeHex(1000000),
+      // User arbitrary gas fee values - note that we use lower values in order to reduce the amount
+      // of gas fees used in tests; when estimating with a real bundler, they will choose these for
+      // for us anyway.
       maxFeePerGas: '0x10',
       maxPriorityFeePerGas: '0x10',
+      // Use dummy signature that makes ECRECOVER get called in order to have slightly more accurate
+      // estimates for single signer operations.
+      signature: `0x${'aa'.repeat(32)}${'bb'.repeat(32)}1b`,
     }
     const estimates = await provider.send('eth_estimateUserOperationGas', [
       {
@@ -197,11 +208,14 @@ export class Safe4337Operation {
       },
       globalConfig.entryPoint,
     ])
-    console.log(estimates)
+    console.log({ estimates })
 
-    const feeData = await provider.getFeeData()
-
+    const feeData = { ...(await provider.getFeeData()) }
     if (!feeData.maxFeePerGas || !feeData.maxPriorityFeePerGas) throw Error('Missing fee data')
+
+    // Some bundlers require higher priority fees and use non-standard APIs for this. Instead, just
+    // bump the priority fee by 20% to ensure that the operation is accepted by the bundler.
+    feeData.maxPriorityFeePerGas += (feeData.maxPriorityFeePerGas * 20n) / 100n
 
     const params: OperationParams = {
       nonce,
