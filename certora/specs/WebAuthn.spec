@@ -13,7 +13,7 @@ methods {
 function SencodeDataJsonCVL(bytes32 challenge, string clientDataFields) returns string
 {
     env e;
-    return SencodeDataJson(e, challenge, clientDataFields);
+    return summaryEncodeDataJson(e, challenge, clientDataFields);
 }
 
 ghost checkInjectiveSummary(bytes32, bytes32, bytes32) returns bool {

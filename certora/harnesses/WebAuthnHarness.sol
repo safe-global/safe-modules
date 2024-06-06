@@ -7,7 +7,7 @@ contract WebAuthnHarness {
 
     mapping (bytes32 => mapping (bytes32 => string))  symbolicClientDataJson;
 
-    function SencodeDataJson(bytes32 challenge, string calldata clientDataFields) public returns (string memory){
+    function summaryEncodeDataJson(bytes32 challenge, string calldata clientDataFields) public returns (string memory){
         bytes32 hashClientDataFields = keccak256(abi.encodePacked(clientDataFields));
         string memory stringResult = symbolicClientDataJson[challenge][hashClientDataFields];
         bytes32 hashResult = keccak256(abi.encodePacked(stringResult));
