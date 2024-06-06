@@ -104,16 +104,18 @@ rule deterministicSigner()
 
 ghost mathint numOfCreation;
 ghost mapping(address => uint) address_map;
+ghost address createdAddress;
 ghost bool validValue;
 
-hook EXTCODESIZE(address addr) uint v{
+hook EXTCODESIZE(address addr) uint v {
     require address_map[addr] == v;
     validValue = addr <= max_uint160;
 }
 
-hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
+hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v {
     numOfCreation = numOfCreation + 1;
     address_map[v] = length;
+    createdAddress = v;
 }
 
 rule SignerCreationCantOverride()
@@ -209,4 +211,35 @@ rule isValidSignatureForSignerConsistency()
     bytes4 magic2 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
 
     assert (magic1 == MAGIC_VALUE()) <=> (magic2 == MAGIC_VALUE());
+}
+
+rule getSignerRevertingConditions {
+    env e;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    getSigner@withrevert(e, x, y, verifiers);
+
+    assert lastReverted <=> triedTransferringEth;
+}
+
+rule createSignerRevertingConditions {
+    env e;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+
+    address signer = getSigner(e, x, y, verifiers);
+    bool signerHasNoCode = hasNoCode(signer);
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    createSigner@withrevert(e, x, y, verifiers);
+
+    bool notCreatedSigner = signerHasNoCode && (createdAddress != signer);
+
+    assert lastReverted <=> (triedTransferringEth || notCreatedSigner);
 }

@@ -121,3 +121,18 @@ rule verifyIsValidSignatureWillContinueToSucceed(){
     assert (!firstReverted && !secondRevert) => (firstVerified == secondVerify);
     satisfy true;
 }
+
+rule isValidSignatureRevertingConditions {
+    env e;
+    bytes32 message;
+
+    WebAuthn.Signature sigStruct;
+    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
+    
+    bool triedTransferringEth = e.msg.value != 0;
+    bool dataLengthInsufficient = sigStruct.authenticatorData.length <= 32;
+    
+    isValidSignature@withrevert(e, message, signature);
+
+    assert lastReverted <=> (triedTransferringEth || dataLengthInsufficient);
+}
