@@ -43,7 +43,7 @@ describe("Safe6900Module", function () {
         const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
 
         expect(await safe.exec(safe.target, 0, installData)).to.emit(module, "PluginInstalled").withArgs(mockPlugin.target, manifestHash, []);
-        expect(await module.installedPlugins(safe.target, mockPlugin.target)).to.be.equal(1n);
+        expect(await module.isPluginInstalled(safe.target, mockPlugin.target)).to.be.equal(1n);
 
         await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginAlreadyInstalled");
       })
@@ -138,7 +138,7 @@ describe("Safe6900Module", function () {
 
       const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
       await safe.exec(safe.target, 0, installData);
-      expect(await module.installedPlugins(safe.target, mockPlugin.target)).to.be.equal(1n);
+      expect(await module.isPluginInstalled(safe.target, mockPlugin.target)).to.be.equal(1n);
 
       const pluginUninstallData = ethers.randomBytes(64);
 
@@ -146,7 +146,7 @@ describe("Safe6900Module", function () {
       const uninstallData = module.interface.encodeFunctionData('uninstallPlugin', [mockPlugin.target, config, pluginUninstallData]);
 
       expect(await safe.exec(safe.target, 0, uninstallData)).to.emit(module, "PluginUninstalled").withArgs(mockPlugin.target, true);
-      expect(await module.installedPlugins(safe.target, mockPlugin.target)).to.be.equal(0n);
+      expect(await module.isPluginInstalled(safe.target, mockPlugin.target)).to.be.equal(0n);
 
     })
   })

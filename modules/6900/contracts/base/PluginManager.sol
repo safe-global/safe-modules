@@ -8,13 +8,21 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {PluginManifest} from "../interfaces/DataTypes.sol";
 
 abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
+
+    struct ERC6900AccountData {
+        mapping(address => uint256) installedPlugins;
+    }
+
     /// @dev A mapping containing the installed plugins for an account. Safe address => Plugin address => uint256 (0 = not installed, 1 = installed)
-    mapping(address => mapping(address => uint256)) public installedPlugins;
+    mapping(address => ERC6900AccountData) private accountData;
+
+    /// @dev A mapping containing the plugin dependency count for each account. Safe address => Plugin address => uint256 (dependency count).
 
     error PluginAlreadyInstalled(address plugin);
     error PluginInterfaceNotSupported(address plugin);
     error PluginManifestHashMismatch(bytes32 manifestHash);
     error PluginDepenencyCountMismatch();
+    error PluginDependencyNotInstalled(address plugin, address dependency);
 
     /// @inheritdoc IPluginManager
     function installPlugin(
@@ -23,48 +31,53 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         bytes calldata pluginInstallData,
         FunctionReference[] calldata dependencies
     ) external override onlyAccount {
-        // 1. Check if already installed
-        if (installedPlugins[msg.sender][plugin] == 1) {
+        // Check if already installed
+        if (accountData[msg.sender].installedPlugins[plugin] == 1) {
             revert PluginAlreadyInstalled(plugin);
         }
 
-        // 2. Revert if ERC-165 not supported by plugin or does not support IPlugin interface
+        // Revert if ERC-165 not supported by plugin or does not support IPlugin interface
         // TODO: Evaluate if try-catch needed
         if (!IERC165(plugin).supportsInterface(type(IPlugin).interfaceId)) {
             revert PluginInterfaceNotSupported(plugin);
         }
 
-        // 3. Validate manifestHash
+        // Validate manifestHash
         PluginManifest memory manifest = IPlugin(plugin).pluginManifest();
 
         if (!(manifestHash == keccak256(abi.encode(manifest)))) {
             revert PluginManifestHashMismatch(manifestHash);
         }
 
-        // 4. TODO: Check for dependencies
-
-        // 4.1 Length checks
+        // Length checks
         if (dependencies.length != manifest.dependencyInterfaceIds.length) {
             revert PluginDepenencyCountMismatch();
         }
 
-        // 4.2 Dependency does not support interface
-        // uint256 length = dependencies.length;
-        // for (uint256 i = 0; i < length; i++) {
-        //     (address dependencyAddress,) = dependencies[i].unpack();
+        // Dependency does not support interface
+        uint256 length = dependencies.length;
+        for (uint256 i = 0; i < length; i++) {
+            address dependencyAddress = address(bytes20(bytes21(FunctionReference.unwrap(dependencies[i]))));
 
-        //     if (!IERC165().supportsInterface(manifest.dependencyInterfaceIds[i])) {
-        //         revert PluginInterfaceNotSupported(dependencies[i].target);
-        //     }
-        // }
+            if (!IERC165(dependencyAddress).supportsInterface(manifest.dependencyInterfaceIds[i])) {
+                revert PluginInterfaceNotSupported(dependencyAddress);
+            }
 
-        // 5. Evaluate if state changes are required before calling onInstall
-        installedPlugins[msg.sender][plugin] = 1;
+            // Revert if dependency not installed
+            if (accountData[msg.sender].installedPlugins[dependencyAddress] != 1) {
+                revert PluginDependencyNotInstalled(plugin, dependencyAddress);
+            }
+        }
 
-        // 6: Evaluate if try-catch needed
+        // TODO: Update dependency count
+
+        // TODO: Evaluate if state changes are required before calling onInstall
+        accountData[msg.sender].installedPlugins[plugin] = 1;
+
+        // TODO: Evaluate if try-catch needed
         IPlugin(plugin).onInstall(pluginInstallData);
 
-        // 7. Emit event
+        // Emit event
         emit PluginInstalled(plugin, manifestHash, dependencies);
     }
 
@@ -74,11 +87,15 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         // TODO: Other checks
 
         // TODO: Evaluate if state changes are required before calling onUninstall
-        installedPlugins[msg.sender][plugin] = 0;
+        accountData[msg.sender].installedPlugins[plugin] = 0;
 
         // TODO: Evaluate if try-catch needed
         IPlugin(plugin).onUninstall(pluginUninstallData);
 
         emit PluginUninstalled(plugin, true);
+    }
+
+    function isPluginInstalled(address account, address plugin) external view returns (uint256) {
+        return accountData[account].installedPlugins[plugin];
     }
 }
