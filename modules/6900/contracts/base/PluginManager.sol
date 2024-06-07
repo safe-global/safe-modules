@@ -36,6 +36,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
 
         // 3. Validate manifestHash
         PluginManifest memory manifest = IPlugin(plugin).pluginManifest();
+
         if (!(manifestHash == keccak256(abi.encode(manifest)))) {
             revert PluginManifestHashMismatch(manifestHash);
         }
@@ -64,7 +65,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         IPlugin(plugin).onInstall(pluginInstallData);
 
         // 7. Emit event
-        emit PluginInstalled(plugin, manifestHash, dependencies);        
+        emit PluginInstalled(plugin, manifestHash, dependencies);
     }
 
     function uninstallPlugin(address plugin, bytes calldata config, bytes calldata pluginUninstallData) external override onlyAccount {

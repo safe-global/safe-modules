@@ -7,6 +7,7 @@ interface IPluginManager {
     event PluginInstalled(address indexed plugin, bytes32 manifestHash, FunctionReference[] dependencies);
 
     event PluginUninstalled(address indexed plugin, bool indexed onUninstallSucceeded);
+
     function installPlugin(
         address plugin,
         bytes32 manifestHash,

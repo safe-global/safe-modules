@@ -1,8 +1,11 @@
 import { expect } from "chai";
-import {deployments, ethers} from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { getEntryPoint, getTestSafe } from "./utils/setup";
+import { getPluginManifest } from "./utils/dataTypes";
 
 describe("Safe6900Module", function () {
+  const IPLUGIN_INTERFACEID = "0xf23b1ed7";
+
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
 
@@ -20,34 +23,112 @@ describe("Safe6900Module", function () {
     }
   })
 
-  describe("Plugin management",()=>{
-    it("Install plugin only once", async() => {
-      const {safe, module} = await setupTests();
+  describe("Plugin management", () => {
 
-      const mockPlugin = await ethers.deployContract("MockContract");
+    describe("Install plugin", () => {
+      it("Install plugin only once", async () => {
+        const { safe, module } = await setupTests();
 
-      await mockPlugin.givenMethodReturnBool("0x01ffc9a7", true);
-      const manifest = "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001c000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000260000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-      const manifestHash = ethers.keccak256(manifest);
-      // pluginManifest() => 0xc7763130
-      await mockPlugin.givenMethodReturn("0xc7763130", manifest);
+        const mockPlugin = await ethers.deployContract("MockContract");
 
-      const pluginInstallData = ethers.randomBytes(64);
+        await mockPlugin.givenMethodReturnBool("0x01ffc9a7", true);
+        const manifest = getPluginManifest();
+        const manifestHash = ethers.keccak256(manifest);
+        // pluginManifest() => 0xc7763130
 
-      const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
-      
-      expect(await safe.exec(safe.target, 0, installData)).to.emit(module, "PluginInstalled").withArgs(mockPlugin.target, manifestHash, []);
-      expect(await module.installedPlugins(safe.target, mockPlugin.target)).to.be.equal(1n);
+        await mockPlugin.givenMethodReturn("0xc7763130", manifest);
 
-      expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginAlreadyInstalled");
+        const pluginInstallData = ethers.randomBytes(64);
 
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+
+        expect(await safe.exec(safe.target, 0, installData)).to.emit(module, "PluginInstalled").withArgs(mockPlugin.target, manifestHash, []);
+        expect(await module.installedPlugins(safe.target, mockPlugin.target)).to.be.equal(1n);
+
+        await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginAlreadyInstalled");
+      })
+
+      it("Reverts if plugin does not implement IERC165 interface", async () => {
+        const { safe, module } = await setupTests();
+
+        const mockPlugin = await ethers.deployContract("MockContract");
+        await mockPlugin.givenMethodReturnBool("0x01ffc9a7", false);
+
+        const manifest = getPluginManifest();
+        const manifestHash = ethers.keccak256(manifest);
+
+        const pluginInstallData = ethers.randomBytes(64);
+
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+
+        await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginInterfaceNotSupported").withArgs(mockPlugin.target);
+
+      })
+
+      it("Reverts if plugin does not support IERC165 interface", async () => {
+        const { safe, module } = await setupTests();
+
+        const mockPlugin = await ethers.deployContract("MockContract");
+        await mockPlugin.givenMethodReturnBool("0x01ffc9a7", false);
+
+        const manifest = getPluginManifest();
+        const manifestHash = ethers.keccak256(manifest);
+
+        const pluginInstallData = ethers.randomBytes(64);
+
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+
+        await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginInterfaceNotSupported").withArgs(mockPlugin.target);
+
+      })
+
+
+      it("Reverts if plugin does not support IPlugin interface", async () => {
+        const { safe, module } = await setupTests();
+
+        const mockPlugin = await ethers.deployContract("MockContract");
+        const mockIERC165 = await ethers.getContractAt('@openzeppelin/contracts/utils/introspection/IERC165.sol:IERC165', mockPlugin.target);
+        const callData = mockIERC165.interface.encodeFunctionData('supportsInterface', [IPLUGIN_INTERFACEID]);
+
+        await mockPlugin.givenCalldataReturnBool(callData, false);
+
+        const manifest = getPluginManifest();
+        const manifestHash = ethers.keccak256(manifest);
+
+        const pluginInstallData = ethers.randomBytes(64);
+
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+
+        await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginInterfaceNotSupported").withArgs(mockPlugin.target);
+
+      })
+
+      it("Reverts if manifest hash do not match", async () => {
+        const { safe, module } = await setupTests();
+
+        const mockPlugin = await ethers.deployContract("MockContract");
+        await mockPlugin.givenMethodReturnBool("0x01ffc9a7", true);
+
+        const manifest = getPluginManifest({});
+        // pluginManifest() => 0xc7763130
+        await mockPlugin.givenMethodReturn("0xc7763130", manifest);
+
+        const pluginInstallData = ethers.randomBytes(64);
+        const manifestHash = ethers.randomBytes(32);
+
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+
+        await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginManifestHashMismatch").withArgs(manifestHash);
+
+      })
     })
 
-    it("Uninstall plugin", async() => {
-      const {safe, module} = await setupTests();
+
+    it("Uninstall plugin", async () => {
+      const { safe, module } = await setupTests();
 
       const mockPlugin = await ethers.deployContract("MockContract");
-      const manifest = "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001c000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000002400000000000000000000000000000000000000000000000000000000000000260000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+      const manifest = getPluginManifest({});
       const manifestHash = ethers.keccak256(manifest);
       // pluginManifest() => 0xc7763130
       await mockPlugin.givenMethodReturn("0xc7763130", manifest);
