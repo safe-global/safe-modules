@@ -26,8 +26,9 @@
     "deploy": "hardhat deploy --network",
     "lint": "pnpm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "lint:ts": "eslint ./src --fix && eslint ./test --fix",
-    "fmt": "prettier --write ./contracts/**/*.sol",
+    "lint:ts": "eslint ./src && eslint ./test",
+    "lint:fix": "eslint ./src --fix && eslint ./test --fix",
+    "fmt": "prettier --write .",
     "fmt:check": "prettier --check ./**/*.sol",
     "prepare": "pnpm run build"
   },

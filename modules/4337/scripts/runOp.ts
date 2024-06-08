@@ -48,10 +48,17 @@ const runOp = async () => {
   // All other methods return an error
   const accountAbstractionProvider = new MultiProvider4337(BUNDLER_URL!, ethers.provider)
   const entryPoints = await getSupportedEntryPoints(accountAbstractionProvider)
-  const entryPoint = entryPoints[0]
   const moduleAddress = MODULE_ADDRESS ?? (await getSafe4337Module().then((module) => module.getAddress()))
-  const moduleSupportedEntrypoint = await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData('SUPPORTED_ENTRYPOINT') })
+  const [moduleSupportedEntrypoint] = ethers.AbiCoder.defaultAbiCoder().decode(
+    ['address'],
+    await user1.call({ to: moduleAddress, data: INTERFACES.encodeFunctionData('SUPPORTED_ENTRYPOINT') }),
+  )
   console.log({ moduleAddress, moduleSupportedEntrypoint })
+
+  const entryPoint = entryPoints.find((entry) => entry === moduleSupportedEntrypoint)
+  if (entryPoint === undefined) {
+    throw new Error('Module does not support any of the available entry points')
+  }
 
   const proxyCreationCode = (await callInterface(PROXY_FACTORY_ADDRESS, 'proxyCreationCode'))[0]
 
@@ -68,10 +75,10 @@ const runOp = async () => {
 
   safe.connect(accountAbstractionProvider)
 
-  console.log(safe.address)
+  console.log({ safe: safe.address })
   const safeBalance = await ethers.provider.getBalance(safe.address)
   const minBalance = ethers.parseEther('0.01')
-  console.log(safeBalance)
+  console.log({ safeBalance })
   if (safeBalance < minBalance) {
     await (await user1.sendTransaction({ to: safe.address, value: ethers.parseEther('0.01') })).wait()
   }
