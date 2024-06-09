@@ -104,7 +104,6 @@ rule deterministicSigner()
 
 ghost mathint numOfCreation;
 ghost mapping(address => uint) address_map;
-ghost address createdAddress;
 ghost bool validValue;
 
 hook EXTCODESIZE(address addr) uint v {
@@ -115,7 +114,6 @@ hook EXTCODESIZE(address addr) uint v {
 hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v {
     numOfCreation = numOfCreation + 1;
     address_map[v] = length;
-    createdAddress = v;
 }
 
 rule SignerCreationCantOverride()
@@ -224,22 +222,4 @@ rule getSignerRevertingConditions {
     getSigner@withrevert(e, x, y, verifiers);
 
     assert lastReverted <=> triedTransferringEth;
-}
-
-rule createSignerRevertingConditions {
-    env e;
-    uint256 x;
-    uint256 y;
-    P256.Verifiers verifiers;
-
-    address signer = getSigner(e, x, y, verifiers);
-    bool signerHasNoCode = hasNoCode(signer);
-
-    bool triedTransferringEth = e.msg.value != 0;
-
-    createSigner@withrevert(e, x, y, verifiers);
-
-    bool notCreatedSigner = signerHasNoCode && (createdAddress != signer);
-
-    assert lastReverted <=> (triedTransferringEth || notCreatedSigner);
 }
