@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 
-import {SafeWebAuthnSignerFactory} from "../../modules/passkey/contracts/SafeWebAuthnSignerFactory.sol";
+import {SafeWebAuthnSignerFactory} from "../munged/SafeWebAuthnSignerFactory.sol";
 import {P256} from "../../modules/passkey/contracts/libraries/P256.sol";
 import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
 
@@ -29,4 +29,11 @@ contract SafeWebAuthnSignerFactoryHarness is SafeWebAuthnSignerFactory {
         require(success);
         magicValue = abi.decode(result, (bytes4));
     }
+
+    // /**
+    //     munge to pass the SignerCreationCantOverride rule.
+    //  */
+    // function _hasNoCode(address account) internal view override returns (bool result) {
+    //     return account.code.length > 0;
+    // }
 }
