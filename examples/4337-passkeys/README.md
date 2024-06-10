@@ -1,6 +1,6 @@
 # Safe + 4337 + Passkeys example application
 
-This minimalistic example application demonstrates a Safe{Core} Smart Account deployment leveraging 4337 and Passkeys. It uses experimental and unaudited (at the moment of writing) contracts: [SafeSignerLaunchpad](https://github.com/safe-global/safe-modules/blob/main/modules/passkey/contracts/4337/SafeSignerLaunchpad.sol) and [SafeWebAuthnSignerProxy](https://github.com/safe-global/safe-modules/blob/main/modules/passkey/contracts/SafeWebAuthnSignerProxy.sol), which uses [FreshCryptoLib](https://github.com/rdubois-crypto/FreshCryptoLib/) under the hood.
+This minimalistic example application demonstrates a Safe{Core} Smart Account deployment leveraging 4337 and Passkeys. It uses unaudited (at the moment of writing) contracts: [SafeWebAuthnSharedSigner](https://github.com/safe-global/safe-modules/blob/main/modules/passkey/contracts/4337/SafeWebAuthnSharedSigner.sol). The `SafeWebAuthnSharedSigner` allows specifying any signature verifier, including the precompile, but the app chooses to use [FreshCryptoLib](https://github.com/rdubois-crypto/FreshCryptoLib/) verifier under the hood.
 
 ## Running the app
 
@@ -33,7 +33,7 @@ Helpful links:
 ### Run the app in development mode
 
 ```bash
-pnpm run -F {examples/4337-passkeys} dev
+pnpm run --filter @safe-global/safe-modules-example-4337-passkeys dev
 ```
 
 ## Config adjustments

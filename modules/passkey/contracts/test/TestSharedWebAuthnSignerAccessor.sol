@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {SafeWebAuthnSharedSigner} from "../4337/experimental/SafeWebAuthnSharedSigner.sol";
+import {SafeWebAuthnSharedSigner} from "../4337/SafeWebAuthnSharedSigner.sol";
 
 contract TestSharedWebAuthnSignerAccessor {
     function getSignerConfiguration(address sharedSigner) external view returns (SafeWebAuthnSharedSigner.Signer memory signer) {

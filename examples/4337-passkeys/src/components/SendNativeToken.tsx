@@ -13,10 +13,9 @@ type Props = {
   safeAddress: string
   nonce: bigint
   accountEntryPointBalance: bigint
-  signerAddress: string
 }
 
-function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonce, accountEntryPointBalance, signerAddress }: Props) {
+function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonce, accountEntryPointBalance }: Props) {
   const [amount, setAmount] = useState('')
   const [to, setTo] = useState('')
   const [error, setError] = useState('')
@@ -38,7 +37,7 @@ function SendNativeToken({ balanceWei, onSend, walletProvider, safeAddress, nonc
     [safeAddress, nonce, to, amount],
   )
 
-  const { userOpGasLimitEstimation, status: estimationStatus } = useUserOpGasLimitEstimation(userOp, signerAddress)
+  const { userOpGasLimitEstimation, status: estimationStatus } = useUserOpGasLimitEstimation(userOp)
 
   const gasParametersReady =
     feeDataStatus === RequestStatus.SUCCESS &&

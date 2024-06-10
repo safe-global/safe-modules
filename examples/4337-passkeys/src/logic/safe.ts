@@ -1,17 +1,18 @@
 import { ethers } from 'ethers'
-import { abi as SafeSignerLaunchpadAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/experimental/SafeSignerLaunchpad.sol/SafeSignerLaunchpad.json'
-import { abi as SafeWebAuthnSignerFactoryAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/SafeWebAuthnSignerFactory.sol/SafeWebAuthnSignerFactory.json'
 import { abi as SetupModuleSetupAbi } from '@safe-global/safe-4337/build/artifacts/contracts/SafeModuleSetup.sol/SafeModuleSetup.json'
+import { abi as SafeSingletonAbi } from '@safe-global/safe-contracts/build/artifacts/contracts/Safe.sol/Safe.json'
+import { abi as MultiSendAbi } from '@safe-global/safe-contracts/build/artifacts/contracts/libraries/MultiSend.sol/MultiSend.json'
+import { abi as SafeWebAuthnSharedSignerAbi } from '@safe-global/safe-passkey/build/artifacts/contracts/4337/SafeWebAuthnSharedSigner.sol/SafeWebAuthnSharedSigner.json'
 import { abi as Safe4337ModuleAbi } from '@safe-global/safe-4337/build/artifacts/contracts/Safe4337Module.sol/Safe4337Module.json'
 import { abi as SafeProxyFactoryAbi } from '@safe-global/safe-4337/build/artifacts/@safe-global/safe-contracts/contracts/proxies/SafeProxyFactory.sol/SafeProxyFactory.json'
-import type { Safe4337Module, SafeModuleSetup, SafeProxyFactory } from '@safe-global/safe-4337/dist/typechain-types/'
-import type { SafeSignerLaunchpad, SafeWebAuthnSignerFactory } from '@safe-global/safe-passkey/dist/typechain-types/'
+import type { Safe4337Module, SafeModuleSetup, SafeProxyFactory, SafeL2, MultiSend } from '@safe-global/safe-4337/dist/typechain-types/'
+import type { SafeWebAuthnSharedSigner } from '@safe-global/safe-passkey/dist/typechain-types/'
 
 import {
-  P256_VERIFIER_ADDRESS,
+  SAFE_MODULE_SETUP_ADDRESS,
   SAFE_PROXY_FACTORY_ADDRESS,
-  SAFE_SIGNER_LAUNCHPAD_ADDRESS,
-  WEBAUTHN_SIGNER_FACTORY_ADDRESS,
+  SAFE_SINGLETON_ADDRESS,
+  SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS,
 } from '../config'
 import { PackedUserOperation } from './userOp'
 
@@ -19,54 +20,71 @@ import { PackedUserOperation } from './userOp'
 const SafeProxyBytecode =
   '0x608060405234801561001057600080fd5b506040516101e63803806101e68339818101604052602081101561003357600080fd5b8101908080519060200190929190505050600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff1614156100ca576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004018080602001828103825260228152602001806101c46022913960400191505060405180910390fd5b806000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505060ab806101196000396000f3fe608060405273ffffffffffffffffffffffffffffffffffffffff600054167fa619486e0000000000000000000000000000000000000000000000000000000060003514156050578060005260206000f35b3660008037600080366000845af43d6000803e60008114156070573d6000fd5b3d6000f3fea264697066735822122003d1488ee65e08fa41e58e888a9865554c535f2c77126a82cb4c0f917f31441364736f6c63430007060033496e76616c69642073696e676c65746f6e20616464726573732070726f7669646564'
 
-function getWebAuthnSignerFactoryContract(provider: ethers.JsonRpcApiProvider): SafeWebAuthnSignerFactory {
-  return new ethers.Contract(
-    WEBAUTHN_SIGNER_FACTORY_ADDRESS,
-    SafeWebAuthnSignerFactoryAbi,
-    provider,
-  ) as unknown as SafeWebAuthnSignerFactory
+type WebAuthnSharedSignerData = {
+  x: string
+  y: string
+  verifiers: string
 }
 
 /**
- * Calculates the signer address from the given public key coordinates.
- * @param provider The provider to use for the contract call.
- * @param x The x-coordinate of the public key.
- * @param y The y-coordinate of the public key.
- * @returns The signer address.
+ * Encodes the function data for setting the owner of the WebAuthnSharedSigner.
+ *
+ * @param signer The WebAuthnSharedSignerData object containing the signer data.
+ * @returns The encoded function data for setting the owner.
  */
-async function getSignerAddressFromPubkeyCoords(provider: ethers.JsonRpcApiProvider, x: string, y: string): Promise<string> {
-  const WebAuthSignerFactory = getWebAuthnSignerFactoryContract(provider)
-  const signerAddress = await WebAuthSignerFactory.getSigner(x, y, P256_VERIFIER_ADDRESS)
+function encodeWebAuthnSharedSignerConfigure(signer: WebAuthnSharedSignerData): string {
+  const safeWebAuthnSharedSignerInterface = new ethers.Interface(
+    SafeWebAuthnSharedSignerAbi,
+  ) as unknown as SafeWebAuthnSharedSigner['interface']
 
-  return signerAddress
+  return safeWebAuthnSharedSignerInterface.encodeFunctionData('configure', [{ ...signer }])
 }
 
-type SafeInitializer = {
-  singleton: string
-  signerFactory: string
-  signerX: string
-  signerY: string
-  signerVerifiers: string
-  setupTo: string
-  setupData: string
-  fallbackHandler: string
-}
+/**
+ * Encodes the function call for setting up the Safe contract with the specified modules and signer.
+ *
+ * @param modules The addresses of the modules to enable.
+ * @param signer The WebAuthnSharedSignerData object containing the signer data.
+ * @returns The encoded function call data.
+ */
+function encodeSetupCall(modules: string[], signer: WebAuthnSharedSignerData): string {
+  const multiSend = new ethers.Interface(MultiSendAbi) as unknown as MultiSend['interface']
 
-function getLaunchpadInitializer(initializer: SafeInitializer): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
-
-  const launchpadInitializer = safeSignerLaunchpadInterface.encodeFunctionData('setup', [
-    initializer.singleton,
-    initializer.signerFactory,
-    initializer.signerX,
-    initializer.signerY,
-    initializer.signerVerifiers,
-    initializer.setupTo,
-    initializer.setupData,
-    initializer.fallbackHandler,
+  return multiSend.encodeFunctionData('multiSend', [
+    encodeMultiSendTransactions([
+      {
+        op: 1 as const,
+        to: SAFE_MODULE_SETUP_ADDRESS,
+        data: encodeSafeModuleSetupCall(modules),
+      },
+      {
+        op: 1 as const,
+        to: SAFE_WEBAUTHN_SHARED_SIGNER_ADDRESS,
+        data: encodeWebAuthnSharedSignerConfigure(signer),
+      },
+    ]),
   ])
+}
 
-  return launchpadInitializer
+function getSafeInitializer(
+  owners: string[],
+  threshold: ethers.BigNumberish,
+  fallbackHandler: ethers.AddressLike,
+  setupTo = ethers.ZeroAddress,
+  setupData = '0x',
+): string {
+  const safeSingletonInterface = new ethers.Interface(SafeSingletonAbi) as unknown as SafeL2['interface']
+
+  return safeSingletonInterface.encodeFunctionData('setup', [
+    owners,
+    threshold,
+    setupTo,
+    setupData,
+    fallbackHandler,
+    ethers.ZeroAddress,
+    0,
+    ethers.ZeroAddress,
+  ])
 }
 
 /**
@@ -94,7 +112,7 @@ function getSafeDeploymentData(singleton: string, initializer = '0x', saltNonce 
 function getSafeAddress(
   initializer: string,
   factoryAddress = SAFE_PROXY_FACTORY_ADDRESS,
-  singleton = SAFE_SIGNER_LAUNCHPAD_ADDRESS,
+  singleton = SAFE_SINGLETON_ADDRESS,
   saltNonce: ethers.BigNumberish = ethers.ZeroHash,
 ): string {
   const deploymentCode = ethers.solidityPacked(['bytes', 'uint256'], [SafeProxyBytecode, singleton])
@@ -114,35 +132,19 @@ function encodeSafeModuleSetupCall(modules: string[]): string {
 }
 
 /**
- * Encodes the necessary data for initializing a Safe contract and performing a user operation.
- * @param setup - The SafeInitializer object containing the initialization parameters.
+ * Encodes the parameters of a user operation for execution on Safe4337Module.
  * @param to The address of the recipient of the operation.
  * @param value The amount of value to be transferred in the operation.
  * @param data The data payload of the operation.
  * @param operation The type of operation (0 for CALL, 1 for DELEGATECALL).
- * @returns The encoded data for initializing the Safe contract and performing the user operation.
+ * @returns The encoded data for the user operation.
  */
-function getPromoteAccountAndExecuteUserOpData(
-  initializer: SafeInitializer,
-  to: string,
-  value: ethers.BigNumberish,
-  data: string,
-  operation: 0 | 1,
-): string {
-  const safeSignerLaunchpadInterface = new ethers.Interface(SafeSignerLaunchpadAbi) as unknown as SafeSignerLaunchpad['interface']
+function getExecuteUserOpData(to: string, value: ethers.BigNumberish, data: string, operation: 0 | 1): string {
+  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
 
-  const initializeThenUserOpData = safeSignerLaunchpadInterface.encodeFunctionData('promoteAccountAndExecuteUserOp', [
-    initializer.signerFactory,
-    initializer.signerX,
-    initializer.signerY,
-    initializer.signerVerifiers,
-    to,
-    value,
-    data,
-    operation,
-  ])
+  const executeUserOpData = safe4337ModuleInterface.encodeFunctionData('executeUserOpWithErrorString', [to, value, data, operation])
 
-  return initializeThenUserOpData
+  return executeUserOpData
 }
 
 /**
@@ -160,30 +162,53 @@ function getValidateUserOpData(userOp: PackedUserOperation, userOpHash: string, 
   return validateUserOpData
 }
 
-/**
- * Encodes the parameters of a user operation for execution on Safe4337Module.
- * @param to The address of the recipient of the operation.
- * @param value The amount of value to be transferred in the operation.
- * @param data The data payload of the operation.
- * @param operation The type of operation (0 for CALL, 1 for DELEGATECALL).
- * @returns The encoded data for the user operation.
- */
-function getExecuteUserOpData(to: string, value: ethers.BigNumberish, data: string, operation: 0 | 1): string {
-  const safe4337ModuleInterface = new ethers.Interface(Safe4337ModuleAbi) as unknown as Safe4337Module['interface']
-
-  const executeUserOpData = safe4337ModuleInterface.encodeFunctionData('executeUserOpWithErrorString', [to, value, data, operation])
-
-  return executeUserOpData
+export type MultiSendTransaction = {
+  // 0 for CALL, 1 for DELEGATECALL
+  op: 0 | 1
+  to: ethers.AddressLike
+  value?: ethers.BigNumberish
+  data: ethers.BytesLike
 }
 
-export type { SafeInitializer }
+/**
+ * Encodes an array of MultiSendTransaction objects into a single concatenated byte array.
+ *
+ * @param transactions - An array of MultiSendTransaction objects.
+ * @returns The concatenated byte array representing the encoded transactions.
+ */
+function encodeMultiSendTransactions(transactions: MultiSendTransaction[]) {
+  return ethers.concat(
+    transactions.map(({ op, to, value, data }) =>
+      ethers.solidityPacked(['uint8', 'address', 'uint256', 'uint256', 'bytes'], [op, to, value ?? 0, ethers.dataLength(data), data]),
+    ),
+  )
+}
+
+const SAFE_ADDRESS_LOCALSTORAGE_KEY = 'safeAddress'
+
+function storeSafeAddressInLocalStorage(safeAddress: string): void {
+  localStorage.setItem('safeAddress', safeAddress)
+}
+
+function getSafeAddressFromLocalStorage(): string | null {
+  const value = localStorage.getItem(SAFE_ADDRESS_LOCALSTORAGE_KEY)
+
+  if (ethers.isAddress(value)) {
+    return value
+  }
+
+  return null
+}
+
 export {
-  getLaunchpadInitializer,
-  getPromoteAccountAndExecuteUserOpData,
-  getSignerAddressFromPubkeyCoords,
-  getSafeDeploymentData,
-  getSafeAddress,
-  getValidateUserOpData,
   getExecuteUserOpData,
+  getSafeAddress,
+  getSafeAddressFromLocalStorage,
+  getSafeDeploymentData,
+  getSafeInitializer,
+  getValidateUserOpData,
   encodeSafeModuleSetupCall,
+  encodeSetupCall,
+  encodeMultiSendTransactions,
+  storeSafeAddressInLocalStorage,
 }

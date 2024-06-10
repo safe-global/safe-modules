@@ -93,58 +93,12 @@ importers:
       '@safe-global/safe-4337':
         specifier: 0.3.0
         version: 0.3.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      '@safe-global/safe-contracts':
+        specifier: ^1.4.1-build.0
+        version: 1.4.1-build.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@safe-global/safe-passkey':
         specifier: workspace:0.2.0-alpha.2
         version: link:../../modules/passkey
-      '@web3modal/ethers':
-        specifier: ^4.1.11
-        version: 4.2.2(@types/react@18.3.3)(bufferutil@4.0.8)(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
-      ethers:
-        specifier: ^6.12.1
-        version: 6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.23.1
-        version: 6.23.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-    devDependencies:
-      '@types/react':
-        specifier: ^18.3.2
-        version: 18.3.3
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.0
-      '@vitejs/plugin-react-swc':
-        specifier: ^3.6.0
-        version: 3.7.0(vite@5.2.11(@types/node@20.14.0))
-      react-router:
-        specifier: ^6.23.1
-        version: 6.23.1(react@18.3.1)
-      typescript:
-        specifier: ^5.4.5
-        version: 5.4.5
-      vite:
-        specifier: ^5.2.11
-        version: 5.2.11(@types/node@20.14.0)
-      vite-plugin-commonjs:
-        specifier: ^0.10.1
-        version: 0.10.1
-
-  examples/4337-passkeys-singleton-signer:
-    dependencies:
-      '@account-abstraction/contracts':
-        specifier: 0.7.0
-        version: 0.7.0
-      '@safe-global/safe-4337':
-        specifier: 0.3.0
-        version: 0.3.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
-      '@safe-global/safe-passkey':
-        specifier: 0.2.0-alpha.1
-        version: 0.2.0-alpha.1(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@web3modal/ethers':
         specifier: ^4.1.11
         version: 4.2.2(@types/react@18.3.3)(bufferutil@4.0.8)(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
@@ -1299,9 +1253,6 @@ packages:
 
   '@safe-global/safe-deployments@1.36.0':
     resolution: {integrity: sha512-9MbDJveRR64AbmzjIpuUqmDBDtOZpXpvkyhTUs+5UOPT3WgSO375/ZTO7hZpywP7+EmxnjkGc9EoxjGcC4TAyw==}
-
-  '@safe-global/safe-passkey@0.2.0-alpha.1':
-    resolution: {integrity: sha512-rmxZH79J0ynQf9WqyWHbHWbv1K7s6X1hFpp55f4euMO9taoU7Ymw5p+8iBgQNe4EWy4NjRbtfK9NKD7JaLoYjQ==}
 
   '@safe-global/safe-singleton-factory@1.0.26':
     resolution: {integrity: sha512-79xL013OAenMyQZLIDLzuRoO4z/nH3AHLG93PdD1RQltAP98QEoeMjGeWwOkLq26pLMM9OeFz4MPuWtZ2qxWmw==}
@@ -6103,13 +6054,6 @@ snapshots:
     dependencies:
       semver: 7.6.2
 
-  '@safe-global/safe-passkey@0.2.0-alpha.1(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
-    dependencies:
-      '@safe-global/safe-contracts': 1.4.1-build.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
-      cbor: 9.0.2
-    transitivePeerDependencies:
-      - ethers
-
   '@safe-global/safe-singleton-factory@1.0.26': {}
 
   '@scure/base@1.1.6': {}
@@ -6766,7 +6710,7 @@ snapshots:
       '@walletconnect/safe-json': 1.0.2
       '@walletconnect/time': 1.0.2
       tslib: 1.14.1
-      uint8arrays: 3.1.0
+      uint8arrays: 3.1.1
 
   '@walletconnect/safe-json@1.0.2':
     dependencies:
