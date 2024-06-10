@@ -102,3 +102,16 @@ rule isValidSignatureForSignerConsistency()
     assert firstRevert == secondRevert;
     assert (!firstRevert && !secondRevert) => (magic1 == MAGIC_VALUE()) <=> (magic2 == MAGIC_VALUE());
 }
+
+rule getSignerRevertingConditions {
+    env e;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    getSigner@withrevert(e, x, y, verifiers);
+
+    assert lastReverted <=> triedTransferringEth;
+}
