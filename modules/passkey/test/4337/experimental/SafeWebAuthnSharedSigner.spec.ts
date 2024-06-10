@@ -5,32 +5,41 @@ import * as ERC1271 from '../../utils/erc1271'
 import { DUMMY_AUTHENTICATOR_DATA, base64UrlEncode, getSignatureBytes } from '../../../src/utils/webauthn'
 import { encodeWebAuthnSigningMessage } from '../../utils/webauthnShim'
 
-const SIGNER_STORAGE_SLOT = ethers.toBeHex(BigInt(ethers.id('SafeWebAuthnSharedSigner.signer')) - 3n, 32)
+const SIGNER_MAPPING_SLOT = BigInt(ethers.id('SafeWebAuthnSharedSigner.signer')) - 1n
 
 describe('SafeWebAuthnSharedSigner', () => {
   const setupTests = deployments.createFixture(async () => {
-    const { SafeL2, SafeProxyFactory, SafeWebAuthnSharedSigner } = await deployments.run()
+    const { SafeL2, SafeProxyFactory, CompatibilityFallbackHandler, SafeWebAuthnSharedSigner } = await deployments.run()
 
     const safeSingleton = await ethers.getContractAt('ISafe', SafeL2.address)
+    const fallbackHandler = await ethers.getContractAt(CompatibilityFallbackHandler.abi, CompatibilityFallbackHandler.address)
     const proxyFactory = await ethers.getContractAt('SafeProxyFactory', SafeProxyFactory.address)
     const sharedSigner = await ethers.getContractAt('SafeWebAuthnSharedSigner', SafeWebAuthnSharedSigner.address)
+
+    const signerSlot = ethers.solidityPackedKeccak256(['uint256', 'uint256'], [sharedSigner.target, SIGNER_MAPPING_SLOT])
 
     const MockContract = await ethers.getContractFactory('MockContract')
     const mockAccount = await MockContract.deploy()
     const mockVerifier = await MockContract.deploy()
 
+    const TestSharedWebAuthnSignerAccessor = await ethers.getContractFactory('TestSharedWebAuthnSignerAccessor')
+    const sharedSignerAccessor = await TestSharedWebAuthnSignerAccessor.deploy()
+
     return {
       safeSingleton,
+      fallbackHandler,
       proxyFactory,
       sharedSigner,
+      signerSlot,
       mockAccount,
       mockVerifier,
+      sharedSignerAccessor,
     }
   })
 
   describe('getConfiguration', function () {
     it('Should return a configuration for an account', async () => {
-      const { safeSingleton, sharedSigner, mockAccount, mockVerifier } = await setupTests()
+      const { safeSingleton, sharedSigner, signerSlot, mockAccount, mockVerifier } = await setupTests()
 
       const publicKey = {
         x: BigInt(ethers.id('publicKey.x')),
@@ -38,7 +47,7 @@ describe('SafeWebAuthnSharedSigner', () => {
       }
 
       await mockAccount.givenCalldataReturn(
-        safeSingleton.interface.encodeFunctionData('getStorageAt', [SIGNER_STORAGE_SLOT, 3]),
+        safeSingleton.interface.encodeFunctionData('getStorageAt', [signerSlot, 3]),
         ethers.AbiCoder.defaultAbiCoder().encode(
           ['bytes'],
           [ethers.AbiCoder.defaultAbiCoder().encode(['uint256', 'uint256', 'uint176'], [publicKey.x, publicKey.y, mockVerifier.target])],
@@ -94,11 +103,47 @@ describe('SafeWebAuthnSharedSigner', () => {
         expect(await sharedSigner.getConfiguration(mockAccount)).to.deep.equal([0n, 0n, 0n])
       }
     })
+
+    it('Should store the signer configuration in a mapping with the shared signer address as a key', async () => {
+      const { safeSingleton, fallbackHandler, proxyFactory, sharedSigner, mockVerifier, sharedSignerAccessor } = await setupTests()
+
+      const config = {
+        x: ethers.id('publicKey.x'),
+        y: ethers.id('publicKey.y'),
+        verifiers: ethers.toBeHex(await mockVerifier.getAddress(), 32),
+      }
+
+      const initializer = safeSingleton.interface.encodeFunctionData('setup', [
+        [sharedSigner.target],
+        1,
+        sharedSigner.target,
+        sharedSigner.interface.encodeFunctionData('configure', [config]),
+        fallbackHandler.target,
+        ethers.ZeroAddress,
+        0,
+        ethers.ZeroAddress,
+      ])
+
+      const safeProxy = fallbackHandler.attach(
+        await proxyFactory.createProxyWithNonce.staticCall(safeSingleton, initializer, 0),
+      ) as typeof fallbackHandler
+      await proxyFactory.createProxyWithNonce(safeSingleton, initializer, 0)
+
+      expect(
+        ethers.AbiCoder.defaultAbiCoder().decode(
+          ['uint256', 'uint256', 'uint176'],
+          await safeProxy.simulate.staticCall(
+            sharedSignerAccessor.target,
+            sharedSignerAccessor.interface.encodeFunctionData('getSignerConfiguration', [sharedSigner.target]),
+          ),
+        ),
+      ).to.deep.equal([config.x, config.y, BigInt(config.verifiers)])
+    })
   })
 
   describe('configure', function () {
     it('Should configure an account', async () => {
-      const { safeSingleton, proxyFactory, sharedSigner, mockVerifier } = await setupTests()
+      const { safeSingleton, proxyFactory, sharedSigner, signerSlot, mockVerifier } = await setupTests()
 
       const config = {
         x: ethers.id('publicKey.x'),
@@ -120,10 +165,9 @@ describe('SafeWebAuthnSharedSigner', () => {
       const account = await proxyFactory.createProxyWithNonce.staticCall(safeSingleton, initializer, 0)
       await proxyFactory.createProxyWithNonce(safeSingleton, initializer, 0)
 
-      expect(await ethers.provider.getStorage(account, SIGNER_STORAGE_SLOT)).to.equal(config.x)
-      expect(await ethers.provider.getStorage(account, BigInt(SIGNER_STORAGE_SLOT) + 1n)).to.equal(config.y)
-      expect(await ethers.provider.getStorage(account, BigInt(SIGNER_STORAGE_SLOT) + 2n)).to.equal(config.verifiers)
-      expect(await ethers.provider.getStorage(account, ethers.id('SafeWebAuthnSharedSigner.signer'))).to.equal(ethers.ZeroHash)
+      expect(await ethers.provider.getStorage(account, signerSlot)).to.equal(config.x)
+      expect(await ethers.provider.getStorage(account, BigInt(signerSlot) + 1n)).to.equal(config.y)
+      expect(await ethers.provider.getStorage(account, BigInt(signerSlot) + 2n)).to.equal(config.verifiers)
     })
 
     it('Should revert if not DELEGATECALL-ed', async () => {
@@ -135,7 +179,7 @@ describe('SafeWebAuthnSharedSigner', () => {
 
   describe('isValidSignature', function () {
     it('Should return a magic value for an account', async () => {
-      const { safeSingleton, sharedSigner, mockAccount, mockVerifier } = await setupTests()
+      const { safeSingleton, sharedSigner, signerSlot, mockAccount, mockVerifier } = await setupTests()
 
       const data = ethers.toUtf8Bytes('some data to sign')
       const dataHash = ethers.keccak256(data)
@@ -159,7 +203,7 @@ describe('SafeWebAuthnSharedSigner', () => {
       })
 
       await mockAccount.givenCalldataReturn(
-        safeSingleton.interface.encodeFunctionData('getStorageAt', [SIGNER_STORAGE_SLOT, 3]),
+        safeSingleton.interface.encodeFunctionData('getStorageAt', [signerSlot, 3]),
         ethers.AbiCoder.defaultAbiCoder().encode(
           ['bytes'],
           [ethers.AbiCoder.defaultAbiCoder().encode(['uint256', 'uint256', 'uint176'], [x, y, mockVerifier.target])],
