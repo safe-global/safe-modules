@@ -96,6 +96,7 @@ contract TestSafeSignerLaunchpad is IAccount, SafeStorage {
     receive() external payable {}
 
     function preValidationSetup(bytes32 initHash, address to, bytes calldata preInit) external onlyProxy {
+        require(_initHash() == bytes32(0), "Already initialized");
         _setInitHash(initHash);
         if (to != address(0)) {
             (bool success, ) = to.delegatecall(preInit);
