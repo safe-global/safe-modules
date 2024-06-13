@@ -10,6 +10,12 @@ methods {
 
     function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
         checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
+
+    function authenticate(bytes32, bytes) external returns (bytes4) envfree;
+    function _._ external => DISPATCH [
+        SafeWebAuthnSignerProxy._,
+        SafeWebAuthnSignerSingleton._
+    ] default NONDET;
 }
 
 function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
@@ -31,14 +37,6 @@ ghost verifySignatureAllowMalleabilityGhost(P256.Verifiers, bytes32, uint256, ui
 
 // This is the same MAGIC_VALUE constant used in ERC1271.
 definition MAGIC_VALUE() returns bytes4 = to_bytes4(0x1626ba7e);
-
-methods {
-    function authenticate(bytes32, bytes) external returns (bytes4) envfree;
-    function _._ external => DISPATCH [
-        SafeWebAuthnSignerProxy._,
-        SafeWebAuthnSignerSingleton._
-    ] default NONDET;
-}
 
 /*
 Property 14. Proxy - verify return data from the fallback is only one of the magicNumbers
