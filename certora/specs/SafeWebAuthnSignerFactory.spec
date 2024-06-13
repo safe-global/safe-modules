@@ -16,6 +16,11 @@ methods{
 
     function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
     checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
+
+    function _._ external => DISPATCH [
+        proxy._,
+        singleton._
+    ] default NONDET;
 }
 
 function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
