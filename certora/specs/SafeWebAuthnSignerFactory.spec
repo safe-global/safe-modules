@@ -184,3 +184,17 @@ rule isValidSignatureForSignerIntegrity()
     
     satisfy magic1 == MAGIC_VALUE();
 }
+
+
+rule getSignerRevertingConditions {
+    env e;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+
+    bool triedTransferringEth = e.msg.value != 0;
+
+    getSigner@withrevert(e, x, y, verifiers);
+
+    assert lastReverted <=> triedTransferringEth;
+}
