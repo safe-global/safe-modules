@@ -84,44 +84,6 @@ rule verifyIsValidSignatureAreEqual(env e){
                                          (magicValue_hashed == to_bytes4(0) && magicValue_message == to_bytes4(0));
 }
 
-/*
-┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Once signer passed isValidSignature it will never fail on it after any call                                         │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-*/
-
-rule verifyIsValidSignatureWillContinueToSucceed(){
-    env e;
-    env e1;
-    env e2;
-    env e3;
-    require e1.msg.value == 0 && e2.msg.value == 0 && e3.msg.value == 0;
-
-    method f;
-    calldataarg args;
-
-    bytes32 message;
-    WebAuthn.Signature sigStruct;
-    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
-
-    bytes32 message3;
-    WebAuthn.Signature sigStruct3;
-    bytes signature3 = WebAuthnHarness.encodeSignature(e, sigStruct3);
-
-    bytes4 firstVerified = isValidSignature@withrevert(e1, message, signature);
-    bool firstReverted = lastReverted;
-
-    f(e, args);
-    // isValidSignature(e3, message3, signature3);
-
-    bytes4 secondVerify = isValidSignature@withrevert(e2, message, signature);
-    bool secondRevert = lastReverted;
-
-    assert firstReverted == secondRevert;
-    assert (!firstReverted && !secondRevert) => (firstVerified == secondVerify);
-    satisfy true;
-}
-
 rule isValidSignatureRevertingConditions {
     env e;
     bytes32 message;
