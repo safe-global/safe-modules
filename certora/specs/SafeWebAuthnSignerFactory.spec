@@ -1,10 +1,38 @@
 using SafeWebAuthnSignerProxy as proxy;
 using SafeWebAuthnSignerSingleton as singleton;
+using WebAuthnHarness as WebAuthnHarness;
+
 
 methods{
     function getSigner(uint256 x, uint256 y, P256.Verifiers v) internal returns (address) => getSignerGhost(x, y, v);
     function createSigner(uint256, uint256, P256.Verifiers) external returns (address);
     function hasNoCode(address) external returns (bool) envfree;
+    
+    function P256.verifySignatureAllowMalleability(P256.Verifiers a, bytes32 b, uint256 c, uint256 d, uint256 e, uint256 f) internal returns (bool) => 
+    verifySignatureAllowMalleabilityGhost(a, b, c, d, e, f);
+
+    function WebAuthn.encodeSigningMessage(bytes32 challenge, bytes calldata authenticatorData, string calldata clientDataFields) internal returns (bytes memory) =>
+    GETencodeSigningMessageCVL(challenge, authenticatorData, clientDataFields);
+
+    function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
+    checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
+}
+
+function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
+{
+    env e;
+    return WebAuthnHarness.GETencodeSigningMessageSummary(e, challenge, authenticatorData, clientDataFields);
+}
+
+ghost checkInjectiveSummary(bytes32, bytes32, bytes32, bytes32) returns bool {
+    axiom forall bytes32 x1. forall bytes32 y1. forall bytes32 z1. forall bytes32 x2. forall bytes32 y2. forall bytes32 z2. forall bytes32 result.
+    checkInjectiveSummary(x1, y1, z1, result) && checkInjectiveSummary(x2, y2, z2, result) => x1 == x2;
+}
+
+ghost verifySignatureAllowMalleabilityGhost(P256.Verifiers, bytes32, uint256, uint256, uint256, uint256) returns bool {
+    axiom forall P256.Verifiers a. forall bytes32 message1. forall bytes32 message2. forall uint256 c. forall uint256 d. forall uint256 e. forall uint256 f.
+        verifySignatureAllowMalleabilityGhost(a, message1, c, d, e, f) && 
+        verifySignatureAllowMalleabilityGhost(a, message2, c, d, e, f) => message1 == message2;
 }
 
 // Summary is correct only if the unique signer rule is proved spec GetSigner
