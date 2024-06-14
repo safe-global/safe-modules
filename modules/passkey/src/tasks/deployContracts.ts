@@ -4,6 +4,7 @@ task('deploy-contracts', 'Deploys and verifies Safe contracts').setAction(async 
   await run('deploy')
   await run('local-verify')
   await run('etherscan-verify', { forceLicense: true, license: 'LGPL-3.0' })
+  await run('sourcify')
 
   // The `SafeWebAuthnSignerSingleton` is deployed by the `SafeWebAuthnSignerFactory` contructor
   // and not by the deployment script, so it does not automatically get verified. We work around
