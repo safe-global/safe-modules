@@ -75,7 +75,7 @@ const config: HardhatUserConfig = {
     apiKey: ETHERSCAN_API_KEY,
   },
   sourcify: {
-    enabled: false,
+    enabled: true,
   },
 }
 
