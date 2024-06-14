@@ -306,7 +306,7 @@ function SqrtMod(uint256 self) internal view returns (uint256 result){
      * @dev Check if a point in affine coordinates is on the curve (reject Neutral that is indeed on the curve).
      */
     function ecAff_isOnCurve(uint256 x, uint256 y) internal pure returns (bool) {
-        if ( ((0 == x)&&( 0 == y)) || (x == p &&  y == p)) {
+        if (x >= p || y >= p || ((x == 0) && (y == 0))) {
             return false;
         }
         unchecked {

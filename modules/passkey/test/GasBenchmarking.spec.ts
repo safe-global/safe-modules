@@ -59,7 +59,7 @@ describe('Gas Benchmarking [@bench]', function () {
 
     for (const [name, key, networkName] of [
       ['FreshCryptoLib', 'fcl', null],
-      ['daimo-eth', 'daimo', null],
+      ['Daimo', 'daimo', null],
       ['Dummy', 'dummy', null],
       ['Precompile', 'precompile', 'localhost'],
     ] as [string, string, string | null][]) {

@@ -9,7 +9,7 @@ Passkey support with the Safe is provided by implementing [`SignatureValidator`s
 
 ## Contracts Overview
 
-Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification for WebAuthn credentials using the secp256r1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL)](https://github.com/rdubois-crypto/FreshCryptoLib) and [daimo-eth](https://github.com/daimo-eth/p256-verifier).
+Safe account being standard agnostic, new user flows such as custom signature verification logic can be added/removed as and when required. By leveraging this flexibility to support customizing Safe account, Passkeys-based execution flow can be enabled on a Safe. The contracts in this package use [ERC-1271](https://eips.ethereum.org/EIPS/eip-1271) standard and [WebAuthn](https://w3c.github.io/webauthn/) standard to allow signature verification for WebAuthn credentials using the secp256r1 curve. The contracts in this package are designed to be used with precompiles for signature verification in the supported networks or use any verifier contract implementing the EIP-7212 interface as a fallback mechanism. In their current state, the contracts are tested with [Fresh Crypto Lib (FCL) P-256 implementation](https://github.com/rdubois-crypto/FreshCryptoLib) and the [Daimo P-256 verifier](https://github.com/daimo-eth/p256-verifier).
 
 The below sections give a high-level overview of the contracts present in this package.
 
@@ -72,7 +72,7 @@ pnpm test
 pnpm run test:4337
 ```
 
-### Deployments
+## Deployments
 
 ### Deploy
 
@@ -86,16 +86,17 @@ Preparation:
 - Set `ETHERSCAN_API_KEY` in `.env`
 
 ```bash
-pnpm run deploy-all <network>
+pnpm run deploy-all $NETWORK
 ```
 
 This will perform the following steps
 
 ```bash
 pnpm run build
-npx hardhat --network <network> deploy
-npx hardhat --network <network> etherscan-verify
-npx hardhat --network <network> local-verify
+npx hardhat --network $NETWORK deploy
+npx hardhat --network $NETWORK etherscan-verify
+npx hardhat --network $NETWORK local-verify
+npx hardhat --network $NETWORK verify $SAFE_WEBAUTHN_SIGNER_SINGLETON_ADDRESS --contract SafeWebAuthnSignerSingleton
 ```
 
 ### Compiler settings
@@ -112,33 +113,23 @@ The resulting addresses should be on all networks the same.
 
 Note: The address will vary if the contract code changes or a different Solidity version is used.
 
-### Verify contract
-
-This command will use the deployment artifacts to compile the contracts and compare them to the onchain code.
-
-```bash
-npx hardhat --network <network> local-verify
-```
-
-This command will upload the contract source to Etherscan.
-
-```bash
-npx hardhat --network <network> etherscan-verify
-```
-
-### Run benchmark tests
+### Run Benchmark Tests
 
 ```bash
 pnpm run bench
 ```
 
+### User Stories
+
+The test cases in [userstories](./test/userstories) directory demonstrates the usage of the passkey module in different scenarios like deploying a Safe account with passkey module enabled, executing a `userOp` with a Safe using Passkey signer, etc.
+
+## Audits
+
+- [For version 0.2.0 by Certora](docs/v0.2.0/audit.md)
+
 ## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
-## User stories
-
-The test cases in [userstories](./test/userstories) directory demonstrates the usage of the passkey module in different scenarios like deploying a Safe account with passkey module enabled, executing a `userOp` with a Safe using Passkey signer, etc.
 
 ## License
 
