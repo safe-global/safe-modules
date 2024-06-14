@@ -74,6 +74,9 @@ const config: HardhatUserConfig = {
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
+  sourcify: {
+    enabled: false,
+  },
 }
 
 export default config
