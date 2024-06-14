@@ -12,4 +12,4 @@ All discovered findings were addressed.
 
 ## Files
 
-- [Final audit report](audit-report-ackee-draft.pdf)
+- [Final audit report](audit-report-ackee.pdf)
