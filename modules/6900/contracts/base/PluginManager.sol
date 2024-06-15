@@ -8,9 +8,13 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {PluginManifest} from "../interfaces/DataTypes.sol";
 
 abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
-
+    struct PluginData {
+        bytes32 manifestHash;
+        uint256 dependencyCount;
+    }
     struct ERC6900AccountData {
         mapping(address => uint256) installedPlugins;
+        bytes32 manifestHash;
     }
 
     /// @dev A mapping containing the installed plugins for an account. Safe address => Plugin address => uint256 (0 = not installed, 1 = installed)
@@ -23,6 +27,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
     error PluginManifestHashMismatch(bytes32 manifestHash);
     error PluginDepenencyCountMismatch();
     error PluginDependencyNotInstalled(address plugin, address dependency);
+    error PluginDependencyInterfaceNotSupported(address plugin, bytes4 interfaceId);
 
     /// @inheritdoc IPluginManager
     function installPlugin(
@@ -48,7 +53,6 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         if (!(manifestHash == keccak256(abi.encode(manifest)))) {
             revert PluginManifestHashMismatch(manifestHash);
         }
-
         // Length checks
         if (dependencies.length != manifest.dependencyInterfaceIds.length) {
             revert PluginDepenencyCountMismatch();
@@ -59,15 +63,17 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable {
         for (uint256 i = 0; i < length; i++) {
             address dependencyAddress = address(bytes20(bytes21(FunctionReference.unwrap(dependencies[i]))));
 
-            if (!IERC165(dependencyAddress).supportsInterface(manifest.dependencyInterfaceIds[i])) {
-                revert PluginInterfaceNotSupported(dependencyAddress);
-            }
-
             // Revert if dependency not installed
             if (accountData[msg.sender].installedPlugins[dependencyAddress] != 1) {
                 revert PluginDependencyNotInstalled(plugin, dependencyAddress);
             }
+
+            if (!IERC165(dependencyAddress).supportsInterface(manifest.dependencyInterfaceIds[i])) {
+                revert PluginDependencyInterfaceNotSupported(dependencyAddress, manifest.dependencyInterfaceIds[i]);
+            }
         }
+
+        accountData[msg.sender].manifestHash = manifestHash;
 
         // TODO: Update dependency count
 

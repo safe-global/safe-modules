@@ -103,7 +103,7 @@ describe("Safe6900Module", function () {
 
       })
 
-      it("Reverts if manifest hash do not match", async () => {
+      it("Reverts if manifesthash do not match", async () => {
         const { safe, module } = await setupTests();
 
         const mockPlugin = await ethers.deployContract("MockContract");
@@ -119,7 +119,85 @@ describe("Safe6900Module", function () {
         const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
 
         await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginManifestHashMismatch").withArgs(manifestHash);
+      })
 
+      it("Reverts if plugin dependency count do not match", async () => {
+        const { safe, module } = await setupTests();
+
+        const mockPlugin = await ethers.deployContract("MockContract");
+        await mockPlugin.givenMethodReturnBool("0x01ffc9a7", true);
+
+        const manifest = getPluginManifest({});
+        // pluginManifest() => 0xc7763130
+        await mockPlugin.givenMethodReturn("0xc7763130", manifest);
+
+        const pluginInstallData = ethers.randomBytes(64);
+        const manifestHash = ethers.keccak256(manifest);
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+        await safe.exec(safe.target, 0, installData);
+
+        const mockPlugin2 = await ethers.deployContract("MockContract");
+        await mockPlugin2.givenMethodReturnBool("0x01ffc9a7", true);
+        const manifest2 = getPluginManifest({});
+        // pluginManifest() => 0xc7763130
+        await mockPlugin2.givenMethodReturn("0xc7763130", manifest2);
+        const manifestHash2 = ethers.keccak256(manifest2);
+
+        const dependencies = [ethers.solidityPacked(["bytes21"], [mockPlugin.target + "00"])];
+
+        const installData2 = module.interface.encodeFunctionData('installPlugin', [mockPlugin2.target, manifestHash2, pluginInstallData, dependencies]);
+        await expect(safe.exec(safe.target, 0, installData2)).to.be.revertedWithCustomError(module, "PluginDepenencyCountMismatch");
+      })
+
+      it("Reverts if plugin dependency not installed", async () => {
+        const { safe, module } = await setupTests();
+
+        const pluginInstallData = ethers.randomBytes(64);
+
+        const mockPlugin2 = await ethers.deployContract("MockContract");
+        await mockPlugin2.givenMethodReturnBool("0x01ffc9a7", true);
+        const manifest2 = getPluginManifest({dependencyInterfaceIds:["0x11223344"]});
+        // pluginManifest() => 0xc7763130
+        await mockPlugin2.givenMethodReturn("0xc7763130", manifest2);
+        const manifestHash2 = ethers.keccak256(manifest2);
+
+        const dependencyAddress = ethers.ZeroAddress;
+
+        const dependencies = [ethers.solidityPacked(["bytes21"], [dependencyAddress + "00"])];
+
+        const installData2 = module.interface.encodeFunctionData('installPlugin', [mockPlugin2.target, manifestHash2, pluginInstallData, dependencies]);
+        await expect(safe.exec(safe.target, 0, installData2)).to.be.revertedWithCustomError(module, "PluginDependencyNotInstalled").withArgs(mockPlugin2.target, dependencyAddress);
+      })
+
+      it("Reverts if plugin dependency does not support interface", async () => {
+        const { safe, module } = await setupTests();
+
+        const mockPlugin = await ethers.deployContract("MockContract");
+        await mockPlugin.givenMethodReturnBool("0x01ffc9a7", true);
+
+        const mockIERC165 = await ethers.getContractAt('@openzeppelin/contracts/utils/introspection/IERC165.sol:IERC165', mockPlugin.target);
+        const callData = mockIERC165.interface.encodeFunctionData('supportsInterface', ["0x11223344"]);
+        await mockPlugin.givenCalldataReturnBool(callData, false);
+        const manifest = getPluginManifest({});
+        // pluginManifest() => 0xc7763130
+        await mockPlugin.givenMethodReturn("0xc7763130", manifest);
+
+        const pluginInstallData = ethers.randomBytes(64);
+        const manifestHash = ethers.keccak256(manifest);
+        const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+        await safe.exec(safe.target, 0, installData);
+
+        const mockPlugin2 = await ethers.deployContract("MockContract");
+        await mockPlugin2.givenMethodReturnBool("0x01ffc9a7", true);
+        const manifest2 = getPluginManifest({dependencyInterfaceIds:["0x11223344"]});
+        // pluginManifest() => 0xc7763130
+        await mockPlugin2.givenMethodReturn("0xc7763130", manifest2);
+        const manifestHash2 = ethers.keccak256(manifest2);
+
+        const dependencies = [ethers.solidityPacked(["bytes21"], [mockPlugin.target + "00"])];
+
+        const installData2 = module.interface.encodeFunctionData('installPlugin', [mockPlugin2.target, manifestHash2, pluginInstallData, dependencies]);
+        await expect(safe.exec(safe.target, 0, installData2)).to.be.revertedWithCustomError(module, "PluginDependencyInterfaceNotSupported").withArgs(mockPlugin.target, "0x11223344");
       })
     })
 
