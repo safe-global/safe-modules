@@ -152,13 +152,19 @@ rule createAndVerifyEQtoIsValidSignatureForSigner()
     bytes signature;
     bytes32 message;
 
+    signerAddress = getSigner(e, x, y, verifier);
+    require(numOfCreation == 0);
+    require(hasNoCode(e, signerAddress));
+    require(WebAuthnHarness.castSignatureSuccess(e, message, signature));
+
+
     storage s = lastStorage;
 
     bytes4 magic1 = isValidSignatureForSigner(e, message, signature, x, y, verifier);
 
     bytes4 magic2 = createAndVerify(e, message, signature, x, y, verifier) at s;
 
-    assert magic1 == magic2;
+    assert magic1 == magic2 && numOfCreation == 1;
 }
 
 /*
