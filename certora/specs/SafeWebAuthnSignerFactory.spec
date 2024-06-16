@@ -152,7 +152,7 @@ rule createAndVerifyEQtoIsValidSignatureForSigner()
     bytes signature;
     bytes32 message;
 
-    signerAddress = getSigner(e, x, y, verifier);
+    address signerAddress = getSigner(e, x, y, verifier);
     require(numOfCreation == 0);
     require(hasNoCode(e, signerAddress));
     require(WebAuthnHarness.castSignatureSuccess(e, message, signature));
