@@ -1,0 +1,56 @@
+{
+  "name": "@safe-global/safe-recovery",
+  "version": "0.3.0",
+  "description": "Safe Module for Social Recovery by Candide Labs",
+  "homepage": "https://github.com/safe-global/safe-modules/tree/main/modules/recovery",
+  "license": "GPL-3.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "contracts",
+    "dist",
+    "build"
+  ],
+  "scripts": {
+    "build": "pnpm run build:sol && npm run build:ts",
+    "build:sol": "rimraf build typechain-types && hardhat compile",
+    "build:ts": "rimraf dist && tsc",
+    "deploy-all": "hardhat deploy-contracts --network",
+    "lint": "pnpm run lint:ts",
+    "lint:ts": "eslint ./src",
+    "lint:fix": "eslint ./src --fix",
+    "fmt": "prettier --write ./src",
+    "prepare": "pnpm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/safe-global/safe-modules.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "Wallet",
+    "Safe",
+    "Safe module"
+  ],
+  "author": "@safe-global",
+  "bugs": {
+    "url": "https://github.com/safe-global/safe-modules/issues"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/node": "^20.14.0",
+    "@types/yargs": "^17.0.32",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.12.1",
+    "hardhat": "^2.22.3",
+    "hardhat-deploy": "^0.12.4",
+    "typescript": "^5.4.5",
+    "yargs": "^17.7.2"
+  },
+  "dependencies": {
+    "candide-contracts": "github:5afe/CandideWalletContracts#113d3c059e039e332637e8f686d9cbd505f1e738",
+    "@openzeppelin/contracts": "=4.9.6",
+    "@safe-global/safe-contracts": "=1.4.1-build.0"
+  }
+}
