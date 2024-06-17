@@ -1,6 +1,6 @@
 {
   "name": "@safe-global/safe-recovery",
-  "version": "0.3.0",
+  "version": "0.1.0",
   "description": "Safe Module for Social Recovery by Candide Labs",
   "homepage": "https://github.com/safe-global/safe-modules/tree/main/modules/recovery",
   "license": "GPL-3.0",
