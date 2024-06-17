@@ -97,7 +97,7 @@ importers:
         specifier: ^1.4.1-build.0
         version: 1.4.1-build.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@safe-global/safe-passkey':
-        specifier: workspace:0.2.0-alpha.2
+        specifier: workspace:0.2.0
         version: link:../../modules/passkey
       '@web3modal/ethers':
         specifier: ^4.1.11
