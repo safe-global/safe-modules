@@ -179,16 +179,17 @@ Preparation:
 - Set `INFURA_KEY` in `.env`
 
 ```bash
-pnpm run deploy-all <network>
+pnpm run deploy-all $NETWORK
 ```
 
 This will perform the following steps
 
 ```bash
 pnpm run build
-npx hardhat --network <network> deploy
-npx hardhat --network <network> etherscan-verify
-npx hardhat --network <network> local-verify
+npx hardhat --network $NETWORK deploy
+npx hardhat --network $NETWORK local-verify
+npx hardhat --network $NETWORK etherscan-verify
+npx hardhat --network $NETWORK sourcify
 ```
 
 ### Run script
@@ -227,13 +228,13 @@ Note: The address will vary if the contract code changes or a different Solidity
 This command will use the deployment artifacts to compile the contracts and compare them to the onchain code.
 
 ```bash
-npx hardhat --network <network> local-verify
+npx hardhat --network $NETWORK local-verify
 ```
 
 This command will upload the contract source to Etherscan.
 
 ```bash
-npx hardhat --network <network> etherscan-verify
+npx hardhat --network $NETWORK etherscan-verify
 ```
 
 ## Documentation

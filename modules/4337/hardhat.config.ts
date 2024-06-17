@@ -30,9 +30,9 @@ if (['mainnet', 'sepolia', 'polygon', 'amoy'].includes(argv.network) && INFURA_K
   throw new Error(`Could not find Infura key in env, unable to connect to network ${argv.network}`)
 }
 
-import './src/tasks/local_verify'
-import './src/tasks/deploy_contracts'
-import './src/tasks/show_codesize'
+import './src/tasks/localVerify'
+import './src/tasks/deployContracts'
+import './src/tasks/codesize'
 
 const solidityVersion = SOLIDITY_VERSION || '0.8.23'
 const soliditySettings = SOLIDITY_SETTINGS
