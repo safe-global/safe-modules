@@ -6,6 +6,7 @@ import type { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
 import yargs from 'yargs/yargs'
 
 import './src/tasks/deployContracts'
+import './src/tasks/localVerify'
 
 const argv = yargs(process.argv.slice(2))
   .options({ network: { type: 'string', default: 'hardhat' } })
@@ -15,7 +16,7 @@ const argv = yargs(process.argv.slice(2))
 
 // Load environment variables.
 dotenv.config()
-const { NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env
+const { CUSTOM_NODE_URL, INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env
 
 const DEFAULT_MNEMONIC = 'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat'
 
@@ -32,11 +33,11 @@ if (['mainnet', 'sepolia'].includes(argv.network) && INFURA_KEY === undefined) {
   throw new Error(`Could not find Infura key in env, unable to connect to network ${argv.network}`)
 }
 
-const customNetwork = NODE_URL
+const customNetwork = CUSTOM_NODE_URL
   ? {
       custom: {
         ...sharedNetworkConfig,
-        url: NODE_URL,
+        url: CUSTOM_NODE_URL,
       },
     }
   : {}
