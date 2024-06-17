@@ -42,8 +42,9 @@ This will perform the following steps
 ```bash
 pnpm run build
 npx hardhat --network $NETWORK deploy
-npx hardhat --network $NETWORK etherscan-verify
 npx hardhat --network $NETWORK local-verify
+npx hardhat --network $NETWORK etherscan-verify
+npx hardhat --network $NETWORK sourcify
 ```
 
 ### Compiler settings

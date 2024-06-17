@@ -5,7 +5,7 @@ import dotenv from 'dotenv'
 import type { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
 import yargs from 'yargs/yargs'
 
-import './src/tasks/deploy_contracts'
+import './src/tasks/deployContracts'
 
 const argv = yargs(process.argv.slice(2))
   .options({ network: { type: 'string', default: 'hardhat' } })
