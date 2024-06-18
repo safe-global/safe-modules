@@ -96,9 +96,15 @@ importers:
       '@safe-global/safe-contracts':
         specifier: ^1.4.1-build.0
         version: 1.4.1-build.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      '@safe-global/safe-deployments':
+        specifier: ^1.36.0
+        version: 1.36.0
+      '@safe-global/safe-modules-deployments':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@safe-global/safe-passkey':
-        specifier: workspace:0.2.0
-        version: link:../../modules/passkey
+        specifier: 0.2.0
+        version: 0.2.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@web3modal/ethers':
         specifier: ^4.1.11
         version: 4.2.2(@types/react@18.3.3)(bufferutil@4.0.8)(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
@@ -1299,6 +1305,12 @@ packages:
 
   '@safe-global/safe-deployments@1.36.0':
     resolution: {integrity: sha512-9MbDJveRR64AbmzjIpuUqmDBDtOZpXpvkyhTUs+5UOPT3WgSO375/ZTO7hZpywP7+EmxnjkGc9EoxjGcC4TAyw==}
+
+  '@safe-global/safe-modules-deployments@2.2.0':
+    resolution: {integrity: sha512-ZzNhMf8Xxods3TrY7kSrescnicHQRFH7eYx7TMKqVhxFScEiuYmivQMdV94ziF+Hot0xCcrrFeed657U/oXrJw==}
+
+  '@safe-global/safe-passkey@0.2.0':
+    resolution: {integrity: sha512-B9IpVvwXLvK3m+BRhn9z8kCbEizFmua4YmaUBZ9yr0xM9YsX2PRTnxbFvC7pLph1OQ2u+9O2V3FEmPiS10YEIw==}
 
   '@safe-global/safe-singleton-factory@1.0.26':
     resolution: {integrity: sha512-79xL013OAenMyQZLIDLzuRoO4z/nH3AHLG93PdD1RQltAP98QEoeMjGeWwOkLq26pLMM9OeFz4MPuWtZ2qxWmw==}
@@ -6105,6 +6117,17 @@ snapshots:
   '@safe-global/safe-deployments@1.36.0':
     dependencies:
       semver: 7.6.2
+
+  '@safe-global/safe-modules-deployments@2.2.0': {}
+
+  '@safe-global/safe-passkey@0.2.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
+    dependencies:
+      '@account-abstraction/contracts': 0.7.0
+      '@openzeppelin/contracts': 5.0.2
+      '@safe-global/safe-contracts': 1.4.1-build.0(ethers@6.12.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      cbor: 9.0.2
+    transitivePeerDependencies:
+      - ethers
 
   '@safe-global/safe-singleton-factory@1.0.26': {}
 
