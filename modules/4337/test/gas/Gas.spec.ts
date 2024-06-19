@@ -1,18 +1,27 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { getSafe4337Module, getEntryPoint, getFactory, getSafeModuleSetup, getSafeL2Singleton } from '../utils/setup'
+import {
+  getSafe4337Module,
+  getEntryPoint,
+  getFactory,
+  getSafeModuleSetup,
+  getSafeL2Singleton,
+  getEntryPointSimulations,
+} from '../utils/setup'
 import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execution'
 import { buildPackedUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
+import { estimateUserOperationGas } from '../utils/simulations'
 
-describe('Gas Metering', () => {
+describe.only('Gas Metering', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
     const { HariWillibaldToken, XanderBlazeNFT } = await deployments.run()
 
     const [user] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
+    const entryPointSimulations = await getEntryPointSimulations()
     const module = await getSafe4337Module()
     const proxyFactory = await getFactory()
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
@@ -33,6 +42,7 @@ describe('Gas Metering', () => {
     return {
       user,
       entryPoint,
+      entryPointSimulations,
       validator: module,
       safe,
       erc20Token,
@@ -42,7 +52,8 @@ describe('Gas Metering', () => {
 
   describe('Safe Deployment + Enabling 4337 Module', () => {
     it('Safe with 4337 Module Deployment', async () => {
-      const { user, entryPoint, validator, safe } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
 
       // cover the prefund
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
@@ -61,9 +72,12 @@ describe('Gas Metering', () => {
           initCode: safe.getInitCode(),
         },
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
 
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
-
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
         signature,
@@ -77,7 +91,8 @@ describe('Gas Metering', () => {
 
   describe('Safe Deployment + Enabling 4337 Module + Native Transfers', () => {
     it('Safe with 4337 Module Deployment + Native Transfer', async () => {
-      const { user, entryPoint, validator, safe } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
       const amount = ethers.parseEther('0.00001')
       const receiver = ethers.Wallet.createRandom().address
 
@@ -100,6 +115,10 @@ describe('Gas Metering', () => {
           initCode: safe.getInitCode(),
         },
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
 
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
@@ -120,7 +139,8 @@ describe('Gas Metering', () => {
     })
 
     it('Safe with 4337 Module Native Transfer', async () => {
-      const { user, entryPoint, validator, safe } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe } = await setupTests()
+      const entryPointAddress = await getEntryPoint()
 
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
@@ -141,6 +161,11 @@ describe('Gas Metering', () => {
         false,
         false,
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -155,7 +180,8 @@ describe('Gas Metering', () => {
 
   describe('Safe Deployment + Enabling 4337 Module + Token Operations', () => {
     it('Safe with 4337 Module Deployment + ERC20 Token Transfer', async () => {
-      const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe, erc20Token } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
 
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
 
@@ -178,6 +204,10 @@ describe('Gas Metering', () => {
           initCode: safe.getInitCode(),
         },
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
 
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
@@ -196,7 +226,8 @@ describe('Gas Metering', () => {
     })
 
     it('Safe with 4337 Module Deployment + ERC721 Token Minting', async () => {
-      const { user, entryPoint, validator, safe, erc721Token } = await setupTests()
+      const { user, entryPoint,entryPointSimulations, validator, safe, erc721Token } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
       const tokenID = 1
 
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
@@ -216,6 +247,10 @@ describe('Gas Metering', () => {
           initCode: safe.getInitCode(),
         },
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -236,7 +271,8 @@ describe('Gas Metering', () => {
 
   describe('Token Operations Only', () => {
     it('Safe with 4337 Module ERC20 Token Transfer', async () => {
-      const { user, entryPoint, validator, safe, erc20Token } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe, erc20Token } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
 
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
 
@@ -260,6 +296,10 @@ describe('Gas Metering', () => {
         false,
         false,
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -272,7 +312,8 @@ describe('Gas Metering', () => {
     })
 
     it('Safe with 4337 Module ERC721 Token Minting', async () => {
-      const { user, entryPoint, validator, safe, erc721Token } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe, erc721Token } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
 
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
 
@@ -294,6 +335,10 @@ describe('Gas Metering', () => {
         false,
         false,
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,

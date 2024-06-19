@@ -8,6 +8,9 @@ export { PackedUserOperation, UserOperation }
 type OptionalExceptFor<T, TRequired extends keyof T = keyof T> = Partial<Pick<T, Exclude<keyof T, TRequired>>> &
   Required<Pick<T, TRequired>>
 
+export const PLACEHOLDER_SIGNATURE =
+  '0x9c8ecb7ad80d2dd4411c8827079cda17095236ee3cba1c9b81153d52af17bc9d0701228dc95a75136a3e3a0130988ba4053cc15d3805db49e2cc08d9c99562191b'
+
 export type SafeUserOperation = {
   safe: string
   entryPoint: string
