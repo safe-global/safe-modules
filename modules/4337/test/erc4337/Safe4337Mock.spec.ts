@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getEntryPoint, get4337TestSafe } from '../utils/setup'
-import { buildSignatureBytes, signHash, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, signHash, logUserOperationGas } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
   buildSafeUserOpTransaction,
@@ -49,7 +49,7 @@ describe('Safe4337Mock', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
-      await logGas('Execute UserOp without fee payment', entryPoint.handleOps([userOp], user1.address))
+      await logUserOperationGas('Execute UserOp without fee payment', entryPoint, entryPoint.handleOps([userOp], user1.address))
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
     })
 
@@ -72,7 +72,7 @@ describe('Safe4337Mock', () => {
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
-      await logGas('Execute UserOp with fee payment', entryPoint.handleOps([userOp], feeBeneficiary))
+      await logUserOperationGas('Execute UserOp with fee payment', entryPoint, entryPoint.handleOps([userOp], feeBeneficiary))
 
       // checking that the fee was paid
       expect(await ethers.provider.getBalance(feeBeneficiary)).to.be.gt(0)

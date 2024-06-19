@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getSafe4337Module, getEntryPoint, getFactory, getSafeModuleSetup, getSafeL2Singleton } from '../utils/setup'
-import { buildSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execution'
 import { buildPackedUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
@@ -69,7 +69,7 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Deployment', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas('Safe with 4337 Module Deployment', entryPoint, entryPoint.handleOps([userOp], user.address))
 
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
     })
@@ -108,7 +108,11 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Deployment + Native Transfer', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas(
+        'Safe with 4337 Module Deployment + Native Transfer',
+        entryPoint,
+        entryPoint.handleOps([userOp], user.address),
+      )
 
       const recipientBalAfter = await ethers.provider.getBalance(receiver)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
@@ -143,7 +147,7 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Native Transfer', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas('Safe with 4337 Module Native Transfer', entryPoint, entryPoint.handleOps([userOp], user.address))
 
       expect(await ethers.provider.getBalance(receiver)).to.equal(amount)
     })
@@ -182,7 +186,11 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module Deployment + ERC20 Transfer', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas(
+        'Safe with 4337 Module Deployment + ERC20 Transfer',
+        entryPoint,
+        entryPoint.handleOps([userOp], user.address),
+      )
       expect(await erc20Token.balanceOf(safe.address)).to.equal(0)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
     })
@@ -215,7 +223,11 @@ describe('Gas Metering', () => {
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
-      await logGas('Safe with 4337 Module Deployment + ERC721 Transfer', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas(
+        'Safe with 4337 Module Deployment + ERC721 Transfer',
+        entryPoint,
+        entryPoint.handleOps([userOp], user.address),
+      )
       expect(await erc721Token.balanceOf(safe.address)).to.equal(1)
       expect(await erc721Token.ownerOf(tokenID)).to.equal(safe.address)
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.not.equal(0)
@@ -254,7 +266,7 @@ describe('Gas Metering', () => {
         signature,
       })
 
-      await logGas('Safe with 4337 Module ERC20 Transfer', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas('Safe with 4337 Module ERC20 Transfer', entryPoint, entryPoint.handleOps([userOp], user.address))
 
       expect(await erc20Token.balanceOf(safe.address)).to.equal(0)
     })
@@ -289,7 +301,7 @@ describe('Gas Metering', () => {
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
-      await logGas('Safe with 4337 Module ERC721 Transfer', entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas('Safe with 4337 Module ERC721 Transfer', entryPoint, entryPoint.handleOps([userOp], user.address))
       expect(await erc721Token.balanceOf(safe.address)).to.equal(1)
       expect(await erc721Token.ownerOf(tokenID)).to.equal(safe.address)
     })

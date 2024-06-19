@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { getSafe4337Module, getEntryPoint, getFactory, getSafeModuleSetup, getSafeL2Singleton } from '../utils/setup'
-import { buildSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execution'
 import { buildPackedUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
@@ -94,7 +94,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
         safeOp,
         signature,
       })
-      await logGas('Execute UserOp without fee payment', entryPoint.handleOps([userOp], user1.address))
+      await logUserOperationGas('Execute UserOp without fee payment', entryPoint, entryPoint.handleOps([userOp], user1.address))
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0'))
     })
 
@@ -179,7 +179,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
         safeOp,
         signature,
       })
-      await logGas('Execute UserOp with fee payment', entryPoint.handleOps([userOp], feeBeneficiary))
+      await logUserOperationGas('Execute UserOp with fee payment', entryPoint, entryPoint.handleOps([userOp], feeBeneficiary))
 
       // checking that the fee was paid
       expect(await ethers.provider.getBalance(feeBeneficiary)).to.be.gt(0)
@@ -211,7 +211,11 @@ describe('Safe4337Module - Newly deployed safe', () => {
         safeOp,
         signature,
       })
-      await logGas('Execute UserOp with fee payment and bubble up error string', entryPoint.handleOps([userOp], user1.address))
+      await logUserOperationGas(
+        'Execute UserOp with fee payment and bubble up error string',
+        entryPoint,
+        entryPoint.handleOps([userOp], user1.address),
+      )
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.5'))
     })
 
