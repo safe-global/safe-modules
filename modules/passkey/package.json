@@ -51,7 +51,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/mock-contract": "^4.1.0",
-    "@safe-global/safe-4337": "workspace:^0.3.0",
+    "@safe-global/safe-4337": "workspace:^0.3.0-1",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@simplewebauthn/server": "^10.0.0",
     "@types/node": "^20.14.0",

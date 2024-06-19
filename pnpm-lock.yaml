@@ -319,7 +319,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       '@safe-global/safe-4337':
-        specifier: workspace:^0.3.0
+        specifier: workspace:^0.3.0-1
         version: link:../4337
       '@safe-global/safe-4337-local-bundler':
         specifier: workspace:^0.0.0
