@@ -32,7 +32,7 @@ const customNetwork = CUSTOM_NODE_URL
   : {}
 
 const compilerSettings = {
-  version: '0.8.24',
+  version: '0.8.26',
   settings: {
     optimizer: {
       enabled: true,
