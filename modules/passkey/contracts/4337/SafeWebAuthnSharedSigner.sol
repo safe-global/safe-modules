@@ -33,11 +33,6 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
     uint256 private constant _SIGNER_MAPPING_SLOT = 0x2e0aed53485dc2290ceb5ce14725558ad3e3a09d38c69042410ad15c2b4ea4e8;
 
     /**
-     * @notice An error indicating a `CALL` to a function that should only be `DELEGATECALL`-ed.
-     */
-    error NotDelegateCalled();
-
-    /**
      * @notice Address of the shared signer contract itself.
      * @dev This is used for determining whether or not the contract is being `DELEGATECALL`-ed when
      * setting signer data.
@@ -48,6 +43,23 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
      * @notice The starting storage slot on the account containing the signer data.
      */
     uint256 public immutable SIGNER_SLOT;
+
+    /**
+     * @notice Emitted when the shared signer is configured for an account.
+     * @dev Note that the configured account is not included in the event data. Since configuration
+     * is done as a `DELEGATECALL`, the contract emitting the event is the configured account. This
+     * is also why the event name is prefixed with `SafeWebAuthnSharedSigner`, in order to avoid
+     * event `topic0` collisions with other contracts (seeing as "configured" is a common term).
+     * @param x The x-coordinate of the public key.
+     * @param y The y-coordinate of the public key.
+     * @param verifiers The P-256 verifiers to use.
+     */
+    event SafeWebAuthnSharedSignerConfigured(uint256 x, uint256 y, P256.Verifiers verifiers);
+
+    /**
+     * @notice An error indicating a `CALL` to a function that should only be `DELEGATECALL`-ed.
+     */
+    error NotDelegateCalled();
 
     /**
      * @notice Create a new shared WebAuthn signer instance.
@@ -133,6 +145,8 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
         signerStorage.x = signer.x;
         signerStorage.y = signer.y;
         signerStorage.verifiers = signer.verifiers;
+
+        emit SafeWebAuthnSharedSignerConfigured(signer.x, signer.y, signer.verifiers);
     }
 
     /**
