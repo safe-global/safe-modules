@@ -125,3 +125,18 @@ rule verifyIsValidSignatureWillContinueToSucceed(){
     satisfy (!firstReverted && firstVerified == to_bytes4(0x1626ba7e));
     satisfy true;
 }
+
+rule isValidSignatureRevertingConditions {
+    env e;
+    bytes32 message;
+
+    WebAuthn.Signature sigStruct;
+    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
+    
+    bool triedTransferringEth = e.msg.value != 0;
+    bool dataLengthInsufficient = sigStruct.authenticatorData.length <= 32;
+    
+    isValidSignature@withrevert(e, message, signature);
+
+    assert lastReverted <=> (triedTransferringEth || dataLengthInsufficient);
+}
