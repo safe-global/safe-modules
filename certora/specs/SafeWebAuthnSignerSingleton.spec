@@ -9,6 +9,7 @@ methods {
 
     function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
         checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
+    function SafeWebAuthnSignerFactory.getSigner(uint256 x, uint256 y, P256.Verifiers v) internal returns (address) => getSignerGhost(x, y, v);
 }
 
 function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
@@ -28,11 +29,18 @@ ghost verifySignatureAllowMalleabilityGhost(P256.Verifiers, bytes32, uint256, ui
         verifySignatureAllowMalleabilityGhost(a, message2, c, d, e, f) => message1 == message2;
 }
 
+// Summary is correct only if the unique signer rule is proved spec GetSigner
+ghost getSignerGhost(uint256, uint256, P256.Verifiers) returns address {
+    axiom forall uint256 x1. forall uint256 y1. forall P256.Verifiers v1.
+    forall uint256 x2. forall uint256 y2. forall P256.Verifiers v2.
+    (getSignerGhost(x1, y1, v1) == getSignerGhost(x2, y2, v2)) <=> (x1 == x2 && y1 == y2 && v1 == v2); 
+}
+
 definition MAGIC_VALUE() returns bytes4 = to_bytes4(0x1626ba7e);
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Implementation of _verifySignature Function (Integrity)                                                             │
+│ Implementation of isValidSignature Function (Integrity)                                                             │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -46,6 +54,7 @@ rule verifySignatureUniqueness(env e){
     bytes4 second_message_verified = isValidSignature(e, second_message, signature);
 
     assert (first_message != second_message) => !(first_message_verified == MAGIC_VALUE() && second_message_verified == MAGIC_VALUE());
+    satisfy true;
 }
 
 rule verifySignatureIntegrity(env e){
@@ -60,11 +69,12 @@ rule verifySignatureIntegrity(env e){
     bytes4 second_message_verified = isValidSignature(e, second_message, signature);
 
     assert (second_message_verified == MAGIC_VALUE()) <=> (first_message == second_message);
+    satisfy true;
 }
 
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Both is valid Signature behave the same way                                                                         │
+│ Both isValidSignature behave the same way                                                                           │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
@@ -82,6 +92,7 @@ rule verifyIsValidSignatureAreEqual(env e){
     assert (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e)) => message == keccak256(data);
     assert message == keccak256(data) => (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e)) || 
                                          (magicValue_hashed == to_bytes4(0) && magicValue_message == to_bytes4(0));
+    satisfy (magicValue_hashed == to_bytes4(0x20c13b0b) && magicValue_message == to_bytes4(0x1626ba7e));
 }
 
 /*
@@ -92,32 +103,25 @@ rule verifyIsValidSignatureAreEqual(env e){
 
 rule verifyIsValidSignatureWillContinueToSucceed(){
     env e;
-    env e1;
-    env e2;
-    env e3;
-    require e1.msg.value == 0 && e2.msg.value == 0 && e3.msg.value == 0;
+    require e.msg.value == 0;
 
     method f;
     calldataarg args;
 
     bytes32 message;
-    WebAuthn.Signature sigStruct;
-    bytes signature = WebAuthnHarness.encodeSignature(e, sigStruct);
+    bytes signature;
 
-    bytes32 message3;
-    WebAuthn.Signature sigStruct3;
-    bytes signature3 = WebAuthnHarness.encodeSignature(e, sigStruct3);
-
-    bytes4 firstVerified = isValidSignature@withrevert(e1, message, signature);
+    bytes4 firstVerified = isValidSignature@withrevert(e, message, signature);
     bool firstReverted = lastReverted;
 
     f(e, args);
-    // isValidSignature(e3, message3, signature3);
 
-    bytes4 secondVerify = isValidSignature@withrevert(e2, message, signature);
+    bytes4 secondVerify = isValidSignature@withrevert(e, message, signature);
     bool secondRevert = lastReverted;
 
     assert firstReverted == secondRevert;
     assert (!firstReverted && !secondRevert) => (firstVerified == secondVerify);
+    
+    satisfy (!firstReverted && firstVerified == to_bytes4(0x1626ba7e));
     satisfy true;
 }
