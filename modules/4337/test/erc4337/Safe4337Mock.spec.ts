@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { getEntryPoint, get4337TestSafe } from '../utils/setup'
+import { getEntryPoint, get4337TestSafe, getEntryPointSimulations } from '../utils/setup'
 import { buildSignatureBytes, signHash, logUserOperationGas } from '../../src/utils/execution'
 import {
   buildSafeUserOp,
@@ -9,6 +9,7 @@ import {
   calculateSafeOperationHash,
 } from '../../src/utils/userOp'
 import { chainId, timestamp } from '../utils/encoding'
+import { estimateUserOperationGas } from '../utils/simulations'
 
 describe('Safe4337Mock', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -16,6 +17,7 @@ describe('Safe4337Mock', () => {
 
     const [user1] = await ethers.getSigners()
     const entryPoint = await getEntryPoint()
+    const entryPointSimulations = await getEntryPointSimulations()
     const safe = await get4337TestSafe(user1, ethers.ZeroAddress, ethers.ZeroAddress)
     const safe4337 = await ethers.getContractAt('Safe4337Module', await safe.getAddress())
 
@@ -24,12 +26,14 @@ describe('Safe4337Mock', () => {
       safe,
       validator: safe4337,
       entryPoint,
+      entryPointSimulations,
     }
   })
 
   describe('executeUserOp', () => {
     it('should execute contract calls without fee', async () => {
-      const { user1, safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint, entryPointSimulations } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
 
       await user1.sendTransaction({ to: await safe.getAddress(), value: ethers.parseEther('1.0') })
       expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('1.0'))
@@ -46,6 +50,10 @@ describe('Safe4337Mock', () => {
           maxFeePerGas: '0',
         },
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
@@ -54,7 +62,8 @@ describe('Safe4337Mock', () => {
     })
 
     it('should execute contract calls with fee', async () => {
-      const { user1, safe, validator, entryPoint } = await setupTests()
+      const { user1, safe, validator, entryPoint, entryPointSimulations } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
       const feeBeneficiary = ethers.Wallet.createRandom().address
       const randomAddress = ethers.Wallet.createRandom().address
 
@@ -69,6 +78,10 @@ describe('Safe4337Mock', () => {
         '0',
         await entryPoint.getAddress(),
       )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })

@@ -14,7 +14,7 @@ import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 import { estimateUserOperationGas } from '../utils/simulations'
 
-describe.only('Gas Metering', () => {
+describe('Gas Metering', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     await deployments.fixture()
     const { HariWillibaldToken, XanderBlazeNFT } = await deployments.run()
@@ -140,7 +140,7 @@ describe.only('Gas Metering', () => {
 
     it('Safe with 4337 Module Native Transfer', async () => {
       const { user, entryPoint, entryPointSimulations, validator, safe } = await setupTests()
-      const entryPointAddress = await getEntryPoint()
+      const entryPointAddress = await entryPoint.getAddress()
 
       await user.sendTransaction({ to: safe.address, value: ethers.parseEther('1.0') })
       expect(ethers.dataLength(await ethers.provider.getCode(safe.address))).to.equal(0)
