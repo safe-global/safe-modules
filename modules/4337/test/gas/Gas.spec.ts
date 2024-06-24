@@ -356,7 +356,7 @@ describe('Gas Metering', () => {
       })
 
       expect(await erc721Token.balanceOf(safe.address)).to.equal(0)
-      await logUserOperationGas('Safe with 4337 Module ERC721 Transfer', entryPoint, entryPoint.handleOps([userOp], user.address))
+      await logUserOperationGas('Safe with 4337 Module ERC721 Token Minting', entryPoint, entryPoint.handleOps([userOp], user.address))
       expect(await erc721Token.balanceOf(safe.address)).to.equal(1)
       expect(await erc721Token.ownerOf(tokenID)).to.equal(safe.address)
     })
