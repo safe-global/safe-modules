@@ -4,41 +4,27 @@ import { buildPackedUserOperationFromSafeUserOperation, PLACEHOLDER_SIGNATURE, S
 import { EntryPointSimulations } from '../../typechain-types'
 
 export interface GasOverheads {
-  /**
-   * fixed overhead for entire handleOp bundle.
-   */
+  // fixed overhead for entire handleOp bundle.
   fixed: number
 
-  /**
-   * per userOp overhead, added on top of the above fixed per-bundle.
-   */
+  // The per userOp overhead, added on top of the above fixed per-bundle.
   perUserOp: number
 
-  /**
-   * overhead for userOp word (32 bytes) block
-   */
+  // The overhead for userOp word (32 bytes) block.
   perUserOpWord: number
 
   // perCallDataWord: number
 
-  /**
-   * zero byte cost, for calldata gas cost calculations
-   */
+  // The gas cost for zero bytes, used in calldata gas cost calculations.
   zeroByte: number
 
-  /**
-   * non-zero byte cost, for calldata gas cost calculations
-   */
+  // The gas cost for non-zero bytes, used in calldata gas cost calculations.
   nonZeroByte: number
 
-  /**
-   * expected bundle size, to split per-bundle overhead between all ops.
-   */
+  // The expected bundle size, used to split per-bundle overhead between all ops.
   bundleSize: number
 
-  /**
-   * expected length of the userOp signature.
-   */
+  // The expected length of the userOp signature.
   sigSize: number
 }
 
@@ -121,6 +107,12 @@ export type ExecutionResultStructOutput = [
   targetResult: string
 }
 
+/**
+ * Calculates the verification gas limit and call gas limit based on the user operation and execution result.
+ * @param userOperation - The user operation object.
+ * @param executionResult - The execution result object.
+ * @returns An object containing the verification gas limit and call gas limit.
+ */
 export const calcVerificationGasAndCallGasLimit = (userOperation: SafeUserOperation, executionResult: ExecutionResultStructOutput) => {
   const verificationGasLimit = BigInt(executionResult.preOpGas) - BigInt(userOperation.preVerificationGas)
 
@@ -131,6 +123,32 @@ export const calcVerificationGasAndCallGasLimit = (userOperation: SafeUserOperat
   return { verificationGasLimit, callGasLimit }
 }
 
+/**
+ * Estimates gas for a user operation on a Safe account.
+ *
+ * This function performs a simulation of the user operation to estimate User Operation gas parameters
+ * required for executing the operation on the blockchain. It uses state overrides to replace the EntryPoint code
+ * with the EntryPointSimulations contract, which allows for gas estimation without actually executing the operation.
+ *
+ * TODO: This function doesn't support the case where multiple user operations are bundled together. To implement this,
+ * we can use Pimlico's EntryPointSimulations contract to simulate the execution of multiple user operations:
+ * https://github.com/pimlicolabs/alto/blob/5f0fb585870cfca3d081e962989c682aa3c02ff4/contracts/src/PimlicoEntryPointSimulations/PimlicoEntryPointSimulations.sol
+ *
+ * @param provider - The Hardhat Ethers provider used for blockchain interactions.
+ * @param entryPointSimulations - An instance of EntryPointSimulations contract for simulating operations.
+ * @param safeOp - The Safe user operation to estimate gas for.
+ * @param entryPointAddress - The address of the EntryPoint contract.
+ *
+ * @returns A promise that resolves to an EstimateUserOpGasResult object containing:
+ *   - preVerificationGas: The gas required for pre-verification steps.
+ *   - callGasLimit: The gas limit for the main execution call.
+ *   - verificationGasLimit: The gas limit for the verification step.
+ *   - totalGasPaid: The total amount of gas paid for the operation.
+ *   - maxFeePerGas: The maximum fee per gas unit.
+ *   - maxPriorityFeePerGas: The maximum priority fee per gas unit.
+ *
+ * @throws Error if fee data is missing from the provider.
+ */
 export const estimateUserOperationGas = async (
   provider: HardhatEthersProvider,
   entryPointSimulations: EntryPointSimulations,
