@@ -175,11 +175,10 @@ export const getRequiredGas = (userOp: PackedUserOperation): string => {
   return (BigInt(callGasLimit) + BigInt(verificationGasLimit) * multiplier + BigInt(userOp.preVerificationGas)).toString()
 }
 
-export const getRequiredPrefund = (userOp: PackedUserOperation): string => {
+export const getRequiredPrefund = (userOp: PackedUserOperation): bigint => {
   const requiredGas = getRequiredGas(userOp)
   const { maxFeePerGas } = unpackGasParameters(userOp)
-  const requiredPrefund = (BigInt(requiredGas) * BigInt(maxFeePerGas)).toString()
-  console.log({ requiredGas, requiredPrefund })
+  const requiredPrefund = BigInt(requiredGas) * BigInt(maxFeePerGas)
 
   return requiredPrefund
 }

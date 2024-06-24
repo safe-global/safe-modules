@@ -7,6 +7,7 @@ import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
   calculateSafeOperationHash,
+  getRequiredPrefund,
 } from '../../src/utils/userOp'
 import { chainId, timestamp } from '../utils/encoding'
 import { estimateUserOperationGas } from '../utils/simulations'
@@ -54,11 +55,14 @@ describe('Safe4337Mock', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
       await logUserOperationGas('Execute UserOp without fee payment', entryPoint, entryPoint.handleOps([userOp], user1.address))
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
+      const paidPrefund = getRequiredPrefund(userOp)
+      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5') - paidPrefund)
     })
 
     it('should execute contract calls with fee', async () => {
@@ -82,6 +86,8 @@ describe('Safe4337Mock', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })

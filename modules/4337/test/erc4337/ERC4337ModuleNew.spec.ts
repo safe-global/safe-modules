@@ -1,8 +1,20 @@
 import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
-import { getSafe4337Module, getEntryPoint, getFactory, getSafeModuleSetup, getSafeL2Singleton, getEntryPointSimulations } from '../utils/setup'
+import {
+  getSafe4337Module,
+  getEntryPoint,
+  getFactory,
+  getSafeModuleSetup,
+  getSafeL2Singleton,
+  getEntryPointSimulations,
+} from '../utils/setup'
 import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execution'
-import { buildPackedUserOperationFromSafeUserOperation, buildSafeUserOpTransaction, signSafeOp } from '../../src/utils/userOp'
+import {
+  buildPackedUserOperationFromSafeUserOperation,
+  buildSafeUserOpTransaction,
+  getRequiredPrefund,
+  signSafeOp,
+} from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
 import { estimateUserOperationGas } from '../utils/simulations'
@@ -96,7 +108,8 @@ describe('Safe4337Module - Newly deployed safe', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
-
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -187,6 +200,8 @@ describe('Safe4337Module - Newly deployed safe', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -217,13 +232,14 @@ describe('Safe4337Module - Newly deployed safe', () => {
         true,
         {
           initCode: safe.getInitCode(),
-          maxFeePerGas: 0,
         },
       )
       const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -234,7 +250,8 @@ describe('Safe4337Module - Newly deployed safe', () => {
         entryPoint,
         entryPoint.handleOps([userOp], user1.address),
       )
-      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.5'))
+      const paidPrefund = getRequiredPrefund(userOp)
+      expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0.5') - paidPrefund)
     })
 
     it('executeUserOpWithErrorString reverts on failure and bubbles up the revert reason', async () => {

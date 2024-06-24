@@ -76,7 +76,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
-
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -119,7 +120,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
-
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
       const userOp = buildPackedUserOperationFromSafeUserOperation({
@@ -165,7 +167,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
-
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -208,7 +211,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
-
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
 
       const userOp = buildPackedUserOperationFromSafeUserOperation({
@@ -226,7 +230,7 @@ describe('Gas Metering', () => {
     })
 
     it('Safe with 4337 Module Deployment + ERC721 Token Minting', async () => {
-      const { user, entryPoint,entryPointSimulations, validator, safe, erc721Token } = await setupTests()
+      const { user, entryPoint, entryPointSimulations, validator, safe, erc721Token } = await setupTests()
       const entryPointAddress = await entryPoint.getAddress()
       const tokenID = 1
 
@@ -251,6 +255,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -300,6 +306,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
@@ -339,6 +347,8 @@ describe('Gas Metering', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,

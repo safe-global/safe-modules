@@ -42,7 +42,6 @@ export interface GasOverheads {
   sigSize: number
 }
 
-
 /**
  * Calculates the gas cost for pre-verification of a Safe user operation.
  * preVerificationGas (by definition) is the cost overhead that can't be calculated on-chain.
@@ -92,18 +91,18 @@ export const calcPreVerificationGas = (userOp: SafeUserOperation): bigint => {
 }
 
 export interface EstimateUserOpGasResult {
-  /**
-   * the preVerification gas used by this UserOperation.
-   */
+  // the preVerification gas used by this UserOperation.
   preVerificationGas: bigint
-  /**
-   * gas used for validation of this UserOperation, including account creation
-   */
+  // gas used for validation of this UserOperation, including account creation
   verificationGasLimit: bigint
-  /**
-   * estimated cost of calling the account with the given callData
-   */
+  // estimated cost of calling the account with the given callData
   callGasLimit: bigint
+  // total gas paid for this UserOperation, useful for tests that verify account balance changes. Important: this is only an estimate.
+  totalGasPaid: bigint
+  // max fee per gas used for the estimate
+  maxFeePerGas: bigint
+  // max priority fee per gas used for the estimate
+  maxPriorityFeePerGas: bigint
 }
 
 export type ExecutionResultStructOutput = [
@@ -137,11 +136,16 @@ export const estimateUserOperationGas = async (
   entryPointSimulations: EntryPointSimulations,
   safeOp: SafeUserOperation,
   entryPointAddress: string,
-  ): Promise<EstimateUserOpGasResult> => {
+): Promise<EstimateUserOpGasResult> => {
+  const feeData = await provider.getFeeData()
+  if (!feeData.maxFeePerGas || !feeData.maxPriorityFeePerGas) {
+    throw new Error('Fee data is missing')
+  }
+  const opWithGasData = { ...safeOp, maxFeePerGas: feeData.maxFeePerGas, maxPriorityFeePerGas: feeData.maxPriorityFeePerGas }
   const preVerificationGas = calcPreVerificationGas(safeOp)
-  const opWithPreVerificationGas = { ...safeOp, preVerificationGas }
-    
-  const packedUserOp = buildPackedUserOperationFromSafeUserOperation({ safeOp: opWithPreVerificationGas, signature: PLACEHOLDER_SIGNATURE })
+  opWithGasData.preVerificationGas = preVerificationGas
+
+  const packedUserOp = buildPackedUserOperationFromSafeUserOperation({ safeOp: opWithGasData, signature: PLACEHOLDER_SIGNATURE })
   const encodedSimulateHandleOp = entryPointSimulations.interface.encodeFunctionData('simulateHandleOp', [
     packedUserOp,
     ethers.ZeroAddress,
@@ -164,11 +168,14 @@ export const estimateUserOperationGas = async (
     'simulateHandleOp',
     simulationData,
   )[0] as unknown as ExecutionResultStructOutput
-  const { verificationGasLimit, callGasLimit } = calcVerificationGasAndCallGasLimit(opWithPreVerificationGas, executionResultStruct)
+  const { verificationGasLimit, callGasLimit } = calcVerificationGasAndCallGasLimit(opWithGasData, executionResultStruct)
 
   return {
     preVerificationGas,
     callGasLimit,
     verificationGasLimit,
+    totalGasPaid: BigInt(executionResultStruct.paid),
+    maxFeePerGas: feeData.maxFeePerGas,
+    maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
   }
 }

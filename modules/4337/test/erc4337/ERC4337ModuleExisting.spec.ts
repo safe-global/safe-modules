@@ -6,6 +6,7 @@ import {
   calculateSafeOperationHash,
   buildPackedUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
+  getRequiredPrefund,
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { estimateUserOperationGas } from '../utils/simulations'
@@ -73,6 +74,8 @@ describe('Safe4337Module - Existing Safe', () => {
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
@@ -175,14 +178,13 @@ describe('Safe4337Module - Existing Safe', () => {
         await entryPoint.getAddress(),
         false,
         true,
-        {
-          maxFeePerGas: '0',
-        },
       )
       const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
       safeOp.callGasLimit = gasEstimation.callGasLimit
       safeOp.preVerificationGas = gasEstimation.preVerificationGas
       safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
       const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const signature = buildSignatureBytes([await signHash(user1, safeOpHash)])
       const userOp = buildPackedUserOperationFromSafeUserOperation({ safeOp, signature })
@@ -191,7 +193,8 @@ describe('Safe4337Module - Existing Safe', () => {
         entryPoint,
         entryPoint.handleOps([userOp], relayer),
       )
-      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5'))
+      const paidPrefund = getRequiredPrefund(userOp)
+      expect(await ethers.provider.getBalance(await safe.getAddress())).to.be.eq(ethers.parseEther('0.5') - paidPrefund)
     })
 
     it('executeUserOpWithErrorString reverts on failure and bubbles up the revert reason', async () => {

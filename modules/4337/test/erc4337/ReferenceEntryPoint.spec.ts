@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { deployments, ethers } from 'hardhat'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { EventLog, Log } from 'ethers'
-import { getEntryPoint, getEntryPointSimulations, getFactory, getSafeModuleSetup } from '../utils/setup'
+import { getEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
 import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
@@ -12,7 +12,6 @@ import {
 } from '../../src/utils/userOp'
 import { chainId } from '../utils/encoding'
 import { Safe4337 } from '../../src/utils/safe'
-import { estimateUserOperationGas } from '../utils/simulations'
 
 describe('Safe4337Module - Reference EntryPoint', () => {
   const setupTests = async () => {
@@ -20,7 +19,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     const [user, deployer, relayer] = await ethers.getSigners()
 
     const entryPoint = await getEntryPoint()
-    const entryPointSimulations = await getEntryPointSimulations()
     const moduleFactory = await ethers.getContractFactory('Safe4337Module')
     const module = await moduleFactory.deploy(await entryPoint.getAddress())
     const proxyFactory = await getFactory()
@@ -46,14 +44,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       safe,
       validator: module,
       entryPoint,
-      entryPointSimulations,
       safeGlobalConfig,
     }
   }
 
   it('should deploy a Safe and execute transactions', async () => {
-    const { user, relayer, safe, validator, entryPoint, entryPointSimulations } = await setupTests()
-    const entryPointAddress = await entryPoint.getAddress()
+    const { user, relayer, safe, validator, entryPoint } = await setupTests()
 
     const accountBalance = ethers.parseEther('1.0')
     await user.sendTransaction({ to: safe.address, value: accountBalance })
@@ -74,10 +70,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
             initCode: nonce === 0 ? safe.getInitCode() : '0x',
           },
         )
-        const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
-        safeOp.callGasLimit = gasEstimation.callGasLimit
-        safeOp.preVerificationGas = gasEstimation.preVerificationGas
-        safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildPackedUserOperationFromSafeUserOperation({
           safeOp,
@@ -86,12 +79,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       }),
     )
 
-    const transaction = await logUserOperationGas(
+    const { transactionResponse } = await logUserOperationGas(
       'Execute UserOps with reference EntryPoint',
       entryPoint,
       entryPoint.handleOps(userOps, await relayer.getAddress()),
     )
-    const receipt = await transaction.wait()
+    const receipt = await transactionResponse.wait()
 
     const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
     const deposits = receipt.logs
@@ -102,8 +95,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
   })
 
   it('should correctly bubble up the signature timestamps to the entrypoint', async () => {
-    const { user, relayer, safe, validator, entryPoint, entryPointSimulations } = await setupTests()
-    const entryPointAddress = await entryPoint.getAddress()
+    const { user, relayer, safe, validator, entryPoint } = await setupTests()
 
     const accountBalance = ethers.parseEther('1.0')
     const now = await time.latest()
@@ -132,10 +124,6 @@ describe('Safe4337Module - Reference EntryPoint', () => {
             validUntil,
           },
         )
-        const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
-        safeOp.callGasLimit = gasEstimation.callGasLimit
-        safeOp.preVerificationGas = gasEstimation.preVerificationGas
-        safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildPackedUserOperationFromSafeUserOperation({
           safeOp,
@@ -149,12 +137,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA22 expired or not due')
     await time.increaseTo(validAfter + 1)
 
-    const transaction = await logUserOperationGas(
+    const { transactionResponse } = await logUserOperationGas(
       'Execute UserOps with reference EntryPoint',
       entryPoint,
       entryPoint.handleOps(userOps, await relayer.getAddress()),
     )
-    const receipt = await transaction.wait()
+    const receipt = await transactionResponse.wait()
 
     const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
     const deposits = receipt.logs
@@ -165,8 +153,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
   })
 
   it('should support a Safe signer (NOTE: would require a staked paymaster for ERC-4337)', async () => {
-    const { user, relayer, safe: parentSafe, validator, entryPoint, entryPointSimulations, safeGlobalConfig } = await setupTests()
-    const entryPointAddress = await entryPoint.getAddress()
+    const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
     const daughterSafe = await Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
@@ -189,10 +176,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
         initCode: daughterSafe.getInitCode(),
       },
     )
-    const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
-    safeOp.callGasLimit = gasEstimation.callGasLimit
-    safeOp.preVerificationGas = gasEstimation.preVerificationGas
-    safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+
     const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
     const signature = buildSignatureBytes([
       {
@@ -217,12 +201,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       signature,
     })
 
-    const transaction = await logUserOperationGas(
+    const { transactionResponse } = await logUserOperationGas(
       'Execute UserOps with reference EntryPoint',
       entryPoint,
       entryPoint.handleOps([userOp], await relayer.getAddress()),
     )
-    const receipt = await transaction.wait()
+    const receipt = await transactionResponse.wait()
 
     const deposits = receipt.logs
       .filter(isEventLog)
