@@ -35,10 +35,7 @@ function useEntryPointAccountBalance(
 
     fetchBalance()
 
-    // We convert the interval to a number because typescript thinks this call is ambiguous
-    // since node.js and browser have different return types for setInterval
-    // more info: https://github.com/Microsoft/TypeScript/issues/30128#issuecomment-807394387
-    const interval = +setInterval(fetchBalance, opts.pollInterval)
+    const interval = setInterval(fetchBalance, opts.pollInterval)
     return () => {
       cancelled = true
       clearInterval(interval)

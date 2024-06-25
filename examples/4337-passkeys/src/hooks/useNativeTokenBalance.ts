@@ -40,10 +40,7 @@ function useNativeTokenBalance(provider: ethers.Eip1193Provider, address: string
       const pollInterval = opts?.pollInterval || 5000
 
       updateBalance()
-      // We convert the interval to a number because typescript thinks this call is ambiguous
-      // since node.js and browser have different return types for setInterval
-      // more info: https://github.com/Microsoft/TypeScript/issues/30128#issuecomment-807394387
-      const interval = +setInterval(updateBalance, pollInterval)
+      const interval = setInterval(updateBalance, pollInterval)
 
       return () => {
         cancelled = true
