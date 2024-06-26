@@ -216,8 +216,15 @@ contract Safe4337Mock is SafeMock, IAccount {
      */
     function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
-        checkSignatures(keccak256(operationData), operationData, signatures);
-        validationData = _packValidationData(false, validUntil, validAfter);
+
+        bytes32 dataHash = keccak256(operationData);
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        (v, r, s) = _signatureSplit(signatures);
+        bool validSignature = owner == ecrecover(keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", dataHash)), v - 4, r, s);
+
+        validationData = _packValidationData(!validSignature, validUntil, validAfter);
     }
 
     /**
