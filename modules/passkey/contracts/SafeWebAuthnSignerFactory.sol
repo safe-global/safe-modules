@@ -77,7 +77,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         );
 
         // solhint-disable-next-line no-inline-assembly
-        assembly {
+        assembly ("memory-safe") {
             // staticcall to the singleton contract with return size given as 32 bytes. The
             // singleton contract is known and immutable so it is safe to specify return size.
             if staticcall(gas(), singleton, add(data, 0x20), mload(data), 0, 32) {
