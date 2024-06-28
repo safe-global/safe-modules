@@ -55,26 +55,30 @@ contract SafeWebAuthnSignerProxy {
         uint256 y = _Y;
         P256.Verifiers verifiers = _VERIFIERS;
 
+        // Note that we **intentionally** do not mark this assembly block as memory Safe even if it
+        // is, as doing so causes the optimizer to behave sub-optimally (pun intended). The proxy
+        // seems to be compiled in its own compilation unit anyway, so it does not affect
+        // optimizations to the rest of the contracts (in particular, {SafeWebAuthnSignerFactory}).
         // solhint-disable-next-line no-inline-assembly
-        assembly {
+        assembly /* ("memory-safe") */ {
             // Forward the call to the singleton implementation. We append the configuration to the
             // calldata instead of having the singleton implementation read it from storage. This is
             // both more gas efficient and required for ERC-4337 compatibility. Note that we append
             // the configuration fields in reverse order since the fields are packed, and this makes
             // it so we don't need to mask any bits from the `verifiers` value. This computes `data`
             // to be `abi.encodePacked(msg.data, x, y, verifiers)`.
-            let data := mload(0x40)
-            mstore(add(data, add(calldatasize(), 0x36)), verifiers)
-            mstore(add(data, add(calldatasize(), 0x20)), y)
-            mstore(add(data, calldatasize()), x)
-            calldatacopy(data, 0x00, calldatasize())
+            let ptr := mload(0x40)
+            mstore(add(ptr, add(calldatasize(), 0x36)), verifiers)
+            mstore(add(ptr, add(calldatasize(), 0x20)), y)
+            mstore(add(ptr, calldatasize()), x)
+            calldatacopy(ptr, 0x00, calldatasize())
 
-            let success := delegatecall(gas(), singleton, data, add(calldatasize(), 0x56), 0, 0)
-            returndatacopy(0, 0, returndatasize())
-            if iszero(success) {
-                revert(0, returndatasize())
+            let success := delegatecall(gas(), singleton, ptr, add(calldatasize(), 0x56), 0, 0)
+            returndatacopy(ptr, 0x00, returndatasize())
+            if success {
+                return(ptr, returndatasize())
             }
-            return(0, returndatasize())
+            revert(ptr, returndatasize())
         }
     }
 }
