@@ -14,5 +14,7 @@ jobs:
         with:
           node-version: 20.x
           cache: pnpm
-      - run: pnpm install
-      - run: pnpm run fmt:global-check
+      - run: |
+          pnpm install
+          pnpm run fmt:global-check
+          npx sherif@latest
