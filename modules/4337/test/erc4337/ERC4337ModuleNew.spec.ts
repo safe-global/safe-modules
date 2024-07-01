@@ -119,6 +119,43 @@ describe('Safe4337Module - Newly deployed safe', () => {
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0'))
     })
 
+    it('should revert when signature length is manipulated', async () => {
+      const { user1, safe, validator, entryPoint, entryPointSimulations } = await setupTests()
+      const entryPointAddress = await entryPoint.getAddress()
+
+      await entryPoint.depositTo(await safe.address, { value: ethers.parseEther('1.0') })
+
+      await user1.sendTransaction({ to: safe.address, value: ethers.parseEther('0.5') })
+      const safeOp = buildSafeUserOpTransaction(
+        safe.address,
+        user1.address,
+        ethers.parseEther('0.5'),
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
+      )
+      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
+      safeOp.callGasLimit = gasEstimation.callGasLimit
+      safeOp.preVerificationGas = gasEstimation.preVerificationGas
+      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
+      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
+      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
+      // Add additional byte to the signature to make signature length invalid
+      const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())]).concat('00')
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature,
+      })
+      await expect(entryPoint.handleOps([userOp], user1.address))
+        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+        .withArgs(0, 'AA24 signature error')
+    })
+
     it('should not be able to execute contract calls twice', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()
 

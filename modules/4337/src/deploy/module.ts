@@ -14,6 +14,12 @@ const deploy: DeployFunction = async ({ deployments, getNamedAccounts }) => {
     log: true,
     deterministicDeployment: true,
   })
+
+  await deploy('SafeL2Mod', {
+    from: deployer,
+    log: true,
+    deterministicDeployment: true,
+  })
 }
 
 deploy.dependencies = ['entrypoint']
