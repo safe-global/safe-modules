@@ -39,9 +39,7 @@ contract SafeL2Mod is SafeL2 {
                 // When handling contract signatures the address of the contract is encoded into r
                 currentOwner = address(uint160(uint256(r)));
 
-                // Check that signature data pointer (s) is not pointing inside the static part of the signatures bytes
-                // This check is not completely accurate, since it is possible that more signatures than the threshold are send.
-                // Here we only check that the pointer is not pointing inside the part that is being processed
+                // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
                 require(uint256(s) == offset, "GS021");
 
                 // Check that signature data pointer (s) is in bounds (points to the length of data -> 32 bytes)
