@@ -8,7 +8,7 @@ This minimalistic example application demonstrates a Safe{Core} Smart Account de
 
 ```bash
 git clone https://github.com/safe-global/safe-modules.git
-cd safe-modules
+cd safe-modules/examples/4337-passkeys
 ```
 
 ### Install dependencies

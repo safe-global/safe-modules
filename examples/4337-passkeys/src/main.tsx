@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
-// Keep the import of the wallets file to eval so w3m package can initialise
+// Keep the import of the wallets file to eval so w3m package can initialize
 // the required globals
 import './logic/wallets.ts'
 import './index.css'
