@@ -4,7 +4,7 @@
 
 Certora (<https://www.certora.com/>).
 
-## Notes
+### Notes
 
 The final audit was performed on commit [8a906605010520bed5b532c9d2feb04fdf237832](https://github.com/safe-global/safe-modules/tree/8a906605010520bed5b532c9d2feb04fdf237832).
 

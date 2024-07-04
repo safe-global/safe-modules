@@ -102,7 +102,7 @@ npx hardhat --network $NETWORK verify $SAFE_WEBAUTHN_SIGNER_SINGLETON_ADDRESS --
 
 ### Compiler settings
 
-The project uses Solidity compiler version `0.8.26` with 10 million optimizer runs, as we want to optimize for the code execution costs. The EVM version is set to `paris` because not all our target networks support the opcodes introduced in the `Shanghai` EVM upgrade.
+The project uses Solidity compiler version `0.8.26` with 10 million IR optimizer runs, as we want to optimize for the code execution costs. Note that the `FCLP256Verifier` contract use the legacy bytecode optimizer in order to prevent performance regressions caused by the new IR optimizer. The EVM version is set to `paris` because not all our target networks support the opcodes introduced in the `Shanghai` EVM upgrade.
 
 #### Custom Networks
 
