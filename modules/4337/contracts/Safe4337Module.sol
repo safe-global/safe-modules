@@ -215,7 +215,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @dev Checks if the signatures length is correct and does not contain addtional bytes.
      *      The code uses scratch space to store s and v values of the signatures.
      *      0x00 stores s value and 0x20 stores v value.
-     *      As checkSignatures is expected to perform, it is skipped here.
+     *      As checkSignatures is expected to check whether signature length is aleast threshold * 0x41, it is skipped here.
      * @param signatures signatures data
      * @param threshold Indicates the number of iterations to perform in the loop.
      * @return bool True if length check passes, false otherwise.
