@@ -119,9 +119,8 @@ describe('Safe4337Module - Newly deployed safe', () => {
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0'))
     })
 
-    it('should revert when signature length is manipulated', async () => {
-      const { user1, safe, validator, entryPoint, entryPointSimulations } = await setupTests()
-      const entryPointAddress = await entryPoint.getAddress()
+    it('should revert when signature length contains additional bytes', async () => {
+      const { user1, safe, validator, entryPoint } = await setupTests()
 
       await entryPoint.depositTo(await safe.address, { value: ethers.parseEther('1.0') })
 
@@ -139,12 +138,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
           initCode: safe.getInitCode(),
         },
       )
-      const gasEstimation = await estimateUserOperationGas(ethers.provider, entryPointSimulations, safeOp, entryPointAddress)
-      safeOp.callGasLimit = gasEstimation.callGasLimit
-      safeOp.preVerificationGas = gasEstimation.preVerificationGas
-      safeOp.verificationGasLimit = gasEstimation.verificationGasLimit
-      safeOp.maxFeePerGas = gasEstimation.maxFeePerGas
-      safeOp.maxPriorityFeePerGas = gasEstimation.maxPriorityFeePerGas
+
       // Add additional byte to the signature to make signature length invalid
       const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())]).concat('00')
       const userOp = buildPackedUserOperationFromSafeUserOperation({
