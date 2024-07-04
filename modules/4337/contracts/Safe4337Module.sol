@@ -213,8 +213,6 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     /**
      * @dev Checks if the signatures length is correct and does not contain addtional bytes.
-     *      The code uses scratch space to store s and v values of the signatures.
-     *      0x00 stores s value and 0x20 stores v value.
      *      As checkSignatures is expected to check whether signature length is aleast threshold * 0x41, it is skipped here.
      * @param signatures signatures data
      * @param threshold Indicates the number of iterations to perform in the loop.
@@ -228,10 +226,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             /// @solidity memory-safe-assembly
             assembly {
                 let signaturePos := mul(0x41, i)
-                calldatacopy(0x00, add(signatures.offset, add(signaturePos, 0x20)), 0x20)
-                let s := mload(0x00)
-                calldatacopy(0x20, add(signatures.offset, add(signaturePos, 0x40)), 0x20)
-                let v := byte(0, mload(0x20))
+                let s := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
+                let v := byte(0, calldataload(add(signatures.offset, add(signaturePos, 0x40))))
 
                 if iszero(v) {
                     // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
