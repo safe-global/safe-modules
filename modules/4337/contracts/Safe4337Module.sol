@@ -264,7 +264,6 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
 
-        // address[] memory owners = ISafe(payable(userOp.sender)).getOwners();
         uint256 threshold = ISafe(payable(userOp.sender)).getThreshold();
         bool success = _checkSignatureLength(signatures, threshold);
 
