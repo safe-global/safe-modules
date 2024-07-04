@@ -213,13 +213,15 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
     /**
      * @dev Checks if the signatures length is correct and does not contain addtional bytes.
-     *      As checkSignatures is expected to check whether signature length is aleast threshold * 0x41, it is skipped here.
      * @param signatures signatures data
      * @param threshold Indicates the number of iterations to perform in the loop.
      * @return result True if length check passes, false otherwise.
      */
     function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool result) {
         uint256 offset = threshold * 0x41;
+
+        if (signatures.length < offset) return false;
+
         result = true;
         for (uint256 i = 0; i < threshold; i++) {
             /* solhint-disable no-inline-assembly */
@@ -233,16 +235,16 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
                     result := eq(s, offset)
                     // Check if the contract signature is in bounds: start of data is s + 32 and end is start + signature length
-                    let contractSignatureLen := mload(0x40)
-                    calldatacopy(contractSignatureLen, add(signatures.offset, s), 0x20)
+                    let contractSignatureLen := calldataload(add(signatures.offset, s))
                     // Update the required position of the next offset.
-                    offset := add(add(s, 0x20), mload(contractSignatureLen))
+                    offset := add(add(s, 0x20), contractSignatureLen)
                 }
             }
-            if(!result) return result;
+            /* solhint-enable no-inline-assembly */
+            if (!result) return result;
         }
-        if (signatures.length != offset) return false;
-        return true;
+        if (signatures.length > offset) return false;
+        return result;
     }
 
     /**
