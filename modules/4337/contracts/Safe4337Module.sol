@@ -216,11 +216,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      *      As checkSignatures is expected to check whether signature length is aleast threshold * 0x41, it is skipped here.
      * @param signatures signatures data
      * @param threshold Indicates the number of iterations to perform in the loop.
-     * @return bool True if length check passes, false otherwise.
+     * @return result True if length check passes, false otherwise.
      */
-    function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool) {
+    function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool result) {
         uint256 offset = threshold * 0x41;
-
+        result = true;
         for (uint256 i = 0; i < threshold; i++) {
             /* solhint-disable no-inline-assembly */
             /// @solidity memory-safe-assembly
@@ -231,11 +231,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
                 if iszero(v) {
                     // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
-                    if iszero(eq(s, offset)) {
-                        // If they are not equal, return false
-                        mstore(0x00, 0)
-                        return(0x00, 0x20)
-                    }
+                    result := eq(s, offset)
                     // Check if the contract signature is in bounds: start of data is s + 32 and end is start + signature length
                     let contractSignatureLen := mload(0x40)
                     calldatacopy(contractSignatureLen, add(signatures.offset, s), 0x20)
@@ -243,6 +239,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     offset := add(add(s, 0x20), mload(contractSignatureLen))
                 }
             }
+            if(!result) return result;
         }
         if (signatures.length != offset) return false;
         return true;
