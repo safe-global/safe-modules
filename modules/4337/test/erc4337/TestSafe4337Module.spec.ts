@@ -58,7 +58,7 @@ describe('TestSafe4337Module', () => {
     const { module } = await setupTests()
     const [user] = await ethers.getSigners()
 
-    let safeOpHash = ethers.hexlify(ethers.randomBytes(32))
+    const safeOpHash = ethers.hexlify(ethers.randomBytes(32))
 
     const signature = buildSignatureBytes([
       await signHash(user, safeOpHash),
@@ -78,7 +78,7 @@ describe('TestSafe4337Module', () => {
     const { module } = await setupTests()
     const [user] = await ethers.getSigners()
 
-    let safeOpHash = ethers.hexlify(ethers.randomBytes(32))
+    const safeOpHash = ethers.hexlify(ethers.randomBytes(32))
 
     const signature = buildSignatureBytes([
       await signHash(user, safeOpHash),
@@ -102,7 +102,7 @@ describe('TestSafe4337Module', () => {
     const { module } = await setupTests()
     const [user] = await ethers.getSigners()
 
-    let safeOpHash = ethers.hexlify(ethers.randomBytes(32))
+    const safeOpHash = ethers.hexlify(ethers.randomBytes(32))
 
     const signature = buildSignatureBytes([
       await signHash(user, safeOpHash),
