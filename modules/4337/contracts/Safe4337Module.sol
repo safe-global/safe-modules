@@ -212,6 +212,47 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
+     * @dev Checks if the signatures length is correct and does not contain addtional bytes.
+     *      The code uses scratch space to store s and v values of the signatures.
+     *      0x00 stores s value and 0x20 stores v value.
+     *      As checkSignatures is expected to perform, it is skipped here.
+     * @param signatures signatures data
+     * @param threshold Indicates the number of iterations to perform in the loop.
+     * @return bool True if length check passes, false otherwise.
+     */
+    function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool) {
+        uint256 offset = threshold * 0x41;
+
+        for (uint256 i = 0; i < threshold; i++) {
+            /* solhint-disable no-inline-assembly */
+            /// @solidity memory-safe-assembly
+            assembly {
+                let signaturePos := mul(0x41, i)
+                calldatacopy(0x00, add(signatures.offset, add(signaturePos, 0x20)), 0x20)
+                let s := mload(0x00)
+                calldatacopy(0x20, add(signatures.offset, add(signaturePos, 0x40)), 0x20)
+                let v := byte(0, mload(0x20))
+
+                if iszero(v) {
+                    // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
+                    if iszero(eq(s, offset)) {
+                        // If they are not equal, return false
+                        mstore(0x00, 0)
+                        return(0x00, 0x20)
+                    }
+                    // Check if the contract signature is in bounds: start of data is s + 32 and end is start + signature length
+                    let contractSignatureLen := mload(0x40)
+                    calldatacopy(contractSignatureLen, add(signatures.offset, s), 0x20)
+                    // Update the required position of the next offset.
+                    offset := add(add(s, 0x20), mload(contractSignatureLen))
+                }
+            }
+        }
+        if (signatures.length != offset) return false;
+        return true;
+    }
+
+    /**
      * @dev Validates that the user operation is correctly signed and returns an ERC-4337 packed validation data
      * of `validAfter || validUntil || authorizer`:
      *  - `authorizer`: 20-byte address, 0 for valid signature or 1 to mark signature failure (this module does not make use of signature aggregators).
@@ -222,11 +263,20 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      */
     function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
-        try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
-            // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(false, validUntil, validAfter);
-        } catch {
+
+        // address[] memory owners = ISafe(payable(userOp.sender)).getOwners();
+        uint256 threshold = ISafe(payable(userOp.sender)).getThreshold();
+        bool success = _checkSignatureLength(signatures, threshold);
+
+        if (!success) {
             validationData = _packValidationData(true, validUntil, validAfter);
+        } else {
+            try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
+                // The timestamps are validated by the entry point, therefore we will not check them again
+                validationData = _packValidationData(false, validUntil, validAfter);
+            } catch {
+                validationData = _packValidationData(true, validUntil, validAfter);
+            }
         }
     }
 

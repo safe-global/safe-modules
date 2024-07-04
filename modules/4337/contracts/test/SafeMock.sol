@@ -72,6 +72,10 @@ contract SafeMock {
         else (success, returnData) = to.call{value: value}(data);
     }
 
+    function getThreshold() external pure returns (uint256) {
+        return 1;
+    }
+
     // solhint-disable-next-line payable-fallback,no-complex-fallback
     fallback() external payable {
         // solhint-disable-next-line no-inline-assembly

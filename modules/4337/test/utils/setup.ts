@@ -13,8 +13,8 @@ const getRandomIntAsString = (min = 0, max: number = Number.MAX_SAFE_INTEGER): s
 }
 
 export const getSafeL2Singleton = async () => {
-  const SafeDeployment = await deployments.get('SafeL2Mod')
-  return await ethers.getContractAt('SafeL2Mod', SafeDeployment.address)
+  const SafeDeployment = await deployments.get('SafeL2')
+  return await ethers.getContractAt('SafeL2', SafeDeployment.address)
 }
 
 export const getMockSafeSingleton = async (for4337: boolean) => {

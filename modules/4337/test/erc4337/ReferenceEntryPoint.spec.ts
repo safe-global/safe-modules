@@ -215,6 +215,60 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance - transfer - deposits)
   })
 
+  it('should revert on invalid signature length (NOTE: would require a staked paymaster for ERC-4337)', async () => {
+    const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
+
+    await parentSafe.deploy(user)
+    const daughterSafe = await Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+
+    const accountBalance = ethers.parseEther('1.0')
+    await user.sendTransaction({ to: daughterSafe.address, value: accountBalance })
+    expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
+
+    const transfer = ethers.parseEther('0.1')
+    const safeOp = buildSafeUserOpTransaction(
+      daughterSafe.address,
+      user.address,
+      transfer,
+      '0x',
+      '0x0',
+      await entryPoint.getAddress(),
+      false,
+      false,
+      {
+        initCode: daughterSafe.getInitCode(),
+      },
+    )
+
+    const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
+    const signature = buildSignatureBytes([
+      {
+        signer: parentSafe.address,
+        data: await user.signTypedData(
+          {
+            verifyingContract: parentSafe.address,
+            chainId: await chainId(),
+          },
+          {
+            SafeMessage: [{ type: 'bytes', name: 'message' }],
+          },
+          {
+            message: opData,
+          },
+        ),
+        dynamic: true,
+      },
+    ])
+    const userOp = buildPackedUserOperationFromSafeUserOperation({
+      safeOp,
+      signature: signature.concat('00'), // invalid signature length,
+    })
+
+    await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
+      .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+      .withArgs(0, 'AA24 signature error')
+  })
+
   function isEventLog(log: Log): log is EventLog {
     return typeof (log as Partial<EventLog>).eventName === 'string'
   }
