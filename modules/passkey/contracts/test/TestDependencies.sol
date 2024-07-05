@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 /* solhint-disable no-global-import */
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.20;
 
 import "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import "@account-abstraction/contracts/samples/VerifyingPaymaster.sol";

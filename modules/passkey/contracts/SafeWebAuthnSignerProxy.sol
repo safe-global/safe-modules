@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 /* solhint-disable no-complex-fallback */
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.20;
 
 import {P256} from "./libraries/WebAuthn.sol";
 

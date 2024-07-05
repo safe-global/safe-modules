@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.20;
 
 import {SignatureValidator} from "./base/SignatureValidator.sol";
 import {P256, WebAuthn} from "./libraries/WebAuthn.sol";

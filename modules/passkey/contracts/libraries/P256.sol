@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import {IP256Verifier} from "../interfaces/IP256Verifier.sol";
 
@@ -116,7 +116,7 @@ library P256 {
             mstore(add(input, 128), y)
 
             // Perform staticcall and check result, note that Yul evaluates expressions from right
-            // to left. See <https://docs.soliditylang.org/en/v0.8.24/yul.html#function-calls>.
+            // to left. See <https://docs.soliditylang.org/en/v0.8.26/yul.html#function-calls>.
             mstore(0, 0)
             success := and(
                 and(

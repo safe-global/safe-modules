@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 contract Benchmarker {
     function call(address to, bytes memory data) external returns (uint256 gas, bytes memory returnData) {
