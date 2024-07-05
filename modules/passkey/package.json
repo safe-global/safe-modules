@@ -53,6 +53,7 @@
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "workspace:^0.3.0-1",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
+    "@safe-global/safe-contracts": "^1.4.1-build.0",
     "@simplewebauthn/server": "^10.0.0",
     "@types/node": "^20.14.8",
     "dotenv": "^16.4.5",
@@ -66,7 +67,6 @@
   "dependencies": {
     "@account-abstraction/contracts": "0.7.0",
     "@openzeppelin/contracts": "^5.0.2",
-    "@safe-global/safe-contracts": "^1.4.1-build.0",
     "cbor": "^9.0.2"
   }
 }

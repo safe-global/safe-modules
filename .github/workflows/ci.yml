@@ -17,5 +17,4 @@ jobs:
       - run: |
           pnpm install
           pnpm run fmt:global-check
-          # -i is to ignore packages that are expected to have multiple versions across the workspace
-          npx sherif@0.9.0 -i @openzeppelin/contracts
+          pnpm run lint:monorepo
