@@ -1,4 +1,5 @@
 import { BigNumberish, Signer, TransactionResponse, ethers } from 'ethers'
+import { IEntryPoint } from '../../typechain-types'
 
 export const EIP_DOMAIN = {
   EIP712Domain: [
@@ -137,9 +138,56 @@ export const buildSignatureBytes = (signatures: SafeSignature[]): string => {
 export const logGas = async (message: string, tx: Promise<TransactionResponse>, skip?: boolean): Promise<TransactionResponse> => {
   return tx.then(async (result) => {
     const receipt = await result.wait()
+
     if (!receipt?.gasUsed) throw new Error('No gas used in receipt')
 
     if (!skip) console.log(`           Used ${receipt.gasUsed} gas for >${message}<`)
     return result
+  })
+}
+
+type UserOperationGasLog = {
+  actualGasUsed: bigint
+  actualGasCost: bigint
+  transactionResponse: TransactionResponse
+}
+
+/**
+ * Logs the gas used by a user operation and returns the gas log.
+ *
+ * @param message - The message associated with the user operation.
+ * @param entryPoint - The entry point object.
+ * @param tx - The transaction promise.
+ * @param skip - Optional flag to skip logging.
+ * @returns {UserOperationGasLog} A promise that resolves to the user operation gas log.
+ * @throws An error if the receipt is not available, gas used is not available in the receipt,
+ * gas used or gas cost is not available in the UserOperationEvent, or UserOperationEvent is not emitted.
+ */
+export const logUserOperationGas = async (
+  message: string,
+  entryPoint: IEntryPoint,
+  tx: Promise<TransactionResponse>,
+  skip?: boolean,
+): Promise<UserOperationGasLog> => {
+  return tx.then(async (transactionResponse) => {
+    const receipt = await transactionResponse.wait()
+    if (!receipt) throw new Error('No receipt')
+
+    const userOperationEvent = await entryPoint.queryFilter(entryPoint.filters.UserOperationEvent(), receipt.blockNumber)
+    const parsedUserOperationEvent = entryPoint.interface.parseLog(userOperationEvent[0])
+
+    if (!receipt?.gasUsed) throw new Error('No gas used in receipt')
+    if (!parsedUserOperationEvent?.args.actualGasUsed || !parsedUserOperationEvent?.args.actualGasCost)
+      throw new Error('No gas used or gas cost in UserOperationEvent or UserOperationEvent not emitted')
+
+    if (!skip) {
+      console.log(`           Used ${parsedUserOperationEvent.args.actualGasUsed} gas (Account or Paymaster) for >${message}<`)
+      console.log(`           Used ${receipt.gasUsed} gas (Transaction) for >${message}<`)
+    }
+    return {
+      actualGasUsed: parsedUserOperationEvent.args.actualGasUsed,
+      actualGasCost: parsedUserOperationEvent.args.actualGasCost,
+      transactionResponse,
+    }
   })
 }

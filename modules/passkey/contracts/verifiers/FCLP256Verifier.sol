@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 /* solhint-disable no-complex-fallback */
 /* solhint-disable payable-fallback */
-pragma solidity 0.8.24;
+pragma solidity 0.8.26;
 
 import {IP256Verifier} from "../interfaces/IP256Verifier.sol";
 import {FCL_ecdsa} from "../vendor/FCL/FCL_ecdsa.sol";

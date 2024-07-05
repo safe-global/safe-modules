@@ -17,7 +17,7 @@ interface ISafeSignerFactory {
      * @param y The y-coordinate of the public key.
      * @param verifiers The P-256 verifiers to use.
      */
-    event Created(address signer, uint256 x, uint256 y, P256.Verifiers verifiers);
+    event Created(address indexed signer, uint256 x, uint256 y, P256.Verifiers verifiers);
 
     /**
      * @notice Gets the unique signer address for the specified data.

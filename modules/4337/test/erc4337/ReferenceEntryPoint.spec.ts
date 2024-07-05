@@ -3,7 +3,7 @@ import { deployments, ethers } from 'hardhat'
 import { time } from '@nomicfoundation/hardhat-network-helpers'
 import { EventLog, Log } from 'ethers'
 import { getEntryPoint, getFactory, getSafeModuleSetup } from '../utils/setup'
-import { buildSignatureBytes, logGas } from '../../src/utils/execution'
+import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execution'
 import {
   buildSafeUserOpTransaction,
   buildPackedUserOperationFromSafeUserOperation,
@@ -70,6 +70,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
             initCode: nonce === 0 ? safe.getInitCode() : '0x',
           },
         )
+
         const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
         return buildPackedUserOperationFromSafeUserOperation({
           safeOp,
@@ -78,8 +79,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       }),
     )
 
-    const transaction = await logGas('Execute UserOps with reference EntryPoint', entryPoint.handleOps(userOps, await relayer.getAddress()))
-    const receipt = await transaction.wait()
+    const { transactionResponse } = await logUserOperationGas(
+      'Execute UserOps with reference EntryPoint',
+      entryPoint,
+      entryPoint.handleOps(userOps, await relayer.getAddress()),
+    )
+    const receipt = await transactionResponse.wait()
 
     const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
     const deposits = receipt.logs
@@ -132,8 +137,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA22 expired or not due')
     await time.increaseTo(validAfter + 1)
 
-    const transaction = await logGas('Execute UserOps with reference EntryPoint', entryPoint.handleOps(userOps, await relayer.getAddress()))
-    const receipt = await transaction.wait()
+    const { transactionResponse } = await logUserOperationGas(
+      'Execute UserOps with reference EntryPoint',
+      entryPoint,
+      entryPoint.handleOps(userOps, await relayer.getAddress()),
+    )
+    const receipt = await transactionResponse.wait()
 
     const transfers = ethers.parseEther('0.1') * BigInt(userOps.length)
     const deposits = receipt.logs
@@ -167,6 +176,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
         initCode: daughterSafe.getInitCode(),
       },
     )
+
     const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
     const signature = buildSignatureBytes([
       {
@@ -191,11 +201,12 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       signature,
     })
 
-    const transaction = await logGas(
+    const { transactionResponse } = await logUserOperationGas(
       'Execute UserOps with reference EntryPoint',
+      entryPoint,
       entryPoint.handleOps([userOp], await relayer.getAddress()),
     )
-    const receipt = await transaction.wait()
+    const receipt = await transactionResponse.wait()
 
     const deposits = receipt.logs
       .filter(isEventLog)

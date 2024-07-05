@@ -53,6 +53,11 @@ export const getEntryPoint = async () => {
   return await ethers.getContractAt('IEntryPoint', EntryPointDeployment.address)
 }
 
+export const getEntryPointSimulations = async () => {
+  const EntryPointDeployment = await deployments.get('EntryPointSimulations')
+  return await ethers.getContractAt('EntryPointSimulations', EntryPointDeployment.address)
+}
+
 export const getSafeAtAddress = async (address: string) => {
   return await ethers.getContractAt('SafeMock', address)
 }
