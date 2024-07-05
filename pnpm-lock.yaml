@@ -145,13 +145,13 @@ importers:
 
   modules/4337:
     dependencies:
-      '@safe-global/safe-contracts':
-        specifier: ^1.4.1-build.0
-        version: 1.4.1-build.0(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
-    devDependencies:
       '@account-abstraction/contracts':
         specifier: 0.7.0
         version: 0.7.0
+      '@safe-global/safe-contracts':
+        specifier: 1.4.1-build.0
+        version: 1.4.1-build.0(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+    devDependencies:
       '@noble/curves':
         specifier: ^1.4.0
         version: 1.4.0
@@ -358,7 +358,7 @@ importers:
         specifier: '=4.9.6'
         version: 4.9.6
       '@safe-global/safe-contracts':
-        specifier: ^1.4.1-build.0
+        specifier: '=1.4.1-build.0'
         version: 1.4.1-build.0(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       candide-contracts:
         specifier: github:5afe/CandideWalletContracts#113d3c059e039e332637e8f686d9cbd505f1e738

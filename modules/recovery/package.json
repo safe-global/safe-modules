@@ -51,6 +51,6 @@
   "dependencies": {
     "candide-contracts": "github:5afe/CandideWalletContracts#113d3c059e039e332637e8f686d9cbd505f1e738",
     "@openzeppelin/contracts": "=4.9.6",
-    "@safe-global/safe-contracts": "^1.4.1-build.0"
+    "@safe-global/safe-contracts": "=1.4.1-build.0"
   }
 }
