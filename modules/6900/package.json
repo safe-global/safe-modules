@@ -14,21 +14,21 @@
     "build"
   ],
   "scripts": {
-    "build": "npm run build:sol && npm run build:ts",
+    "build": "pnpm run build:sol && pnpm run build:ts",
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
     "test": "hardhat test --deploy-fixture",
     "coverage": "hardhat coverage",
     "codesize": "hardhat codesize",
-    "benchmark": "npm run test benchmark/*.ts",
+    "benchmark": "pnpm run test benchmark/*.ts",
     "deploy-all": "hardhat deploy-contracts --network",
     "deploy": "hardhat deploy --network",
-    "lint": "npm run lint:sol && npm run lint:ts",
+    "lint": "pnpm run lint:sol && pnpm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint ./src --fix && eslint ./test --fix",
     "fmt": "prettier --write ./contracts/**/*.sol",
     "fmt:check": "prettier --check ./**/*.sol",
-    "prepare": "npm run build"
+    "prepare": "pnpm run build"
   },
   "repository": {
     "type": "git",
@@ -45,8 +45,12 @@
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
   "devDependencies": {
+    "@account-abstraction/contracts": "^0.7.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.0.2",
+    "@safe-global/mock-contract": "^4.1.0",
+    "@safe-global/safe-4337-local-bundler": "workspace:^",
     "@types/chai": "^4.3.14",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.30",
@@ -54,7 +58,7 @@
     "cbor": "^9.0.2",
     "debug": "^4.3.4",
     "dotenv": "^16.4.5",
-    "ethers": "^6.11.1",
+    "ethers": "^6.13.1",
     "hardhat": "^2.22.2",
     "hardhat-deploy": "^0.12.2",
     "husky": "^9.0.11",
@@ -63,11 +67,6 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.4.3",
     "yargs": "^17.7.2"
-  },
-  "overrides": {
-    "@safe-global/safe-contracts": {
-      "ethers": "^6.11.1"
-    }
   },
   "dependencies": {
     "@safe-global/safe-contracts": "^1.4.1-build.0"
