@@ -131,7 +131,7 @@ describe('WebAuthn Library', () => {
     })
   })
 
-  describe('signingMessage', function () {
+  describe('encodeSigningMessage', function () {
     it('Should correctly compute a signing message', async () => {
       const { webAuthnLib } = await setupTests()
 
@@ -149,6 +149,19 @@ describe('WebAuthn Library', () => {
       const message = ethers.concat([authenticatorData, clientDataHash])
 
       expect(await webAuthnLib.encodeSigningMessage(challenge, authenticatorData, `"origin":"http://safe.global"`)).to.equal(message)
+    })
+
+    it('Should revert if SHA-256 precompile reverts', async () => {
+      const { webAuthnLib } = await setupTests()
+
+      // This test is a bit tricky - the SHA-256 precompile can be made to revert by calling it
+      // with insufficient gas. Here we check that the revert is propagated by the
+      // `encodeSigningMessage` function. If the revert were not propagated, since the input is
+      // large enough, the function would be able to finish executing and return bogus data. Finding
+      // a large enough client data and exact gas limits to make this happen is a bit annoying, so
+      // lets hope for no gas schedule changes :fingers_crossed:.
+      const longClientDataFields = `"long":"${'a'.repeat(100000)}"`
+      await expect(webAuthnLib.encodeSigningMessage(ethers.ZeroHash, '0x', longClientDataFields, { gasLimit: 1701001 })).to.be.reverted
     })
   })
 
