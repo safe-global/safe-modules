@@ -2,6 +2,8 @@
   "name": "@safe-global/safe-modules",
   "version": "1.0.0",
   "description": "A monorepo for Safe modules",
+  "private": true,
+  "packageManager": "pnpm@9.4.0",
   "main": "dist/index.js",
   "workspaces": [
     "packages/*",

@@ -53,14 +53,14 @@
     "@alchemy/aa-core": "2.3.1",
     "@gelatonetwork/relay-sdk": "^5.5.6",
     "alchemy-sdk": "3.1.2",
-    "dotenv": "16.4.5",
-    "ethers": "^6.12.1",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1",
     "permissionless": "0.1.29",
     "viem": "2.12.5"
   },
   "devDependencies": {
-    "@types/node": "20.14.0",
+    "@types/node": "^20.14.8",
     "tsx": "4.11.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.5.2"
   }
 }

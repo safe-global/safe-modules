@@ -39,18 +39,18 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@types/node": "^20.14.0",
+    "@types/node": "^20.14.8",
     "@types/yargs": "^17.0.32",
     "dotenv": "^16.4.5",
-    "ethers": "^6.12.1",
-    "hardhat": "^2.22.3",
+    "ethers": "^6.13.1",
+    "hardhat": "^2.22.5",
     "hardhat-deploy": "^0.12.4",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.2",
     "yargs": "^17.7.2"
   },
   "dependencies": {
     "candide-contracts": "github:5afe/CandideWalletContracts#113d3c059e039e332637e8f686d9cbd505f1e738",
     "@openzeppelin/contracts": "=4.9.6",
-    "@safe-global/safe-contracts": "=1.4.1-build.0"
+    "@safe-global/safe-contracts": "^1.4.1-build.0"
   }
 }
