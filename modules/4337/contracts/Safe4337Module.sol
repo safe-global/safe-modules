@@ -258,18 +258,23 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
 
-        uint256 threshold = ISafe(payable(userOp.sender)).getThreshold();
-        bool success = _checkSignatureLength(signatures, threshold);
+        bool validSignature;
+        try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
+            validSignature = true;
+        } catch {
+            validSignature = false;
+        }
 
-        if (!success) {
-            validationData = _packValidationData(true, validUntil, validAfter);
+        // checkSignatures function in Safe contract does not force a fixed size on signature length. A malicious actor can append additional bytes in the signature than needed and force gas usage to reach verificationGasLimit. _checkSignatureLength ensures that there are no additional bytes in the signatures than required.
+        validSignature = validSignature
+            && _checkSignatureLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
+
+        if (validSignature) {
+            // The timestamps are validated by the entry point, therefore we will not check them again
+            validationData = _packValidationData(false, validUntil, validAfter);
         } else {
-            try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
-                // The timestamps are validated by the entry point, therefore we will not check them again
-                validationData = _packValidationData(false, validUntil, validAfter);
-            } catch {
-                validationData = _packValidationData(true, validUntil, validAfter);
-            }
+            validationData = _packValidationData(true, validUntil, validAfter);
+        }
         }
     }
 
