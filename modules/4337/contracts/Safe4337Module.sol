@@ -275,7 +275,6 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         } else {
             validationData = _packValidationData(true, validUntil, validAfter);
         }
-        }
     }
 
     /**
