@@ -228,7 +228,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             /// @solidity memory-safe-assembly
             assembly {
                 let signaturePos := mul(0x41, i)
-                // read the Safe signature type (uint8) from calldata. 
+                // read the Safe signature type (uint8) from calldata.
                 let signatureType := byte(0, calldataload(add(signatures.offset, add(signaturePos, 0x40))))
 
                 // signatureType = 0 indicates that signature is a smart contract signature in Safe Signature Encoding
