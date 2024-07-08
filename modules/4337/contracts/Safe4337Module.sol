@@ -243,8 +243,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             /* solhint-enable no-inline-assembly */
             if (!result) return result;
         }
-        if (signatures.length > offset) return false;
-        return result;
+        result = signatures.length <= offset;
     }
 
     /**
