@@ -228,16 +228,19 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             /// @solidity memory-safe-assembly
             assembly {
                 let signaturePos := mul(0x41, i)
-                let s := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
-                let v := byte(0, calldataload(add(signatures.offset, add(signaturePos, 0x40))))
+                // read the Safe signature type (uint8) from calldata. 
+                let signatureType := byte(0, calldataload(add(signatures.offset, add(signaturePos, 0x40))))
 
-                if iszero(v) {
+                // signatureType = 0 indicates that signature is a smart contract signature in Safe Signature Encoding
+                if iszero(signatureType) {
+                    // For Safe smart contract signature the s value points to the start of the signature data in the signatures
+                    let signatureStartPointer := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
                     // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
-                    result := eq(s, offset)
+                    result := eq(signatureStartPointer, offset)
                     // Check if the contract signature is in bounds: start of data is s + 32 and end is start + signature length
-                    let contractSignatureLen := calldataload(add(signatures.offset, s))
+                    let contractSignatureLen := calldataload(add(signatures.offset, signatureStartPointer))
                     // Update the required position of the next offset.
-                    offset := add(add(s, 0x20), contractSignatureLen)
+                    offset := add(add(signatureStartPointer, 0x20), contractSignatureLen)
                 }
             }
             /* solhint-enable no-inline-assembly */
