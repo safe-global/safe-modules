@@ -258,14 +258,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
 
-        // checkSignatures function in Safe contract does not force a fixed size on signature length. A malicious actor can append additional bytes in the signature than needed and force gas usage to reach verificationGasLimit. _checkSignatureLength ensures that there are no additional bytes in the signatures than required.
-        if (!_checkSignatureLength(signatures, ISafe(payable(userOp.sender)).getThreshold()))
-            return _packValidationData(true, validUntil, validAfter);
+        // checkSignatures function in Safe contract does not force a fixed size on signature length.
+        // A malicious actor can append additional bytes in the signature than needed and force gas usage to reach verificationGasLimit.
+        // _checkSignatureLength ensures that there are no additional bytes in the signatures than required.
+        bool validSignature = _checkSignatureLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
 
-        bool validSignature;
-        try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
-            validSignature = true;
-        } catch {
+        try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {} catch {
             validSignature = false;
         }
 
