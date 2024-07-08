@@ -11,7 +11,6 @@ methods {
     function getOperationHash(
         Safe4337Module.PackedUserOperation userOp
     ) external returns(bytes32) envfree => PER_CALLEE_CONSTANT;
-
     function _checkSignatureLength(bytes calldata, uint256) internal returns(bool)=> ALWAYS(true);
 }
 
