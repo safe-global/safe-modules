@@ -266,8 +266,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         }
 
         // checkSignatures function in Safe contract does not force a fixed size on signature length. A malicious actor can append additional bytes in the signature than needed and force gas usage to reach verificationGasLimit. _checkSignatureLength ensures that there are no additional bytes in the signatures than required.
-        validSignature = validSignature
-            && _checkSignatureLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
+        validSignature = validSignature && _checkSignatureLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
 
         if (validSignature) {
             // The timestamps are validated by the entry point, therefore we will not check them again
