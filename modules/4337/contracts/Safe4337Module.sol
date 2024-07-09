@@ -217,12 +217,11 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param threshold Indicates the number of iterations to perform in the loop.
      * @return result True if length check passes, false otherwise.
      */
-    function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool result) {
+    function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool) {
         uint256 offset = threshold * 0x41;
 
         if (signatures.length < offset) return false;
-
-        result = true;
+        bool pointsAtEnd = true;
         for (uint256 i = 0; i < threshold; i++) {
             /* solhint-disable no-inline-assembly */
             /// @solidity memory-safe-assembly
@@ -236,7 +235,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     // For Safe smart contract signature the s value points to the start of the signature data in the signatures
                     let signatureStartPointer := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
                     // Require that the signature data pointer is pointing to the expected location, at the end of processed contract signatures.
-                    result := eq(signatureStartPointer, offset)
+                    pointsAtEnd := eq(signatureStartPointer, offset)
                     // Check if the contract signature is in bounds: start of data is s + 32 and end is start + signature length
                     let contractSignatureLen := calldataload(add(signatures.offset, signatureStartPointer))
                     // Update the required position of the next offset.
@@ -244,9 +243,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                 }
             }
             /* solhint-enable no-inline-assembly */
-            if (!result) return result;
+            if (!pointsAtEnd) return false;
         }
-        result = signatures.length <= offset;
+        return signatures.length <= offset;
     }
 
     /**
