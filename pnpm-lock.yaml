@@ -45,7 +45,7 @@ importers:
         specifier: ^5.0.7
         version: 5.0.7
       sherif:
-        specifier: 0.10.0
+        specifier: ^0.10.0
         version: 0.10.0
 
   examples/4337-gas-metering:
@@ -297,8 +297,8 @@ importers:
         specifier: 0.7.0
         version: 0.7.0
       '@openzeppelin/contracts':
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: '=5.0.0'
+        version: 5.0.0
       cbor:
         specifier: ^9.0.2
         version: 9.0.2
@@ -1158,6 +1158,9 @@ packages:
 
   '@openzeppelin/contracts@4.9.6':
     resolution: {integrity: sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA==}
+
+  '@openzeppelin/contracts@5.0.0':
+    resolution: {integrity: sha512-bv2sdS6LKqVVMLI5+zqnNrNU/CA+6z6CmwFXm/MzmOPBRSO5reEJN7z0Gbzvs0/bv/MZZXNklubpwy3v2+azsw==}
 
   '@openzeppelin/contracts@5.0.2':
     resolution: {integrity: sha512-ytPc6eLGcHHnapAZ9S+5qsdomhjo6QBHTDRRBFfTxXIpsicMhVPouPgmUPebZZZGX7vt9USA+Z+0M0dSVtSUEA==}
@@ -5982,6 +5985,8 @@ snapshots:
   '@openzeppelin/contracts@3.4.2-solc-0.7': {}
 
   '@openzeppelin/contracts@4.9.6': {}
+
+  '@openzeppelin/contracts@5.0.0': {}
 
   '@openzeppelin/contracts@5.0.2': {}
 
