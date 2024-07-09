@@ -36,7 +36,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       proxyCreationCode,
       chainId: Number(await chainId()),
     }
-    const safe = await Safe4337.withSigner(user.address, safeGlobalConfig)
+    const safe = Safe4337.withSigner(user.address, safeGlobalConfig)
 
     return {
       user,
@@ -156,7 +156,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
-    const daughterSafe = await Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+    const daughterSafe = Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
 
     const accountBalance = ethers.parseEther('1.0')
     await user.sendTransaction({ to: daughterSafe.address, value: accountBalance })
@@ -215,11 +215,43 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance - transfer - deposits)
   })
 
-  it('should revert on invalid signature length (NOTE: would require a staked paymaster for ERC-4337)', async () => {
+  it('should revert on invalid signature length - EOA signature', async () => {
+    const { user, relayer, safe, validator, entryPoint } = await setupTests()
+
+    const accountBalance = ethers.parseEther('1.0')
+    await user.sendTransaction({ to: safe.address, value: accountBalance })
+    expect(await ethers.provider.getBalance(safe.address)).to.be.eq(accountBalance)
+
+    const safeOp = buildSafeUserOpTransaction(
+      safe.address,
+      user.address,
+      ethers.parseEther('0.1'),
+      '0x',
+      `0`,
+      await entryPoint.getAddress(),
+      false,
+      false,
+      {
+        initCode: safe.getInitCode(),
+      },
+    )
+
+    const signature = buildSignatureBytes([await signSafeOp(user, await validator.getAddress(), safeOp, await chainId())])
+    const userOp = buildPackedUserOperationFromSafeUserOperation({
+      safeOp,
+      signature: signature.concat('00'), // adding '00' invalidates signature length
+    })
+
+    await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
+      .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+      .withArgs(0, 'AA24 signature error')
+  })
+
+  it('should revert on invalid signature length - Smart contract signature (NOTE: would require a staked paymaster for ERC-4337)', async () => {
     const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
-    const daughterSafe = await Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+    const daughterSafe = Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
 
     const accountBalance = ethers.parseEther('1.0')
     await user.sendTransaction({ to: daughterSafe.address, value: accountBalance })
@@ -261,7 +293,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     ])
     const userOp = buildPackedUserOperationFromSafeUserOperation({
       safeOp,
-      signature: signature.concat('00'), // invalid signature length,
+      signature: signature.concat('00'), // adding '00' invalidates signature length
     })
 
     await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
