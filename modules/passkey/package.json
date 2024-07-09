@@ -65,7 +65,6 @@
   },
   "dependencies": {
     "@account-abstraction/contracts": "^0.7.0",
-    "@openzeppelin/contracts": "^5.0.0",
     "@safe-global/safe-contracts": "^1.4.1-build.0",
     "cbor": "^9.0.2"
   }
