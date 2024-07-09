@@ -49,7 +49,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "candide-contracts": "github:5afe/CandideWalletContracts#113d3c059e039e332637e8f686d9cbd505f1e738",
+    "candide-contracts": "github:candidelabs/candide-contracts#b8bbfd762b5946a37c620684f9a6c01196ec6d8e",
     "@openzeppelin/contracts": "=4.9.6",
     "@safe-global/safe-contracts": "=1.4.1-build.0"
   }
