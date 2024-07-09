@@ -165,11 +165,10 @@ describe('Safe4337Module - Newly deployed safe', () => {
       await user1.sendTransaction({ to: daughterSafe.address, value: accountBalance })
       expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
 
-      const transfer = ethers.parseEther('0.1')
       const safeOp = buildSafeUserOpTransaction(
         daughterSafe.address,
         user1.address,
-        transfer,
+        ethers.parseEther('0.1'),
         '0x',
         '0x0',
         await entryPoint.getAddress(),
