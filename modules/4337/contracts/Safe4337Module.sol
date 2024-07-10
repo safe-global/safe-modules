@@ -233,12 +233,13 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
                 // signatureType = 0 indicates that signature is a smart contract signature in Safe Signature Encoding
                 if iszero(signatureType) {
-                    // For Safe smart contract signature the s value points to the start of the signature data in the signatures
-                    // s value is relative to the signature data.
+                    // For Safe smart contract signature the second word of static part points to the start of the signature data in the signatures i.e. dynamic part
+                    // The value of the pointer is relative to `signatures`.
                     let signatureStartPointer := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
                     pointsAtEnd := eq(signatureStartPointer, offset)
                     let contractSignatureLen := calldataload(add(signatures.offset, signatureStartPointer))
-                    // Update the expected offset of the next contract signature. This is the previous expected offset plus the total length of the current contract signature. Note that we add 0x20 to the contract signature length to account for the encoded length value.
+                    // Update the expected offset of the next contract signature. This is the previous expected offset plus the total length of the current contract signature.
+                    // Note that we add 0x20 to the contract signature length to account for the encoded length value.
                     offset := add(offset, add(0x20, contractSignatureLen))
                 }
             }
