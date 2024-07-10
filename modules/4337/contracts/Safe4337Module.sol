@@ -212,10 +212,12 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @dev Checks if the signatures length is correct and does not contain additional bytes. The function does not check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation of {checkSignatures}.
+     * @dev Checks if the signatures length is correct and does not contain additional bytes. The function does not
+     * check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation
+     * of {checkSignatures}.
      * @param signatures signatures data
      * @param threshold Indicates the number of iterations to perform in the loop.
-     * @return isValue True if length check passes, false otherwise.
+     * @return isValid True if length check passes, false otherwise.
      */
     function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
         uint256 offset = threshold * 0x41;
