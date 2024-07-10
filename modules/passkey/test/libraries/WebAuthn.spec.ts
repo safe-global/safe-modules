@@ -161,7 +161,7 @@ describe('WebAuthn Library', () => {
       // a large enough client data and exact gas limits to make this happen is a bit annoying, so
       // lets hope for no gas schedule changes :fingers_crossed:.
       const longClientDataFields = `"long":"${'a'.repeat(100000)}"`
-      await expect(webAuthnLib.encodeSigningMessage(ethers.ZeroHash, '0x', longClientDataFields, { gasLimit: 1701001 })).to.be.reverted
+      await expect(webAuthnLib.encodeSigningMessage(ethers.ZeroHash, '0x', longClientDataFields, { gasLimit: 1699001 })).to.be.reverted
     })
   })
 
