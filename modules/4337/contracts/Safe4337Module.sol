@@ -220,7 +220,6 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool) {
         uint256 offset = threshold * 0x41;
 
-        if (signatures.length < offset) return false;
         bool pointsAtEnd = true;
         for (uint256 i = 0; i < threshold; i++) {
             /* solhint-disable no-inline-assembly */
