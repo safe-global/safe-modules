@@ -301,6 +301,61 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA24 signature error')
   })
 
+  it('should revert when signature pointer points to invalid part of signature data - Smart contract signature (NOTE: would require a staked paymaster for ERC-4337)', async () => {
+    const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
+
+    await parentSafe.deploy(user)
+    const daughterSafe = Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+
+    const accountBalance = ethers.parseEther('1.0')
+    await user.sendTransaction({ to: daughterSafe.address, value: accountBalance })
+    expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
+
+    const transfer = ethers.parseEther('0.1')
+    const safeOp = buildSafeUserOpTransaction(
+      daughterSafe.address,
+      user.address,
+      transfer,
+      '0x',
+      '0x0',
+      await entryPoint.getAddress(),
+      false,
+      false,
+      {
+        initCode: daughterSafe.getInitCode(),
+      },
+    )
+
+    const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
+    const signature = buildSignatureBytes([
+      {
+        signer: parentSafe.address,
+        data: await user.signTypedData(
+          {
+            verifyingContract: parentSafe.address,
+            chainId: await chainId(),
+          },
+          {
+            SafeMessage: [{ type: 'bytes', name: 'message' }],
+          },
+          {
+            message: opData,
+          },
+        ),
+        dynamic: true,
+      },
+    ])
+    const userOp = buildPackedUserOperationFromSafeUserOperation({
+      safeOp,
+      // Replace the 2nd word of static part of signature containing the pointer to dynamic part with invalid pointer value
+      signature: signature.slice(0, 67) + '00'.padStart(64, '0') + signature.slice(131),
+    })
+
+    await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
+      .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+      .withArgs(0, 'AA24 signature error')
+  })
+
   function isEventLog(log: Log): log is EventLog {
     return typeof (log as Partial<EventLog>).eventName === 'string'
   }

@@ -208,6 +208,62 @@ describe('Safe4337Module - Newly deployed safe', () => {
         .withArgs(0, 'AA24 signature error')
     })
 
+    it('should revert when signature pointer points to invalid part of signature data - Smart contract signature', async () => {
+      const { user1, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
+
+      await parentSafe.deploy(user1)
+
+      const daughterSafe = Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+
+      const accountBalance = ethers.parseEther('1.0')
+      await user1.sendTransaction({ to: daughterSafe.address, value: accountBalance })
+      expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
+
+      const safeOp = buildSafeUserOpTransaction(
+        daughterSafe.address,
+        user1.address,
+        ethers.parseEther('0.1'),
+        '0x',
+        '0x0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: daughterSafe.getInitCode(),
+        },
+      )
+
+      const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
+      const signature = buildSignatureBytes([
+        {
+          signer: parentSafe.address,
+          data: await user1.signTypedData(
+            {
+              verifyingContract: parentSafe.address,
+              chainId: await chainId(),
+            },
+            {
+              SafeMessage: [{ type: 'bytes', name: 'message' }],
+            },
+            {
+              message: opData,
+            },
+          ),
+          dynamic: true,
+        },
+      ])
+
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        // Replace the 2nd word of static part of signature containing the pointer to dynamic part with invalid pointer value
+        signature: signature.slice(0, 67) + '00'.padStart(64, '0') + signature.slice(131),
+      })
+
+      await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
+        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+        .withArgs(0, 'AA24 signature error')
+    })
+
     it('should not be able to execute contract calls twice', async () => {
       const { user1, safe, validator, entryPoint } = await setupTests()
 
