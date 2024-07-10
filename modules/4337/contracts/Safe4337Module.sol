@@ -236,8 +236,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     let signatureStartPointer := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
                     pointsAtEnd := eq(signatureStartPointer, offset)
                     let contractSignatureLen := calldataload(add(signatures.offset, signatureStartPointer))
-                    // Update the required position of the next offset.
-                    offset := add(add(signatureStartPointer, 0x20), contractSignatureLen)
+                    // Update the expected offset of the next contract signature. This is the previous expected offset plus the total length of the current contract signature. Note that we add 0x20 to the contract signature length to account for the encoded length value.
+                    offset := add(offset, add(0x20, contractSignatureLen))
                 }
             }
             /* solhint-enable no-inline-assembly */
