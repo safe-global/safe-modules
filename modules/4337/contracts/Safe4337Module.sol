@@ -244,7 +244,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             // If the signature data pointer is not pointing to the expected location, return false.
             if (!pointsAtEnd) return false;
         }
-        return signatures.length <= offset;
+        isValid = signatures.length <= offset;
     }
 
     /**
