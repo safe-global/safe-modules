@@ -170,6 +170,32 @@ describe('SafeWebAuthnSharedSigner', () => {
       expect(await ethers.provider.getStorage(account, BigInt(signerSlot) + 2n)).to.equal(config.verifiers)
     })
 
+    it('Should emit an event', async () => {
+      const { safeSingleton, proxyFactory, sharedSigner, mockVerifier } = await setupTests()
+
+      const config = {
+        x: ethers.id('publicKey.x'),
+        y: ethers.id('publicKey.y'),
+        verifiers: ethers.toBeHex(await mockVerifier.getAddress(), 32),
+      }
+
+      const initializer = safeSingleton.interface.encodeFunctionData('setup', [
+        [sharedSigner.target],
+        1,
+        sharedSigner.target,
+        sharedSigner.interface.encodeFunctionData('configure', [config]),
+        ethers.ZeroAddress,
+        ethers.ZeroAddress,
+        0,
+        ethers.ZeroAddress,
+      ])
+
+      const account = await proxyFactory.createProxyWithNonce.staticCall(safeSingleton, initializer, 0)
+      await expect(proxyFactory.createProxyWithNonce(safeSingleton, initializer, 0))
+        .to.emit(sharedSigner.attach(account), 'SafeWebAuthnSharedSignerConfigured')
+        .withArgs(config.x, config.y, config.verifiers)
+    })
+
     it('Should revert if not DELEGATECALL-ed', async () => {
       const { sharedSigner } = await setupTests()
 
