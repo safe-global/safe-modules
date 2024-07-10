@@ -220,7 +220,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @return isValid True if length check passes, false otherwise.
      */
     function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
-        uint256 offset = threshold * 0x41;
+        uint256 expectedOffset = threshold * 0x41;
 
         for (uint256 i = 0; i < threshold; i++) {
             bool pointsAtEnd = true;
@@ -236,18 +236,18 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
                     // For Safe smart contract signature the second word of static part points to the start of the signature data in the signatures i.e. dynamic part
                     // The value of the pointer is relative to `signatures`.
                     let signatureStartPointer := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
-                    pointsAtEnd := eq(signatureStartPointer, offset)
+                    pointsAtEnd := eq(signatureStartPointer, expectedOffset)
                     let contractSignatureLen := calldataload(add(signatures.offset, signatureStartPointer))
                     // Update the expected offset of the next contract signature. This is the previous expected offset plus the total length of the current contract signature.
                     // Note that we add 0x20 to the contract signature length to account for the encoded length value.
-                    offset := add(offset, add(0x20, contractSignatureLen))
+                    expectedOffset := add(expectedOffset, add(0x20, contractSignatureLen))
                 }
             }
             /* solhint-enable no-inline-assembly */
             // If the signature data pointer is not pointing to the expected location, return false.
             if (!pointsAtEnd) return false;
         }
-        isValid = signatures.length <= offset;
+        isValid = signatures.length <= expectedOffset;
     }
 
     /**
