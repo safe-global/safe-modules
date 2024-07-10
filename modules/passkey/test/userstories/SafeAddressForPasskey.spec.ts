@@ -130,4 +130,43 @@ describe('Safe Address for Passkey [@userstory]', () => {
 
     expect(deterministicSafeAddress).to.equal(await safe.getAddress())
   })
+
+  it('should search for Safes owned by a WebAuthn shared signer', async () => {
+    const { safeSingleton, sharedSigner, signerConfig, deploySafe } = await setupTests()
+
+    const safe = await deploySafe({
+      initializer: safeSingleton.interface.encodeFunctionData('setup', [
+        [await sharedSigner.getAddress()],
+        1,
+        await sharedSigner.getAddress(),
+        sharedSigner.interface.encodeFunctionData('configure', [signerConfig]),
+        ethers.ZeroAddress,
+        ethers.ZeroAddress,
+        0,
+        ethers.ZeroAddress,
+      ]),
+      saltNonce: 0n,
+    })
+
+    let foundSafeAddress = null
+
+    const publicKeyHash = ethers.solidityPackedKeccak256(['uint256', 'uint256'], [signerConfig.x, signerConfig.y])
+    const configuredSafes = await ethers.provider.getLogs({
+      topics: sharedSigner.interface.encodeFilterTopics('SafeWebAuthnSharedSignerConfigured', [publicKeyHash]),
+      fromBlock: 0,
+    })
+    for (const { address: possibleSafeAddress } of configuredSafes) {
+      const possibleSafe = safeSingleton.attach(possibleSafeAddress) as typeof safeSingleton
+
+      const { x, y } = await sharedSigner.getConfiguration(possibleSafe)
+      const isOwner = await possibleSafe.isOwner(sharedSigner)
+
+      if (signerConfig.x === x && signerConfig.y === y && isOwner) {
+        foundSafeAddress = possibleSafe
+        break
+      }
+    }
+
+    expect(foundSafeAddress).to.equal(await safe.getAddress())
+  })
 })
