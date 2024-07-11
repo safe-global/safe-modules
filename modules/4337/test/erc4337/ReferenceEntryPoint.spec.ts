@@ -247,7 +247,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA24 signature error')
   })
 
-  it('should revert on invalid signature length - Smart contract signature (NOTE: would require a staked paymaster for ERC-4337)', async () => {
+  it('should revert on invalid signature length - Smart contract signature', async () => {
     const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
