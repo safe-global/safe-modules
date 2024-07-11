@@ -215,8 +215,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @dev Checks if the signatures length is correct and does not contain additional bytes. The function does not
      * check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation
      * of {checkSignatures}.
-     * @param signatures signatures data
-     * @param threshold Indicates the number of iterations to perform in the loop.
+     * @param signatures Signatures data.
+     * @param threshold Signer threshold for the Safe account.
      * @return isValid True if length check passes, false otherwise.
      */
     function _checkSignaturesLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
@@ -271,7 +271,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
 
         // The `checkSignatures` function in the Safe contract does not force a fixed size on signature length.
-        // A malicious bundler can pad the Safe operation `signatures` with additional bytes, causing the account to pay more gas than needed for user operation validation (capped by `verificationGasLimit`).
+        // A malicious bundler can pad the Safe operation `signatures` with additional bytes, causing the account to pay
+        // more gas than needed for user operation validation (capped by `verificationGasLimit`).
         // `_checkSignaturesLength` ensures that there are no additional bytes in the `signature` than are required.
         bool validSignature = _checkSignaturesLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
 
@@ -279,7 +280,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             validSignature = false;
         }
 
-        // The timestamps are validated by the entry point, therefore we will not check them again
+        // The timestamps are validated by the entry point, therefore we will not check them again.
         validationData = _packValidationData(!validSignature, validUntil, validAfter);
     }
 

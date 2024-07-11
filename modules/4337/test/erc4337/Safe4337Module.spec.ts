@@ -359,7 +359,11 @@ describe('Safe4337Module', () => {
 
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
-        signature: ethers.hexlify(ethers.randomBytes(32)) + '00'.padStart(64, '0') + '00' + ethers.hexlify(ethers.randomBytes(65)).slice(2),
+        signature: ethers.concat([
+          ethers.randomBytes(32),
+          ethers.toBeHex(0, 32), // point to start of the signatures bytes
+          '0x00', // contract signature type
+        ]),
       })
       const packedValidationData = packValidationData(1, validUntil, validAfter)
       const entryPointImpersonator = await ethers.getSigner(await entryPoint.getAddress())

@@ -301,7 +301,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA24 signature error')
   })
 
-  it('should revert when signature pointer points to invalid part of signature data - Smart contract signature', async () => {
+  it('should revert when signature offset points to invalid part of signature data - Smart contract signature', async () => {
     const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
