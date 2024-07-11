@@ -50,11 +50,12 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
      * is done as a `DELEGATECALL`, the contract emitting the event is the configured account. This
      * is also why the event name is prefixed with `SafeWebAuthnSharedSigner`, in order to avoid
      * event `topic0` collisions with other contracts (seeing as "configured" is a common term).
+     * @param publicKeyHash The Keccak-256 hash of the public key coordinates.
      * @param x The x-coordinate of the public key.
      * @param y The y-coordinate of the public key.
      * @param verifiers The P-256 verifiers to use.
      */
-    event SafeWebAuthnSharedSignerConfigured(uint256 x, uint256 y, P256.Verifiers verifiers);
+    event SafeWebAuthnSharedSignerConfigured(bytes32 indexed publicKeyHash, uint256 x, uint256 y, P256.Verifiers verifiers);
 
     /**
      * @notice An error indicating a `CALL` to a function that should only be `DELEGATECALL`-ed.
@@ -146,7 +147,8 @@ contract SafeWebAuthnSharedSigner is SignatureValidator {
         signerStorage.y = signer.y;
         signerStorage.verifiers = signer.verifiers;
 
-        emit SafeWebAuthnSharedSignerConfigured(signer.x, signer.y, signer.verifiers);
+        bytes32 publicKeyHash = keccak256(abi.encode(signer.x, signer.y));
+        emit SafeWebAuthnSharedSignerConfigured(publicKeyHash, signer.x, signer.y, signer.verifiers);
     }
 
     /**

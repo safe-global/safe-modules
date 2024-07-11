@@ -178,6 +178,7 @@ describe('SafeWebAuthnSharedSigner', () => {
         y: ethers.id('publicKey.y'),
         verifiers: ethers.toBeHex(await mockVerifier.getAddress(), 32),
       }
+      const publicKeyHash = ethers.solidityPackedKeccak256(['uint256', 'uint256'], [config.x, config.y])
 
       const initializer = safeSingleton.interface.encodeFunctionData('setup', [
         [sharedSigner.target],
@@ -193,7 +194,7 @@ describe('SafeWebAuthnSharedSigner', () => {
       const account = await proxyFactory.createProxyWithNonce.staticCall(safeSingleton, initializer, 0)
       await expect(proxyFactory.createProxyWithNonce(safeSingleton, initializer, 0))
         .to.emit(sharedSigner.attach(account), 'SafeWebAuthnSharedSignerConfigured')
-        .withArgs(config.x, config.y, config.verifiers)
+        .withArgs(publicKeyHash, config.x, config.y, config.verifiers)
     })
 
     it('Should revert if not DELEGATECALL-ed', async () => {
