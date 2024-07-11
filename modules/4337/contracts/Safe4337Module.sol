@@ -220,35 +220,42 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @return isValid True if length check passes, false otherwise.
      */
     function _checkSignaturesLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
-        uint256 expectedOffset = threshold * 0x41;
+        uint256 maxLength = threshold * 0x41;
+
+        // Make sure that `signatures` bytes are at least as long as the static part of the signatures for the specified
+        // threshold (i.e. we have at least 65 bytes per signer). This avoids out-of-bound access reverts when decoding
+        // the signature in order to adhere to the ERC-4337 specification.
+        if (signatures.length < maxLength) {
+            return false;
+        }
 
         for (uint256 i = 0; i < threshold; i++) {
-            bool pointsAtEnd = true;
-            /* solhint-disable no-inline-assembly */
-            /// @solidity memory-safe-assembly
-            assembly {
-                let signaturePos := mul(0x41, i)
-                // read the Safe signature type byte from the signatures bytes, this is the 65th byte per signature.
-                // The fixed part of the signature is encoded as {32-bytes signature verifier}{32-bytes dynamic data position}{1-byte signature type}
-                let signatureType := byte(0, calldataload(add(signatures.offset, add(signaturePos, 0x40))))
+            // Each signature is 0x41 (65) bytes long, where fixed part of a Safe contract signature is encoded as:
+            //      {32-bytes signature verifier}{32-bytes dynamic data position}{1-byte signature type}
+            // and the dynamic part is encoded as:
+            //      {32-bytes signature length}{bytes signature data}
+            //
+            // For each signature we check whether or not the signature is a contract signature (signature type of 0).
+            // If it is, we need to read the length of the contract signature bytes from the signature data, and add it
+            // to the maximum signatures length.
+            //
+            // In order to keep the implementation simpler, and unlike in the length check above, we intentionally
+            // revert here on out-of-bound bytes array access as well as arithmetic overflow, as you would have to
+            // **intentionally** build invalid `signatures` data to trigger these conditions. Furthermore, there are no
+            // security issues associated with reverting in these cases, just not optimally following the ERC-4337
+            // standard (specifically: "SHOULD return `SIG_VALIDATION_FAILED` (and not revert) on signature mismatch").
 
-                // signatureType = 0 indicates that signature is a smart contract signature in Safe Signature Encoding
-                if iszero(signatureType) {
-                    // For Safe smart contract signature the second word of static part points to the start of the signature data in the signatures i.e. dynamic part
-                    // The value of the pointer is relative to `signatures`.
-                    let signatureStartPointer := calldataload(add(signatures.offset, add(signaturePos, 0x20)))
-                    pointsAtEnd := eq(signatureStartPointer, expectedOffset)
-                    let contractSignatureLen := calldataload(add(signatures.offset, signatureStartPointer))
-                    // Update the expected offset of the next contract signature. This is the previous expected offset plus the total length of the current contract signature.
-                    // Note that we add 0x20 to the contract signature length to account for the encoded length value.
-                    expectedOffset := add(expectedOffset, add(0x20, contractSignatureLen))
-                }
+            uint256 signaturePos = i * 0x41;
+            uint8 signatureType = uint8(signatures[signaturePos + 0x40]);
+
+            if (signatureType == 0) {
+                uint256 signatureOffset = uint256(bytes32(signatures[signaturePos + 0x20:]));
+                uint256 signatureLength = uint256(bytes32(signatures[signatureOffset:]));
+                maxLength += 0x20 + signatureLength;
             }
-            /* solhint-enable no-inline-assembly */
-            // If the signature data pointer is not pointing to the expected location, return false.
-            if (!pointsAtEnd) return false;
         }
-        isValid = signatures.length <= expectedOffset;
+
+        isValid = signatures.length <= maxLength;
     }
 
     /**

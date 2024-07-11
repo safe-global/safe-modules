@@ -269,6 +269,39 @@ describe('Safe4337Module', () => {
       expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(packedValidationData)
     })
 
+    it('should fail signature validation when signatures are too short', async () => {
+      const { user, safeModule, validator, entryPoint } = await setupTests()
+
+      const validAfter = BigInt(ethers.hexlify(ethers.randomBytes(3)))
+      const validUntil = validAfter + BigInt(ethers.hexlify(ethers.randomBytes(3)))
+
+      const safeOp = buildSafeUserOpTransaction(
+        await safeModule.getAddress(),
+        user.address,
+        0,
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          validAfter,
+          validUntil,
+        },
+      )
+
+      const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: "0x",
+      })
+      const packedValidationData = packValidationData(1, validUntil, validAfter)
+      const entryPointImpersonator = await ethers.getSigner(await entryPoint.getAddress())
+      const safeFromEntryPoint = safeModule.connect(entryPointImpersonator)
+
+      expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(packedValidationData)
+    })
+
     it('should indicate failed validation data when signature length contains additional bytes', async () => {
       const { user, safeModule, validator, entryPoint } = await setupTests()
 
