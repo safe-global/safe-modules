@@ -302,6 +302,38 @@ describe('Safe4337Module', () => {
 
       expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(packedValidationData)
     })
+
+    it('should indicate failed validation data when dynamic position pointer is invalid', async () => {
+      const { user, safeModule, entryPoint } = await setupTests()
+
+      const validAfter = BigInt(ethers.hexlify(ethers.randomBytes(3)))
+      const validUntil = validAfter + BigInt(ethers.hexlify(ethers.randomBytes(3)))
+
+      const safeOp = buildSafeUserOpTransaction(
+        await safeModule.getAddress(),
+        user.address,
+        0,
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          validAfter,
+          validUntil,
+        },
+      )
+
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: ethers.hexlify(ethers.randomBytes(32)) + '00'.padStart(64, '0') + '00' + ethers.hexlify(ethers.randomBytes(65)).slice(2),
+      })
+      const packedValidationData = packValidationData(1, validUntil, validAfter)
+      const entryPointImpersonator = await ethers.getSigner(await entryPoint.getAddress())
+      const safeFromEntryPoint = safeModule.connect(entryPointImpersonator)
+
+      expect(await safeFromEntryPoint.validateUserOp.staticCall(userOp, ethers.ZeroHash, 0)).to.eq(packedValidationData)
+    })
   })
 
   describe('execUserOp', () => {
