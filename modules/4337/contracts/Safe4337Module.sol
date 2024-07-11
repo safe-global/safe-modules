@@ -228,7 +228,8 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
             /// @solidity memory-safe-assembly
             assembly {
                 let signaturePos := mul(0x41, i)
-                // read the Safe signature type byte from the signatures bytes, this is the 64th byte per signature.
+                // read the Safe signature type byte from the signatures bytes, this is the 65th byte per signature.
+                // The fixed part of the signature is encoded as {32-bytes signature verifier}{32-bytes dynamic data position}{1-byte signature type}
                 let signatureType := byte(0, calldataload(add(signatures.offset, add(signaturePos, 0x40))))
 
                 // signatureType = 0 indicates that signature is a smart contract signature in Safe Signature Encoding
