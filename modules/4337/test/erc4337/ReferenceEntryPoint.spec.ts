@@ -356,7 +356,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA24 signature error')
   })
 
-  it('should revert when expected offset and given dynamic pointer in signatures are not equal - Smart contract signature (NOTE: would require a staked paymaster for ERC-4337)', async () => {
+  it('should revert when padded with additional bytes in-between signatures - Smart contract signature', async () => {
     const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
