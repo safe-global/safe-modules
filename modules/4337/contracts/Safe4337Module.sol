@@ -264,19 +264,15 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
 
         // The `checkSignatures` function in the Safe contract does not force a fixed size on signature length.
         // A malicious bundler can pad the Safe operation `signatures` with additional bytes, causing the account to pay more gas than needed for user operation validation (capped by `verificationGasLimit`).
-        // `_checkSignatureLength` ensures that there are no additional bytes in the `signature` than are required.
-        bool validSignature = _checkSignatureLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
+        // `_checkSignaturesLength` ensures that there are no additional bytes in the `signature` than are required.
+        bool validSignature = _checkSignaturesLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
 
         try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {} catch {
             validSignature = false;
         }
 
-        if (validSignature) {
-            // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(false, validUntil, validAfter);
-        } else {
-            validationData = _packValidationData(true, validUntil, validAfter);
-        }
+        // The timestamps are validated by the entry point, therefore we will not check them again
+        validationData = _packValidationData(!validSignature, validUntil, validAfter);
     }
 
     /**
