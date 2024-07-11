@@ -6,7 +6,7 @@ import { decodePublicKey } from '../../src/utils/webauthn'
 
 /**
  * User story: Find Safe for Passkey
- * This user story demonstrates to compute deterministically the address of a Safe for a given
+ * This user story demonstrates how to compute the address of a Safe deterministically for a given
  * WebAuthn credential. Note that searching for Safes by owner is not really practical without a
  * service (as building Safe owners from Ethereum logs is non-trivial). Instead we show that, given
  * a Dapp-specific initial Safe setup with a passkey owner, it is possible to find the Safe address
