@@ -234,29 +234,31 @@ describe('Safe4337Module - Newly deployed safe', () => {
       )
 
       const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
-      const signature = buildSignatureBytes([
+      const parentSafeSignature = await user1.signTypedData(
         {
-          signer: parentSafe.address,
-          data: await user1.signTypedData(
-            {
-              verifyingContract: parentSafe.address,
-              chainId: await chainId(),
-            },
-            {
-              SafeMessage: [{ type: 'bytes', name: 'message' }],
-            },
-            {
-              message: opData,
-            },
-          ),
-          dynamic: true,
+          verifyingContract: parentSafe.address,
+          chainId: await chainId(),
         },
+        {
+          SafeMessage: [{ type: 'bytes', name: 'message' }],
+        },
+        {
+          message: opData,
+        },
+      )
+
+      // The 2nd word of static part of signature containing invalid value pointing to dynamic part
+      const signature = ethers.concat([
+        ethers.zeroPadValue(parentSafe.address, 32), // address of the signer
+        ethers.toBeHex(0, 32), // offset of the start of the signature
+        '0x00', // contract signature type
+        ethers.toBeHex(ethers.dataLength(parentSafeSignature), 32), // length of the dynamic signature
+        parentSafeSignature,
       ])
 
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
-        // Replace the 2nd word of static part of signature containing the pointer to dynamic part with invalid pointer value
-        signature: signature.slice(0, 67) + '00'.padStart(64, '0') + signature.slice(131),
+        signature,
       })
 
       await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
