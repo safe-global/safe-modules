@@ -219,7 +219,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @param threshold Indicates the number of iterations to perform in the loop.
      * @return isValid True if length check passes, false otherwise.
      */
-    function _checkSignatureLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
+    function _checkSignaturesLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
         uint256 expectedOffset = threshold * 0x41;
 
         for (uint256 i = 0; i < threshold; i++) {
