@@ -270,7 +270,7 @@ describe('Safe4337Module', () => {
     })
 
     it('should fail signature validation when signatures are too short', async () => {
-      const { user, safeModule, validator, entryPoint } = await setupTests()
+      const { user, safeModule, entryPoint } = await setupTests()
 
       const validAfter = BigInt(ethers.hexlify(ethers.randomBytes(3)))
       const validUntil = validAfter + BigInt(ethers.hexlify(ethers.randomBytes(3)))
@@ -290,10 +290,9 @@ describe('Safe4337Module', () => {
         },
       )
 
-      const safeOpHash = calculateSafeOperationHash(await validator.getAddress(), safeOp, await chainId())
       const userOp = buildPackedUserOperationFromSafeUserOperation({
         safeOp,
-        signature: "0x",
+        signature: '0x',
       })
       const packedValidationData = packValidationData(1, validUntil, validAfter)
       const entryPointImpersonator = await ethers.getSigner(await entryPoint.getAddress())
