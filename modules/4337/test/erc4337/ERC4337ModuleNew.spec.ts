@@ -12,6 +12,7 @@ import { buildSignatureBytes, logUserOperationGas } from '../../src/utils/execut
 import {
   buildPackedUserOperationFromSafeUserOperation,
   buildSafeUserOpTransaction,
+  calculateSafeOperationData,
   getRequiredPrefund,
   signSafeOp,
 } from '../../src/utils/userOp'
@@ -31,7 +32,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
     const proxyCreationCode = await proxyFactory.proxyCreationCode()
     const safeModuleSetup = await getSafeModuleSetup()
     const singleton = await getSafeL2Singleton()
-    const safe = await Safe4337.withSigner(user1.address, {
+    const safeGlobalConfig = {
       safeSingleton: await singleton.getAddress(),
       entryPoint: await entryPoint.getAddress(),
       erc4337module: await module.getAddress(),
@@ -39,7 +40,9 @@ describe('Safe4337Module - Newly deployed safe', () => {
       safeModuleSetup: await safeModuleSetup.getAddress(),
       proxyCreationCode,
       chainId: Number(await chainId()),
-    })
+    }
+
+    const safe = Safe4337.withSigner(user1.address, safeGlobalConfig)
 
     return {
       user1,
@@ -50,6 +53,7 @@ describe('Safe4337Module - Newly deployed safe', () => {
       entryPoint,
       entryPointSimulations,
       relayer,
+      safeGlobalConfig,
     }
   })
 
@@ -117,6 +121,149 @@ describe('Safe4337Module - Newly deployed safe', () => {
       })
       await logUserOperationGas('Execute UserOp without fee payment', entryPoint, entryPoint.handleOps([userOp], user1.address))
       expect(await ethers.provider.getBalance(safe.address)).to.be.eq(ethers.parseEther('0'))
+    })
+
+    it('should revert when signature length contains additional bytes - EOA signature', async () => {
+      const { user1, safe, validator, entryPoint } = await setupTests()
+
+      await entryPoint.depositTo(safe.address, { value: ethers.parseEther('1.0') })
+
+      await user1.sendTransaction({ to: safe.address, value: ethers.parseEther('0.5') })
+      const safeOp = buildSafeUserOpTransaction(
+        safe.address,
+        user1.address,
+        ethers.parseEther('0.5'),
+        '0x',
+        '0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: safe.getInitCode(),
+        },
+      )
+
+      // Add additional byte to the signature to make signature length invalid
+      const signature = buildSignatureBytes([await signSafeOp(user1, await validator.getAddress(), safeOp, await chainId())]).concat('00')
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature,
+      })
+      await expect(entryPoint.handleOps([userOp], user1.address))
+        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+        .withArgs(0, 'AA24 signature error')
+    })
+
+    it('should revert when signature length contains additional bytes - Smart contract signature', async () => {
+      const { user1, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
+
+      await parentSafe.deploy(user1)
+
+      const daughterSafe = Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+
+      const accountBalance = ethers.parseEther('1.0')
+      await user1.sendTransaction({ to: daughterSafe.address, value: accountBalance })
+      expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
+
+      const safeOp = buildSafeUserOpTransaction(
+        daughterSafe.address,
+        user1.address,
+        ethers.parseEther('0.1'),
+        '0x',
+        '0x0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: daughterSafe.getInitCode(),
+        },
+      )
+
+      const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
+      const signature = buildSignatureBytes([
+        {
+          signer: parentSafe.address,
+          data: await user1.signTypedData(
+            {
+              verifyingContract: parentSafe.address,
+              chainId: await chainId(),
+            },
+            {
+              SafeMessage: [{ type: 'bytes', name: 'message' }],
+            },
+            {
+              message: opData,
+            },
+          ),
+          dynamic: true,
+        },
+      ])
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature: signature.concat('00'), // adding '00' invalidates signature length
+      })
+
+      await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
+        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+        .withArgs(0, 'AA24 signature error')
+    })
+
+    it('should revert when signature offset points to invalid part of signature data - Smart contract signature', async () => {
+      const { user1, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
+
+      await parentSafe.deploy(user1)
+
+      const daughterSafe = Safe4337.withSigner(parentSafe.address, safeGlobalConfig)
+
+      const accountBalance = ethers.parseEther('1.0')
+      await user1.sendTransaction({ to: daughterSafe.address, value: accountBalance })
+      expect(await ethers.provider.getBalance(daughterSafe.address)).to.be.eq(accountBalance)
+
+      const safeOp = buildSafeUserOpTransaction(
+        daughterSafe.address,
+        user1.address,
+        ethers.parseEther('0.1'),
+        '0x',
+        '0x0',
+        await entryPoint.getAddress(),
+        false,
+        false,
+        {
+          initCode: daughterSafe.getInitCode(),
+        },
+      )
+
+      const opData = calculateSafeOperationData(await validator.getAddress(), safeOp, await chainId())
+      const parentSafeSignature = await user1.signTypedData(
+        {
+          verifyingContract: parentSafe.address,
+          chainId: await chainId(),
+        },
+        {
+          SafeMessage: [{ type: 'bytes', name: 'message' }],
+        },
+        {
+          message: opData,
+        },
+      )
+
+      // The 2nd word of static part of signature containing invalid value pointing to dynamic part
+      const signature = ethers.concat([
+        ethers.zeroPadValue(parentSafe.address, 32), // address of the signer
+        ethers.toBeHex(0, 32), // offset of the start of the signature
+        '0x00', // contract signature type
+        ethers.toBeHex(ethers.dataLength(parentSafeSignature), 32), // length of the dynamic signature
+        parentSafeSignature,
+      ])
+
+      const userOp = buildPackedUserOperationFromSafeUserOperation({
+        safeOp,
+        signature,
+      })
+
+      await expect(entryPoint.handleOps([userOp], await relayer.getAddress()))
+        .to.be.revertedWithCustomError(entryPoint, 'FailedOp')
+        .withArgs(0, 'AA24 signature error')
     })
 
     it('should not be able to execute contract calls twice', async () => {

@@ -212,6 +212,53 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
+     * @dev Checks if the signatures length is correct and does not contain additional bytes. The function does not
+     * check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation
+     * of {checkSignatures}.
+     * @param signatures Signatures data.
+     * @param threshold Signer threshold for the Safe account.
+     * @return isValid True if length check passes, false otherwise.
+     */
+    function _checkSignaturesLength(bytes calldata signatures, uint256 threshold) internal pure returns (bool isValid) {
+        uint256 maxLength = threshold * 0x41;
+
+        // Make sure that `signatures` bytes are at least as long as the static part of the signatures for the specified
+        // threshold (i.e. we have at least 65 bytes per signer). This avoids out-of-bound access reverts when decoding
+        // the signature in order to adhere to the ERC-4337 specification.
+        if (signatures.length < maxLength) {
+            return false;
+        }
+
+        for (uint256 i = 0; i < threshold; i++) {
+            // Each signature is 0x41 (65) bytes long, where fixed part of a Safe contract signature is encoded as:
+            //      {32-bytes signature verifier}{32-bytes dynamic data position}{1-byte signature type}
+            // and the dynamic part is encoded as:
+            //      {32-bytes signature length}{bytes signature data}
+            //
+            // For each signature we check whether or not the signature is a contract signature (signature type of 0).
+            // If it is, we need to read the length of the contract signature bytes from the signature data, and add it
+            // to the maximum signatures length.
+            //
+            // In order to keep the implementation simpler, and unlike in the length check above, we intentionally
+            // revert here on out-of-bound bytes array access as well as arithmetic overflow, as you would have to
+            // **intentionally** build invalid `signatures` data to trigger these conditions. Furthermore, there are no
+            // security issues associated with reverting in these cases, just not optimally following the ERC-4337
+            // standard (specifically: "SHOULD return `SIG_VALIDATION_FAILED` (and not revert) on signature mismatch").
+
+            uint256 signaturePos = i * 0x41;
+            uint8 signatureType = uint8(signatures[signaturePos + 0x40]);
+
+            if (signatureType == 0) {
+                uint256 signatureOffset = uint256(bytes32(signatures[signaturePos + 0x20:]));
+                uint256 signatureLength = uint256(bytes32(signatures[signatureOffset:]));
+                maxLength += 0x20 + signatureLength;
+            }
+        }
+
+        isValid = signatures.length <= maxLength;
+    }
+
+    /**
      * @dev Validates that the user operation is correctly signed and returns an ERC-4337 packed validation data
      * of `validAfter || validUntil || authorizer`:
      *  - `authorizer`: 20-byte address, 0 for valid signature or 1 to mark signature failure (this module does not make use of signature aggregators).
@@ -222,12 +269,19 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      */
     function _validateSignatures(PackedUserOperation calldata userOp) internal view returns (uint256 validationData) {
         (bytes memory operationData, uint48 validAfter, uint48 validUntil, bytes calldata signatures) = _getSafeOp(userOp);
-        try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {
-            // The timestamps are validated by the entry point, therefore we will not check them again
-            validationData = _packValidationData(false, validUntil, validAfter);
-        } catch {
-            validationData = _packValidationData(true, validUntil, validAfter);
+
+        // The `checkSignatures` function in the Safe contract does not force a fixed size on signature length.
+        // A malicious bundler can pad the Safe operation `signatures` with additional bytes, causing the account to pay
+        // more gas than needed for user operation validation (capped by `verificationGasLimit`).
+        // `_checkSignaturesLength` ensures that there are no additional bytes in the `signature` than are required.
+        bool validSignature = _checkSignaturesLength(signatures, ISafe(payable(userOp.sender)).getThreshold());
+
+        try ISafe(payable(userOp.sender)).checkSignatures(keccak256(operationData), operationData, signatures) {} catch {
+            validSignature = false;
         }
+
+        // The timestamps are validated by the entry point, therefore we will not check them again.
+        validationData = _packValidationData(!validSignature, validUntil, validAfter);
     }
 
     /**

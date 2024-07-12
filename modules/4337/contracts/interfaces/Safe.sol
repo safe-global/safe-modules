@@ -56,4 +56,10 @@ interface ISafe {
      * @param module Module to be enabled.
      */
     function enableModule(address module) external;
+
+    /**
+     * @notice Returns the number of required confirmations for a Safe transaction aka the threshold.
+     * @return Threshold number.
+     */
+    function getThreshold() external view returns (uint256);
 }
