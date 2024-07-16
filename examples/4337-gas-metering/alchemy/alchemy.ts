@@ -7,17 +7,15 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { goerli, sepolia } from 'viem/chains'
 import { getAccountAddress, getAccountInitCode } from '../utils/safe'
 import { SAFE_ADDRESSES_MAP } from '../utils/address'
+import { UserOperation, signUserOperation, txTypes, createCallData } from '../utils/userOps'
 import {
-  UserOperation,
-  signUserOperation,
-  txTypes,
   getGasValuesFromAlchemyPaymaster,
-  getFeeValuesFromAlchemy,
+  getMaxPriorityFeePerGasFromAlchemy,
   getMaxFeePerGas,
   getGasValuesFromAlchemy,
   submitUserOperationAlchemy,
-  createCallData,
-} from '../utils/userOps'
+} from './utils'
+
 import { transferETH } from '../utils/nativeTransfer'
 
 dotenv.config()
@@ -128,7 +126,7 @@ const senderAddress = await getAccountAddress({
 console.log('\nCounterfactual Sender Address Created:', senderAddress)
 console.log('Address Link: https://' + chain + '.etherscan.io/address/' + senderAddress)
 
-const contractCode = await publicClient.getBytecode({ address: senderAddress })
+const contractCode = await publicClient.getCode({ address: senderAddress })
 
 if (contractCode) {
   console.log('\nThe Safe is already deployed.')
@@ -162,9 +160,9 @@ const sponsoredUserOperation: UserOperation = {
   factory: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   factoryData: contractCode ? '0x' : initCode,
   callData: txCallData,
-  callGasLimit: 1n, // All Gas Values will be filled by Estimation Response Data.
-  verificationGasLimit: 1n,
-  preVerificationGas: 1n,
+  callGasLimit: 1000000n, // All Gas Values will be filled by Estimation Response Data.
+  verificationGasLimit: 1000000n,
+  preVerificationGas: 500000n,
   maxFeePerGas: 1n,
   maxPriorityFeePerGas: 1n,
   paymasterData: '0x',
@@ -190,7 +188,7 @@ if (usePaymaster) {
   sponsoredUserOperation.maxFeePerGas = rvGas?.maxFeePerGas
   sponsoredUserOperation.maxPriorityFeePerGas = rvGas?.maxPriorityFeePerGas
 } else {
-  sponsoredUserOperation.maxPriorityFeePerGas = await getFeeValuesFromAlchemy(chain, apiKey)
+  sponsoredUserOperation.maxPriorityFeePerGas = await getMaxPriorityFeePerGasFromAlchemy(chain, apiKey)
   sponsoredUserOperation.maxFeePerGas = await getMaxFeePerGas(alchemy, sponsoredUserOperation.maxPriorityFeePerGas)
 
   const rvGas = await getGasValuesFromAlchemy(entryPointAddress, sponsoredUserOperation, chain, apiKey)
@@ -199,7 +197,7 @@ if (usePaymaster) {
   sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
 
-  const weiToSend = parseEther('0.02')
+  const weiToSend = parseEther('1')
   let safeETHBalance = await publicClient.getBalance({
     address: senderAddress,
   })
@@ -215,7 +213,7 @@ if (usePaymaster) {
     console.log('\nTransferred required ETH for the transaction.')
   }
 }
-
+console.dir(sponsoredUserOperation, { depth: null })
 sponsoredUserOperation.signature = await signUserOperation(
   sponsoredUserOperation,
   signer,
