@@ -70,6 +70,8 @@ contract Account is Safe {
     "ffffff"                                                                                                                                 // excess data
 
     Both will have the same canonical hash: 0xc860b1a81652620308a8138a17ef5105d9b18e6e766516ffd3de9897260d1320
+
+    For more details: https://docs.safe.global/advanced/smart-account-signatures
     */
     function canonicalSignatureHash(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes32 canonical) {
         uint256 dynamicOffset = safeThreshold * 0x41;
