@@ -90,12 +90,12 @@ contract Account is Safe {
 
     All three will have the same canonical hash: 0xe304234a47e4f89d0a95d9fafb42e9c3143e23e951d38add9f781c34f962deb7
     */
-    function canonicalSignatureHash(bytes calldata signatures, uint256 threshold) public pure returns (bytes32 canonical) {
-        uint256 dynamicOffset = threshold * 0x41;
+    function canonicalSignatureHash(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes32 canonical) {
+        uint256 dynamicOffset = safeThreshold * 0x41;
         bytes memory staticPart = signatures[:dynamicOffset];
         bytes memory dynamicPart = "";
 
-        for (uint256 i = 0; i < threshold; i++) {
+        for (uint256 i = 0; i < safeThreshold; i++) {
             uint256 ptr = i * 0x41;
             uint8 v = uint8(signatures[ptr + 0x40]);
 
@@ -130,17 +130,6 @@ contract Account is Safe {
             }
         }
         canonical = keccak256(abi.encodePacked(staticPart, dynamicPart));
-    }
-
-    function containsContractSignature(bytes calldata signatures, uint256 threshold) public pure returns (bool) {
-        for (uint256 i = 0; i < threshold; i++) {
-            uint256 ptr = i * 0x41;
-            uint8 v = uint8(signatures[ptr + 0x40]);
-            if (v == 0) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 
