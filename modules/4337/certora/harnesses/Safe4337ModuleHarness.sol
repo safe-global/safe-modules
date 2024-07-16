@@ -8,8 +8,4 @@ contract Safe4337ModuleHarness is Safe4337Module {
     function checkSignaturesLength(bytes calldata signatures, uint256 threshold) external pure returns (bool) {
         return _checkSignaturesLength(signatures, threshold);
     }
-
-    function combineBytes(bytes calldata signatures, bytes calldata data) external pure returns (bytes memory) {
-        return abi.encode(signatures, data);
-    }
 }

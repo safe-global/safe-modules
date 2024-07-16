@@ -2,7 +2,6 @@ using Account as safeContract;
 
 methods {
     function checkSignaturesLength(bytes, uint256) external returns(bool) envfree;
-    function combineBytes(bytes, bytes) external returns(bytes) envfree;
 
     // Safe Contract functions
     function safeContract.canonicalSignatureHash(bytes, uint256) external returns(bytes32) envfree;
