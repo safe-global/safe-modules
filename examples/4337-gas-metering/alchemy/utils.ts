@@ -263,7 +263,7 @@ export const submitUserOperationAlchemy = async (
     }
 
     if (receipt && receipt['receipt']['transactionHash']) {
-      console.log('\nTransaction Link: https://' + chain + '.etherscan.io/tx/' + receipt['transactionHash'])
+      console.log('\nTransaction Link: https://' + chain + '.etherscan.io/tx/' + receipt['receipt']['transactionHash'])
       const actualGasUsed = fromHex(receipt['actualGasUsed'], 'number')
       const gasUsed = fromHex(receipt['receipt']['gasUsed'], 'number')
       console.log(`\nGas Used (Account or Paymaster): ${actualGasUsed}`)

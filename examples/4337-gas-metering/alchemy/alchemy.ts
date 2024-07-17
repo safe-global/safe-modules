@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { ENTRYPOINT_ADDRESS_V06, getAccountNonce } from 'permissionless'
+import { ENTRYPOINT_ADDRESS_V07, getAccountNonce } from 'permissionless'
 import { Network, Alchemy } from 'alchemy-sdk'
 import { setTimeout } from 'timers/promises'
 import { PublicClient, Hash, Transport, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
@@ -138,7 +138,7 @@ if (contractCode) {
 }
 
 const newNonce = await getAccountNonce(publicClient, {
-  entryPoint: ENTRYPOINT_ADDRESS_V06,
+  entryPoint: ENTRYPOINT_ADDRESS_V07,
   sender: senderAddress,
 })
 console.log('\nNonce for the sender received from EntryPoint.')
@@ -157,7 +157,7 @@ const txCallData: `0x${string}` = await createCallData(
 const sponsoredUserOperation: UserOperation = {
   sender: senderAddress,
   nonce: newNonce,
-  factory: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
+  factory: contractCode ? undefined : chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   factoryData: contractCode ? '0x' : initCode,
   callData: txCallData,
   callGasLimit: 1000000n, // All Gas Values will be filled by Estimation Response Data.
@@ -197,7 +197,7 @@ if (usePaymaster) {
   sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
 
-  const weiToSend = parseEther('0.5')
+  const weiToSend = parseEther('0.05')
   let safeETHBalance = await publicClient.getBalance({
     address: senderAddress,
   })
