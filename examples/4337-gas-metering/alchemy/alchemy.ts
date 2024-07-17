@@ -197,7 +197,7 @@ if (usePaymaster) {
   sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
 
-  const weiToSend = parseEther('1')
+  const weiToSend = parseEther('0.5')
   let safeETHBalance = await publicClient.getBalance({
     address: senderAddress,
   })
@@ -213,7 +213,7 @@ if (usePaymaster) {
     console.log('\nTransferred required ETH for the transaction.')
   }
 }
-console.dir(sponsoredUserOperation, { depth: null })
+
 sponsoredUserOperation.signature = await signUserOperation(
   sponsoredUserOperation,
   signer,

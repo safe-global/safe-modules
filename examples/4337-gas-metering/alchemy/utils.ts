@@ -16,15 +16,27 @@ export type gasData = {
   preVerificationGas: string
   callGasLimit: string
   verificationGasLimit: string
+  paymasterVerificationGasLimit: string | null
 }
 
-export const serializeValuesToBigInt = (obj: Record<string, string>): Record<string, bigint> => {
+export const serializeValuesToBigInt = <T extends Record<string, string>, K extends keyof T = never>(
+  obj: T,
+  excludeFields: K[] = [] as K[],
+): {
+  [P in keyof T]: P extends K ? T[P] : bigint
+} => {
   return Object.entries(obj).reduce(
     (acc, [key, value]) => {
-      acc[key] = BigInt(value)
+      if (excludeFields.includes(key as K)) {
+        acc[key as keyof T] = value as keyof T extends K ? T[K & keyof T] : bigint
+      } else {
+        acc[key as keyof T] = BigInt(value) as keyof T extends K ? T[K & keyof T] : bigint
+      }
       return acc
     },
-    {} as Record<string, bigint>,
+    {} as {
+      [P in keyof T]: P extends K ? T[P] : bigint
+    },
   )
 }
 
@@ -75,7 +87,7 @@ export const getGasValuesFromAlchemyPaymaster = async (
     })
   console.log('\nReceived Paymaster Data from Alchemy.')
 
-  return serializeValuesToBigInt(suoData)
+  return serializeValuesToBigInt(suoData, ['paymasterAndData'])
 }
 
 export const getMaxPriorityFeePerGasFromAlchemy = async (chain: string, apiKey: string): Promise<bigint> => {
@@ -97,8 +109,6 @@ export const getMaxPriorityFeePerGasFromAlchemy = async (chain: string, apiKey: 
       }
       return json
     })
-
-  console.log({ responseValues })
   console.log('\nReceived Fee Data from Alchemy.')
 
   let rvFee
@@ -148,7 +158,7 @@ export const getGasValuesFromAlchemy = async (
           callGasLimit: undefined,
           verificationGasLimit: undefined,
           preVerificationGas: undefined,
-          maxFeePerGas: sponsoredUserOperation.maxFeePerGas.toString(16),
+          maxFeePerGas: addHexPrefix(sponsoredUserOperation.maxFeePerGas.toString(16)),
           maxPriorityFeePerGas: addHexPrefix(sponsoredUserOperation.maxPriorityFeePerGas.toString(16)),
           nonce: addHexPrefix(sponsoredUserOperation.nonce.toString(16)),
         },
@@ -167,14 +177,17 @@ export const getGasValuesFromAlchemy = async (
     })
 
   console.log('\nReceived Gas Data from Alchemy.')
-  console.log(responseValues)
-  let rvGas
+  let rvGas: gasData | undefined
   if (responseValues && responseValues['result']) {
     rvGas = responseValues['result'] as gasData
   } else {
     throw new Error('No gas data found')
   }
 
+  if (!rvGas.paymasterVerificationGasLimit) {
+    rvGas.paymasterVerificationGasLimit = '0x0'
+  }
+  // @ts-expect-error I don't know why but the types are not correct
   return serializeValuesToBigInt(rvGas)
 }
 
@@ -197,7 +210,7 @@ export const submitUserOperationAlchemy = async (
           callGasLimit: addHexPrefix(sponsoredUserOperation.callGasLimit.toString(16)),
           verificationGasLimit: addHexPrefix(sponsoredUserOperation.verificationGasLimit.toString(16)),
           preVerificationGas: addHexPrefix(sponsoredUserOperation.preVerificationGas.toString(16)),
-          maxFeePerGas: sponsoredUserOperation.maxFeePerGas.toString(16),
+          maxFeePerGas: addHexPrefix(sponsoredUserOperation.maxFeePerGas.toString(16)),
           maxPriorityFeePerGas: addHexPrefix(sponsoredUserOperation.maxPriorityFeePerGas.toString(16)),
           nonce: addHexPrefix(sponsoredUserOperation.nonce.toString(16)),
         },
@@ -244,15 +257,15 @@ export const submitUserOperationAlchemy = async (
           if (json.error && 'message' in json.error) {
             throw new Error(json.error.message)
           }
-          receipt = json
+          receipt = json['result']
         })
       runOnce = false
     }
 
-    if (receipt['result'] && receipt['result']['receipt']['transactionHash']) {
-      console.log('\nTransaction Link: https://' + chain + '.etherscan.io/tx/' + receipt['result']['receipt']['transactionHash'])
-      const actualGasUsed = fromHex(receipt['result']['actualGasUsed'], 'number')
-      const gasUsed = fromHex(responseValues['result']['receipt']['gasUsed'], 'number')
+    if (receipt && receipt['receipt']['transactionHash']) {
+      console.log('\nTransaction Link: https://' + chain + '.etherscan.io/tx/' + receipt['transactionHash'])
+      const actualGasUsed = fromHex(receipt['actualGasUsed'], 'number')
+      const gasUsed = fromHex(receipt['receipt']['gasUsed'], 'number')
       console.log(`\nGas Used (Account or Paymaster): ${actualGasUsed}`)
       console.log(`Gas Used (Transaction): ${gasUsed}\n`)
     }
