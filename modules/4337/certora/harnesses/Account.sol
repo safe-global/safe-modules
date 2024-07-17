@@ -74,7 +74,8 @@ contract Account is Safe {
     For more details: https://docs.safe.global/advanced/smart-account-signatures
     */
     function canonicalSignatureHash(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes32 canonical) {
-        uint256 dynamicOffset = safeThreshold * 0x41;
+        uint256 dynamicOffsetStart = safeThreshold * 0x41;
+        uint256 dynamicOffset = dynamicOffsetStart;
         bytes memory staticPart = signatures[:dynamicOffset];
         bytes memory dynamicPart = "";
 
@@ -86,11 +87,9 @@ contract Account is Safe {
             // the signature to the dynamic part.
             if (v == 0) {
                 uint256 signatureOffset = uint256(bytes32(signatures[ptr + 0x20:]));
-                require(signatureOffset >= dynamicOffset, "Invalid signature offset");
+                require(signatureOffset >= dynamicOffsetStart, "Invalid signature offset");
 
                 uint256 signatureLength = uint256(bytes32(signatures[signatureOffset:]));
-                require(signatureLength > 0, "Invalid signature length");
-
                 bytes memory signature = signatures[signatureOffset+0x20:][:signatureLength];
 
                 // Make sure to update the static part so that the smart contract signature
