@@ -107,7 +107,10 @@ describe('Singleton Signers [@4337]', () => {
       await entryPoint.getAddress(),
       false,
       false,
-      { initCode },
+      {
+        initCode,
+        verificationGasLimit: 600000,
+      },
     )
     const opHash = await validator.getOperationHash(
       buildPackedUserOperationFromSafeUserOperation({

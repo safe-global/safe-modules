@@ -59,7 +59,7 @@ contract Account is Safe {
      * The canonical format ensures the signatures are tightly packed one after the other in order.
      *
      * For more details on signature encoding: https://docs.safe.global/advanced/smart-account-signatures
-    */
+     */
     function canonicalSignature(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes memory canonical) {
         uint256 dynamicOffset = safeThreshold * 0x41;
         bytes memory staticPart = signatures[:dynamicOffset];
@@ -75,7 +75,7 @@ contract Account is Safe {
                 uint256 signatureOffset = uint256(bytes32(signatures[ptr + 0x20:]));
 
                 uint256 signatureLength = uint256(bytes32(signatures[signatureOffset:]));
-                bytes memory signature = signatures[signatureOffset+0x20:][:signatureLength];
+                bytes memory signature = signatures[signatureOffset + 0x20:][:signatureLength];
 
                 // Make sure to update the static part so that the smart contract signature
                 // points to the "canonical" signature offset (i.e. that all contract
@@ -91,7 +91,7 @@ contract Account is Safe {
             }
         }
         canonical = abi.encodePacked(staticPart, dynamicPart);
-    }    
+    }
 }
 
 // @notice This is a harness contract for the rule that verfies the validation data
