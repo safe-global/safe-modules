@@ -1,6 +1,6 @@
 import { Alchemy } from 'alchemy-sdk'
 import { fromHex } from 'viem'
-import { setTimeout } from "timers/promises";
+import { setTimeout } from 'timers/promises'
 import { UserOperation } from '../utils/userOps'
 
 // Sponsored User Operation Data
@@ -11,7 +11,7 @@ export type suoData = {
   paymaster: string
   paymasterData: string
   paymasterVerificationGasLimit: string
-    paymasterPostOpGasLimit: string
+  paymasterPostOpGasLimit: string
   maxFeePerGas: string
   maxPriorityFeePerGas: string
 }
@@ -44,7 +44,7 @@ export const serializeValuesToBigInt = <T extends Record<string, string>, K exte
   )
 }
 
-export const addHexPrefix = (hexStr: string): `0x${string}` => (hexStr.startsWith('0x') ? hexStr as `0x{string}` : `0x${hexStr}`)
+export const addHexPrefix = (hexStr: string): `0x${string}` => (hexStr.startsWith('0x') ? (hexStr as `0x{string}`) : `0x${hexStr}`)
 
 export const getGasValuesFromAlchemyPaymaster = async (
   policyID: string | undefined,
@@ -92,7 +92,7 @@ export const getGasValuesFromAlchemyPaymaster = async (
     })
   console.log('\nReceived Paymaster Data from Alchemy.')
 
-  return serializeValuesToBigInt(suoData, ['paymaster', "paymasterData"])
+  return serializeValuesToBigInt(suoData, ['paymaster', 'paymasterData'])
 }
 
 export const getMaxPriorityFeePerGasFromAlchemy = async (chain: string, apiKey: string): Promise<bigint> => {
@@ -212,14 +212,19 @@ export const submitUserOperationAlchemy = async (
       params: [
         {
           ...sponsoredUserOperation,
-          paymasterPostOpGasLimit: addHexPrefix(sponsoredUserOperation.paymasterPostOpGasLimit?.toString(16) ?? '0x'),
-            paymasterVerificationGasLimit: addHexPrefix(sponsoredUserOperation.paymasterVerificationGasLimit?.toString(16) ?? '0x'),
           callGasLimit: addHexPrefix(sponsoredUserOperation.callGasLimit.toString(16)),
           verificationGasLimit: addHexPrefix(sponsoredUserOperation.verificationGasLimit.toString(16)),
           preVerificationGas: addHexPrefix(sponsoredUserOperation.preVerificationGas.toString(16)),
           maxFeePerGas: addHexPrefix(sponsoredUserOperation.maxFeePerGas.toString(16)),
           maxPriorityFeePerGas: addHexPrefix(sponsoredUserOperation.maxPriorityFeePerGas.toString(16)),
           nonce: addHexPrefix(sponsoredUserOperation.nonce.toString(16)),
+          // Paymaster fields do not pass alchemy validation if the transaction doesn't have a paymaster.
+          ...(sponsoredUserOperation.paymaster
+            ? {
+                paymasterPostOpGasLimit: addHexPrefix(sponsoredUserOperation.paymasterPostOpGasLimit?.toString(16) ?? '0x'),
+                paymasterVerificationGasLimit: addHexPrefix(sponsoredUserOperation.paymasterVerificationGasLimit?.toString(16) ?? '0x'),
+              }
+            : {}),
         },
         entryPointAddress,
       ],

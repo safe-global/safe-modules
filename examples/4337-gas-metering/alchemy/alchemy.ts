@@ -24,7 +24,8 @@ import {
   getMaxPriorityFeePerGasFromAlchemy,
   getMaxFeePerGas,
   getGasValuesFromAlchemy,
-  submitUserOperationAlchemy, addHexPrefix,
+  submitUserOperationAlchemy,
+  addHexPrefix,
 } from './utils'
 
 import { transferETH } from '../utils/nativeTransfer'
@@ -251,7 +252,7 @@ if (usePaymaster) {
       abi: parseAbi(['function depositTo(address _to) public payable']),
     })
 
-    const transaction = await entryPoint.write.depositTo([sponsoredUserOperation.sender])
+    const transaction = await entryPoint.write.depositTo([sponsoredUserOperation.sender], { value: requiredPrefund })
     console.log(`Prefund transaction hash: ${transaction}`)
     await publicClient.waitForTransactionReceipt({
       hash: transaction,

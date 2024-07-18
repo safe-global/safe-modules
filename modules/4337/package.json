@@ -57,7 +57,7 @@
     "@simplewebauthn/server": "^10.0.0",
     "@types/chai": "^4.3.16",
     "@types/mocha": "^10.0.7",
-    "@types/node": "^20.14.8",
+    "@types/node": "^20.14.10",
     "@types/yargs": "^17.0.32",
     "cbor": "^9.0.2",
     "debug": "^4.3.5",
