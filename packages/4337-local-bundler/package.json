@@ -18,7 +18,7 @@
     "@account-abstraction/contracts": "0.7.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/safe-4337-provider": "workspace:^0.0.0",
-    "@safe-global/safe-contracts": "^1.4.1-build.0",
+    "@safe-global/safe-contracts": "1.4.1-build.0",
     "ethers": "^6.13.1",
     "hardhat": "^2.22.5",
     "hardhat-deploy": "^0.12.4",

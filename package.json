@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "A monorepo for Safe modules",
   "private": true,
-  "packageManager": "pnpm@9.4.0",
   "main": "dist/index.js",
   "workspaces": [
     "packages/*",
@@ -13,7 +12,7 @@
   "scripts": {
     "fmt:global": "prettier --write .",
     "fmt:global-check": "prettier --check .",
-    "lint:monorepo": "sherif -i @openzeppelin/contracts -i @safe-global/safe-contracts"
+    "lint:monorepo": "sherif -i @openzeppelin/contracts -r root-package-manager-field"
   },
   "repository": {
     "type": "git",
@@ -30,6 +29,10 @@
     "Wallet",
     "Safe"
   ],
+  "engines": {
+    "node": "^20",
+    "pnpm": "^9"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.12.0",
     "@typescript-eslint/parser": "^7.12.0",
