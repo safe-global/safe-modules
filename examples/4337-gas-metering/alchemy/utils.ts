@@ -1,5 +1,6 @@
 import { Alchemy } from 'alchemy-sdk'
 import { fromHex } from 'viem'
+import { setTimeout } from "timers/promises";
 import { UserOperation } from '../utils/userOps'
 
 // Sponsored User Operation Data
@@ -250,7 +251,7 @@ export const submitUserOperationAlchemy = async (
 
     let receipt
     while (receipt == null || runOnce) {
-      await new Promise((resolve) => setTimeout(resolve, 25000))
+      await setTimeout(25000)
       await fetch('https://eth-' + chain + '.g.alchemy.com/v2/' + apiKey, hashOptions)
         .then((response) => response.json())
         .then((json) => {
