@@ -4,14 +4,12 @@ methods {
     function checkSignaturesLength(bytes, uint256) external returns(bool) envfree;
 
     // Safe Contract functions
-    function safeContract.canonicalSignatureHash(bytes, uint256) external returns(bytes32) envfree;
+    function safeContract.canonicalSignature(bytes, uint256) external returns(bytes) envfree;
 }
 
 // This rule verifies that if excess data is added to the signature, though it could pass in the safe contract's `checkSignatures(...)`,
 // it will be caught within the `_checkSignaturesLength(...)` call, as the dynamic length is checked.
-rule canonicalHashBasedLengthCheck(bytes signatures, bytes griefedSignatures, uint256 threshold) {
-    require safeContract.canonicalSignatureHash(signatures, threshold) == safeContract.canonicalSignatureHash(griefedSignatures, threshold);
-    require signatures.length < griefedSignatures.length;
-
-    assert checkSignaturesLength(signatures, threshold) => !checkSignaturesLength(griefedSignatures, threshold);
+rule signatureCannotBeLongerThanCanonicalEncoding(bytes signatures, uint256 threshold) {
+    bytes canonical = safeContract.canonicalSignature(signatures, threshold);
+    assert checkSignaturesLength(signatures, threshold) => signatures.length <= canonical.length;
 }

@@ -54,28 +54,14 @@ contract Account is Safe {
         return uint48(bytes6(sigs[6:12]));
     }
 
-    /*
-    This function is used to calculate the hash of the signatures in a standard way. This will result in signatures having possible excess data to result in the same hash
-    as the same signatures without the excess data. This is required for formal verification.
-
-    Actual Signature:
-    "0x" +
-    "0000000000000000000000000000000000000000000000000000000000000001 0000000000000000000000000000000000000000000000000000000000000041 00" + // encoded EIP-1271 signature 1
-    "0000000000000000000000000000000000000000000000000000000000000004 deadbeef"                                                              // length of bytes + data of bytes of signature 1
-
-    With Excess Data:
-    "0x" +
-    "0000000000000000000000000000000000000000000000000000000000000001 0000000000000000000000000000000000000000000000000000000000000041 00" + // encoded EIP-1271 signature 1
-    "0000000000000000000000000000000000000000000000000000000000000004 deadbeef"                                                              // length of bytes + data of bytes of signature 1
-    "ffffff"                                                                                                                                 // excess data
-
-    Both will have the same canonical hash: 0xc860b1a81652620308a8138a17ef5105d9b18e6e766516ffd3de9897260d1320
-
-    For more details: https://docs.safe.global/advanced/smart-account-signatures
+    /**
+     * @dev This function encodes signature in a canonical format. This is required for formal verification.
+     * The canonical format ensures the signatures are tightly packed one after the other in order.
+     *
+     * For more details on signature encoding: https://docs.safe.global/advanced/smart-account-signatures
     */
-    function canonicalSignatureHash(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes32 canonical) {
-        uint256 dynamicOffsetStart = safeThreshold * 0x41;
-        uint256 dynamicOffset = dynamicOffsetStart;
+    function canonicalSignature(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes memory canonical) {
+        uint256 dynamicOffset = safeThreshold * 0x41;
         bytes memory staticPart = signatures[:dynamicOffset];
         bytes memory dynamicPart = "";
 
@@ -87,7 +73,6 @@ contract Account is Safe {
             // the signature to the dynamic part.
             if (v == 0) {
                 uint256 signatureOffset = uint256(bytes32(signatures[ptr + 0x20:]));
-                require(signatureOffset >= dynamicOffsetStart, "Invalid signature offset");
 
                 uint256 signatureLength = uint256(bytes32(signatures[signatureOffset:]));
                 bytes memory signature = signatures[signatureOffset+0x20:][:signatureLength];
@@ -105,8 +90,8 @@ contract Account is Safe {
                 dynamicPart = abi.encodePacked(dynamicPart, signatureLength, signature);
             }
         }
-        canonical = keccak256(abi.encodePacked(staticPart, dynamicPart));
-    }
+        canonical = abi.encodePacked(staticPart, dynamicPart);
+    }    
 }
 
 // @notice This is a harness contract for the rule that verfies the validation data
