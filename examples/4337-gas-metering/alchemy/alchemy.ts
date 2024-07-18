@@ -24,7 +24,7 @@ import {
   getMaxPriorityFeePerGasFromAlchemy,
   getMaxFeePerGas,
   getGasValuesFromAlchemy,
-  submitUserOperationAlchemy,
+  submitUserOperationAlchemy, addHexPrefix,
 } from './utils'
 
 import { transferETH } from '../utils/nativeTransfer'
@@ -191,11 +191,13 @@ console.log('\nSigned Dummy Data for Paymaster Data Creation from Alchemy.')
 
 if (usePaymaster) {
   const rvGas = await getGasValuesFromAlchemyPaymaster(policyID, entryPointAddress, sponsoredUserOperation, chain, apiKey)
-
   sponsoredUserOperation.preVerificationGas = rvGas?.preVerificationGas
   sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
-  sponsoredUserOperation.paymasterAndData = rvGas?.paymasterAndData
+  sponsoredUserOperation.paymaster = addHexPrefix(rvGas?.paymaster)
+  sponsoredUserOperation.paymasterData = addHexPrefix(rvGas?.paymasterData)
+  sponsoredUserOperation.paymasterPostOpGasLimit = rvGas?.paymasterPostOpGasLimit
+  sponsoredUserOperation.paymasterVerificationGasLimit = rvGas?.paymasterVerificationGasLimit
   sponsoredUserOperation.maxFeePerGas = rvGas?.maxFeePerGas
   sponsoredUserOperation.maxPriorityFeePerGas = rvGas?.maxPriorityFeePerGas
 } else {

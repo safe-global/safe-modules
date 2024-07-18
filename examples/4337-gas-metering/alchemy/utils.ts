@@ -8,7 +8,10 @@ export type suoData = {
   preVerificationGas: string
   callGasLimit: string
   verificationGasLimit: string
-  paymasterAndData: string
+  paymaster: string
+  paymasterData: string
+  paymasterVerificationGasLimit: string
+    paymasterPostOpGasLimit: string
   maxFeePerGas: string
   maxPriorityFeePerGas: string
 }
@@ -41,7 +44,7 @@ export const serializeValuesToBigInt = <T extends Record<string, string>, K exte
   )
 }
 
-export const addHexPrefix = (hexStr: string) => (hexStr.startsWith('0x') ? hexStr : `0x${hexStr}`)
+export const addHexPrefix = (hexStr: string): `0x${string}` => (hexStr.startsWith('0x') ? hexStr as `0x{string}` : `0x${hexStr}`)
 
 export const getGasValuesFromAlchemyPaymaster = async (
   policyID: string | undefined,
@@ -64,8 +67,9 @@ export const getGasValuesFromAlchemyPaymaster = async (
           dummySignature: sponsoredUserOperation.signature,
           userOperation: {
             sender: sponsoredUserOperation.sender,
-            nonce: '0x' + sponsoredUserOperation.nonce.toString(16),
-            initCode: sponsoredUserOperation.initCode,
+            nonce: addHexPrefix(sponsoredUserOperation.nonce.toString(16)),
+            factory: sponsoredUserOperation.factory,
+            factoryData: sponsoredUserOperation.factoryData,
             callData: sponsoredUserOperation.callData,
           },
         },
@@ -88,7 +92,7 @@ export const getGasValuesFromAlchemyPaymaster = async (
     })
   console.log('\nReceived Paymaster Data from Alchemy.')
 
-  return serializeValuesToBigInt(suoData, ['paymasterAndData'])
+  return serializeValuesToBigInt(suoData, ['paymaster', "paymasterData"])
 }
 
 export const getMaxPriorityFeePerGasFromAlchemy = async (chain: string, apiKey: string): Promise<bigint> => {
@@ -208,6 +212,8 @@ export const submitUserOperationAlchemy = async (
       params: [
         {
           ...sponsoredUserOperation,
+          paymasterPostOpGasLimit: addHexPrefix(sponsoredUserOperation.paymasterPostOpGasLimit?.toString(16) ?? '0x'),
+            paymasterVerificationGasLimit: addHexPrefix(sponsoredUserOperation.paymasterVerificationGasLimit?.toString(16) ?? '0x'),
           callGasLimit: addHexPrefix(sponsoredUserOperation.callGasLimit.toString(16)),
           verificationGasLimit: addHexPrefix(sponsoredUserOperation.verificationGasLimit.toString(16)),
           preVerificationGas: addHexPrefix(sponsoredUserOperation.preVerificationGas.toString(16)),
