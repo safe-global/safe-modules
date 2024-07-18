@@ -53,6 +53,45 @@ contract Account is Safe {
     function getValidUntilTimestamp(bytes calldata sigs) external pure returns (uint48) {
         return uint48(bytes6(sigs[6:12]));
     }
+
+    /**
+     * @dev This function encodes signature in a canonical format. This is required for formal verification.
+     * The canonical format ensures the signatures are tightly packed one after the other in order.
+     *
+     * For more details on signature encoding: https://docs.safe.global/advanced/smart-account-signatures
+    */
+    function canonicalSignature(bytes calldata signatures, uint256 safeThreshold) public pure returns (bytes memory canonical) {
+        uint256 dynamicOffset = safeThreshold * 0x41;
+        bytes memory staticPart = signatures[:dynamicOffset];
+        bytes memory dynamicPart = "";
+
+        for (uint256 i = 0; i < safeThreshold; i++) {
+            uint256 ptr = i * 0x41;
+            uint8 v = uint8(signatures[ptr + 0x40]);
+
+            // Check to see if we have a smart contract signature, and if we do, then append
+            // the signature to the dynamic part.
+            if (v == 0) {
+                uint256 signatureOffset = uint256(bytes32(signatures[ptr + 0x20:]));
+
+                uint256 signatureLength = uint256(bytes32(signatures[signatureOffset:]));
+                bytes memory signature = signatures[signatureOffset+0x20:][:signatureLength];
+
+                // Make sure to update the static part so that the smart contract signature
+                // points to the "canonical" signature offset (i.e. that all contract
+                // signatures are tightly packed one after the other in order). This ensures
+                // a canonical representation for the signatures.
+                /* solhint-disable no-inline-assembly */
+                assembly ("memory-safe") {
+                    mstore(add(staticPart, add(0x40, ptr)), dynamicOffset)
+                }
+                /* solhint-enable no-inline-assembly */
+                dynamicOffset += signatureLength + 0x20;
+                dynamicPart = abi.encodePacked(dynamicPart, signatureLength, signature);
+            }
+        }
+        canonical = abi.encodePacked(staticPart, dynamicPart);
+    }    
 }
 
 // @notice This is a harness contract for the rule that verfies the validation data

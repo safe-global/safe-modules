@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rule: ['verify4337Module.sh', 'verifyTransactionExecutionMethods.sh', 'verifyValidationData.sh']
+        rule: ['verify4337Module.sh', 'verifyTransactionExecutionMethods.sh', 'verifyValidationData.sh', 'verifySignatureLengthCheck.sh']
     steps:
       - uses: actions/checkout@v3
 
