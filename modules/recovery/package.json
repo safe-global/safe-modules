@@ -39,7 +39,7 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@types/node": "^20.14.8",
+    "@types/node": "^20.14.10",
     "@types/yargs": "^17.0.32",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.1",

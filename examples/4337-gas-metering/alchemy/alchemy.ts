@@ -1,23 +1,33 @@
 import dotenv from 'dotenv'
-import { ENTRYPOINT_ADDRESS_V06, getAccountNonce } from 'permissionless'
+import { ENTRYPOINT_ADDRESS_V07, getAccountNonce, getRequiredPrefund } from 'permissionless'
 import { Network, Alchemy } from 'alchemy-sdk'
 import { setTimeout } from 'timers/promises'
-import { PublicClient, Hash, Transport, createPublicClient, formatEther, http, parseEther, zeroAddress } from 'viem'
+import {
+  PublicClient,
+  Hash,
+  Transport,
+  createPublicClient,
+  formatEther,
+  http,
+  getContract,
+  zeroAddress,
+  createWalletClient,
+  parseAbi,
+} from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { goerli, sepolia } from 'viem/chains'
 import { getAccountAddress, getAccountInitCode } from '../utils/safe'
 import { SAFE_ADDRESSES_MAP } from '../utils/address'
+import { UserOperation, signUserOperation, txTypes, createCallData } from '../utils/userOps'
 import {
-  UserOperation,
-  signUserOperation,
-  txTypes,
   getGasValuesFromAlchemyPaymaster,
-  getFeeValuesFromAlchemy,
+  getMaxPriorityFeePerGasFromAlchemy,
   getMaxFeePerGas,
   getGasValuesFromAlchemy,
   submitUserOperationAlchemy,
-  createCallData,
-} from '../utils/userOps'
+  addHexPrefix,
+} from './utils'
+
 import { transferETH } from '../utils/nativeTransfer'
 
 dotenv.config()
@@ -128,7 +138,7 @@ const senderAddress = await getAccountAddress({
 console.log('\nCounterfactual Sender Address Created:', senderAddress)
 console.log('Address Link: https://' + chain + '.etherscan.io/address/' + senderAddress)
 
-const contractCode = await publicClient.getBytecode({ address: senderAddress })
+const contractCode = await publicClient.getCode({ address: senderAddress })
 
 if (contractCode) {
   console.log('\nThe Safe is already deployed.')
@@ -140,7 +150,7 @@ if (contractCode) {
 }
 
 const newNonce = await getAccountNonce(publicClient, {
-  entryPoint: ENTRYPOINT_ADDRESS_V06,
+  entryPoint: ENTRYPOINT_ADDRESS_V07,
   sender: senderAddress,
 })
 console.log('\nNonce for the sender received from EntryPoint.')
@@ -159,12 +169,12 @@ const txCallData: `0x${string}` = await createCallData(
 const sponsoredUserOperation: UserOperation = {
   sender: senderAddress,
   nonce: newNonce,
-  factory: chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
+  factory: contractCode ? undefined : chainAddresses.SAFE_PROXY_FACTORY_ADDRESS,
   factoryData: contractCode ? '0x' : initCode,
   callData: txCallData,
-  callGasLimit: 1n, // All Gas Values will be filled by Estimation Response Data.
-  verificationGasLimit: 1n,
-  preVerificationGas: 1n,
+  callGasLimit: 1000000n, // All Gas Values will be filled by Estimation Response Data.
+  verificationGasLimit: 1000000n,
+  preVerificationGas: 500000n,
   maxFeePerGas: 1n,
   maxPriorityFeePerGas: 1n,
   paymasterData: '0x',
@@ -182,15 +192,17 @@ console.log('\nSigned Dummy Data for Paymaster Data Creation from Alchemy.')
 
 if (usePaymaster) {
   const rvGas = await getGasValuesFromAlchemyPaymaster(policyID, entryPointAddress, sponsoredUserOperation, chain, apiKey)
-
   sponsoredUserOperation.preVerificationGas = rvGas?.preVerificationGas
   sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
-  sponsoredUserOperation.paymasterAndData = rvGas?.paymasterAndData
+  sponsoredUserOperation.paymaster = addHexPrefix(rvGas?.paymaster)
+  sponsoredUserOperation.paymasterData = addHexPrefix(rvGas?.paymasterData)
+  sponsoredUserOperation.paymasterPostOpGasLimit = rvGas?.paymasterPostOpGasLimit
+  sponsoredUserOperation.paymasterVerificationGasLimit = rvGas?.paymasterVerificationGasLimit
   sponsoredUserOperation.maxFeePerGas = rvGas?.maxFeePerGas
   sponsoredUserOperation.maxPriorityFeePerGas = rvGas?.maxPriorityFeePerGas
 } else {
-  sponsoredUserOperation.maxPriorityFeePerGas = await getFeeValuesFromAlchemy(chain, apiKey)
+  sponsoredUserOperation.maxPriorityFeePerGas = await getMaxPriorityFeePerGasFromAlchemy(chain, apiKey)
   sponsoredUserOperation.maxFeePerGas = await getMaxFeePerGas(alchemy, sponsoredUserOperation.maxPriorityFeePerGas)
 
   const rvGas = await getGasValuesFromAlchemy(entryPointAddress, sponsoredUserOperation, chain, apiKey)
@@ -199,20 +211,52 @@ if (usePaymaster) {
   sponsoredUserOperation.callGasLimit = rvGas?.callGasLimit
   sponsoredUserOperation.verificationGasLimit = rvGas?.verificationGasLimit
 
-  const weiToSend = parseEther('0.02')
-  let safeETHBalance = await publicClient.getBalance({
-    address: senderAddress,
+  const requiredPrefund = getRequiredPrefund({
+    userOperation: sponsoredUserOperation,
+    entryPoint: ENTRYPOINT_ADDRESS_V07,
   })
-  if (safeETHBalance < weiToSend) {
-    console.log('\nTransferring', formatEther(weiToSend - safeETHBalance), 'ETH to Safe for transaction.')
-    await transferETH(publicClient, signer, senderAddress, weiToSend - safeETHBalance, chain, paymaster)
-    while (safeETHBalance < weiToSend) {
-      await setTimeout(30000) // Sometimes it takes time to index.
-      safeETHBalance = await publicClient.getBalance({
-        address: senderAddress,
-      })
+
+  // This is just a coincidental detail of how the benchmark worked so far:
+  // If the user operation is an account creation, we paid the prefund as a part of the `validateUserOp` call.
+  // But the subsequent benchmarks that didn't involve account creation didn't pay it, because there was still leftover
+  // ETH in the EntryPoint. To maintain consistent behaviour between the benchmarks,
+  // we prefund the account directly to the entry point if the user operation is not an account creation.
+  if (txType === 'account') {
+    let safeETHBalance = await publicClient.getBalance({
+      address: senderAddress,
+    })
+    if (safeETHBalance < requiredPrefund) {
+      console.log('\nTransferring', formatEther(requiredPrefund - safeETHBalance), 'ETH to Safe for transaction.')
+      await transferETH(publicClient, signer, senderAddress, requiredPrefund - safeETHBalance, chain, paymaster)
+      while (safeETHBalance < requiredPrefund) {
+        await setTimeout(30000) // Sometimes it takes time to index.
+        safeETHBalance = await publicClient.getBalance({
+          address: senderAddress,
+        })
+      }
+      console.log('\nTransferred required ETH for the transaction.')
     }
-    console.log('\nTransferred required ETH for the transaction.')
+  } else {
+    console.log('\nPrefund Required:', formatEther(requiredPrefund))
+    const walletClient = createWalletClient({
+      account: signer,
+      chain: sepolia,
+      transport: http(rpcURL),
+    })
+    const entryPoint = getContract({
+      address: ENTRYPOINT_ADDRESS_V07,
+      client: {
+        public: publicClient,
+        wallet: walletClient,
+      },
+      abi: parseAbi(['function depositTo(address _to) public payable']),
+    })
+
+    const transaction = await entryPoint.write.depositTo([sponsoredUserOperation.sender], { value: requiredPrefund })
+    console.log(`Prefund transaction hash: ${transaction}`)
+    await publicClient.waitForTransactionReceipt({
+      hash: transaction,
+    })
   }
 }
 

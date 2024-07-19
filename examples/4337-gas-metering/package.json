@@ -48,18 +48,18 @@
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
   "dependencies": {
-    "@alchemy/aa-accounts": "2.4.0",
-    "@alchemy/aa-alchemy": "2.4.0",
-    "@alchemy/aa-core": "2.3.1",
+    "@alchemy/aa-accounts": "3.18.2",
+    "@alchemy/aa-alchemy": "3.18.2",
+    "@alchemy/aa-core": "3.18.2",
     "@gelatonetwork/relay-sdk": "^5.5.6",
-    "alchemy-sdk": "3.1.2",
+    "alchemy-sdk": "3.3.1",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.1",
-    "permissionless": "0.1.29",
-    "viem": "2.12.5"
+    "permissionless": "0.1.39",
+    "viem": "2.17.4"
   },
   "devDependencies": {
-    "@types/node": "^20.14.8",
+    "@types/node": "^20.14.10",
     "tsx": "4.11.0",
     "typescript": "^5.5.2"
   }
