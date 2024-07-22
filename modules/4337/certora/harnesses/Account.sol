@@ -94,8 +94,10 @@ contract Account is Safe {
     }
 }
 
-// @notice This is a harness contract for the rule that verfies the validation data
-//         in case the checkSignature functions reverts.
+/*
+ * @notice This is a harness contract for the rule that verfies the validation data
+ *         in case the checkSignature functions reverts.
+ */
 contract AlwaysRevertingAccount {
     function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) public view {
         revert();

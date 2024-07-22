@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rule: ['verify4337Module.sh', 'verifyTransactionExecutionMethods.sh', 'verifyValidationData.sh', 'verifySignatureLengthCheck.sh']
+        rule: ['Safe4337Module', 'TransactionExecutionMethods', 'ValidationDataLastBitOne', 'SignatureLengthCheck']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -33,7 +33,7 @@ jobs:
         with: { python-version: 3.11 }
 
       - name: Install certora cli
-        run: pip install -Iv certora-cli==7.3.0
+        run: pip install -r modules/4337/certora/requirements.txt
 
       - name: Install solc
         run: |
@@ -47,8 +47,7 @@ jobs:
       - name: Verify rule ${{ matrix.rule }}
         working-directory: ./modules/4337
         run: |
-          echo "key length" ${#CERTORAKEY}
-          chmod +x ./certora/scripts/${{ matrix.rule }}
-          ./certora/scripts/${{ matrix.rule }}
+          echo "Certora key length" ${#CERTORAKEY}
+          certoraRun certora/conf/${{ matrix.rule }}.conf --wait_for_results=all
         env:
           CERTORAKEY: ${{ secrets.CERTORA_KEY }}
