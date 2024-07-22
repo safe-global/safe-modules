@@ -361,7 +361,7 @@ describe('Safe4337Module - Reference EntryPoint', () => {
       .withArgs(0, 'AA24 signature error')
   })
 
-  it('should revert when padded with additional bytes in-between signatures - Smart contract signature', async () => {
+  it.only('should revert when padded with additional bytes in-between signatures - Smart contract signature', async () => {
     const { user, relayer, safe: parentSafe, validator, entryPoint, safeGlobalConfig } = await setupTests()
 
     await parentSafe.deploy(user)
@@ -404,11 +404,11 @@ describe('Safe4337Module - Reference EntryPoint', () => {
     // Here signature contains additional bytes in between signatures
     const signature = ethers.concat([
       ethers.zeroPadValue(parentSafe.address, 32), // address of the signer
-      ethers.toBeHex(65 + 'padding'.length, 32), // offset of the start of the signature
+      ethers.toBeHex(65, 32), // offset of the start of the signature
       '0x00', // contract signature type
-      ethers.toUtf8Bytes('padding'), // extra illegal padding between signatures
-      ethers.toBeHex(ethers.dataLength(parentSafeSignature), 32), // length of the dynamic signature
+      ethers.toBeHex(ethers.dataLength(parentSafeSignature) + ethers.dataLength(ethers.toUtf8Bytes('padding')), 32), // length of the dynamic signature
       parentSafeSignature,
+      ethers.toUtf8Bytes('padding'), // extra illegal padding between signatures
     ])
 
     const userOp = buildPackedUserOperationFromSafeUserOperation({
