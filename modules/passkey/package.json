@@ -54,7 +54,7 @@
     "@safe-global/safe-4337": "workspace:^0.3.0-1",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@safe-global/safe-contracts": "1.4.1-build.0",
-    "@simplewebauthn/server": "^10.0.0",
+    "@simplewebauthn/server": "^10.0.1",
     "@types/node": "^20.14.10",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.1",
