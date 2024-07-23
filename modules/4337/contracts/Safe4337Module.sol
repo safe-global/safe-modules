@@ -215,11 +215,14 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Checks if the signatures length is correct and does not contain additional bytes. The function does not
      * check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation
      * of {checkSignatures}.
-     * @dev A malicious bundler can pad additional bytes to the `signatures` data, causing the account to pay more gas
-     * than needed for user operation validation. Safe account has two types of signatures: EOA and Smart Contract
-     * signatures. While the EOA signature is fixed in size, the Smart Contract signature can be of arbitrary length.
-     * Safe encodes the Smart Contract signature length in the signature data. Since, the `signature` field in UserOp
-     * is not part of the UserOp hash a malicious bundler can manipulate the field storing the signature length and pad
+     * @dev Safe account has two types of signatures: EOA and Smart Contract signatures. While the EOA signature is 
+     * fixed in size, the Smart Contract signature can be of arbitrary length. Safe encodes the Smart Contract
+     * signature length in the signature data. A malicious bundler can pad additional bytes to the `signature` data,
+     * causing the account to pay more gas than needed for user operation validation and reach the
+     * verificationGasLimit if the verifier does not implement appropriate length checks. `_checkSignaturesLength`
+     * function checks for presence of any padded bytes to the `signature` data. However, there is an
+     * edge case that `_checkSignaturesLength` function cannot detect. Since, the `signature` field in UserOp is not
+     * part of the UserOp hash a malicious bundler can manipulate the field storing the signature length and pad
      * additional bytes to the dynamic part of the signatures which will make `_checkSignaturesLength` to return true.
      * In such cases, it is the responsibility of the signature verifier to check for additional padded bytes to the
      * signatures data.
