@@ -215,7 +215,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * @notice Checks if the signatures length is correct and does not contain additional bytes. The function does not
      * check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation
      * of {checkSignatures}.
-     * @dev Safe account has two types of signatures: EOA and Smart Contract signatures. While the EOA signature is 
+     * @dev Safe account has two types of signatures: EOA and Smart Contract signatures. While the EOA signature is
      * fixed in size, the Smart Contract signature can be of arbitrary length. Safe encodes the Smart Contract
      * signature length in the signature data. If appropriate length checks are not performed during the signature
      * verification then a malicious bundler can pad additional bytes to the signatures data and make the account pay
