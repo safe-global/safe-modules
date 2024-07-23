@@ -217,15 +217,16 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * of {checkSignatures}.
      * @dev Safe account has two types of signatures: EOA and Smart Contract signatures. While the EOA signature is 
      * fixed in size, the Smart Contract signature can be of arbitrary length. Safe encodes the Smart Contract
-     * signature length in the signature data. A malicious bundler can pad additional bytes to the `signature` data,
-     * causing the account to pay more gas than needed for user operation validation and reach the
-     * verificationGasLimit if the verifier does not implement appropriate length checks. `_checkSignaturesLength`
-     * function checks for presence of any padded bytes to the `signature` data. However, there is an
-     * edge case that `_checkSignaturesLength` function cannot detect. Since, the `signature` field in UserOp is not
-     * part of the UserOp hash a malicious bundler can manipulate the field storing the signature length and pad
-     * additional bytes to the dynamic part of the signatures which will make `_checkSignaturesLength` to return true.
-     * In such cases, it is the responsibility of the signature verifier to check for additional padded bytes to the
-     * signatures data.
+     * signature length in the signature data. If appropriate length checks are not performed during the signature
+     * verification then a malicious bundler can pad additional bytes to the signatures data and make the account pay
+     * more gas than needed for user operation validation and reach the verificationGasLimit.
+     * `_checkSignaturesLength` function checks for the presence of any padded bytes to the `signature` data.
+     * However, there is an edge case that `_checkSignaturesLength` function cannot detect.
+     * Since the `signature` field in UserOp is not part of the UserOp hash a malicious bundler can manipulate the
+     * field(s) storing the signature length and pad additional bytes to the dynamic part of the signatures which will
+     * make `_checkSignaturesLength` to return true. In such cases, it is the responsibility of the signature verifier
+     * (which can be a Safe or any other contract) that supports ERC-1271 and is the owner of the Safe to check for
+     * additional padded bytes to the signatures data.
      * @param signatures Signatures data.
      * @param threshold Signer threshold for the Safe account.
      * @return isValid True if length check passes, false otherwise.
