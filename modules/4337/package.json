@@ -54,7 +54,6 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
     "@safe-global/safe-4337-provider": "workspace:^0.0.0",
-    "@simplewebauthn/server": "^10.0.0",
     "@types/chai": "^4.3.16",
     "@types/mocha": "^10.0.7",
     "@types/node": "^20.14.10",
