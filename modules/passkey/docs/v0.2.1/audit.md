@@ -34,7 +34,7 @@ Certora (<https://www.certora.com/>).
 
 The final audit was performed on commit [c3a4d0671099c5e17fda7287b764b93f6b9801df](https://github.com/safe-global/safe-modules/tree/c3a4d0671099c5e17fda7287b764b93f6b9801df).
 
-No new issues were discovered during this audit. 
+No new issues were discovered during this audit.
 
 ### Files
 
