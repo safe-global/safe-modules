@@ -128,7 +128,7 @@ The test cases in [userstories](./test/userstories) directory demonstrates the u
 
 - [For version 0.2.0 by Certora](docs/v0.2.0/audit.md)
 - [For version 0.2.1 by Hats Finance Audit Competition](docs/v0.2.1/audit-competition-report-hats.md)
-- [For version 0.2.1 by Certora](docs/v0.2.1/Safe%20-%20Certora%20-%20Passkey%20Module%20-%20Final%20report%20v2%20-%20July%202024.pdf)
+- [For version 0.2.1 by Certora](docs/v0.2.1/Safe-Certora-Passkey-Module-July-2024.pdf)
 
 ## Security and Liability
 

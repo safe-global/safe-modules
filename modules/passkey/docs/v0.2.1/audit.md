@@ -38,4 +38,4 @@ No new issues were discovered during this audit.
 
 ### Files
 
-- [Final audit report](Safe%20-%20Certora%20-%20Passkey%20Module%20-%20Final%20report%20v2%20-%20July%202024.pdf)
+- [Final audit report](Safe-Certora-Passkey-Module-July-2024.pdf)
