@@ -25,3 +25,17 @@ There were three low severity findings that were found as part of the competitio
 ### Files
 
 - [Final audit competition report](audit-competition-report-hats.md)
+
+## Auditor
+
+Certora (<https://www.certora.com/>).
+
+### Notes
+
+The final audit was performed on commit [c3a4d0671099c5e17fda7287b764b93f6b9801df](https://github.com/safe-global/safe-modules/tree/c3a4d0671099c5e17fda7287b764b93f6b9801df).
+
+No new issues were discovered during this audit. 
+
+### Files
+
+- [Final audit report](Safe%20-%20Certora%20-%20Passkey%20Module%20-%20Final%20report%20v2%20-%20July%202024.pdf)
