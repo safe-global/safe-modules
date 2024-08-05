@@ -239,9 +239,6 @@ importers:
       '@safe-global/safe-deployments':
         specifier: ^1.37.0
         version: 1.37.0
-      '@safe-global/safe-singleton-factory':
-        specifier: ^1.0.25
-        version: 1.0.27
       '@typechain/ethers-v6':
         specifier: ^0.5.1
         version: 0.5.1(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(typechain@8.3.2(typescript@5.5.2))(typescript@5.5.2)
@@ -2428,9 +2425,6 @@ packages:
 
   '@safe-global/safe-passkey@0.2.0':
     resolution: {integrity: sha512-B9IpVvwXLvK3m+BRhn9z8kCbEizFmua4YmaUBZ9yr0xM9YsX2PRTnxbFvC7pLph1OQ2u+9O2V3FEmPiS10YEIw==}
-
-  '@safe-global/safe-singleton-factory@1.0.27':
-    resolution: {integrity: sha512-IrYUsJODsXQbWRxPaQWyIT3CnTp+EG7w90WaO/tPH10iCGGpPgopQl10ULWwYALto5e05OToYgIPwd9CS1KtTg==}
 
   '@safe-global/safe-singleton-factory@1.0.31':
     resolution: {integrity: sha512-7B8XkpP7Q2ukPXbQumdgAat1fJt2voVpMaiQLgP5nyOxo7uYzf0n8kPiwMjdpLsLMDicKKfsBuHrhhCY9vfAJA==}
@@ -10112,8 +10106,6 @@ snapshots:
       cbor: 9.0.2
     transitivePeerDependencies:
       - ethers
-
-  '@safe-global/safe-singleton-factory@1.0.27': {}
 
   '@safe-global/safe-singleton-factory@1.0.31': {}
 
