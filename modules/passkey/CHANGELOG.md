@@ -11,10 +11,10 @@ EVM target: Paris
 
 ## Expected addresses
 
-- `SafeWebAuthnSignerFactory` at `TBD`
-- `SafeWebAuthnSharedSigner` at `TBD`
-- `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4`
-- `FCLP256Verifier` at `TBD`
+- `SafeWebAuthnSignerFactory` at `0x1d31F259eE307358a26dFb23EB365939E8641195`
+- `SafeWebAuthnSharedSigner` at `0x94a4F6affBd8975951142c3999aEAB7ecee555c2`
+- `DaimoP256Verifier` at `0xfd08a316255D83133c5d74EcF62B625414f68C14`
+- `FCLP256Verifier` at `0xA86e0054C51E4894D88762a017ECc5E5235f5DBA`
 
 ## Changes
 
@@ -28,6 +28,7 @@ EVM target: Paris
 - Index the `signer` field for `Created` event in the `SafeWebAuthnSignerFactory` contract.
 - Use more consistent compiler version pragmas throughout the contracts.
 - Initial release of the `SafeWebAuthnSharedSigner` contract.
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
 
 # Version 0.2.0
 

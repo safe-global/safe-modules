@@ -4,6 +4,11 @@ import 'hardhat-deploy'
 import dotenv from 'dotenv'
 import type { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
 import yargs from 'yargs/yargs'
+import { getSingletonFactoryInfo } from "@safe-global/safe-singleton-factory";
+import { DeterministicDeploymentInfo } from "hardhat-deploy/dist/types";
+import './src/tasks/localVerify'
+import './src/tasks/deployContracts'
+import './src/tasks/codesize'
 
 const argv = yargs(process.argv.slice(2))
   .options({ network: { type: 'string', default: 'hardhat' } })
@@ -30,10 +35,6 @@ if (['mainnet', 'sepolia', 'polygon', 'amoy'].includes(argv.network) && INFURA_K
   throw new Error(`Could not find Infura key in env, unable to connect to network ${argv.network}`)
 }
 
-import './src/tasks/localVerify'
-import './src/tasks/deployContracts'
-import './src/tasks/codesize'
-
 const solidityVersion = SOLIDITY_VERSION || '0.8.23'
 const soliditySettings = SOLIDITY_SETTINGS
   ? JSON.parse(SOLIDITY_SETTINGS)
@@ -44,6 +45,26 @@ const soliditySettings = SOLIDITY_SETTINGS
         runs: 10_000_000,
       },
     }
+
+const deterministicDeployment = (network: string): DeterministicDeploymentInfo => {
+    const info = getSingletonFactoryInfo(parseInt(network));
+    if (!info) {
+        throw new Error(`
+        Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
+        For more information, see https://github.com/safe-global/safe-smart-account#replay-protection-eip-155
+      `);
+    }
+
+    const gasLimit = BigInt(info.gasLimit)
+    const gasPrice = BigInt(info.gasPrice)
+  
+    return {
+        factory: info.address,
+        deployer: info.signerAddress,
+        funding: String(gasLimit * gasPrice),
+        signedTx: info.transaction,
+    };
+};
 
 const customNetwork = NODE_URL
   ? {
@@ -98,6 +119,7 @@ const userConfig: HardhatUserConfig = {
     },
     ...customNetwork,
   },
+  deterministicDeployment,
   namedAccounts: {
     deployer: 0,
   },

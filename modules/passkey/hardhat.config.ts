@@ -7,6 +7,8 @@ import { HttpNetworkUserConfig } from 'hardhat/types'
 import './src/tasks/codesize'
 import './src/tasks/deployContracts'
 import './src/tasks/localVerify'
+import { getSingletonFactoryInfo } from "@safe-global/safe-singleton-factory";
+import { DeterministicDeploymentInfo } from "hardhat-deploy/dist/types";
 
 dotenv.config()
 const { CUSTOM_NODE_URL, MNEMONIC, ETHERSCAN_API_KEY, PK } = process.env
@@ -43,6 +45,26 @@ const compilerSettings = {
   },
 }
 
+const deterministicDeployment = (network: string): DeterministicDeploymentInfo => {
+  const info = getSingletonFactoryInfo(parseInt(network));
+  if (!info) {
+      throw new Error(`
+      Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
+      For more information, see https://github.com/safe-global/safe-smart-account#replay-protection-eip-155
+    `);
+  }
+
+  const gasLimit = BigInt(info.gasLimit)
+  const gasPrice = BigInt(info.gasPrice)
+
+  return {
+      factory: info.address,
+      deployer: info.signerAddress,
+      funding: String(gasLimit * gasPrice),
+      signedTx: info.transaction,
+  };
+};
+
 const config: HardhatUserConfig = {
   paths: {
     artifacts: 'build/artifacts',
@@ -65,6 +87,7 @@ const config: HardhatUserConfig = {
     },
     ...customNetwork,
   },
+  deterministicDeployment,
   solidity: {
     compilers: [compilerSettings],
     overrides: {
