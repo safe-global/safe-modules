@@ -260,7 +260,7 @@ if (transactionType === UserOperationType.VerifyingPaymaster) {
 
   if (senderUSDCBalance < usdcAmount) {
     console.log(`\nTransferring ${usdcAmount / usdcDenomination} USDC Token for paying the Paymaster from Sender to Safe.`)
-    await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, usdcAmount, chain, paymaster)
+    await transferERC20Token(usdcTokenAddress, publicClient, signer, senderAddress, usdcAmount, paymaster)
     while (senderUSDCBalance < usdcAmount) {
       await setTimeout(15000)
       senderUSDCBalance = await getERC20Balance(usdcTokenAddress, publicClient, senderAddress)

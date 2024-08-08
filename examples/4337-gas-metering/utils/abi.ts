@@ -10,7 +10,7 @@ export const ERC20_TOKEN_APPROVE_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const ERC20_TOKEN_TRANSFER_ABI = [
   {
@@ -24,7 +24,7 @@ export const ERC20_TOKEN_TRANSFER_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const ERC20_TOKEN_DECIMALS_ABI = [
   {
@@ -34,7 +34,7 @@ export const ERC20_TOKEN_DECIMALS_ABI = [
     type: 'function',
     stateMutability: 'view',
   },
-]
+] as const
 
 export const ERC20_TOKEN_BALANCE_OF_ABI = [
   {
@@ -44,7 +44,7 @@ export const ERC20_TOKEN_BALANCE_OF_ABI = [
     type: 'function',
     stateMutability: 'view',
   },
-]
+] as const
 
 export const ERC20_TOKEN_MINT_ABI = [
   {
@@ -57,7 +57,7 @@ export const ERC20_TOKEN_MINT_ABI = [
     type: 'function',
     stateMutability: 'public',
   },
-]
+] as const
 
 export const ERC721_TOKEN_SAFEMINT_ABI = [
   {
@@ -68,7 +68,7 @@ export const ERC721_TOKEN_SAFEMINT_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const MULTISEND_ABI = [
   {
@@ -78,7 +78,7 @@ export const MULTISEND_ABI = [
     stateMutability: 'payable',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_NONCE_ABI = [
   {
@@ -88,7 +88,7 @@ export const SAFE_NONCE_ABI = [
     type: 'function',
     stateMutability: 'view',
   },
-]
+] as const
 
 export const SAFE_EXECTRANSACTION_ABI = [
   {
@@ -110,7 +110,7 @@ export const SAFE_EXECTRANSACTION_ABI = [
     stateMutability: 'external',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_SETUP_ABI = [
   {
@@ -161,7 +161,7 @@ export const SAFE_SETUP_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_ENABLE_MODULES_ABI = [
   {
@@ -177,7 +177,7 @@ export const SAFE_ENABLE_MODULES_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_FACTORY_CREATE_PROXY_WITH_NONCE_ABI = [
   {
@@ -209,7 +209,7 @@ export const SAFE_FACTORY_CREATE_PROXY_WITH_NONCE_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_4337_EXECUTE_USEROP_ABI = [
   {
@@ -240,7 +240,7 @@ export const SAFE_4337_EXECUTE_USEROP_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_FACTORY_PROXY_CREATION_CODE_ABI = [
   {
@@ -256,7 +256,7 @@ export const SAFE_FACTORY_PROXY_CREATION_CODE_ABI = [
     stateMutability: 'pure',
     type: 'function',
   },
-]
+] as const
 
 export const SAFE_4337_MODULE_ABI = [
   { inputs: [{ internalType: 'address', name: 'entryPoint', type: 'address' }], stateMutability: 'nonpayable', type: 'constructor' },
@@ -476,4 +476,4 @@ export const SAFE_4337_MODULE_ABI = [
     stateMutability: 'nonpayable',
     type: 'function',
   },
-]
+] as const

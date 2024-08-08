@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { http, createWalletClient, PrivateKeyAccount, Address, WalletClient, HttpTransport, Chain, Account, PublicClient } from 'viem'
+import { Account, Address, Chain, HttpTransport, PrivateKeyAccount, PublicClient, WalletClient, createWalletClient, http } from 'viem'
 import { baseSepolia, goerli, sepolia } from 'viem/chains'
 import { setTimeout } from 'timers/promises'
 
@@ -8,8 +8,8 @@ const pimlicoRPCURL = process.env.PIMLICO_RPC_URL
 const alchemyRPCURL = process.env.ALCHEMY_RPC_URL
 const gelatoRPCURL = process.env.GELATO_RPC_URL
 
-export const transferETH = async (
-  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia | typeof goerli>,
+export const transferETH = async <C extends Chain>(
+  publicClient: PublicClient<HttpTransport, C>,
   signer: PrivateKeyAccount,
   receiver: Address,
   amount: bigint,

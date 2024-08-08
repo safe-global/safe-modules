@@ -1,6 +1,5 @@
 import dotenv from 'dotenv'
-import { HttpTransport, http, Address, encodeFunctionData, createWalletClient, PrivateKeyAccount, PublicClient } from 'viem'
-import { baseSepolia, goerli, sepolia } from 'viem/chains'
+import { Address, Chain, PrivateKeyAccount, PublicClient, Transport, createWalletClient, encodeFunctionData, http } from 'viem'
 import {
   ERC20_TOKEN_APPROVE_ABI,
   ERC20_TOKEN_BALANCE_OF_ABI,
@@ -32,95 +31,48 @@ export const generateTransferCallData = (to: Address, value: bigint) => {
   return transferData
 }
 
-export const getERC20Decimals = async (
+export const getERC20Decimals = async <C extends Chain>(
   erc20TokenAddress: Address,
-  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
-): Promise<bigint> => {
-  const erc20Decimals = (await publicClient.readContract({
+  publicClient: PublicClient<Transport<'http'>, C>,
+): Promise<number> => {
+  const erc20Decimals = await publicClient.readContract({
     abi: ERC20_TOKEN_DECIMALS_ABI,
     address: erc20TokenAddress,
     functionName: 'decimals',
-  })) as bigint
+  })
 
   return erc20Decimals
 }
 
-export const getERC20Balance = async (
+export const getERC20Balance = async <C extends Chain>(
   erc20TokenAddress: Address,
-  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
+  publicClient: PublicClient<Transport<'http'>, C>,
   owner: Address,
 ): Promise<bigint> => {
-  const senderERC20Balance = (await publicClient.readContract({
+  const senderERC20Balance = await publicClient.readContract({
     abi: ERC20_TOKEN_BALANCE_OF_ABI,
     address: erc20TokenAddress,
     functionName: 'balanceOf',
     args: [owner],
-  })) as bigint
+  })
 
   return senderERC20Balance
 }
 
-export const mintERC20Token = async (
+export const mintERC20Token = async <C extends Chain>(
   erc20TokenAddress: Address,
-  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
+  publicClient: PublicClient<Transport<'http'>, C>,
   signer: PrivateKeyAccount,
   to: Address,
   amount: bigint,
-  chain: string,
   paymaster: string,
 ) => {
-  let walletClient
-  if (paymaster == 'pimlico') {
-    if (chain == 'sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: sepolia,
-        transport: http(pimlicoRPCURL),
-      })
-    } else if (chain == 'base-sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: baseSepolia,
-        transport: http(pimlicoRPCURL),
-      })
-    } else {
-      throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-    }
-  } else if (paymaster == 'alchemy') {
-    if (chain == 'sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: sepolia,
-        transport: http(alchemyRPCURL),
-      })
-    } else if (chain == 'goerli') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: goerli,
-        transport: http(alchemyRPCURL),
-      })
-    } else {
-      throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-    }
-  } else if (paymaster == 'gelato') {
-    if (chain == 'sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: sepolia,
-        transport: http(gelatoRPCURL),
-      })
-    } else if (chain == 'base-sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: baseSepolia,
-        transport: http(gelatoRPCURL),
-      })
-    } else {
-      throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-    }
-  } else {
-    throw new Error('Current code only support Pimlico and Alchemy. Please make required changes if you want to use a different Paymaster.')
-  }
+  const walletClient = createWalletClient({
+    account: signer,
+    chain: publicClient.chain,
+    transport: getTransport(paymaster),
+  })
+
   const { request } = await publicClient.simulateContract({
     address: erc20TokenAddress,
     abi: ERC20_TOKEN_MINT_ABI,
@@ -128,70 +80,27 @@ export const mintERC20Token = async (
     args: [to, amount],
     account: signer,
   })
-  await walletClient.writeContract(request)
+
+  // I cannot get Viem to accept the `request` type here, and it seems to be related to this
+  // function being generic on the chain type. Using concrete chain types helps, but doesn't
+  // completely solve the issue either.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await walletClient.writeContract(request as any)
 }
 
-export const transferERC20Token = async (
+export const transferERC20Token = async <C extends Chain>(
   erc20TokenAddress: Address,
-  publicClient: PublicClient<HttpTransport, typeof baseSepolia | typeof sepolia>,
+  publicClient: PublicClient<Transport<'http'>, C>,
   signer: PrivateKeyAccount,
   to: Address,
   amount: bigint,
-  chain: string,
   paymaster: string,
 ) => {
-  let walletClient
-  if (paymaster == 'pimlico') {
-    if (chain == 'sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: sepolia,
-        transport: http(pimlicoRPCURL),
-      })
-    } else if (chain == 'base-sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: baseSepolia,
-        transport: http(pimlicoRPCURL),
-      })
-    } else {
-      throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-    }
-  } else if (paymaster == 'alchemy') {
-    if (chain == 'sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: sepolia,
-        transport: http(alchemyRPCURL),
-      })
-    } else if (chain == 'goerli') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: goerli,
-        transport: http(alchemyRPCURL),
-      })
-    } else {
-      throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-    }
-  } else if (paymaster == 'gelato') {
-    if (chain == 'sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: sepolia,
-        transport: http(gelatoRPCURL),
-      })
-    } else if (chain == 'base-sepolia') {
-      walletClient = createWalletClient({
-        account: signer,
-        chain: baseSepolia,
-        transport: http(gelatoRPCURL),
-      })
-    } else {
-      throw new Error('Current code only support limited networks. Please make required changes if you want to use custom network.')
-    }
-  } else {
-    throw new Error('Current code only support Pimlico and Alchemy. Please make required changes if you want to use a different Paymaster.')
-  }
+  const walletClient = createWalletClient({
+    account: signer,
+    chain: publicClient.chain,
+    transport: getTransport(paymaster),
+  })
 
   const signerERC20Bal = await getERC20Balance(erc20TokenAddress, publicClient, signer.address)
   if (signerERC20Bal < amount) {
@@ -206,5 +115,22 @@ export const transferERC20Token = async (
     args: [to, amount],
     account: signer,
   })
-  await walletClient.writeContract(request)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await walletClient.writeContract(request as any)
+}
+
+const getTransport = (paymaster: string): Transport<'http'> => {
+  switch (paymaster) {
+    case 'pimlico':
+      return http(pimlicoRPCURL)
+    case 'alchemy':
+      return http(alchemyRPCURL)
+    case 'gelato':
+      return http(gelatoRPCURL)
+    default:
+      throw new Error(
+        'Current code only support Alchemy, Pimlico and Gelato. Please make required changes if you want to use a different Paymaster.',
+      )
+  }
 }
