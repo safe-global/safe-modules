@@ -1,5 +1,17 @@
 import dotenv from 'dotenv'
-import { parseEther, type Hex, type PrivateKeyAccount, type Address, formatEther, concat, pad, toHex } from 'viem'
+import {
+  parseEther,
+  type Hex,
+  type PrivateKeyAccount,
+  type Address,
+  type Chain,
+  type PublicClient,
+  type Transport,
+  formatEther,
+  concat,
+  pad,
+  toHex,
+} from 'viem'
 import { encodeCallData } from './safe'
 import { EIP712_SAFE_OPERATION_TYPE } from './type'
 import { setTimeout } from 'timers/promises'
@@ -31,10 +43,35 @@ export type UserOperation = {
   paymasterAndData?: never
 }
 
+export type PackedUserOperation = {
+  sender: Address
+  nonce: bigint
+  initCode: Hex
+  callData: Hex
+  accountGasLimits: Hex
+  preVerificationGas: bigint
+  gasFees: Hex
+  paymasterAndData: Hex
+  signature: Hex
+}
+
+export type UserOperationReceipt = {
+  actualGasUsed: bigint
+  receipt: {
+    transactionHash: Address
+    gasUsed: bigint
+  }
+}
+
+export interface BundlerClient {
+  sendUserOperation: (args: { userOperation: UserOperation; entryPoint: Address }) => Promise<Address>
+  getUserOperationReceipt: (args: { hash: Address }) => Promise<UserOperationReceipt | null>
+}
+
 export const submitUserOperationPimlico = async (
   userOperation: UserOperation,
-  bundlerClient: any,
-  entryPointAddress: string,
+  bundlerClient: BundlerClient,
+  entryPointAddress: Address,
   chain: string,
 ) => {
   const userOperationHash = await bundlerClient.sendUserOperation({
@@ -110,9 +147,9 @@ export const signUserOperation = async (
   return signatureBytes
 }
 
-export const createCallData = async (
+export const createCallData = async <C extends Chain>(
   chain: string,
-  publicClient: any,
+  publicClient: PublicClient<Transport<'http'>, C>,
   signer: PrivateKeyAccount,
   txType: string,
   senderAddress: `0x${string}`,
@@ -137,7 +174,7 @@ export const createCallData = async (
     // Trying to mint tokens (Make sure ERC20 Token Contract is mintable by anyone).
     if (senderERC20Balance < erc20Amount) {
       console.log('\nMinting ERC20 Tokens to Safe Wallet.')
-      await mintERC20Token(erc20TokenAddress, publicClient, signer, senderAddress, erc20Amount, chain, paymaster)
+      await mintERC20Token(erc20TokenAddress, publicClient, signer, senderAddress, erc20Amount, paymaster)
 
       while (senderERC20Balance < erc20Amount) {
         await setTimeout(15000)
@@ -222,7 +259,7 @@ export function getPaymasterAndData(unpackedUserOperation: UserOperation) {
     : '0x'
 }
 
-export function toPackedUserOperation(unpackedUserOperation: UserOperation): Record<string, any> {
+export function toPackedUserOperation(unpackedUserOperation: UserOperation): PackedUserOperation {
   return {
     sender: unpackedUserOperation.sender,
     nonce: unpackedUserOperation.nonce,
