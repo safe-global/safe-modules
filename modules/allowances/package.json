@@ -28,7 +28,6 @@
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.0.2",
     "@safe-global/safe-deployments": "^1.37.0",
-    "@safe-global/safe-singleton-factory": "^1.0.25",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/mocha": "^10.0.7",

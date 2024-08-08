@@ -4,6 +4,8 @@ import 'hardhat-deploy'
 import dotenv from 'dotenv'
 import type { HardhatUserConfig, HttpNetworkUserConfig } from 'hardhat/types'
 import yargs from 'yargs/yargs'
+import { getSingletonFactoryInfo } from "@safe-global/safe-singleton-factory";
+import { DeterministicDeploymentInfo } from "hardhat-deploy/dist/types";
 
 import './src/tasks/deployContracts'
 import './src/tasks/localVerify'
@@ -42,6 +44,26 @@ const customNetwork = CUSTOM_NODE_URL
     }
   : {}
 
+const deterministicDeployment = (network: string): DeterministicDeploymentInfo => {
+    const info = getSingletonFactoryInfo(parseInt(network));
+    if (!info) {
+        throw new Error(`
+        Safe factory not found for network ${network}. You can request a new deployment at https://github.com/safe-global/safe-singleton-factory.
+        For more information, see https://github.com/safe-global/safe-smart-account#replay-protection-eip-155
+      `);
+    }
+
+    const gasLimit = BigInt(info.gasLimit)
+    const gasPrice = BigInt(info.gasPrice)
+  
+    return {
+        factory: info.address,
+        deployer: info.signerAddress,
+        funding: String(gasLimit * gasPrice),
+        signedTx: info.transaction,
+    };
+};
+
 const userConfig: HardhatUserConfig = {
   paths: {
     artifacts: 'build/artifacts',
@@ -71,6 +93,7 @@ const userConfig: HardhatUserConfig = {
     },
     ...customNetwork,
   },
+  deterministicDeployment,
   namedAccounts: {
     deployer: 0,
   },
