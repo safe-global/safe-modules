@@ -224,7 +224,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * However, there is an edge case that `_checkSignaturesLength` function cannot detect.
      * Since the `signature` field in UserOp is not part of the UserOp hash a malicious bundler can manipulate the
      * field(s) storing the signature length and pad additional bytes to the dynamic part of the signatures which will
-     * make `_checkSignaturesLength` to return true. In such cases, it is the responsibility of the signature verifier
+     * make `_checkSignaturesLength` to return true. In such cases, it is the responsibility of the Safe signature validator
      * (which can be a Safe or any other contract) that supports ERC-1271 and is the owner of the Safe to check for
      * additional padded bytes to the signatures data.
      * @param signatures Signatures data.
