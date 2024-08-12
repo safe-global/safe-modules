@@ -2,20 +2,6 @@
 
 # Version: Unreleased
 
-## Compiler settings
-
-Solidity compiler: [0.8.20](https://github.com/ethereum/solidity/releases/tag/v0.8.20)
-
-Solidity optimizer: enabled via IR with 1.000.000 runs
-
-## Recovery Period
-
-The recovery period is 14 days.
-
-## Expected addresses with [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
-
-- `SocialRecoveryModule` at `0x9BacD92F4687Db306D7ded5d4513a51EA05df25b`
-
 ## Changes
 
 ### General
@@ -34,7 +20,7 @@ Solidity optimizer: enabled via IR with 1.000.000 runs
 
 The recovery period is 14 days.
 
-## Expected addresses with [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
+## Expected addresses
 
 - `SocialRecoveryModule` at `0x4Aa5Bf7D840aC607cb5BD3249e6Af6FC86C04897`
 

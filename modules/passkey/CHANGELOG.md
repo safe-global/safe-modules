@@ -9,7 +9,7 @@ Solidity compiler: [0.8.26](https://github.com/ethereum/solidity/releases/tag/v0
 Solidity optimizer: enabled with 10.000.000 runs (via IR for all contracts except `FCLP256Verifier`)
 EVM target: Paris
 
-## Expected addresses with [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
+## Expected addresses
 
 - `SafeWebAuthnSignerFactory` at `0x1d31F259eE307358a26dFb23EB365939E8641195`
 - `SafeWebAuthnSharedSigner` at `0x94a4F6affBd8975951142c3999aEAB7ecee555c2`
@@ -42,7 +42,7 @@ Solidity compiler: [0.8.24](https://github.com/ethereum/solidity/releases/tag/v0
 Solidity optimizer: enabled with 10.000.000 runs
 EVM target: Paris
 
-## Expected addresses with [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
+## Expected addresses
 
 - `SafeWebAuthnSignerFactory` at `0xF7488fFbe67327ac9f37D5F722d83Fc900852Fbf`
 - `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4`

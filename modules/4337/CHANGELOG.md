@@ -4,21 +4,6 @@ This changelog only contains changes starting from version 0.2.0
 
 # Version: Unreleased
 
-## Compiler settings
-
-Solidity compiler: [0.8.23](https://github.com/ethereum/solidity/releases/tag/v0.8.23)
-
-Solidity optimizer: enabled with 10.000.000 runs
-
-## Supported EntryPoint
-
-The official deployments support the EntryPoint v0.7.0 with the canonical deployment at `0x0000000071727De22E5E9d8BAf0edAc6f37da032`.
-
-## Expected addresses with [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
-
-- `SafeModuleSetup` at `0xF2C2C95C168Ef121b052B4c518889CFe166cB4Fa`
-- `Safe4337Module` at `0x68C77b778228823a06e3CbcDA816d46D80B1C728`
-
 ## Changes
 
 ### General
