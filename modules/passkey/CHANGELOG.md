@@ -36,11 +36,11 @@ EVM target: Paris
 
 ## Expected addresses
 
-### With [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
+### With [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
 
-- `SafeWebAuthnSignerFactory` at ``
-- `SafeWebAuthnSharedSigner` at ``
-- `FCLP256Verifier` at ``
+- `SafeWebAuthnSignerFactory` at `0xfF25690FC38De1572c2C8075966Bb813f60a095F`
+- `SafeWebAuthnSharedSigner` at `0xB3a6Aa3eDDD715dbD84aD465Ab0f98919eBB6d5C`
+- `FCLP256Verifier` at `0xFbe0614fFB2226cd6d1D3F9A79BC73d7647b4C61`
 
 ### Official Deployment Address from 3rd party
 
