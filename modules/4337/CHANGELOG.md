@@ -22,7 +22,7 @@ Solidity optimizer: enabled with 10.000.000 runs
 
 The official deployments support the EntryPoint v0.7.0 with the canonical deployment at `0x0000000071727De22E5E9d8BAf0edAc6f37da032`.
 
-## Expected addresses with [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
+## Expected addresses
 
 - `SafeModuleSetup` at `0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47`
 - `Safe4337Module` at `0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226`
