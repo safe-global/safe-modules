@@ -1,6 +1,6 @@
 # Changelog
 
-# Version: Unreleased
+# Version 0.2.1
 
 ## Compiler settings
 
@@ -21,39 +21,13 @@ EVM target: Paris
 
 ## Changes
 
-### General
-
-- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
-
-# Version 0.2.1
-
-## Compiler settings
-
-Solidity compiler: [0.8.26](https://github.com/ethereum/solidity/releases/tag/v0.8.26)
-
-Solidity optimizer: enabled with 10.000.000 runs (via IR for all contracts except `FCLP256Verifier`)
-EVM target: Paris
-
-## Expected addresses
-
-### With [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
-
-- `SafeWebAuthnSignerFactory` at `0xfF25690FC38De1572c2C8075966Bb813f60a095F`
-- `SafeWebAuthnSharedSigner` at `0xB3a6Aa3eDDD715dbD84aD465Ab0f98919eBB6d5C`
-- `FCLP256Verifier` at `0xFbe0614fFB2226cd6d1D3F9A79BC73d7647b4C61`
-
-### Official Deployment Address from 3rd party
-
-- `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4` ([Source](https://p256.eth.limo/))
-
-## Changes
-
 ### Security Fixes
 
 - Check the success of the static call to the SHA-256 precompile.
 
 ### General
 
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
 - Use compiler version 0.8.26 and use IR optimizer for all contracts (except `FCLP256Verifier` as it introduces perfomance regressions). This simultaneously decreases code size and runtime gas costs.
 - Index the `signer` field for `Created` event in the `SafeWebAuthnSignerFactory` contract.
 - Use more consistent compiler version pragmas throughout the contracts.
@@ -68,7 +42,7 @@ Solidity compiler: [0.8.24](https://github.com/ethereum/solidity/releases/tag/v0
 Solidity optimizer: enabled with 10.000.000 runs
 EVM target: Paris
 
-## Expected addresses
+## Expected addresses with [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
 
 - `SafeWebAuthnSignerFactory` at `0xF7488fFbe67327ac9f37D5F722d83Fc900852Fbf`
 - `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4`
