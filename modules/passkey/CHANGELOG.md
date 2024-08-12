@@ -1,5 +1,30 @@
 # Changelog
 
+# Version: Unreleased
+
+## Compiler settings
+
+Solidity compiler: [0.8.26](https://github.com/ethereum/solidity/releases/tag/v0.8.26)
+
+Solidity optimizer: enabled with 10.000.000 runs (via IR for all contracts except `FCLP256Verifier`)
+EVM target: Paris
+
+## Expected addresses with [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
+
+- `SafeWebAuthnSignerFactory` at `0x1d31F259eE307358a26dFb23EB365939E8641195`
+- `SafeWebAuthnSharedSigner` at `0x94a4F6affBd8975951142c3999aEAB7ecee555c2`
+- `FCLP256Verifier` at `0xA86e0054C51E4894D88762a017ECc5E5235f5DBA`
+
+### Official Deployment Address from 3rd party
+
+- `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4` ([Source](https://p256.eth.limo/))
+
+## Changes
+
+### General
+
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
+
 # Version 0.2.1
 
 ## Compiler settings
@@ -13,9 +38,9 @@ EVM target: Paris
 
 ### With [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
 
-- `SafeWebAuthnSignerFactory` at `0x1d31F259eE307358a26dFb23EB365939E8641195`
-- `SafeWebAuthnSharedSigner` at `0x94a4F6affBd8975951142c3999aEAB7ecee555c2`
-- `FCLP256Verifier` at `0xA86e0054C51E4894D88762a017ECc5E5235f5DBA`
+- `SafeWebAuthnSignerFactory` at ``
+- `SafeWebAuthnSharedSigner` at ``
+- `FCLP256Verifier` at ``
 
 ### Official Deployment Address from 3rd party
 
@@ -33,7 +58,6 @@ EVM target: Paris
 - Index the `signer` field for `Created` event in the `SafeWebAuthnSignerFactory` contract.
 - Use more consistent compiler version pragmas throughout the contracts.
 - Initial release of the `SafeWebAuthnSharedSigner` contract.
-- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
 
 # Version 0.2.0
 
