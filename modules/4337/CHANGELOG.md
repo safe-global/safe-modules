@@ -2,29 +2,6 @@
 
 This changelog only contains changes starting from version 0.2.0
 
-# Version 0.3.1
-
-## Compiler settings
-
-Solidity compiler: [0.8.23](https://github.com/ethereum/solidity/releases/tag/v0.8.23)
-
-Solidity optimizer: enabled with 10.000.000 runs
-
-## Supported EntryPoint
-
-The official deployments support the EntryPoint v0.7.0 with the canonical deployment at `0x0000000071727De22E5E9d8BAf0edAc6f37da032`.
-
-## Expected addresses
-
-- `SafeModuleSetup` at `0xF2C2C95C168Ef121b052B4c518889CFe166cB4Fa`
-- `Safe4337Module` at `0x68C77b778228823a06e3CbcDA816d46D80B1C728`
-
-## Changes
-
-### General
-
-- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
-
 # Version 0.3.0
 
 ## Compiler settings
@@ -39,6 +16,13 @@ The official deployments support the EntryPoint v0.7.0 with the canonical deploy
 
 ## Expected addresses
 
+### With [Safe Singleton Factory](https://github.com/safe-global/safe-singleton-factory)
+
+- `SafeModuleSetup` at `0xF2C2C95C168Ef121b052B4c518889CFe166cB4Fa`
+- `Safe4337Module` at `0x68C77b778228823a06e3CbcDA816d46D80B1C728`
+
+### With [Deterministic Deployment Proxy](https://github.com/Arachnid/deterministic-deployment-proxy)
+
 - `SafeModuleSetup` at `0x2dd68b007B46fBe91B9A7c3EDa5A7a1063cB5b47`
 - `Safe4337Module` at `0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226`
 
@@ -46,6 +30,7 @@ The official deployments support the EntryPoint v0.7.0 with the canonical deploy
 
 ### General
 
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
 - Use the new `PackedUserOperation` struct from EntryPoint v0.7.0 ([#225](https://github.com/safe-global/safe-modules/issues/225))
 - The `AddModulesLib` implementation was optimized, got missing NatSpecs and was renamed to `SafeModuleSetup` ([#241](https://github.com/safe-global/safe-modules/pull/241]))
 - Use hardcoded constants for type hashes and domain separators in `Safe4337Module` ([#179](https://github.com/safe-global/safe-modules/issues/179]))
