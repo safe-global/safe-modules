@@ -1,5 +1,6 @@
 import {
   Address,
+  Chain,
   Hex,
   PrivateKeyAccount,
   PublicClient,
@@ -16,7 +17,6 @@ import {
 import { InternalTx, encodeMultiSend } from './multisend'
 import { generateApproveCallData, generateTransferCallData, getERC20Balance, getERC20Decimals, mintERC20Token } from './erc20'
 import { setTimeout } from 'timers/promises'
-import { baseSepolia, sepolia } from 'viem/chains'
 import { generateMintingCallData } from './erc721'
 import { transferETH } from './nativeTransfer'
 import {
@@ -38,7 +38,7 @@ export interface MetaTransaction {
   nonce: bigint
 }
 
-export const getGelatoCallData = async ({
+export const getGelatoCallData = async <C extends Chain>({
   safe,
   owner,
   publicClient,
@@ -48,7 +48,7 @@ export const getGelatoCallData = async ({
 }: {
   safe: Address
   owner: PrivateKeyAccount
-  publicClient: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
+  publicClient: PublicClient<Transport<'http'>, C>
   txType: string
   erc20TokenAddress: Address
   erc721TokenAddress: Address
@@ -176,7 +176,7 @@ const getInitializerCode = async ({
   })
 }
 
-const getGelatoInitializerCode = async ({
+const getGelatoInitializerCode = async <C extends Chain>({
   owner,
   client,
   txType,
@@ -187,7 +187,7 @@ const getGelatoInitializerCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  client: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
+  client: PublicClient<Transport<'http'>, C>
   txType: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
@@ -242,7 +242,7 @@ const getGelatoInitializerCode = async ({
   })
 }
 
-export const prepareForGelatoTx = async ({
+export const prepareForGelatoTx = async <C extends Chain>({
   signer,
   chain,
   publicClient,
@@ -252,7 +252,7 @@ export const prepareForGelatoTx = async ({
 }: {
   signer: PrivateKeyAccount
   chain: string
-  publicClient: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
+  publicClient: PublicClient<Transport<'http'>, C>
   txType: string
   senderAddress: Address
   erc20TokenAddress: Address
@@ -267,7 +267,7 @@ export const prepareForGelatoTx = async ({
     // Trying to mint tokens (Make sure ERC20 Token Contract is mintable by anyone).
     if (senderERC20Balance < erc20Amount) {
       console.log('\nMinting ERC20 Tokens to Safe Wallet.')
-      await mintERC20Token(erc20TokenAddress, publicClient, signer, senderAddress, erc20Amount, chain, 'gelato')
+      await mintERC20Token(erc20TokenAddress, publicClient, signer, senderAddress, erc20Amount, 'gelato')
 
       while (senderERC20Balance < erc20Amount) {
         await setTimeout(15000)
@@ -341,7 +341,7 @@ export const getAccountInitCode = async ({
   return initCodeCallData
 }
 
-export const getGelatoAccountInitCode = async ({
+export const getGelatoAccountInitCode = async <C extends Chain>({
   owner,
   client,
   txType,
@@ -354,7 +354,7 @@ export const getGelatoAccountInitCode = async ({
   erc721TokenAddress,
 }: {
   owner: Address
-  client: PublicClient<Transport<'http'>, typeof sepolia | typeof baseSepolia>
+  client: PublicClient<Transport<'http'>, C>
   txType: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
@@ -393,7 +393,7 @@ export const encodeCallData = (params: { to: Address; value: bigint; data: `0x${
   })
 }
 
-export const getAccountAddress = async ({
+export const getAccountAddress = async <C extends Chain>({
   owner,
   client,
   txType = '',
@@ -409,7 +409,7 @@ export const getAccountAddress = async ({
   isGelato = false,
 }: {
   owner: Address
-  client: any
+  client: PublicClient<Transport<'http'>, C>
   txType?: string
   safeModuleSetupAddress: Address
   safe4337ModuleAddress: Address
