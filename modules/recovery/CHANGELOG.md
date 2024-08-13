@@ -1,5 +1,13 @@
 # Changelog
 
+# Version: Unreleased
+
+## Changes
+
+### General
+
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
+
 # Version 0.1.0
 
 ## Compiler settings

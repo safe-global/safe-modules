@@ -2,6 +2,14 @@
 
 This changelog only contains changes starting from version 0.2.0
 
+# Version: Unreleased
+
+## Changes
+
+### General
+
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
+
 # Version 0.3.0
 
 ## Compiler settings
@@ -20,14 +28,6 @@ The official deployments support the EntryPoint v0.7.0 with the canonical deploy
 - `Safe4337Module` at `0x75cf11467937ce3F2f357CE24ffc3DBF8fD5c226`
 
 ## Changes
-
-### Security Fixes
-
-None
-
-### Compatibility Fixes
-
-None
 
 ### General
 

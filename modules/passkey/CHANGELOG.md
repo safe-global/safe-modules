@@ -11,10 +11,13 @@ EVM target: Paris
 
 ## Expected addresses
 
-- `SafeWebAuthnSignerFactory` at `TBD`
-- `SafeWebAuthnSharedSigner` at `TBD`
-- `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4`
-- `FCLP256Verifier` at `TBD`
+- `SafeWebAuthnSignerFactory` at `0x1d31F259eE307358a26dFb23EB365939E8641195`
+- `SafeWebAuthnSharedSigner` at `0x94a4F6affBd8975951142c3999aEAB7ecee555c2`
+- `FCLP256Verifier` at `0xA86e0054C51E4894D88762a017ECc5E5235f5DBA`
+
+### Official Deployment Address from 3rd party
+
+- `DaimoP256Verifier` at `0xc2b78104907F722DABAc4C69f826a522B2754De4` ([Source](https://p256.eth.limo/))
 
 ## Changes
 
@@ -24,6 +27,7 @@ EVM target: Paris
 
 ### General
 
+- Using the [`safe-singleton-factory`](https://github.com/safe-global/safe-singleton-factory) to deploy contracts.
 - Use compiler version 0.8.26 and use IR optimizer for all contracts (except `FCLP256Verifier` as it introduces perfomance regressions). This simultaneously decreases code size and runtime gas costs.
 - Index the `signer` field for `Created` event in the `SafeWebAuthnSignerFactory` contract.
 - Use more consistent compiler version pragmas throughout the contracts.
