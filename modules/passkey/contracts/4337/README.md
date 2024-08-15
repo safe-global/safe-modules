@@ -6,8 +6,6 @@ This directory contains additional support contracts for using passkeys with Saf
 >
 > **As such, for the moment, we recommend that Safes be created with an ownership structure or recovery mechanism that allows passkey owners to be rotated in case access to the WebAuthn credential is lost.**
 
-**:warning: As of writing, this contract has not been audited, as such it is not recommended for production use. :warning:**
-
 ## Overview
 
 The core contract provided by the `passkey` module is the `SafeWebAuthnSignerFactory` contract which can be used to create smart contract signers that can be used as owners of Safes. These WebAuthn signers are fully supported both with traditional Safe transactions and infrastructure, as well as ERC-4337. In fact, they are designed such that no storage is read during signature verification (all configuration - the WebAuthn credential public key coordinates and the P-256 verifier contract to use) are stored in contract code instead of account storage for compatibility with ERC-4337.
