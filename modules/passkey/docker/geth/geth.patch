@@ -1,12 +1,13 @@
 diff --git a/params/config.go b/params/config.go
-index b3a96a96a..166243692 100644
+index bd5c40b..f56aa79 100644
 --- a/params/config.go
 +++ b/params/config.go
-@@ -1078,6 +1078,6 @@ func (c *ChainConfig) Rules(num *big.Int, isMerge bool, timestamp uint64) Rules
+@@ -1122,7 +1122,7 @@ func (c *ChainConfig) Rules(num *big.Int, isMerge bool, timestamp uint64) Rules
  		IsOptimismBedrock:  isMerge && c.IsOptimismBedrock(num),
  		IsOptimismRegolith: isMerge && c.IsOptimismRegolith(timestamp),
  		IsOptimismCanyon:   isMerge && c.IsOptimismCanyon(timestamp),
 -		IsOptimismFjord:    isMerge && c.IsOptimismFjord(timestamp),
 +		IsOptimismFjord:    c.IsFjord(timestamp),
+ 		IsOptimismGranite:  isMerge && c.IsOptimismGranite(timestamp),
  	}
  }
