@@ -4,15 +4,14 @@ coverage/
 coverage.json
 deployments/
 dist/
-typechain-types
+typechain-types/
+venv/
 *.log
 .env
-
 
 .DS_Store
 .zos.session
 env/
-.env
 .history
 coverage*
 .certora_internal

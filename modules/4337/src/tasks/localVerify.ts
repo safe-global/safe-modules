@@ -1,3 +1,4 @@
+import { promises as fs } from 'node:fs'
 import { task } from 'hardhat/config'
 import { loadSolc } from '../utils/solc'
 
@@ -15,10 +16,13 @@ task('local-verify', 'Verifies that the local deployment files correspond to the
     delete meta.compiler
     delete meta.output
     delete meta.version
-    const sources = Object.values<Record<string, unknown>>(meta.sources)
-    for (const source of sources) {
+    const sources = Object.entries<Record<string, unknown>>(meta.sources)
+    for (const [filename, source] of sources) {
       for (const key of Object.keys(source)) {
         if (allowedSourceKey.indexOf(key) < 0) delete source[key]
+      }
+      if (source['content'] === undefined) {
+        source['content'] = await fs.readFile(filename, 'utf-8')
       }
     }
     meta.settings.outputSelection = {}
