@@ -33,13 +33,11 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
      */
     address public immutable SELF;
 
-    /// @dev A mapping containing the installed plugins for an account. Safe address => Plugin address => uint256 (0 = not installed, 1 = installed)
-    mapping(address => ERC6900AccountData) private accountData;
+    /// @dev Store the installed plugin info for an account.
+    ERC6900AccountData private accountData;
 
     /// @dev A mapping containing the plugin dependency count for each pluginAddress. Plugin address => uint256 (dependency count).
     mapping(address => uint256) public dependentCount;
-
-    /// @dev A mapping containing the plugin dependency count for each account. Safe address => Plugin address => uint256 (dependency count).
 
     error PluginAlreadyInstalled(address plugin);
     error PluginInterfaceNotSupported(address plugin);
@@ -71,7 +69,7 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
         FunctionReference[] calldata dependencies
     ) external onlyDelegateCall {
         // Check if already installed
-        if (accountData[msg.sender].installedPlugins[plugin].plugin != (address(0))) {
+        if (accountData.installedPlugins[plugin].plugin != (address(0))) {
             revert PluginAlreadyInstalled(plugin);
         }
 
@@ -102,7 +100,7 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
             address dependencyAddress = address(bytes20(bytes21(FunctionReference.unwrap(dependencies[i]))));
 
             // Revert if dependency not installed
-            if (accountData[msg.sender].installedPlugins[dependencyAddress].plugin == address(0)) {
+            if (accountData.installedPlugins[dependencyAddress].plugin == address(0)) {
                 revert PluginDependencyNotInstalled(plugin, dependencyAddress);
             }
 
@@ -113,12 +111,12 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
             dependentCount[dependencyAddress]++;
         }
 
-        accountData[msg.sender].installedPlugins[plugin].manifestHash = manifestHash;
+        accountData.installedPlugins[plugin].manifestHash = manifestHash;
 
         // TODO: Evaluate if state changes are required before calling onInstall
-        accountData[msg.sender].installedPlugins[plugin].plugin = plugin;
-        accountData[msg.sender].installedPlugins[plugin].dependencies = dependencies;
-        accountData[msg.sender].installedPlugins[plugin].canSpendNativeToken = manifest.canSpendNativeToken ? 1 : 0;
+        accountData.installedPlugins[plugin].plugin = plugin;
+        accountData.installedPlugins[plugin].dependencies = dependencies;
+        accountData.installedPlugins[plugin].canSpendNativeToken = manifest.canSpendNativeToken ? 1 : 0;
 
         length = manifest.executionFunctions.length;
 
@@ -129,13 +127,17 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
         emit PluginInstalled(plugin, manifestHash, dependencies);
     }
 
-    function uninstallPluginDelegateCallReceiver(address plugin, bytes calldata config, bytes calldata pluginUninstallData) external onlyDelegateCall {
+    function uninstallPluginDelegateCallReceiver(
+        address plugin,
+        bytes calldata config,
+        bytes calldata pluginUninstallData
+    ) external onlyDelegateCall {
         // TODO: Validate manifestHash
         // TODO: Check for dependencies
         // TODO: Other checks
 
         // TODO: Evaluate if state changes are required before calling onUninstall
-        delete accountData[msg.sender].installedPlugins[plugin];
+        delete accountData.installedPlugins[plugin];
 
         // TODO: Evaluate if try-catch needed
         IPlugin(plugin).onUninstall(pluginUninstallData);
