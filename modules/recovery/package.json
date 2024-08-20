@@ -45,6 +45,7 @@
     "ethers": "^6.13.1",
     "hardhat": "^2.22.5",
     "hardhat-deploy": "^0.12.4",
+    "solc": "0.8.20",
     "typescript": "^5.5.2",
     "yargs": "^17.7.2"
   },

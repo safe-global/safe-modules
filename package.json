@@ -12,7 +12,7 @@
   "scripts": {
     "fmt:global": "prettier --write .",
     "fmt:global-check": "prettier --check .",
-    "lint:monorepo": "sherif -i @openzeppelin/contracts -r root-package-manager-field"
+    "lint:monorepo": "sherif -i @openzeppelin/contracts -i solc -r root-package-manager-field"
   },
   "repository": {
     "type": "git",

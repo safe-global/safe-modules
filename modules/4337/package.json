@@ -65,7 +65,7 @@
     "hardhat": "^2.22.5",
     "hardhat-deploy": "^0.12.4",
     "husky": "^9.0.11",
-    "solc": "^0.8.25",
+    "solc": "0.8.23",
     "solhint": "^5.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2",
