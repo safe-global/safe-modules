@@ -31,12 +31,10 @@ contract SafeWebAuthnSignerSingleton is SignatureValidator {
      */
     function getConfiguration() public pure returns (uint256 x, uint256 y, P256.Verifiers verifiers) {
         // solhint-disable-next-line no-inline-assembly
-        uint256 mask = type(uint176).max;
         assembly ("memory-safe") {
             x := calldataload(sub(calldatasize(), 86))
             y := calldataload(sub(calldatasize(), 54))
-            // verifiers := shr(80, calldataload(sub(calldatasize(), 22)))
-            verifiers := and(mask, calldataload(sub(calldatasize(), 32)))
+            verifiers := shr(80, calldataload(sub(calldatasize(), 22)))
         }
     }
 }
