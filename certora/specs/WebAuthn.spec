@@ -113,7 +113,6 @@ rule verifySignatureConsistent(){
     env e1;
     env e2;
     require e1.msg.value == 0 && e2.msg.value == 0;
-    method f;
     calldataarg args;
 
     bytes32 challenge;
@@ -127,7 +126,6 @@ rule verifySignatureConsistent(){
     bool result1 = verifySignature@withrevert(e1, challenge, bytesSignature, authenticatorFlags, x, y, verifiers);
     bool firstCallRevert = lastReverted;
 
-    f(e, args);
 
     bool result2 = verifySignature@withrevert(e2, challenge, bytesSignature, authenticatorFlags, x, y, verifiers);
     bool secondCallRevert = lastReverted;
@@ -150,7 +148,6 @@ rule castSignatureConsistent(){
 
     require (e1.msg.value == e2.msg.value) && (e1.msg.value == e.msg.value) && (e.msg.value == 0);
 
-    method f;
     calldataarg args;
 
     bytes signature;
@@ -164,7 +161,6 @@ rule castSignatureConsistent(){
     firstIsValid, firstData = castSignature@withrevert(e1, signature);
     bool firstRevert = lastReverted;
 
-    f(e, args);
 
     secondIsValid, secondData = castSignature@withrevert(e2, signature);
     bool secondRevert = lastReverted;

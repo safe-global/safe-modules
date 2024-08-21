@@ -16,6 +16,7 @@ methods{
 
     function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
     checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
+    function _.isValidSignature(bytes32,bytes) external => DISPATCHER(optimistic=true, use_fallback=true);
 
     function _._ external => DISPATCH [
         proxy._,
@@ -23,10 +24,21 @@ methods{
     ] default NONDET;
 }
 
-function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
-{
-    env e;
-    return WebAuthnHarness.GETencodeSigningMessageSummary(e, challenge, authenticatorData, clientDataFields);
+ghost mapping(bytes32 => mapping(bytes32 => mapping(bytes32 => bytes32))) componentToEncodeHash;
+ghost mapping(bytes32 => bytes32) revChallenge;
+ghost mapping(bytes32 => bytes32) revAuthenticator;
+ghost mapping(bytes32 => bytes32) revClientData;
+
+function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes {
+    bytes32 authHash = keccak256(authenticatorData);
+    bytes32 clientHash = keccak256(clientDataFields);
+    bytes32 toRetHash = componentToEncodeHash[challenge][authHash][clientHash];
+    require(revChallenge[toRetHash] == challenge);
+    require(revAuthenticator[toRetHash] == authHash);
+    require(revClientData[toRetHash] == clientHash);
+    bytes toRet;
+    require keccak256(toRet) == toRetHash;
+    return toRet;
 }
 
 ghost checkInjectiveSummary(bytes32, bytes32, bytes32, bytes32) returns bool {
