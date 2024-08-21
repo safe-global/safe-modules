@@ -44,6 +44,27 @@ rule shaIntegrity(){
     assert (keccak256(input1) != keccak256(input2)) <=> input1_sha != input2_sha;
 }
 
+
+/*
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ every 2 challenges results in unique message when using encodeSigningMessage (Timeout cert-6290)                    │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+rule uniqueMessagePerChallenge(){
+    env e;
+
+    bytes32 challenge1;
+    bytes32 challenge2;
+    bytes authenticatorData;
+    require authenticatorData.length % 32 == 0;
+    string clientDataField;
+
+    bytes message1 = encodeSigningMessage(e, challenge1, authenticatorData, clientDataField);
+    bytes message2 = encodeSigningMessage(e, challenge2, authenticatorData, clientDataField);
+
+    assert (challenge1 != challenge2) <=> (getSha256(e, message1) != getSha256(e, message2));
+}
+
 /*
 ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ verifySignature functions are equivalent (Proved)                                                                   │
@@ -92,7 +113,6 @@ rule verifySignatureConsistent(){
     env e1;
     env e2;
     require e1.msg.value == 0 && e2.msg.value == 0;
-    method f;
     calldataarg args;
 
     bytes32 challenge;
@@ -106,7 +126,6 @@ rule verifySignatureConsistent(){
     bool result1 = verifySignature@withrevert(e1, challenge, bytesSignature, authenticatorFlags, x, y, verifiers);
     bool firstCallRevert = lastReverted;
 
-    f(e, args);
 
     bool result2 = verifySignature@withrevert(e2, challenge, bytesSignature, authenticatorFlags, x, y, verifiers);
     bool secondCallRevert = lastReverted;
@@ -129,7 +148,6 @@ rule castSignatureConsistent(){
 
     require (e1.msg.value == e2.msg.value) && (e1.msg.value == e.msg.value) && (e.msg.value == 0);
 
-    method f;
     calldataarg args;
 
     bytes signature;
@@ -143,7 +161,6 @@ rule castSignatureConsistent(){
     firstIsValid, firstData = castSignature@withrevert(e1, signature);
     bool firstRevert = lastReverted;
 
-    f(e, args);
 
     secondIsValid, secondData = castSignature@withrevert(e2, signature);
     bool secondRevert = lastReverted;

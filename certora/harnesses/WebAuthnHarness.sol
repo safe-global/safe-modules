@@ -45,6 +45,11 @@ contract WebAuthnHarness {
         return WebAuthn.castSignature(signature);
     }
 
+    function castSignatureSuccess(bytes32 unused, bytes calldata signature) external pure returns (bool) {
+         (bool isValid, ) = WebAuthn.castSignature(signature);
+         return isValid;
+    } 
+
     function castSignature_notreturns(bytes calldata signature) external pure {
         WebAuthn.castSignature(signature);
     }

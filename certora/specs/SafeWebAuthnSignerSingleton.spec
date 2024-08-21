@@ -12,10 +12,21 @@ methods {
     function SafeWebAuthnSignerFactory.getSigner(uint256 x, uint256 y, P256.Verifiers v) internal returns (address) => getSignerGhost(x, y, v);
 }
 
-function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes
-{
-    env e;
-    return WebAuthnHarness.GETencodeSigningMessageSummary(e, challenge, authenticatorData, clientDataFields);
+ghost mapping(bytes32 => mapping(bytes32 => mapping(bytes32 => bytes32))) componentToEncodeHash;
+ghost mapping(bytes32 => bytes32) revChallenge;
+ghost mapping(bytes32 => bytes32) revAuthenticator;
+ghost mapping(bytes32 => bytes32) revClientData;
+
+function GETencodeSigningMessageCVL(bytes32 challenge, bytes authenticatorData, string clientDataFields) returns bytes {
+    bytes32 authHash = keccak256(authenticatorData);
+    bytes32 clientHash = keccak256(clientDataFields);
+    bytes32 toRetHash = componentToEncodeHash[challenge][authHash][clientHash];
+    require(revChallenge[toRetHash] == challenge);
+    require(revAuthenticator[toRetHash] == authHash);
+    require(revClientData[toRetHash] == clientHash);
+    bytes toRet;
+    require keccak256(toRet) == toRetHash;
+    return toRet;
 }
 
 ghost checkInjectiveSummary(bytes32, bytes32, bytes32, bytes32) returns bool {
