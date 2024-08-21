@@ -34,6 +34,6 @@ contract SafeWebAuthnSignerFactoryHarness is SafeWebAuthnSignerFactory {
         munge to pass the SignerCreationCantOverride rule.
      */
     function _hasNoCode(address account) internal view override returns (bool result) {
-        return account.code.length > 0;
+        return account.code.length == 0;
     }
 }
