@@ -20,7 +20,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable, HandlerC
     ) public override onlyAccount {
         address safe = _msgSender();
 
-        IAccount(safe).execTransactionFromModule(
+        (bool success, bytes memory data) = IAccount(safe).execTransactionFromModuleReturnData(
             payable(address(this)),
             0,
             abi.encodeWithSelector(
@@ -32,11 +32,19 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable, HandlerC
             ),
             1 // delegatecall
         );
+
+        if (!success) {
+            if (data.length == 0) revert();
+            assembly {
+                // We use Yul's revert() to bubble up errors from the target contract.
+                revert(add(32, data), mload(data))
+            }
+        }
     }
 
     function uninstallPlugin(address plugin, bytes calldata config, bytes calldata pluginUninstallData) external override onlyAccount {
         address safe = _msgSender();
-        IAccount(safe).execTransactionFromModule(
+        (bool success, bytes memory data) = IAccount(safe).execTransactionFromModuleReturnData(
             payable(address(this)),
             0,
             abi.encodeWithSelector(
@@ -47,5 +55,27 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable, HandlerC
             ),
             1 // delegatecall
         );
+
+        if (!success) {
+            if (data.length == 0) revert();
+            assembly {
+                // We use Yul's revert() to bubble up errors from the target contract.
+                revert(add(32, data), mload(data))
+            }
+        }
+    }
+
+    function isPluginInstalled(address safe, address plugin) external returns (bool) {
+        (bool success, bytes memory data) = IAccount(safe).execTransactionFromModuleReturnData(
+            payable(address(this)),
+            0,
+            abi.encodeWithSelector(Safe6900DelegateCallReceiver.isPluginInstalledDelegateCallReceiver.selector, plugin),
+            1 // delegatecall
+        );
+
+        if (!success) {
+            return false;
+        }
+        return abi.decode(data, (bool));
     }
 }

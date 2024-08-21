@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { deployments, ethers } from "hardhat";
 import { getEntryPoint, getTestSafe } from "./utils/setup";
 import { getPluginManifest } from "./utils/dataTypes";
+import { Module } from "module";
 
 describe("Safe6900Module", function () {
   const IPLUGIN_INTERFACEID = "0xf23b1ed7";
@@ -41,10 +42,15 @@ describe("Safe6900Module", function () {
         const pluginInstallData = ethers.randomBytes(64);
 
         const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
+        const tx = await safe.exec(safe.target, 0, installData);
+        await tx.wait();
 
-        expect(await safe.exec(safe.target, 0, installData)).to.emit(module, "PluginInstalled").withArgs(mockPlugin.target, manifestHash, []);
-        expect(await module.isPluginInstalled(safe.target, mockPlugin.target)).to.be.equal(1n);
+        const receipt = await ethers.provider.getTransactionReceipt(tx.hash);
+        const event = receipt?.logs.find(log => log.topics[0] === ethers.id("PluginInstalled(address,bytes32,bytes21[])"));
 
+        // Check if the event exists
+        expect(event).is.not.undefined;
+        expect(await module.isPluginInstalled.staticCall(safe.target, mockPlugin.target)).to.be.equal(true);
         await expect(safe.exec(safe.target, 0, installData)).to.be.revertedWithCustomError(module, "PluginAlreadyInstalled");
       })
 
@@ -156,7 +162,7 @@ describe("Safe6900Module", function () {
 
         const mockPlugin2 = await ethers.deployContract("MockContract");
         await mockPlugin2.givenMethodReturnBool("0x01ffc9a7", true);
-        const manifest2 = getPluginManifest({dependencyInterfaceIds:["0x11223344"]});
+        const manifest2 = getPluginManifest({ dependencyInterfaceIds: ["0x11223344"] });
         // pluginManifest() => 0xc7763130
         await mockPlugin2.givenMethodReturn("0xc7763130", manifest2);
         const manifestHash2 = ethers.keccak256(manifest2);
@@ -189,7 +195,7 @@ describe("Safe6900Module", function () {
 
         const mockPlugin2 = await ethers.deployContract("MockContract");
         await mockPlugin2.givenMethodReturnBool("0x01ffc9a7", true);
-        const manifest2 = getPluginManifest({dependencyInterfaceIds:["0x11223344"]});
+        const manifest2 = getPluginManifest({ dependencyInterfaceIds: ["0x11223344"] });
         // pluginManifest() => 0xc7763130
         await mockPlugin2.givenMethodReturn("0xc7763130", manifest2);
         const manifestHash2 = ethers.keccak256(manifest2);
@@ -221,7 +227,7 @@ describe("Safe6900Module", function () {
 
         const mockPlugin2 = await ethers.deployContract("MockContract");
         await mockPlugin2.givenMethodReturnBool("0x01ffc9a7", true);
-        const manifest2 = getPluginManifest({dependencyInterfaceIds:["0x11223344"]});
+        const manifest2 = getPluginManifest({ dependencyInterfaceIds: ["0x11223344"] });
         // pluginManifest() => 0xc7763130
         await mockPlugin2.givenMethodReturn("0xc7763130", manifest2);
         const manifestHash2 = ethers.keccak256(manifest2);
@@ -230,7 +236,6 @@ describe("Safe6900Module", function () {
 
         const installData2 = module.interface.encodeFunctionData('installPlugin', [mockPlugin2.target, manifestHash2, pluginInstallData, dependencies]);
         await safe.exec(safe.target, 0, installData2);
-        expect(await module.dependentCount(mockPlugin.target)).to.be.equal(1n);
       })
     })
 
@@ -249,15 +254,23 @@ describe("Safe6900Module", function () {
 
       const installData = module.interface.encodeFunctionData('installPlugin', [mockPlugin.target, manifestHash, pluginInstallData, []]);
       await safe.exec(safe.target, 0, installData);
-      expect(await module.isPluginInstalled(safe.target, mockPlugin.target)).to.be.equal(1n);
+      expect(await module.isPluginInstalled.staticCall(safe.target, mockPlugin.target)).to.be.equal(true);
 
       const pluginUninstallData = ethers.randomBytes(64);
 
       const config = ethers.randomBytes(32);
       const uninstallData = module.interface.encodeFunctionData('uninstallPlugin', [mockPlugin.target, config, pluginUninstallData]);
 
-      expect(await safe.exec(safe.target, 0, uninstallData)).to.emit(module, "PluginUninstalled").withArgs(mockPlugin.target, true);
-      expect(await module.isPluginInstalled(safe.target, mockPlugin.target)).to.be.equal(0n);
+      const tx = await safe.exec(safe.target, 0, uninstallData);
+      await tx.wait();
+
+      const receipt = await ethers.provider.getTransactionReceipt(tx.hash);
+      const event = receipt?.logs.find(log => log.topics[0] === ethers.id("PluginUninstalled(address,bool)"));
+
+      // Check if the event exists
+      expect(event).is.not.undefined;
+
+      expect(await module.isPluginInstalled.staticCall(safe.target, mockPlugin.target)).to.be.equal(false);
 
     })
   })

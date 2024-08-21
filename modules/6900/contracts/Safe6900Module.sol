@@ -7,5 +7,4 @@ import {EntryPointValidator} from "./base/EntryPointValidator.sol";
 
 contract Safe6900Module is PluginManager, Executor {
     constructor(address entryPoint) EntryPointValidator(entryPoint) {}
-
 }

@@ -144,4 +144,8 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
 
         emit PluginUninstalled(plugin, true);
     }
+
+    function isPluginInstalledDelegateCallReceiver(address plugin) external onlyDelegateCall view returns (bool) {
+        return accountData.installedPlugins[plugin].plugin != address(0);
+    }
 }
