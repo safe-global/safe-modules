@@ -112,14 +112,9 @@ ghost mathint numOfCreation;
 ghost mapping(address => uint) address_map;
 ghost address signerAddress;
 
-hook EXTCODESIZE(address addr) uint v{
-    require address_map[addr] == v;
-}
-
 hook CREATE2(uint value, uint offset, uint length, bytes32 salt) address v{
     require(v == signerAddress);
     numOfCreation = numOfCreation + 1;
-    address_map[v] = length;
 }
 
 rule SignerCreationCantOverride()

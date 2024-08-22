@@ -1,8 +1,13 @@
-using Utilities as utilities;
-using SafeWebAuthnSignerProxy as proxy;
+using GetConfigurationProxyHarness as proxy;
 
 methods {
-    function _._ external => DISPATCH [ SafeWebAuthnSignerProxy._, SafeWebAuthnSignerSingleton._ ] default HAVOC_ALL;
+    function GetConfigurationProxyHarness.getX() external returns (uint256) envfree;
+    function GetConfigurationProxyHarness.getY() external returns (uint256) envfree;
+    function GetConfigurationProxyHarness.getVerifiers() external returns (P256.Verifiers) envfree;
+
+    function _._ external => DISPATCH [
+        SafeWebAuthnSignerSingleton.getConfiguration()
+    ] default HAVOC_ALL;
 }
 
 /*
@@ -11,23 +16,21 @@ methods {
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-rule configGetConfiguration {
-    env e;
+rule verifyGetConfigurationIntegrity(env e){
 
-    uint256 xBefore = currentContract._X;
-    uint256 yBefore = currentContract._Y;
-    P256.Verifiers verifiersBefore = currentContract._VERIFIERS;
+    uint256 x;
+    uint256 y;
+    P256.Verifiers verifiers;
+    uint256 new_x; uint256 new_y; P256.Verifiers new_verifiers;
+    bytes32 message;
 
-    uint256 xAfter;
-    uint256 yAfter;
-    P256.Verifiers verifiersAfter;
+    x = proxy.getX();
+    y = proxy.getY();
+    verifiers = proxy.getVerifiers();
+    (new_x, new_y, new_verifiers) = proxy.getConfiguration(e);
 
-    xAfter, yAfter, verifiersAfter = utilities.getConfiguration(e, proxy);
-
-
-    assert xBefore == xAfter &&
-           yBefore == yAfter &&
-           verifiersBefore == verifiersAfter;
+    assert x == new_x;
+    assert y == new_y;
+    assert verifiers == new_verifiers;
     satisfy true;
 }
-

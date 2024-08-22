@@ -11,7 +11,6 @@ methods {
     function WebAuthnHarness.checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal returns (bool) =>
         checkInjectiveSummary(challenge, authenticatorData, clientDataFields, result);
 
-    function authenticate(bytes32, bytes) external returns (bytes4) envfree;
     function _._ external => DISPATCH [
         SafeWebAuthnSignerProxy._,
         SafeWebAuthnSignerSingleton._
@@ -45,10 +44,11 @@ possible calldata values so this simulation will make the prover choose differen
 Rule stuck.
 */
 rule proxyReturnValue {
+    env e;
     bytes32 message;
     bytes signature;
 
-    bytes4 ret = authenticate(message, signature);
+    bytes4 ret = authenticate(e, message, signature);
 
     satisfy ret == MAGIC_VALUE() || ret == to_bytes4(0);
 }
