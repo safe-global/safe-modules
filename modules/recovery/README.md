@@ -76,6 +76,7 @@ DEPLOYMENT_RECOVERY_PERIOD=... pnpm run deploy-all $NETWORK
 ## Documentation
 
 - [Safe developer portal](http://docs.safe.global)
+- [Candide account recovery](https://docs.candide.dev/wallet/plugins/recovery-with-guardians/)
 
 ## Audits
 
