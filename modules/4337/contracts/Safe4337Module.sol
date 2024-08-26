@@ -223,9 +223,9 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * `_checkSignaturesLength` function checks for the presence of any padded bytes to the `signature` data.
      * However, there is an edge case that `_checkSignaturesLength` function cannot detect.
      * A malicious bundler can manipulate the field(s) storing the signature length and pad additional bytes to the
-     * dynamic part of the signatures which will make `_checkSignaturesLength` to return true. In such cases, it is the
-     * responsibility of the Safe signature validator (which can be a Safe or any other contract) that supports
-     * ERC-1271 and is the owner of the Safe to check for additional bytes to it smart contract signature data.
+     * dynamic part of the signatures which will make `_checkSignaturesLength` to return true.  In such cases, it is
+     * the responsibility of the Safe signature validator implementation, as an account owner, to check for additional
+     * bytes to it smart contract signature data.
      * @param signatures Signatures data.
      * @param threshold Signer threshold for the Safe account.
      * @return isValid True if length check passes, false otherwise.
