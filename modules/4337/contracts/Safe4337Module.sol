@@ -219,8 +219,10 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * fixed in size, the Smart Contract signature can be of arbitrary length. If appropriate length checks are not
      * performed during the signature verification then a malicious bundler can pad additional bytes to the signatures
      * data and make the account pay more gas than needed for user operation validation and reach the
-     * `verificationGasLimit`. `_checkSignaturesLength` function checks for the presence of any padded bytes to the
-     * `signature` data. However, there is an edge case that `_checkSignaturesLength` function cannot detect.
+     * `verificationGasLimit`. _checkSignaturesLength ensures that the signatures data cannot be longer than the
+     * canonical encoding of Safe signatures, thus setting a strict upper bound on how long the signatures bytes can
+     * be, greatly limiting a malicious bundler's ability to pad signature bytes. However, there is an edge case that
+     * `_checkSignaturesLength` function cannot detect.
      * Signatures data for Smart Contracts contains a dynamic part that is encoded as:
      *     {32-bytes signature length}{bytes signature data}
      * A malicious bundler can manipulate the field(s) storing the signature length and pad additional bytes to the
