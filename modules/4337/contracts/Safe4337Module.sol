@@ -228,7 +228,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
      * A malicious bundler can manipulate the field(s) storing the signature length and pad additional bytes to the
      * dynamic part of the signatures which will make `_checkSignaturesLength` to return true.  In such cases, it is
      * the responsibility of the Safe signature validator implementation, as an account owner, to check for additional
-     * bytes to it smart contract signature data.
+     * bytes.
      * @param signatures Signatures data.
      * @param threshold Signer threshold for the Safe account.
      * @return isValid True if length check passes, false otherwise.
