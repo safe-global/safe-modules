@@ -7,8 +7,9 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {PluginManifest} from "./interfaces/DataTypes.sol";
 import {IPlugin} from "./interfaces/IPlugin.sol";
 import {IPluginManager} from "./interfaces/IPluginManager.sol";
+import {Base6900} from "./base/Base6900.sol";
 
-abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
+abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager, Base6900 {
     struct PluginData {
         address plugin;
         bytes32 manifestHash;
@@ -28,11 +29,6 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
         mapping(bytes4 => SelectorData) selectorData;
     }
 
-    /**
-     * @notice Address of this contract
-     */
-    address public immutable SELF;
-
     /// @dev Store the installed plugin info for an account.
     ERC6900AccountData private accountData;
 
@@ -50,17 +46,9 @@ abstract contract Safe6900DelegateCallReceiver is SafeStorage, IPluginManager {
      * @notice Constructor
      */
     constructor() {
-        SELF = address(this);
     }
 
-    /**
-     * @notice Modifier to make a function callable via delegatecall only.
-     * If the function is called via a regular call, it will revert.
-     */
-    modifier onlyDelegateCall() {
-        require(address(this) != SELF, "must only be called via delegatecall");
-        _;
-    }
+
 
     function installPluginDelegateCallReceiver(
         address plugin,

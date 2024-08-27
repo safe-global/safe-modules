@@ -134,7 +134,7 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
         PackedUserOperation calldata userOp,
         bytes32,
         uint256 missingAccountFunds
-    ) external onlySupportedEntryPoint returns (uint256 validationData) {
+    ) external onlySupportedEntryPoint virtual returns (uint256 validationData) {
         address payable safeAddress = payable(userOp.sender);
         // The entry point address is appended to the calldata by the Safe in the `FallbackManager` contract,
         // following ERC-2771. Because of this, the relayer may manipulate the entry point address, therefore

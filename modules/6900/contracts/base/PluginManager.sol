@@ -6,7 +6,7 @@ import {IPlugin} from "../interfaces/IPlugin.sol";
 import {OnlyAccountCallable} from "../base/OnlyAccountCallable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {PluginManifest} from "../interfaces/DataTypes.sol";
-import {IAccount} from "../interfaces/IAccount.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {Safe6900DelegateCallReceiver} from "../Safe6900DelegateCallReceiver.sol";
 
@@ -20,7 +20,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable, HandlerC
     ) public override onlyAccount {
         address safe = _msgSender();
 
-        (bool success, bytes memory data) = IAccount(safe).execTransactionFromModuleReturnData(
+        (bool success, bytes memory data) = ISafe(safe).execTransactionFromModuleReturnData(
             payable(address(this)),
             0,
             abi.encodeWithSelector(
@@ -44,7 +44,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable, HandlerC
 
     function uninstallPlugin(address plugin, bytes calldata config, bytes calldata pluginUninstallData) external override onlyAccount {
         address safe = _msgSender();
-        (bool success, bytes memory data) = IAccount(safe).execTransactionFromModuleReturnData(
+        (bool success, bytes memory data) = ISafe(safe).execTransactionFromModuleReturnData(
             payable(address(this)),
             0,
             abi.encodeWithSelector(
@@ -66,7 +66,7 @@ abstract contract PluginManager is IPluginManager, OnlyAccountCallable, HandlerC
     }
 
     function isPluginInstalled(address safe, address plugin) external returns (bool) {
-        (bool success, bytes memory data) = IAccount(safe).execTransactionFromModuleReturnData(
+        (bool success, bytes memory data) = ISafe(safe).execTransactionFromModuleReturnData(
             payable(address(this)),
             0,
             abi.encodeWithSelector(Safe6900DelegateCallReceiver.isPluginInstalledDelegateCallReceiver.selector, plugin),

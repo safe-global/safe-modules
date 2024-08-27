@@ -2,11 +2,11 @@
 pragma solidity ^0.8.23;
 
 /**
- * @title IAccount Declares the functions that are called on an account.
+ * @title ISafe Declares the functions that are called on an Safe account.
  */
-interface IAccount {
+interface ISafe {
     function execTransactionFromModule(
-        address payable to,
+        address to,
         uint256 value,
         bytes calldata data,
         uint8 operation

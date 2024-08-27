@@ -5,13 +5,13 @@ import {IStandardExecutor, Call} from "../interfaces/IStandardExecutor.sol";
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IPlugin} from "../interfaces/IPlugin.sol";
-import {IAccount} from "../interfaces/IAccount.sol";
+import {ISafe} from "../interfaces/ISafe.sol";
 import {HandlerContext} from "@safe-global/safe-contracts/contracts/handler/HandlerContext.sol";
 import {EntryPointValidator} from "../base/EntryPointValidator.sol";
 
 abstract contract Executor is IStandardExecutor, HandlerContext, EntryPointValidator {
     error CallToPluginNotAllowed(address plugin);
-    error ExecutionFailed();
+    error TxExecutionFailed();
 
     function execute(address target, uint256 value, bytes calldata data) external payable override returns (bytes memory) {
         return _execute(target, value, data);
@@ -33,7 +33,7 @@ abstract contract Executor is IStandardExecutor, HandlerContext, EntryPointValid
 
         validateExecution();
 
-        (bool isActionSuccessful, bytes memory resultData) = IAccount(msg.sender).execTransactionFromModuleReturnData(
+        (bool isActionSuccessful, bytes memory resultData) = ISafe(msg.sender).execTransactionFromModuleReturnData(
             target,
             value,
             data,
@@ -42,7 +42,7 @@ abstract contract Executor is IStandardExecutor, HandlerContext, EntryPointValid
         if (isActionSuccessful) {
             return resultData;
         } else {
-            revert ExecutionFailed();
+            revert TxExecutionFailed();
         }
     }
 
