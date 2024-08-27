@@ -212,9 +212,23 @@ contract Safe4337Module is IAccount, HandlerContext, CompatibilityFallbackHandle
     }
 
     /**
-     * @dev Checks if the signatures length is correct and does not contain additional bytes. The function does not
+     * @notice Checks if the signatures length is correct and does not contain additional bytes. The function does not
      * check the integrity of the signature encoding, as this is expected to be checked by the {Safe} implementation
      * of {checkSignatures}.
+     * @dev Safe account has two types of signatures: EOA and Smart Contract signatures. While the EOA signature is
+     * fixed in size, the Smart Contract signature can be of arbitrary length. If appropriate length checks are not
+     * performed during the signature verification then a malicious bundler can pad additional bytes to the signatures
+     * data and make the account pay more gas than needed for user operation validation and reach the
+     * `verificationGasLimit`. _checkSignaturesLength ensures that the signatures data cannot be longer than the
+     * canonical encoding of Safe signatures, thus setting a strict upper bound on how long the signatures bytes can
+     * be, greatly limiting a malicious bundler's ability to pad signature bytes. However, there is an edge case that
+     * `_checkSignaturesLength` function cannot detect.
+     * Signatures data for Smart Contracts contains a dynamic part that is encoded as:
+     *     {32-bytes signature length}{bytes signature data}
+     * A malicious bundler can manipulate the field(s) storing the signature length and pad additional bytes to the
+     * dynamic part of the signatures which will make `_checkSignaturesLength` to return true.  In such cases, it is
+     * the responsibility of the Safe signature validator implementation, as an account owner, to check for additional
+     * bytes.
      * @param signatures Signatures data.
      * @param threshold Signer threshold for the Safe account.
      * @return isValid True if length check passes, false otherwise.
