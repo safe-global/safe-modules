@@ -112,11 +112,12 @@ rule verifyIsValidSignatureAreEqual(env e){
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-rule verifyIsValidSignatureWillContinueToSucceed(){
+rule verifyIsValidSignatureWillContinueToSucceed(method f) filtered { 
+    f -> f.selector != sig:WebAuthnHarness.encodeClientDataJson(bytes32,string).selector
+} {
     env e;
     require e.msg.value == 0;
 
-    method f;
     calldataarg args;
 
     bytes32 message;

@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 import {ISafeSignerFactory} from "../../modules/passkey/contracts/interfaces/ISafeSignerFactory.sol";
-import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
-import {SafeWebAuthnSignerSingleton} from "../../modules/passkey/contracts/SafeWebAuthnSignerSingleton.sol";
+import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
+import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
 import {P256} from "../../modules/passkey/contracts/libraries/P256.sol";
 
 /**
@@ -62,7 +62,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
      * @inheritdoc ISafeSignerFactory
      */
-     function isValidSignatureForSigner(
+    function isValidSignatureForSigner(
         bytes32 message,
         bytes calldata signature,
         uint256 x,

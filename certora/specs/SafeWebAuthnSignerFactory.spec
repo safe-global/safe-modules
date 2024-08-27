@@ -182,14 +182,14 @@ rule createAndVerifyEQtoIsValidSignatureForSigner()
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 
-rule isValidSignatureForSignerConsistency()
-{
+rule isValidSignatureForSignerConsistency(method f) filtered { 
+    f -> f.selector != sig:WebAuthnHarness.encodeClientDataJson(bytes32,string).selector
+} {
     env e;
     env e1;
     env e2;
     require e1.msg.value == 0 && e2.msg.value == 0;
-    
-    method f;
+
     calldataarg args;
 
     uint x;
