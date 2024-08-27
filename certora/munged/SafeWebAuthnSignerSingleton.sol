@@ -2,7 +2,7 @@
 pragma solidity >=0.8.0;
 
 import {SignatureValidator} from "../../modules/passkey/contracts/base/SignatureValidator.sol";
-import {P256, WebAuthn} from "./WebAuthn.sol";
+import {P256, WebAuthn} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
 
 /**
  * @title Safe WebAuthn Signer Singleton
