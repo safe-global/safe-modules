@@ -9,7 +9,7 @@ import {
   verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import { expect } from 'chai'
-import CBOR from 'cbor-web'
+import { decode as cborDecode } from 'cbor-web'
 import { ethers } from 'ethers'
 import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { base64UrlEncode } from '../../src/utils/webauthn'
@@ -90,7 +90,7 @@ describe('WebAuthn Shim', () => {
         },
       })
 
-      const attestationObject = CBOR.decode(credential.response.attestationObject)
+      const attestationObject = cborDecode(credential.response.attestationObject)
       const authData = new DataView(
         attestationObject.authData.buffer,
         attestationObject.authData.byteOffset,
