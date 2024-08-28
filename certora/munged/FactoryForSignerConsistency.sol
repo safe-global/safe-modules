@@ -62,7 +62,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
      * @inheritdoc ISafeSignerFactory
      */
-     function isValidSignatureForSigner(
+    function isValidSignatureForSigner(
         bytes32 message,
         bytes calldata signature,
         uint256 x,
@@ -81,7 +81,6 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         assembly {
             // staticcall to the singleton contract with return size given as 32 bytes. The
             // singleton contract is known and immutable so it is safe to specify return size.
-            // MUNGED!!
             if staticcall(gas(), singleton, add(data, 0x20), mload(data), 0, 32) {
                 magicValue := mload(0)
             }
