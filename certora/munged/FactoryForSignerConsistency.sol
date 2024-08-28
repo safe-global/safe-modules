@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 import {ISafeSignerFactory} from "../../modules/passkey/contracts/interfaces/ISafeSignerFactory.sol";
-import {SafeWebAuthnSignerProxy} from "./SafeWebAuthnSignerProxy.sol";
-import {SafeWebAuthnSignerSingleton} from "./SafeWebAuthnSignerSingleton.sol";
+import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
+import {SafeWebAuthnSignerSingleton} from "../../modules/passkey/contracts/SafeWebAuthnSignerSingleton.sol";
 import {P256} from "../../modules/passkey/contracts/libraries/P256.sol";
 
 /**
@@ -81,12 +81,8 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
         assembly {
             // staticcall to the singleton contract with return size given as 32 bytes. The
             // singleton contract is known and immutable so it is safe to specify return size.
-            // MUNGED!!
-            // if staticcall(gas(), singleton, add(data, 0x20), mload(data), 0, 32) {
-            //     magicValue := mload(0)
-            // }
-            if staticcall(gas(), singleton, add(data, 0x20), mload(data), mload(0x40), 32) {
-                magicValue := mload(mload(0x40))
+            if staticcall(gas(), singleton, add(data, 0x20), mload(data), 0, 32) {
+                magicValue := mload(0)
             }
         }
     }
