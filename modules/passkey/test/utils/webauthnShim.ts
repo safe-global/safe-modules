@@ -10,7 +10,7 @@
 import { p256 } from '@noble/curves/p256'
 import { ethers } from 'ethers'
 import type { BytesLike } from 'ethers'
-import CBOR from 'cbor'
+import CBOR from 'cbor-web'
 import { base64UrlEncode, userVerificationFlag } from '../../src/utils/webauthn'
 
 function b2ab(buf: Uint8Array): ArrayBuffer {

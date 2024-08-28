@@ -9,7 +9,7 @@ import {
   verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import { expect } from 'chai'
-import CBOR from 'cbor'
+import CBOR from 'cbor-web'
 import { ethers } from 'ethers'
 import { WebAuthnCredentials } from '../../test/utils/webauthnShim'
 import { base64UrlEncode } from '../../src/utils/webauthn'

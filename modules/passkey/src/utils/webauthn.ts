@@ -1,4 +1,4 @@
-import CBOR from 'cbor'
+import CBOR from 'cbor-web'
 
 /**
  * Returns the flag for the user verification requirement.
