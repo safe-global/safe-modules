@@ -80,6 +80,7 @@ library WebAuthn {
     function castSignature(bytes calldata signature) internal pure returns (bool isValid, Signature calldata data) {
         uint256 authenticatorDataLength;
         uint256 clientDataFieldsLength;
+        // MUNGED Initiating isValid for future usage
         isValid = true;
 
         // solhint-disable-next-line no-inline-assembly
