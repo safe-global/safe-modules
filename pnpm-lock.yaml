@@ -109,7 +109,7 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       '@safe-global/safe-passkey':
-        specifier: workspace:^0.2.2
+        specifier: workspace:^0.2.1-1
         version: link:../../modules/passkey
       '@web3modal/ethers':
         specifier: ^4.1.11
@@ -169,7 +169,7 @@ importers:
         version: 1.0.11(hardhat@2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10))
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^5.0.0
-        version: 5.0.0(juc3n2vyedonomtvpmsrizjpvm)
+        version: 5.0.0(ebhziiwx5ncphp522anrfafmii)
       '@openzeppelin/contracts':
         specifier: ^5.0.2
         version: 5.0.2
@@ -232,7 +232,7 @@ importers:
     devDependencies:
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^5.0.0
-        version: 5.0.0(juc3n2vyedonomtvpmsrizjpvm)
+        version: 5.0.0(ebhziiwx5ncphp522anrfafmii)
       '@openzeppelin/contracts':
         specifier: ^5.0.2
         version: 5.0.2
@@ -311,7 +311,7 @@ importers:
         version: 1.0.11(hardhat@2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10))
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^5.0.0
-        version: 5.0.0(juc3n2vyedonomtvpmsrizjpvm)
+        version: 5.0.0(ebhziiwx5ncphp522anrfafmii)
       '@safe-global/mock-contract':
         specifier: ^4.1.0
         version: 4.1.0
@@ -372,7 +372,7 @@ importers:
         version: 3.0.6(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(hardhat@2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10))
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^5.0.0
-        version: 5.0.0(juc3n2vyedonomtvpmsrizjpvm)
+        version: 5.0.0(ebhziiwx5ncphp522anrfafmii)
       '@types/node':
         specifier: ^20.14.10
         version: 20.14.10
@@ -408,7 +408,7 @@ importers:
         version: 0.7.0
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^5.0.0
-        version: 5.0.0(juc3n2vyedonomtvpmsrizjpvm)
+        version: 5.0.0(ebhziiwx5ncphp522anrfafmii)
       '@safe-global/safe-4337-provider':
         specifier: workspace:^0.0.0
         version: link:../4337-provider
@@ -9526,7 +9526,7 @@ snapshots:
       ethereumjs-util: 7.1.5
       hardhat: 2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10)
 
-  '@nomicfoundation/hardhat-toolbox@5.0.0(juc3n2vyedonomtvpmsrizjpvm)':
+  '@nomicfoundation/hardhat-toolbox@5.0.0(ebhziiwx5ncphp522anrfafmii)':
     dependencies:
       '@nomicfoundation/hardhat-chai-matchers': 2.0.7(@nomicfoundation/hardhat-ethers@3.0.6(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(hardhat@2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10)))(chai@4.4.1)(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(hardhat@2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10))
       '@nomicfoundation/hardhat-ethers': 3.0.6(ethers@6.13.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(hardhat@2.22.5(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.6.5)(@types/node@20.14.10)(typescript@5.5.2))(typescript@5.5.2)(utf-8-validate@5.0.10))
