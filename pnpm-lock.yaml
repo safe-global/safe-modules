@@ -243,7 +243,7 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2
       '@safe-global/safe-contracts':
-        specifier: ^1.4.1-build.0
+        specifier: 1.4.1-build.0
         version: 1.4.1-build.0(ethers@6.13.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@safe-global/safe-deployments':
         specifier: ^1.37.3
