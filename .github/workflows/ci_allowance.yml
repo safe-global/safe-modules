@@ -39,5 +39,5 @@ jobs:
       - run: |
           pnpm install
           pnpm run --filter "@safe-global/safe-allowance-module" lint
-          pnpm run --filter "@safe-global/safe-allowance-module" fmt 
+          pnpm run --filter "@safe-global/safe-allowance-module" fmt:check
           pnpm run --filter "@safe-global/safe-allowance-module" build
