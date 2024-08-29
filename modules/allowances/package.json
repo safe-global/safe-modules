@@ -22,8 +22,8 @@
     "fmt:sol": "prettier 'contracts/**/*.sol' -w",
     "fmt:ts": "prettier 'tasks/**/*.ts' 'test/**/*.ts' -w"
   },
-  "author": "richard@gnosis.io",
-  "license": "ISC",
+  "author": "safe-global",
+  "license": "GPL-3.0",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.7",
