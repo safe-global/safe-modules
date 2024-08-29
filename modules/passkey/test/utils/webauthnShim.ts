@@ -10,7 +10,7 @@
 import { p256 } from '@noble/curves/p256'
 import { ethers } from 'ethers'
 import type { BytesLike } from 'ethers'
-import CBOR from 'cbor'
+import { encode as cborEncode } from 'cbor-web'
 import { base64UrlEncode, userVerificationFlag } from '../../src/utils/webauthn'
 
 function b2ab(buf: Uint8Array): ArrayBuffer {
@@ -135,7 +135,7 @@ class Credential {
     key.set(1, 2) // kty = EC2
     key.set(3, -7) // alg = ES256 (Elliptic curve signature with SHA-256)
 
-    return ethers.hexlify(CBOR.encode(key))
+    return ethers.hexlify(cborEncode(key))
   }
 }
 
@@ -191,7 +191,7 @@ export class WebAuthnCredentials {
       rawId: credential.rawId.slice(),
       response: {
         clientDataJSON: b2ab(ethers.toUtf8Bytes(JSON.stringify(clientData))),
-        attestationObject: b2ab(CBOR.encode(attestationObject)),
+        attestationObject: b2ab(cborEncode(attestationObject)),
       },
       type: 'public-key',
     }

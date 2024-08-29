@@ -1,4 +1,4 @@
-import CBOR from 'cbor'
+import { decode as cborDecode } from 'cbor-web'
 
 /**
  * Returns the flag for the user verification requirement.
@@ -40,7 +40,7 @@ export function base64UrlEncode(data: string | Uint8Array | ArrayBuffer): string
  * @returns The x and y coordinates of the public key.
  */
 export function decodePublicKey(response: Pick<AuthenticatorAttestationResponse, 'attestationObject'>): { x: bigint; y: bigint } {
-  const attestationObject = CBOR.decode(response.attestationObject)
+  const attestationObject = cborDecode(response.attestationObject)
   const authData = new DataView(
     attestationObject.authData.buffer,
     attestationObject.authData.byteOffset,
@@ -48,7 +48,7 @@ export function decodePublicKey(response: Pick<AuthenticatorAttestationResponse,
   )
   const credentialIdLength = authData.getUint16(53)
   const cosePublicKey = attestationObject.authData.slice(55 + credentialIdLength)
-  const key: Map<number, unknown> = CBOR.decode(cosePublicKey)
+  const key: Map<number, unknown> = cborDecode(cosePublicKey)
   const bn = (bytes: Uint8Array) => BigInt('0x' + toHexString(bytes))
   return {
     x: bn(key.get(-2) as Uint8Array),
