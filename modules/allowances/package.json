@@ -26,8 +26,11 @@
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.7",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
     "@openzeppelin/contracts": "^5.0.2",
-    "@safe-global/safe-deployments": "^1.37.0",
+    "@safe-global/safe-contracts": "^1.4.1",
+    "@safe-global/safe-deployments": "^1.37.3",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/mocha": "^10.0.7",
@@ -36,13 +39,13 @@
     "@typescript-eslint/parser": "^7.12.0",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
-    "ethers": "^6.13.1",
-    "hardhat": "^2.22.5",
+    "ethers": "^6.13.2",
+    "hardhat": "^2.22.9",
     "hardhat-deploy": "^0.12.4",
-    "solhint": "^5.0.1",
-    "solidity-coverage": "^0.8.12",
+    "solhint": "^5.0.3",
+    "solidity-coverage": "^0.8.13",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.4"
   }
 }

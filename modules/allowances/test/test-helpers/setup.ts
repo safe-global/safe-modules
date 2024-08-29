@@ -1,7 +1,7 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import hre from 'hardhat'
 
-import { AllowanceModule__factory, ISafe__factory, TestToken, TestToken__factory } from '../../typechain-types'
+import { AllowanceModule__factory, ITestSafe__factory, TestToken, TestToken__factory } from '../../typechain-types'
 
 import deploySafeProxy from './deploySafeProxy'
 import deploySingletons from './deploySingletons'
@@ -18,7 +18,7 @@ export default async function setup() {
   // both the safe and the allowance work by signature
   // connect the contracts to a signer that has funds
   // but isn't safe owner, or allowance spender
-  const safe = ISafe__factory.connect(safeAddress, relayer)
+  const safe = ITestSafe__factory.connect(safeAddress, relayer)
   const allowanceModule = AllowanceModule__factory.connect(allowanceModuleAddress, relayer)
 
   // fund the safe

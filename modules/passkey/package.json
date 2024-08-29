@@ -46,8 +46,8 @@
     "prepare": "pnpm run build"
   },
   "devDependencies": {
-    "@noble/curves": "^1.4.0",
-    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@noble/curves": "^1.5.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.7",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/mock-contract": "^4.1.0",
@@ -57,17 +57,17 @@
     "@simplewebauthn/server": "^10.0.1",
     "@types/node": "^20.14.10",
     "dotenv": "^16.4.5",
-    "ethers": "^6.13.1",
-    "hardhat": "^2.22.5",
+    "ethers": "^6.13.2",
+    "hardhat": "^2.22.9",
     "hardhat-deploy": "^0.12.4",
     "solc": "0.8.26",
-    "solhint": "^5.0.1",
+    "solhint": "^5.0.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.5.4"
   },
   "dependencies": {
     "@account-abstraction/contracts": "0.7.0",
-    "@openzeppelin/contracts": "5.0.0",
+    "@openzeppelin/contracts": "5.0.2",
     "cbor-web": "^9.0.2"
   }
 }

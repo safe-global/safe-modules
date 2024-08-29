@@ -37,16 +37,16 @@
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@nomicfoundation/hardhat-ethers": "^3.0.7",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/node": "^20.14.10",
-    "@types/yargs": "^17.0.32",
+    "@types/yargs": "^17.0.33",
     "dotenv": "^16.4.5",
-    "ethers": "^6.13.1",
-    "hardhat": "^2.22.5",
+    "ethers": "^6.13.2",
+    "hardhat": "^2.22.9",
     "hardhat-deploy": "^0.12.4",
     "solc": "0.8.20",
-    "typescript": "^5.5.2",
+    "typescript": "^5.5.4",
     "yargs": "^17.7.2"
   },
   "dependencies": {
