@@ -22,7 +22,7 @@ jobs:
           pnpm run --filter "@safe-global/safe-allowance-module" coverage
       - uses: coverallsapp/github-action@master
         with:
-          path-to-lcov: modules/passkey/coverage/lcov.info
+          path-to-lcov: modules/allowances/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
   lint:
     runs-on: ubuntu-latest
