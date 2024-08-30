@@ -1,9 +1,9 @@
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import { TransactionRequest, ZeroAddress } from 'ethers'
 
-import { ISafe } from '../../typechain-types'
+import { ISafeTest } from '../../typechain-types'
 
-export default async function execSafeTransaction(safe: ISafe, { to, data, value = 0 }: TransactionRequest, signer: SignerWithAddress) {
+export default async function execSafeTransaction(safe: ISafeTest, { to, data, value = 0 }: TransactionRequest, signer: SignerWithAddress) {
   const address = await safe.getAddress()
   const chainId = await safe.getChainId()
   const nonce = await safe.nonce()
