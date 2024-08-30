@@ -253,4 +253,4 @@ All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MER
 
 ## License
 
-All smart contracts are released under LGPL-3.0.
+All smart contracts are released under LGPL-3.0-only.

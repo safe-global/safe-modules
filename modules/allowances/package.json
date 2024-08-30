@@ -28,7 +28,7 @@
     "fmt:ts:write": "prettier 'tasks/**/*.ts' 'test/**/*.ts' --write"
   },
   "author": "safe-global",
-  "license": "GPL-3.0",
+  "license": "LGPL-3.0-only",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.7",
