@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0 <0.9.0;
 
-interface ITestSafe {
+interface ISafeTest {
     function getThreshold() external view returns (uint256);
 
     function getChainId() external view returns (uint256);
