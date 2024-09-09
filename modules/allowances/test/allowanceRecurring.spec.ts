@@ -133,4 +133,24 @@ describe('AllowanceModule allowanceRecurring', () => {
     expect(expectedLastReset).to.be.equal(resetLast)
     expect(4).to.equal(nonce)
   })
+
+  it('Reverts when trying to set up a recurring allowance with reset period of 0', async () => {
+    const { safe, allowanceModule, token, owner, alice } = await loadFixture(setup)
+    const tokenAddress = await token.getAddress()
+
+    // add alice as delegate
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    // create an allowance for alice
+    const configResetPeriod = 0
+    const configResetBase = nowInMinutes()
+
+    await expect(
+      execSafeTransaction(
+        safe,
+        await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, configResetPeriod, configResetBase),
+        owner,
+      ),
+    ).to.be.reverted
+  })
 })

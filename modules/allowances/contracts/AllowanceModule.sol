@@ -89,7 +89,7 @@ contract AllowanceModule is SignatureDecoder {
         // solium-disable-next-line security/no-block-members
         uint32 currentMin = uint32(block.timestamp / 60);
         if (resetBaseMin > 0) {
-            require(resetBaseMin <= currentMin, "resetBaseMin <= currentMin");
+            require(resetBaseMin <= currentMin && resetTimeMin > 0, "resetBaseMin <= currentMin && resetTimeMin > 0");
             allowance.lastResetMin = currentMin - ((currentMin - resetBaseMin) % resetTimeMin);
         } else if (allowance.lastResetMin == 0) {
             allowance.lastResetMin = currentMin;
