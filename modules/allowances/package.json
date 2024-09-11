@@ -1,6 +1,6 @@
 {
   "name": "@safe-global/safe-allowance-module",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Allowance module for the gnosis safe",
   "keywords": [
     "Ethereum",
