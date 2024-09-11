@@ -126,6 +126,8 @@ pnpm build
 
 ## Deploying and verifying contracts
 
+Specify all the necessary environment variables in `.env`, following the `.env.sample` file.
+
 ```bash
 pnpm i
 pnpm run deploy <network_name>
