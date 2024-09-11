@@ -123,3 +123,25 @@ pnpm test
 pnpm i
 pnpm build
 ```
+
+## Deploying and verifying contracts
+
+Specify all the necessary environment variables in `.env`, following the `.env.sample` file.
+
+```bash
+pnpm i
+pnpm run deploy <network_name>
+```
+
+1. `network_name` is the name of the network you want to deploy to. It must be added to the hardhat config under `networks` beforehand.
+2. If the hardhat plugin cannot figure out the etherscan API url for the network, you can add it manually to `tasks/deploy_verify.ts`.
+Example:
+```ts
+await hre.run('etherscan-verify', {
+  forceLicense: true,
+  license: 'LGPL-3.0',
+  apiUrl: "https://api.gnosiscan.io"
+})
+```
+
+
