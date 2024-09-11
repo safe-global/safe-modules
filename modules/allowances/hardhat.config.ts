@@ -57,14 +57,6 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: 'https://rpc.gnosischain.com',
     },
-    ewc: {
-      ...sharedNetworkConfig,
-      url: `https://rpc.energyweb.org`,
-    },
-    mumbai: {
-      ...sharedNetworkConfig,
-      url: `https://polygon-mumbai.infura.io/v3/${INFURA_KEY}`,
-    },
     polygon: {
       ...sharedNetworkConfig,
       url: `https://polygon-mainnet.infura.io/v3/${INFURA_KEY}`,
