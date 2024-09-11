@@ -336,7 +336,7 @@ library WebAuthn {
      * @param input The input bytes to hash.
      * @return digest The SHA-256 digest of the input bytes.
      */
-    function _sha256(bytes memory input) public view returns (bytes32 digest) {
+    function _sha256(bytes memory input) private view returns (bytes32 digest) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {
             // The SHA-256 precompile is at address 0x0002. Note that we don't check the whether or
