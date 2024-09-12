@@ -1,6 +1,6 @@
 using SafeWebAuthnSignerProxy as proxy;
 using SafeWebAuthnSignerSingleton as singleton;
-using WebAuthnHarness as WebAuthnHarness;
+using WebAuthnHarnessWithMunge as WebAuthnHarness;
 
 
 methods{

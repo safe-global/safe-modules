@@ -1,5 +1,5 @@
 using SafeWebAuthnSignerProxy as SafeWebAuthnSignerProxy;
-using WebAuthnHarness as WebAuthnHarness;
+using WebAuthnHarnessWithMunge as WebAuthnHarness;
 
 methods {
     function P256.verifySignatureAllowMalleability(P256.Verifiers a, bytes32 b, uint256 c, uint256 d, uint256 e, uint256 f) internal returns (bool) => 

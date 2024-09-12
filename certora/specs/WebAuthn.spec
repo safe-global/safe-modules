@@ -198,7 +198,7 @@ rule castSignatureDeterministicDecoding(){
 │ CastSignature Length Check Validity (Proved)                                                                        |
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
-
+/*  note: the rule requires specific features still not available on a stable certora-cli
 rule castSignatureLengthCheckValidity(){
     env e;
 
@@ -213,7 +213,7 @@ rule castSignatureLengthCheckValidity(){
 
     assert isValid <=> length_is_correct;
 }
-
+*/
 /*
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ castSignature Reverting Conditions                                                                                                       |
