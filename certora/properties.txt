@@ -1,0 +1,31 @@
+Factory   - Immutability of Singleton Contract.																[Critical]
+Factory   - getSigner is unique for every x,y and verifier combination (need to make sure it is required)	[High]
+Factory   - createSigner and getSigner always returns the same address.										[Medium]
+Factory   - Deterministic Address Calculation for Signers.													[High]
+Factory   - Correctness of Signer Creation. (Cant called twice, override)									[Cannot understand the risk]
+Factory   - Signature Validation (isValidSignatureForSigner Integrity)										[Critical]
+Factory   - Code Presence Check (_hasNoCode Integrity)														[Deprecated - internal code]
+Proxy     - Immutability of Configuration Parameters (x, y, Singleton, verifier)							[Critical]
+Proxy     - Delegate Call Integrity (calls the _verifySignature implementation in the Singleton)			[Low]
+Proxy     - Fallback data corruption (uses data appending that needed to be verified)						[Low]
+Proxy     - verify return data from Delegate call.															[Low]
+Proxy     - No buffer overflow when appending Parameters. //(Maybe for Dravee)								[Low]
+Singleton - Implementation of _verifySignature Function (Integrity)											[High/Medium]
+Singleton - getConfiguration Function (Integrity).															[High/Medium]
+Singleton - Both is valid Signature behave the same way.													[Low]
+Singleton - Once signer passed isValidSignature it will never fail on it after any call.					[Low]
+Singleton - Once isValidSignature failed, it will never pass before createSigner called.					[High]
+WebAuthn  - castSignature Integrity																			[Low/Medium]
+WebAuthn  - encodeClientDataJson Integrity																	[Medium]
+WebAuthn  - encodeSigningMessage Integrity																	[Medium]
+WebAuthn  - verifySignature Integrity																		[Medium]
+WebAuthn  - Both verifySignature behave the same way.														[Low]
+WebAuthn  - given input in encodeSigningMessage(), one should produce only one valid output.				[Medium - Maybe duplication]	
+		i.e., one cannot reuse a signature valid for one challenge to be valid for another challenge			
+
+// Optional
+Checks for Revert condition on critical Functions (isValidSignature,
+ verifySignature, Proxy Fallback, createSigner, getSigner)			 											[Low]
+ 
+ // Open Question for Dravee:
+	What is the user protection against hacks?
