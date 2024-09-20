@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {P256, WebAuthn} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
+import {P256, WebAuthn} from "../../contracts/libraries/WebAuthn.sol";
 
 contract WebAuthnHarness {
     mapping(bytes32 => mapping(bytes32 => string)) symbolicClientDataJson;

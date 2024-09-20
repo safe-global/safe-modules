@@ -58,7 +58,7 @@ jobs:
         run: pnpm install
 
       - name: Verify rule ${{ matrix.rule }}
-        working-directory: ./modules/4337
+        working-directory: ./modules/passkey
         run: |
           echo "Certora key length" ${#CERTORAKEY}
           certoraRun certora/conf/${{ matrix.rule }}.conf --wait_for_results=all

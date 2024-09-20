@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0;
 
 import {SafeWebAuthnSignerFactory} from "../munged/SafeWebAuthnSignerFactory.sol";
-import {P256} from "../../modules/passkey/contracts/libraries/P256.sol";
-import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
+import {P256} from "../../contracts/libraries/P256.sol";
+import {SafeWebAuthnSignerProxy} from "../../contracts/SafeWebAuthnSignerProxy.sol";
 
 contract GetSignerHarness is SafeWebAuthnSignerFactory {
     function getSignerHarnessed(uint256 x, uint256 y, P256.Verifiers verifiers) public view returns (uint256 value) {

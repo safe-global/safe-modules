@@ -2,7 +2,7 @@
 /* solhint-disable no-complex-fallback */
 pragma solidity >=0.8.0;
 
-import {P256} from "modules/passkey/contracts/libraries/WebAuthn.sol";
+import {P256} from "../../contracts/libraries/WebAuthn.sol";
 
 /**
  * @title Safe WebAuthn Signer Proxy
