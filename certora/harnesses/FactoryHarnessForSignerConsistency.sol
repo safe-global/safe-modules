@@ -6,7 +6,6 @@ import {P256} from "../../modules/passkey/contracts/libraries/P256.sol";
 import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
 
 contract FactoryHarnessForSignerConsistency is SafeWebAuthnSignerFactory {
-   
     //Harness
     function hasNoCode(address account) external view returns (bool result) {
         // solhint-disable-next-line no-inline-assembly

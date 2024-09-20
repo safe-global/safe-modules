@@ -91,7 +91,7 @@ library WebAuthn {
             // Solidity generates calldata bounds checks which aren't required for the security of
             // the signature verification, as it can only lead to _shorter_ signatures which are
             // are less gas expensive anyway.
-            
+
             // MUNGED To simplify prover execution
             let t1 := calldataload(data)
             isValid := and(isValid, lt(t1, signature.length))

@@ -1,6 +1,5 @@
 import {P256} from "../../modules/passkey/contracts/libraries/WebAuthn.sol";
 
-
 interface IConfigHolder {
     function getConfiguration() external pure returns (uint256 x, uint256 y, P256.Verifiers verifiers);
 }

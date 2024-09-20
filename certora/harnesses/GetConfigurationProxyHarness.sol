@@ -32,10 +32,15 @@ contract GetConfigurationProxyHarness {
      */
     P256.Verifiers internal immutable _VERIFIERS;
 
-
-    function getX() external view returns (uint256) { return _X; }
-    function getY() external view returns (uint256) { return _Y; }
-    function getVerifiers() external view returns (P256.Verifiers) { return _VERIFIERS; }
+    function getX() external view returns (uint256) {
+        return _X;
+    }
+    function getY() external view returns (uint256) {
+        return _Y;
+    }
+    function getVerifiers() external view returns (P256.Verifiers) {
+        return _VERIFIERS;
+    }
 
     /**
      * @notice Creates a new WebAuthn Safe Signer Proxy.

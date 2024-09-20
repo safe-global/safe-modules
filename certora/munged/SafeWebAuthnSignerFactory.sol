@@ -32,7 +32,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
     /**
      * @inheritdoc ISafeSignerFactory
      */
-     // funtion is not really virtual, Munged!
+    // funtion is not really virtual, Munged!
     function getSigner(uint256 x, uint256 y, P256.Verifiers verifiers) public view virtual override returns (address signer) {
         bytes32 codeHash = keccak256(
             abi.encodePacked(
@@ -96,7 +96,7 @@ contract SafeWebAuthnSignerFactory is ISafeSignerFactory {
      * @param account The address of the account to check.
      * @return result True if the account has no code, false otherwise.
      */
-     // funtion is not really virtual, munged!
+    // funtion is not really virtual, munged!
     function _hasNoCode(address account) internal view virtual returns (bool result) {
         // solhint-disable-next-line no-inline-assembly
         assembly ("memory-safe") {

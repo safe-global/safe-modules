@@ -4,20 +4,19 @@ pragma solidity ^0.8.0;
 import {P256, WebAuthn} from "../munged/WebAuthn.sol";
 
 contract WebAuthnHarnessWithMunge {
+    mapping(bytes32 => mapping(bytes32 => string)) symbolicClientDataJson;
 
-    mapping (bytes32 => mapping (bytes32 => string))  symbolicClientDataJson;
-
-    function summaryEncodeDataJson(bytes32 challenge, string calldata clientDataFields) public returns (string memory){
+    function summaryEncodeDataJson(bytes32 challenge, string calldata clientDataFields) public returns (string memory) {
         bytes32 hashClientDataFields = keccak256(abi.encodePacked(clientDataFields));
         string memory stringResult = symbolicClientDataJson[challenge][hashClientDataFields];
         bytes32 hashResult = keccak256(abi.encodePacked(stringResult));
 
-        require (checkInjective(challenge, hashClientDataFields, hashResult));
- 
+        require(checkInjective(challenge, hashClientDataFields, hashResult));
+
         return stringResult;
     }
 
-    function checkInjective(bytes32 challenge, bytes32 clientDataFields, bytes32 result) internal view returns (bool){
+    function checkInjective(bytes32 challenge, bytes32 clientDataFields, bytes32 result) internal view returns (bool) {
         return true;
     }
 
@@ -37,18 +36,18 @@ contract WebAuthnHarnessWithMunge {
         return true;
     }
 
-    function encodeSignature(WebAuthn.Signature calldata sig) external pure returns (bytes memory signature){
+    function encodeSignature(WebAuthn.Signature calldata sig) external pure returns (bytes memory signature) {
         signature = abi.encode(sig.authenticatorData, sig.clientDataFields, sig.r, sig.s);
     }
 
-    function castSignature(bytes calldata signature) external pure returns (bool isValid, WebAuthn.Signature calldata data){
+    function castSignature(bytes calldata signature) external pure returns (bool isValid, WebAuthn.Signature calldata data) {
         return WebAuthn.castSignature(signature);
     }
 
     function castSignatureSuccess(bytes32 unused, bytes calldata signature) external pure returns (bool) {
-         (bool isValid, ) = WebAuthn.castSignature(signature);
-         return isValid;
-    } 
+        (bool isValid, ) = WebAuthn.castSignature(signature);
+        return isValid;
+    }
 
     function castSignature_notreturns(bytes calldata signature) external pure {
         WebAuthn.castSignature(signature);
@@ -60,10 +59,7 @@ contract WebAuthnHarnessWithMunge {
         return getSha256(str1Bytes) == getSha256(str2Bytes);
     }
 
-    function encodeClientDataJson(
-        bytes32 challenge,
-        string calldata clientDataFields
-    ) public pure returns (string memory clientDataJson){
+    function encodeClientDataJson(bytes32 challenge, string calldata clientDataFields) public pure returns (string memory clientDataJson) {
         return WebAuthn.encodeClientDataJson(challenge, clientDataFields);
     }
 
@@ -78,14 +74,16 @@ contract WebAuthnHarnessWithMunge {
     function checkAuthenticatorFlags(
         bytes calldata authenticatorData,
         WebAuthn.AuthenticatorFlags authenticatorFlags
-    ) public pure returns (bool success){
+    ) public pure returns (bool success) {
         return WebAuthn.checkAuthenticatorFlags(authenticatorData, authenticatorFlags);
     }
 
-    function prepareSignature(bytes calldata authenticatorData,
+    function prepareSignature(
+        bytes calldata authenticatorData,
         string calldata clientDataFields,
         uint256 r,
-        uint256 s) public pure returns(bytes memory signature, WebAuthn.Signature memory structSignature){
+        uint256 s
+    ) public pure returns (bytes memory signature, WebAuthn.Signature memory structSignature) {
         signature = abi.encode(authenticatorData, clientDataFields, r, s);
         structSignature = WebAuthn.Signature(authenticatorData, clientDataFields, r, s);
     }
@@ -116,21 +114,29 @@ contract WebAuthnHarnessWithMunge {
         return WebAuthn._sha256(input);
     }
 
-    mapping (bytes32 => mapping (bytes32 => mapping (bytes32 => bytes)))  symbolicMessageSummary;
+    mapping(bytes32 => mapping(bytes32 => mapping(bytes32 => bytes))) symbolicMessageSummary;
 
-    function GETencodeSigningMessageSummary(bytes32 challenge, bytes calldata authenticatorData, string calldata clientDataFields) public returns (bytes memory){
+    function GETencodeSigningMessageSummary(
+        bytes32 challenge,
+        bytes calldata authenticatorData,
+        string calldata clientDataFields
+    ) public returns (bytes memory) {
         bytes32 hashed_authenticatorData = keccak256(authenticatorData);
         bytes32 hashed_clientDataFields = keccak256(abi.encodePacked(clientDataFields));
 
         bytes memory bytes_mapping = symbolicMessageSummary[challenge][hashed_authenticatorData][hashed_clientDataFields];
 
-        require (checkInjective(challenge, hashed_authenticatorData, hashed_clientDataFields, keccak256(bytes_mapping)));
+        require(checkInjective(challenge, hashed_authenticatorData, hashed_clientDataFields, keccak256(bytes_mapping)));
 
         return bytes_mapping;
     }
 
-    function checkInjective(bytes32 challenge, bytes32 authenticatorData, bytes32 clientDataFields, bytes32 result) internal view returns (bool){
+    function checkInjective(
+        bytes32 challenge,
+        bytes32 authenticatorData,
+        bytes32 clientDataFields,
+        bytes32 result
+    ) internal view returns (bool) {
         return true;
     }
-    
 }

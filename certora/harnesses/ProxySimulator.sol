@@ -5,7 +5,6 @@ pragma solidity >=0.8.0;
 import {SafeWebAuthnSignerProxy} from "../../modules/passkey/contracts/SafeWebAuthnSignerProxy.sol";
 
 contract ProxySimulator {
-
     address internal _proxy;
 
     constructor(address proxy) {
