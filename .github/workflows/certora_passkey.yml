@@ -19,7 +19,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rule: ['GetConfigurationConf', 'GetSigner', 'ProxySimulator', 'SafeWebAuthnSignerFactory', 'SafeWebAuthnSignerProxy', 'SafeWebAuthnSignerSingleton', 'SignerCreationCantOverride', 'SingletonIsValidSignatureRevertingConditions', 'ValidSignatureForSignerIntegrity', 'VerifyEQtoIsValidSignatureForSigner', 'WebAuthn']
+        rule:
+          [
+            'GetConfigurationConf',
+            'GetSigner',
+            'ProxySimulator',
+            'SafeWebAuthnSignerFactory',
+            'SafeWebAuthnSignerProxy',
+            'SafeWebAuthnSignerSingleton',
+            'SignerCreationCantOverride',
+            'SingletonIsValidSignatureRevertingConditions',
+            'ValidSignatureForSignerIntegrity',
+            'VerifyEQtoIsValidSignatureForSigner',
+            'WebAuthn',
+          ]
     steps:
       - uses: actions/checkout@v4
 
