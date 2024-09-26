@@ -20,7 +20,7 @@ interface ISafe {
 
 contract AllowanceModule is SignatureDecoder {
     string public constant NAME = "Allowance Module";
-    string public constant VERSION = "0.1.0";
+    string public constant VERSION = "0.1.1";
 
     bytes32 public constant DOMAIN_SEPARATOR_TYPEHASH = 0x47e79534a245952e8b16893a336b85a3d9ea9fa8c573f3d803afb92a79469218;
     // keccak256(
@@ -89,7 +89,7 @@ contract AllowanceModule is SignatureDecoder {
         // solium-disable-next-line security/no-block-members
         uint32 currentMin = uint32(block.timestamp / 60);
         if (resetBaseMin > 0) {
-            require(resetBaseMin <= currentMin, "resetBaseMin <= currentMin");
+            require(resetBaseMin <= currentMin && resetTimeMin > 0, "resetBaseMin <= currentMin && resetTimeMin > 0");
             allowance.lastResetMin = currentMin - ((currentMin - resetBaseMin) % resetTimeMin);
         } else if (allowance.lastResetMin == 0) {
             allowance.lastResetMin = currentMin;
