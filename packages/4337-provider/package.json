@@ -11,9 +11,9 @@
     "prepare": "pnpm run build"
   },
   "dependencies": {
-    "ethers": "^6.13.2",
+    "ethers": "^6.13.4",
     "rimraf": "^6.0.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.3"
   },
   "devDependencies": {
     "@types/node": "^20.14.10"

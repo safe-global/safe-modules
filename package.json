@@ -34,19 +34,19 @@
     "pnpm": "^9"
   },
   "devDependencies": {
-    "@safe-global/safe-singleton-factory": "^1.0.32",
+    "@safe-global/safe-singleton-factory": "^1.0.35",
     "@typescript-eslint/eslint-plugin": "^7.12.0",
     "@typescript-eslint/parser": "^7.12.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-no-only-tests": "^3.3.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.11",
+    "eslint-plugin-react-refresh": "^0.4.12",
     "prettier": "^3.3.3",
     "prettier-plugin-solidity": "^1.4.1",
     "rimraf": "^6.0.1",
-    "sherif": "^0.11.0"
+    "sherif": "^1.0.0"
   }
 }

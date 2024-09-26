@@ -18,11 +18,11 @@
     "@account-abstraction/contracts": "0.7.0",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/safe-4337-provider": "workspace:^0.0.0",
-    "@safe-global/safe-contracts": "1.4.1-build.0",
-    "ethers": "^6.13.2",
-    "hardhat": "^2.22.9",
+    "@safe-global/safe-contracts": "1.4.1-2",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.13",
     "hardhat-deploy": "^0.12.4",
     "node-fetch": "^3.3.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.3"
   }
 }
