@@ -2,7 +2,7 @@ using Account as safeContract;
 
 methods {
     function SUPPORTED_ENTRYPOINT() external returns(address) envfree;
-    function _._msgSender() internal => ERC2771MessageSender() expect address;
+    function HandlerContext._msgSender() internal returns(address) => ERC2771MessageSender();
     function _.checkSignatures(bytes32, bytes, bytes) external => checkSignaturesFunctionCalled() expect bool;
 
     //ISafe harnessed functions

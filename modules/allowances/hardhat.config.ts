@@ -1,4 +1,5 @@
 import '@nomicfoundation/hardhat-toolbox'
+import '@nomicfoundation/hardhat-ethers'
 import 'hardhat-deploy'
 import './tasks/deploy_verify'
 import dotenv from 'dotenv'
