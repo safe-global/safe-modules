@@ -24,6 +24,7 @@
     "benchmark": "pnpm run test test/gas/*.ts",
     "deploy-all": "hardhat deploy-contracts --network",
     "deploy": "hardhat deploy --network",
+    "deploy-custom": "rm -rf deployments/custom && npm run deploy custom",
     "lint": "pnpm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint ./src && eslint ./test",
