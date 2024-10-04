@@ -34,6 +34,7 @@
     "codesize": "hardhat codesize",
     "deploy-all": "hardhat deploy-contracts --network",
     "deploy": "hardhat deploy --network",
+    "deploy-custom": "rm -rf deployments/custom && npm run deploy custom",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "pnpm run lint:sol && pnpm run lint:ts",

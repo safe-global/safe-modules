@@ -14,6 +14,7 @@
     "test": "hardhat test",
     "coverage": "hardhat coverage",
     "deploy": "hardhat deploy-verify --network",
+    "deploy-custom": "rm -rf deployments/custom && npm run deploy custom",
     "prepare": "pnpm run clean && npm run build",
     "lint": "pnpm run lint:sol && npm run lint:ts",
     "lint:sol": "solhint 'contracts/**/*.sol'",

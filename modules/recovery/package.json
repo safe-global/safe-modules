@@ -16,6 +16,7 @@
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
     "deploy-all": "hardhat deploy-contracts --network",
+    "deploy-custom": "rm -rf deployments/custom && npm run deploy custom",
     "lint": "pnpm run lint:ts",
     "lint:ts": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
