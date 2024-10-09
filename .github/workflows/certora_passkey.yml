@@ -1,0 +1,66 @@
+name: certora
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - modules/passkey/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - modules/passkey/**
+
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rule:
+          [
+            'GetConfigurationConf',
+            'GetSigner',
+            'ProxySimulator',
+            'SafeWebAuthnSignerFactory',
+            'SafeWebAuthnSignerProxy',
+            'SafeWebAuthnSignerSingleton',
+            'SignerCreationCantOverride',
+            'SingletonIsValidSignatureRevertingConditions',
+            'ValidSignatureForSignerIntegrity',
+            'VerifyEQtoIsValidSignatureForSigner',
+            'WebAuthn',
+          ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install python
+        uses: actions/setup-python@v4
+        with: { python-version: 3.11 }
+
+      - name: Install certora cli
+        run: pip install -r modules/passkey/certora/requirements.txt
+
+      - name: Install solc
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.26/solc-static-linux
+          chmod +x solc-static-linux
+          sudo mv solc-static-linux /usr/local/bin/solc8.26
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Verify rule ${{ matrix.rule }}
+        working-directory: ./modules/passkey
+        run: |
+          echo "Certora key length" ${#CERTORAKEY}
+          certoraRun certora/conf/${{ matrix.rule }}.conf --wait_for_results=all
+        env:
+          CERTORAKEY: ${{ secrets.CERTORA_KEY }}
