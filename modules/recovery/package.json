@@ -16,6 +16,7 @@
     "build:sol": "rimraf build typechain-types && hardhat compile",
     "build:ts": "rimraf dist && tsc",
     "deploy-all": "hardhat deploy-contracts --network",
+    "deploy-custom": "rm -rf deployments/custom && npm run deploy custom",
     "lint": "pnpm run lint:ts",
     "lint:ts": "eslint ./src",
     "lint:fix": "eslint ./src --fix",
@@ -43,10 +44,10 @@
     "@types/yargs": "^17.0.33",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
-    "hardhat": "^2.22.13",
+    "hardhat": "^2.22.16",
     "hardhat-deploy": "^0.12.4",
     "solc": "0.8.20",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "yargs": "^17.7.2"
   },
   "dependencies": {

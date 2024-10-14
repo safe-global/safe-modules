@@ -9,7 +9,7 @@ import { getSingletonFactoryInfo } from '@safe-global/safe-singleton-factory'
 
 dotenv.config()
 
-const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY } = process.env
+const { INFURA_KEY, MNEMONIC, ETHERSCAN_API_KEY, CUSTOM_NODE_URL } = process.env
 
 const sharedNetworkConfig: HttpNetworkUserConfig = {
   accounts: {
@@ -18,6 +18,15 @@ const sharedNetworkConfig: HttpNetworkUserConfig = {
       'candy maple cake sugar pudding cream honey rich smooth crumble sweet treat',
   },
 }
+
+const customNetwork = CUSTOM_NODE_URL
+  ? {
+      custom: {
+        ...sharedNetworkConfig,
+        url: CUSTOM_NODE_URL,
+      },
+    }
+  : {}
 
 const config: HardhatUserConfig = {
   paths: {
@@ -78,6 +87,7 @@ const config: HardhatUserConfig = {
       ...sharedNetworkConfig,
       url: `https://api.avax.network/ext/bc/C/rpc`,
     },
+    ...customNetwork,
   },
   deterministicDeployment,
   namedAccounts: {

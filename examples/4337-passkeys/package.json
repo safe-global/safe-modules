@@ -14,7 +14,7 @@
     "@account-abstraction/contracts": "0.7.0",
     "@safe-global/safe-4337": "0.3.0",
     "@safe-global/safe-contracts": "1.4.1-2",
-    "@safe-global/safe-deployments": "^1.37.10",
+    "@safe-global/safe-deployments": "^1.37.18",
     "@safe-global/safe-modules-deployments": "^2.2.4",
     "@safe-global/safe-passkey": "workspace:^0.2.1-1",
     "@web3modal/ethers": "^4.1.11",
@@ -24,12 +24,12 @@
     "react-router-dom": "^6.27.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.11",
+    "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react-swc": "^3.7.1",
+    "@vitejs/plugin-react-swc": "^3.7.2",
     "react-router": "^6.27.0",
-    "typescript": "^5.6.3",
+    "typescript": "^5.7.2",
     "vite": "^5.4.8",
-    "vite-plugin-commonjs": "^0.10.3"
+    "vite-plugin-commonjs": "^0.10.4"
   }
 }

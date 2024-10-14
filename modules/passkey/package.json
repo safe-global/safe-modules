@@ -34,6 +34,7 @@
     "codesize": "hardhat codesize",
     "deploy-all": "hardhat deploy-contracts --network",
     "deploy": "hardhat deploy --network",
+    "deploy-custom": "rm -rf deployments/custom && npm run deploy custom",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
     "lint": "pnpm run lint:sol && pnpm run lint:ts",
@@ -46,7 +47,7 @@
     "prepare": "pnpm run build"
   },
   "devDependencies": {
-    "@noble/curves": "^1.6.0",
+    "@noble/curves": "^1.7.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
@@ -58,12 +59,12 @@
     "@types/node": "^20.14.10",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
-    "hardhat": "^2.22.13",
+    "hardhat": "^2.22.16",
     "hardhat-deploy": "^0.12.4",
     "solc": "0.8.26",
     "solhint": "^5.0.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "@account-abstraction/contracts": "0.7.0",
