@@ -17,6 +17,8 @@ describe('Execute Safe Transaction [@userstory]', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
     const { SafeProxyFactory, SafeL2, FCLP256Verifier, SafeWebAuthnSignerFactory, SafeWebAuthnSharedSigner } = await deployments.run()
 
+    const [relayer] = await ethers.getSigners()
+
     const proxyFactory = await ethers.getContractAt(SafeProxyFactory.abi, SafeProxyFactory.address)
     const singleton = await ethers.getContractAt(SafeL2.abi, SafeL2.address)
     const verifier = await ethers.getContractAt('IP256Verifier', FCLP256Verifier.address)
@@ -24,6 +26,7 @@ describe('Execute Safe Transaction [@userstory]', () => {
     const sharedSigner = await ethers.getContractAt('SafeWebAuthnSharedSigner', SafeWebAuthnSharedSigner.address)
 
     return {
+      relayer,
       proxyFactory,
       singleton,
       signerFactory,
@@ -35,7 +38,7 @@ describe('Execute Safe Transaction [@userstory]', () => {
   })
 
   it('should create a Safe and execute a transaction', async () => {
-    const { singleton, proxyFactory, verifier, navigator, SafeL2, signerFactory } = await setupTests()
+    const { relayer, singleton, proxyFactory, verifier, navigator, SafeL2, signerFactory } = await setupTests()
 
     // Create a WebAuthn credential to own the Safe.
     const credential = navigator.credentials.create({
@@ -127,9 +130,10 @@ describe('Execute Safe Transaction [@userstory]', () => {
     })
     const signatureData = encodeWebAuthnSignature(assertion.response)
 
-    // Execute the Safe transaction.
+    // Use relayer account to execute the signed Safe transaction.
+    const relayedSafe = safe.connect(relayer) as typeof safe
     expect(
-      await safe.execTransaction(
+      await relayedSafe.execTransaction(
         transaction.to,
         transaction.value,
         transaction.data,
@@ -151,7 +155,7 @@ describe('Execute Safe Transaction [@userstory]', () => {
   })
 
   it('should create a Safe and execute a transaction with the shared WebAuthn signer', async () => {
-    const { singleton, proxyFactory, verifier, navigator, SafeL2, sharedSigner } = await setupTests()
+    const { relayer, singleton, proxyFactory, verifier, navigator, SafeL2, sharedSigner } = await setupTests()
 
     // Create a WebAuthn credential to own the Safe.
     const credential = navigator.credentials.create({
@@ -250,9 +254,10 @@ describe('Execute Safe Transaction [@userstory]', () => {
     })
     const signatureData = encodeWebAuthnSignature(assertion.response)
 
-    // Execute the Safe transaction.
+    // Use relayer account to execute the signed Safe transaction.
+    const relayedSafe = safe.connect(relayer) as typeof safe
     expect(
-      await safe.execTransaction(
+      await relayedSafe.execTransaction(
         transaction.to,
         transaction.value,
         transaction.data,
