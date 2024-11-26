@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.8.0;
 import {Safe} from "@safe-global/safe-contracts/contracts/Safe.sol";
-import {Enum} from "@safe-global/safe-contracts/contracts/common/Enum.sol";
 
 contract Account is Safe {
     constructor(
@@ -99,11 +98,11 @@ contract Account is Safe {
  *         in case the checkSignature functions reverts.
  */
 contract AlwaysRevertingAccount {
-    function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) public view {
+    function checkSignatures(bytes32 dataHash, bytes memory data, bytes memory signatures) public pure {
         revert();
     }
 
-    function getSignatures(bytes calldata signature) external returns (bytes memory slice) {
+    function getSignatures(bytes calldata signature) external pure returns (bytes memory slice) {
         slice = signature[12:];
     }
 }

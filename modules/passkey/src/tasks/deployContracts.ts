@@ -12,7 +12,7 @@ task('deploy-contracts', 'Deploys and verifies Safe contracts').setAction(async 
   const { address: fclP256Verifier } = await deployments.get('FCLP256Verifier')
   await run('verify', { address: fclP256Verifier, contract: 'contracts/verifiers/FCLP256Verifier.sol:FCLP256Verifier' })
 
-  await run('etherscan-verify', { forceLicense: true, license: 'LGPL-3.0' })
+  await run('etherscan-verify', { forceLicense: true, license: 'LGPL-3.0-only' })
   await run('sourcify')
 
   // The `SafeWebAuthnSignerSingleton` is deployed by the `SafeWebAuthnSignerFactory` contructor
