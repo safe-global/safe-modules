@@ -30,7 +30,7 @@
     "Safe"
   ],
   "engines": {
-    "node": "^20",
+    "node": "^22",
     "pnpm": "^9"
   },
   "devDependencies": {
@@ -43,10 +43,10 @@
     "eslint-plugin-no-only-tests": "^3.3.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.14",
-    "prettier": "^3.4.1",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "prettier": "^3.4.2",
     "prettier-plugin-solidity": "^1.4.1",
     "rimraf": "^6.0.1",
-    "sherif": "^1.0.2"
+    "sherif": "^1.1.1"
   }
 }

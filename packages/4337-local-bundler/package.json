@@ -20,7 +20,7 @@
     "@safe-global/safe-4337-provider": "workspace:^0.0.0",
     "@safe-global/safe-contracts": "1.4.1-2",
     "ethers": "^6.13.4",
-    "hardhat": "^2.22.16",
+    "hardhat": "^2.22.17",
     "hardhat-deploy": "^0.12.4",
     "node-fetch": "^3.3.2",
     "typescript": "^5.7.2"

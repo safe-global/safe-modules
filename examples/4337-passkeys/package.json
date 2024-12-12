@@ -14,7 +14,7 @@
     "@account-abstraction/contracts": "0.7.0",
     "@safe-global/safe-4337": "0.3.0",
     "@safe-global/safe-contracts": "1.4.1-2",
-    "@safe-global/safe-deployments": "^1.37.18",
+    "@safe-global/safe-deployments": "^1.37.22",
     "@safe-global/safe-modules-deployments": "^2.2.4",
     "@safe-global/safe-passkey": "workspace:^0.2.1-1",
     "@web3modal/ethers": "^4.1.11",
