@@ -17,7 +17,7 @@
     "Safe",
     "Safe module"
   ],
-  "license": "GPL-3.0",
+  "license": "LGPL-3.0-only",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -47,28 +47,28 @@
     "prepare": "pnpm run build"
   },
   "devDependencies": {
-    "@noble/curves": "^1.4.0",
-    "@nomicfoundation/hardhat-ethers": "^3.0.6",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.11",
+    "@noble/curves": "^1.7.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.12",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@safe-global/mock-contract": "^4.1.0",
     "@safe-global/safe-4337": "workspace:^0.3.0-1",
     "@safe-global/safe-4337-local-bundler": "workspace:^0.0.0",
-    "@safe-global/safe-contracts": "1.4.1-build.0",
+    "@safe-global/safe-contracts": "1.4.1-2",
     "@simplewebauthn/server": "^10.0.1",
-    "@types/node": "^20.14.10",
-    "dotenv": "^16.4.5",
-    "ethers": "^6.13.1",
-    "hardhat": "^2.22.5",
+    "@types/node": "^22.10.2",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.17",
     "hardhat-deploy": "^0.12.4",
     "solc": "0.8.26",
-    "solhint": "^5.0.1",
+    "solhint": "^5.0.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.2"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "@account-abstraction/contracts": "0.7.0",
-    "@openzeppelin/contracts": "5.0.0",
+    "@openzeppelin/contracts": "5.0.2",
     "cbor-web": "^9.0.2"
   }
 }

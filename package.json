@@ -19,7 +19,7 @@
     "url": "git+https://github.com/safe-global/safe-modules.git"
   },
   "author": "@safe-global",
-  "license": "GPL-3.0",
+  "license": "LGPL-3.0-only",
   "bugs": {
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
@@ -30,23 +30,23 @@
     "Safe"
   ],
   "engines": {
-    "node": "^20",
+    "node": "^22",
     "pnpm": "^9"
   },
   "devDependencies": {
-    "@safe-global/safe-singleton-factory": "^1.0.31",
+    "@safe-global/safe-singleton-factory": "^1.0.36",
     "@typescript-eslint/eslint-plugin": "^7.12.0",
     "@typescript-eslint/parser": "^7.12.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-no-only-tests": "^3.1.0",
-    "eslint-plugin-prettier": "^5.1.3",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-no-only-tests": "^3.3.0",
+    "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react-hooks": "^4.6.2",
-    "eslint-plugin-react-refresh": "^0.4.7",
-    "prettier": "^3.3.0",
-    "prettier-plugin-solidity": "^1.3.1",
-    "rimraf": "^5.0.7",
-    "sherif": "^0.10.0"
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "prettier": "^3.4.2",
+    "prettier-plugin-solidity": "^1.4.1",
+    "rimraf": "^6.0.1",
+    "sherif": "^1.1.1"
   }
 }

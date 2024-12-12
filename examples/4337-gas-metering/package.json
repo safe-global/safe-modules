@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Gas Metering Analysis for Safe with 4337 Module",
   "homepage": "https://github.com/safe-global/safe-modules/4337-gas-metering",
-  "license": "GPL-3.0",
+  "license": "LGPL-3.0-only",
   "type": "module",
   "private": true,
   "scripts": {
@@ -48,19 +48,19 @@
     "url": "https://github.com/safe-global/safe-modules/issues"
   },
   "dependencies": {
-    "@alchemy/aa-accounts": "3.18.2",
-    "@alchemy/aa-alchemy": "3.18.2",
-    "@alchemy/aa-core": "3.18.2",
+    "@alchemy/aa-accounts": "3.19.0",
+    "@alchemy/aa-alchemy": "3.19.0",
+    "@alchemy/aa-core": "3.19.0",
     "@gelatonetwork/relay-sdk": "^5.5.6",
-    "alchemy-sdk": "3.3.1",
-    "dotenv": "^16.4.5",
-    "ethers": "^6.13.1",
-    "permissionless": "0.1.39",
-    "viem": "2.17.4"
+    "alchemy-sdk": "3.5.0",
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.4",
+    "permissionless": "0.1.45",
+    "viem": "2.21.54"
   },
   "devDependencies": {
-    "@types/node": "^20.14.10",
-    "tsx": "4.11.0",
-    "typescript": "^5.5.2"
+    "@types/node": "^22.10.2",
+    "tsx": "4.19.2",
+    "typescript": "^5.7.2"
   }
 }
