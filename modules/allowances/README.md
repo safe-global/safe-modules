@@ -99,7 +99,7 @@ Some limits have been applied to the different fields to make sure that the over
 
 To make it easier to allow querying for allowances two more data structures have been added to the contract: `delegates` and `tokens`.
 
-`delegates` stores all the delegates for a specific Safe in a double linked list. For this we also store an entry point to that double linked list in `delegatesStart`. Each delegate is identified by a `uint48` which is the first **6bytes** of the delegate address. This could theoretically cause collisions. Therfore the index points to a struct containing the `address` of the delgate, the `next` index and the `prev` index, so that it is possible to verify which address was used to get the index. In case of collisions we recommend to generate a new delegate.
+`delegates` stores all the delegates for a specific Safe in a double linked list. For this we also store an entry point to that double linked list in `delegatesStart`. Each delegate is identified by a `uint48` which is the first **6bytes** of the delegate address. This could theoretically cause collisions. Therfore the index points to a struct containing the `address` of the delegate, the `next` index and the `prev` index, so that it is possible to verify which address was used to get the index. In case of collisions we recommend to generate a new delegate.
 
 `tokens` is a list that is appended when ever an allowance is set for a token for the first time. The tokens will never be removed from this list.
 
