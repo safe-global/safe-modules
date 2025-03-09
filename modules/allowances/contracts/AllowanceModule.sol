@@ -347,12 +347,12 @@ contract AllowanceModule is SignatureDecoder {
         if (current.next != 0) {
             delegates[msg.sender][current.next].prev = current.prev;
         }
-        delete delegates[msg.sender][uint48(delegate)];
+        delete delegates[msg.sender][uint256(delegate)];
         emit RemoveDelegate(msg.sender, delegate);
     }
 
-    function getDelegates(address safe, uint48 start, uint8 pageSize) public view returns (address[] memory results, uint48 next) {
-        results = new address[](pageSize);
+    function getDelegates(address safe, uint256 start, uint8 pageSize) public view returns (address[] memory results, uint256 next) {
+        results = new address[](pageSize
         uint8 i = 0;
         uint48 initialIndex = (start != 0) ? start : delegatesStart[safe];
         Delegate memory current = delegates[safe][initialIndex];
