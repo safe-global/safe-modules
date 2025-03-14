@@ -299,9 +299,6 @@ importers:
 
   modules/passkey:
     dependencies:
-      '@account-abstraction/contracts':
-        specifier: 0.7.0
-        version: 0.7.0
       '@openzeppelin/contracts':
         specifier: 5.0.2
         version: 5.0.2
@@ -309,6 +306,9 @@ importers:
         specifier: ^9.0.2
         version: 9.0.2
     devDependencies:
+      '@account-abstraction/contracts':
+        specifier: 0.7.0
+        version: 0.7.0
       '@noble/curves':
         specifier: ^1.7.0
         version: 1.7.0
@@ -3166,9 +3166,11 @@ packages:
 
   '@web3modal/core@4.2.3':
     resolution: {integrity: sha512-UykKZTELBpb6ey+IV6fkHWsLkjrIdILmRYzhlznyTPbm9qX5pOR9tH0Z3QGUo7YPFmUqMRH1tC9Irsr3SgIbbw==}
+    deprecated: Web3Modal is now Reown AppKit. Please follow the upgrade guide at https://docs.reown.com/appkit/upgrade/from-w3m-to-reown
 
   '@web3modal/ethers@4.2.3':
     resolution: {integrity: sha512-E7qnN9kstGDXkXx2DSm7o5NwA7NCqctVpyxBhFcSiR8kXRplcBSGttlLGs6ZcA3J+4luEQrMHY+FKP82RVB4Pg==}
+    deprecated: Web3Modal is now Reown AppKit. Please follow the upgrade guide at https://docs.reown.com/appkit/upgrade/from-w3m-to-reown
     peerDependencies:
       ethers: '>=6.0.0'
       react: '>=17'
@@ -3212,9 +3214,11 @@ packages:
 
   '@web3modal/siwe@4.2.3':
     resolution: {integrity: sha512-uPma0U/OxAy3LwnF7pCYYX8tn+ONBYNcssuVZxEGsusJD1kF4ueS8lK7eyQogyK5nXqOGdNESOjY1NImNNjMVw==}
+    deprecated: Web3Modal is now Reown AppKit. Please follow the upgrade guide at https://docs.reown.com/appkit/upgrade/from-w3m-to-reown
 
   '@web3modal/ui@4.2.3':
     resolution: {integrity: sha512-QPPgE0hii1gpAldTdnrP63D/ryI78Ohz99zRBp8vi81lawot7rbdUbryMoX13hMPCW9vW7JYyvX+jJN7uO3QwA==}
+    deprecated: Web3Modal is now Reown AppKit. Please follow the upgrade guide at https://docs.reown.com/appkit/upgrade/from-w3m-to-reown
 
   '@web3modal/wallet@4.2.3':
     resolution: {integrity: sha512-V+VpwmhQl9qeJMpzNkjpAaxercAsrr1O9oGRjrjD+c0q72NfdcbTalWSbjSQmqabI1M6N06Hw94FkAQuEfVGsg==}
