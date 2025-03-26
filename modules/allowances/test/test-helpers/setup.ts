@@ -10,9 +10,9 @@ import execTransaction from './execSafeTransaction'
 export default async function setup() {
   const [owner, alice, bob, deployer, relayer] = await hre.ethers.getSigners()
 
-  const { safeProxyFactoryAddress, safeMastercopyAddress, allowanceModuleAddress } = await deploySingletons(deployer)
+  const { safeProxyFactoryAddress, safeMastercopyAddress, allowanceModuleAddress } = await deploySingletons(deployer, hre.network.zksync)
 
-  const safeAddress = await deploySafeProxy(safeProxyFactoryAddress, safeMastercopyAddress, owner.address, deployer)
+  const safeAddress = await deploySafeProxy(safeProxyFactoryAddress, safeMastercopyAddress, owner.address, deployer, hre.network.zksync)
   const token = await deployTestToken(deployer)
 
   // both the safe and the allowance work by signature
