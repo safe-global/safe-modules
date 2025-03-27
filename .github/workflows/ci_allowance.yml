@@ -24,7 +24,7 @@ jobs:
         with:
           path-to-lcov: modules/allowances/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
-  tests:zk:
+  testsZk:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
