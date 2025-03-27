@@ -1,11 +1,16 @@
-import { loadFixture, mine } from '@nomicfoundation/hardhat-network-helpers'
+import { mine } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
 import setup from './test-helpers/setup'
+import { deployments } from 'hardhat'
 
 describe('AllowanceModule allowanceRecurring', () => {
+  const setupTests = deployments.createFixture(async ({ deployments }) => {
+    return setup(deployments)
+  })
+
   function nowInMinutes() {
     return Math.floor(Date.now() / (1000 * 60))
   }
@@ -15,14 +20,13 @@ describe('AllowanceModule allowanceRecurring', () => {
   }
 
   it('Execute allowance without refund', async () => {
-    const { safe, allowanceModule, token, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const tokenAddress = await token.getAddress()
 
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
-
     // create an allowance for alice
     const configResetPeriod = 60 * 24
     const configResetBase = nowInMinutes() - 30
@@ -37,7 +41,6 @@ describe('AllowanceModule allowanceRecurring', () => {
       await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, configResetPeriod, configResetBase),
       owner,
     )
-
     // load an existing allowance
     let [amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
 
@@ -135,7 +138,7 @@ describe('AllowanceModule allowanceRecurring', () => {
   })
 
   it('Reverts when trying to set up a recurring allowance with reset period of 0', async () => {
-    const { safe, allowanceModule, token, owner, alice } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice } = await setupTests()
     const tokenAddress = await token.getAddress()
 
     // add alice as delegate

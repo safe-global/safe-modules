@@ -7,7 +7,14 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const deployerAccount = await getDeployerAccount(hre)
 
-  await deploy('AllowanceModule', {
+  await deploy('Safe', {
+    from: deployerAccount,
+    args: [],
+    log: true,
+    deterministicDeployment: true,
+  })
+
+  await deploy('SafeProxyFactory', {
     from: deployerAccount,
     args: [],
     log: true,
@@ -15,6 +22,6 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
 }
 
-deploy.tags = ['AllowanceModule']
+deploy.tags = ['Safe', 'SafeProxyFactory']
 
 export default deploy

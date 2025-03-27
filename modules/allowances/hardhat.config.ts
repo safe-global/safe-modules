@@ -60,7 +60,7 @@ const config: HardhatUserConfig = {
   zksolc: {
     version: "1.5.3",
     settings: {
-      suppressedWarnings: ["TxOrigin"]
+      suppressedWarnings: ["TxOrigin", "SendTransfer"]
     },
   },
   defaultNetwork: 'hardhat',
