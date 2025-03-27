@@ -236,7 +236,7 @@ importers:
     devDependencies:
       '@matterlabs/hardhat-zksync':
         specifier: ^1.5.0
-        version: 1.5.0(7uqymuqogz4h2novwud3utiy3u)
+        version: 1.5.0(jk6et7eojg6xuznibhfkssczzq)
       '@matterlabs/hardhat-zksync-ethers':
         specifier: ^1.2.1
         version: 1.2.1(bufferutil@4.0.8)(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))(ts-node@10.9.2(@swc/core@1.7.35)(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(zksync-ethers@6.16.2(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
@@ -262,8 +262,8 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2
       '@safe-global/safe-contracts':
-        specifier: github:safe-global/safe-smart-account#v1.4.1-3
-        version: https://codeload.github.com/safe-global/safe-smart-account/tar.gz/21dc82410445637820f600c7399a804ad55841d5
+        specifier: 1.4.1-2
+        version: 1.4.1-2(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@safe-global/safe-deployments':
         specifier: ^1.37.22
         version: 1.37.22
@@ -2971,10 +2971,6 @@ packages:
     resolution: {integrity: sha512-UFiqZOamt1lDbyQ16lpzBE8mDdzfnQ3OBftll1erLlwIrdfmhePicQqfLquvyXA8AlqPWQ3ktz1DzpC9UcN+JQ==}
     peerDependencies:
       ethers: 5.4.0
-
-  '@safe-global/safe-contracts@https://codeload.github.com/safe-global/safe-smart-account/tar.gz/21dc82410445637820f600c7399a804ad55841d5':
-    resolution: {tarball: https://codeload.github.com/safe-global/safe-smart-account/tar.gz/21dc82410445637820f600c7399a804ad55841d5}
-    version: 1.4.1-3
 
   '@safe-global/safe-deployments@1.37.22':
     resolution: {integrity: sha512-acUBJ22qqivSjHOwa8laQuHckqpWDjphjdC3zPhUN6G/swHe1WJHN5F2sodtNIjEyRxM73JRRJFsLYfb0EhSAQ==}
@@ -10918,9 +10914,9 @@ snapshots:
       - encoding
       - supports-color
 
-  '@matterlabs/hardhat-zksync@1.5.0(7uqymuqogz4h2novwud3utiy3u)':
+  '@matterlabs/hardhat-zksync@1.5.0(jk6et7eojg6xuznibhfkssczzq)':
     dependencies:
-      '@matterlabs/hardhat-zksync-deploy': 1.6.0(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))(hardhat@2.22.17(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.7.35)(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10))(zksync-ethers@6.16.2(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
+      '@matterlabs/hardhat-zksync-deploy': 1.7.0(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))(hardhat@2.22.17(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.7.35)(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10))(zksync-ethers@6.16.2(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
       '@matterlabs/hardhat-zksync-ethers': 1.2.1(bufferutil@4.0.8)(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))(ts-node@10.9.2(@swc/core@1.7.35)(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(zksync-ethers@6.16.2(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
       '@matterlabs/hardhat-zksync-node': 1.3.1(hardhat@2.22.17(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.7.35)(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10))
       '@matterlabs/hardhat-zksync-solc': 1.2.6(hardhat@2.22.17(bufferutil@4.0.8)(ts-node@10.9.2(@swc/core@1.7.35)(@types/node@22.10.2)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10))
@@ -12430,8 +12426,6 @@ snapshots:
   '@safe-global/safe-contracts@1.4.1-2(ethers@6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
     dependencies:
       ethers: 6.13.4(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-
-  '@safe-global/safe-contracts@https://codeload.github.com/safe-global/safe-smart-account/tar.gz/21dc82410445637820f600c7399a804ad55841d5': {}
 
   '@safe-global/safe-deployments@1.37.22':
     dependencies:

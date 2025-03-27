@@ -1,6 +1,7 @@
 import { Interface, ZeroAddress } from 'ethers'
 
-import { ArtifactSafe, ArtifactSafeZk } from './artifacts'
+import ArtifactSafe from '../../build/artifacts/@safe-global/safe-contracts/contracts/Safe.sol/Safe.json';
+import ArtifactSafeZk from '../../build/artifacts-zk/@safe-global/safe-contracts/contracts/Safe.sol/Safe.json';
 
 export function calculateInitializer(owner: string, zkSync: boolean = false): string {
   const iface = new Interface(zkSync ? ArtifactSafeZk.abi : ArtifactSafe.abi)
