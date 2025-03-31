@@ -5,6 +5,7 @@ import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
 import setup from './test-helpers/setup'
 import { deployments } from 'hardhat'
+import hre from 'hardhat'
 
 describe('AllowanceModule allowanceRecurring', () => {
   const setupTests = deployments.createFixture(async ({ deployments }) => {
@@ -27,6 +28,14 @@ describe('AllowanceModule allowanceRecurring', () => {
 
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    // Set the timestamp to the current time for zk based networks
+    if (hre.network.zksync) {
+      const newTimeinSeconds = Math.floor(Date.now() / 1000)
+      await hre.zksyncEthers.provider.send('evm_setTime', [newTimeinSeconds])
+      await hre.zksyncEthers.provider.send('evm_mine', [])
+    }
+
     // create an allowance for alice
     const configResetPeriod = 60 * 24
     const configResetBase = nowInMinutes() - 30
