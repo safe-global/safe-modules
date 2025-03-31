@@ -20,10 +20,10 @@ export default async function setup(deployments: DeploymentsExtension) {
 
   const initializer = calculateInitializer(await owner.getAddress(), hre.network.zksync)
 
-  const safeAddreess = await factory.createProxyWithNonce.staticCall(safeSingleton.address, initializer, ZeroHash)
+  const safeAddress = await factory.createProxyWithNonce.staticCall(safeSingleton.address, initializer, ZeroHash)
   await factory.createProxyWithNonce(safeSingleton.address, initializer, ZeroHash)
 
-  const safe = await hre.ethers.getContractAt('Safe', safeAddreess)
+  const safe = await hre.ethers.getContractAt('Safe', safeAddress)
 
   // fund the safe
   await token.mint(safe.target, 1000)
