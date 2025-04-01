@@ -29,7 +29,8 @@ describe('AllowanceModule allowanceRecurring', () => {
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
 
-    // Set the timestamp to the current time for zk based networks
+    // The initial timestamp of in-memory node when running test for zkSync based network is too low to test allowance reset.
+    // Set the timestamp of the node to current time to avoid this issue.
     if (hre.network.zksync) {
       const newTimeinSeconds = Math.floor(Date.now() / 1000)
       await hre.zksyncEthers.provider.send('evm_setTime', [newTimeinSeconds])

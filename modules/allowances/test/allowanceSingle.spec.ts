@@ -121,7 +121,7 @@ describe('AllowanceModule allowanceSingle', () => {
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,
         ZeroAddress, // zero means ether
-        ethers.parseEther('1'),
+        OneEther,
         0,
         0,
       ),
