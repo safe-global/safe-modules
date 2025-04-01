@@ -2,7 +2,7 @@ import { Interface, ZeroAddress } from 'ethers'
 
 import ArtifactSafe from '../../build/artifacts/@safe-global/safe-contracts/contracts/Safe.sol/Safe.json'
 
-export function calculateInitializer(owner: string, zkSync: boolean = false): string {
+export function calculateInitializer(owner: string): string {
   const iface = new Interface(ArtifactSafe.abi)
 
   const initializer = iface.encodeFunctionData('setup', [

@@ -18,7 +18,7 @@ export default async function setup(deployments: DeploymentsExtension) {
   const factory = await hre.ethers.getContractAt('SafeProxyFactory', factoryDeployment.address)
   const allowanceModule = await hre.ethers.getContractAt('AllowanceModule', allowanceModuleDeployment.address)
 
-  const initializer = calculateInitializer(await owner.getAddress(), hre.network.zksync)
+  const initializer = calculateInitializer(await owner.getAddress())
 
   const safeAddress = await factory.createProxyWithNonce.staticCall(safeSingleton.address, initializer, ZeroHash)
   await factory.createProxyWithNonce(safeSingleton.address, initializer, ZeroHash)

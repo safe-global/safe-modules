@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { parseUnits, ZeroAddress } from 'ethers'
-import hre, { deployments, ethers } from 'hardhat'
+import hre, { deployments } from 'hardhat'
 
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
