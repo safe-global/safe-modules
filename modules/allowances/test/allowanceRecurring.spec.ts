@@ -1,11 +1,17 @@
-import { loadFixture, mine } from '@nomicfoundation/hardhat-network-helpers'
+import { mine } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
 import setup from './test-helpers/setup'
+import { deployments } from 'hardhat'
+import hre from 'hardhat'
 
 describe('AllowanceModule allowanceRecurring', () => {
+  const setupTests = deployments.createFixture(async ({ deployments }) => {
+    return setup(deployments)
+  })
+
   function nowInMinutes() {
     return Math.floor(Date.now() / (1000 * 60))
   }
@@ -15,13 +21,21 @@ describe('AllowanceModule allowanceRecurring', () => {
   }
 
   it('Execute allowance without refund', async () => {
-    const { safe, allowanceModule, token, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const tokenAddress = await token.getAddress()
 
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    // The initial timestamp of in-memory node when running test for zkSync based network is too low to test allowance reset.
+    // Set the timestamp of the node to current time to avoid this issue.
+    if (hre.network.zksync) {
+      const newTimeinSeconds = Math.floor(Date.now() / 1000)
+      await hre.zksyncEthers.provider.send('evm_setTime', [newTimeinSeconds])
+      await hre.zksyncEthers.provider.send('evm_mine', [])
+    }
 
     // create an allowance for alice
     const configResetPeriod = 60 * 24
@@ -37,7 +51,6 @@ describe('AllowanceModule allowanceRecurring', () => {
       await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, configResetPeriod, configResetBase),
       owner,
     )
-
     // load an existing allowance
     let [amount, spent, resetPeriod, resetLast, nonce] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, tokenAddress)
 
@@ -135,7 +148,7 @@ describe('AllowanceModule allowanceRecurring', () => {
   })
 
   it('Reverts when trying to set up a recurring allowance with reset period of 0', async () => {
-    const { safe, allowanceModule, token, owner, alice } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice } = await setupTests()
     const tokenAddress = await token.getAddress()
 
     // add alice as delegate

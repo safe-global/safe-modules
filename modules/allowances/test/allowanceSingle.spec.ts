@@ -1,7 +1,6 @@
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { parseUnits, ZeroAddress } from 'ethers'
-import hre from 'hardhat'
+import hre, { deployments } from 'hardhat'
 
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
@@ -10,8 +9,12 @@ import setup from './test-helpers/setup'
 const OneEther = parseUnits('1', 'ether')
 
 describe('AllowanceModule allowanceSingle', () => {
+  const setupTests = deployments.createFixture(async ({ deployments }) => {
+    return setup(deployments)
+  })
+
   it('Execute allowance with delegate', async () => {
-    const { safe, allowanceModule, token, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const tokenAddress = await token.getAddress()
@@ -90,14 +93,14 @@ describe('AllowanceModule allowanceSingle', () => {
 
   it('Execute multiple ether allowance with delegate', async () => {
     const { provider } = hre.ethers
-    const { safe, allowanceModule, owner, alice } = await loadFixture(setup)
+    const { safe, allowanceModule, owner, alice } = await setupTests()
 
     const safeAddress = await safe.getAddress()
 
     // fund the safe
     await owner.sendTransaction({
       to: safeAddress,
-      value: parseUnits('1', 'ether'),
+      value: OneEther,
     })
 
     /*

@@ -1,31 +1,35 @@
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
 import hre from 'hardhat'
 
-import { AllowanceModule__factory, ISafeTest__factory, TestToken, TestToken__factory } from '../../typechain-types'
-
-import deploySafeProxy from './deploySafeProxy'
-import deploySingletons from './deploySingletons'
+import { calculateInitializer } from './deploySafeProxy'
 import execTransaction from './execSafeTransaction'
+import { ZeroHash } from 'ethers'
+import { DeploymentsExtension } from 'hardhat-deploy/types'
 
-export default async function setup() {
-  const [owner, alice, bob, deployer, relayer] = await hre.ethers.getSigners()
+export default async function setup(deployments: DeploymentsExtension) {
+  await hre.deployments.fixture()
 
-  const { safeProxyFactoryAddress, safeMastercopyAddress, allowanceModuleAddress } = await deploySingletons(deployer)
+  const [owner, alice, bob] = await hre.ethers.getSigners()
 
-  const safeAddress = await deploySafeProxy(safeProxyFactoryAddress, safeMastercopyAddress, owner.address, deployer)
-  const token = await deployTestToken(deployer)
+  const safeSingleton = await deployments.get('Safe')
+  const factoryDeployment = await deployments.get('SafeProxyFactory')
+  const allowanceModuleDeployment = await deployments.get('AllowanceModule')
+  const token = await hre.ethers.getContractAt('TestToken', (await deployments.get('TestToken')).address)
 
-  // both the safe and the allowance work by signature
-  // connect the contracts to a signer that has funds
-  // but isn't safe owner, or allowance spender
-  const safe = ISafeTest__factory.connect(safeAddress, relayer)
-  const allowanceModule = AllowanceModule__factory.connect(allowanceModuleAddress, relayer)
+  const factory = await hre.ethers.getContractAt('SafeProxyFactory', factoryDeployment.address)
+  const allowanceModule = await hre.ethers.getContractAt('AllowanceModule', allowanceModuleDeployment.address)
+
+  const initializer = calculateInitializer(await owner.getAddress())
+
+  const safeAddress = await factory.createProxyWithNonce.staticCall(safeSingleton.address, initializer, ZeroHash)
+  await factory.createProxyWithNonce(safeSingleton.address, initializer, ZeroHash)
+
+  const safe = await hre.ethers.getContractAt('Safe', safeAddress)
 
   // fund the safe
-  await token.transfer(safeAddress, 1000)
+  await token.mint(safe.target, 1000)
 
   // enable Allowance as mod
-  await execTransaction(safe, await safe.enableModule.populateTransaction(allowanceModuleAddress), owner)
+  await execTransaction(safe, await safe.enableModule.populateTransaction(allowanceModule.target), owner)
 
   return {
     // the deployed safe
@@ -39,9 +43,4 @@ export default async function setup() {
     alice,
     bob,
   }
-}
-
-async function deployTestToken(minter: SignerWithAddress): Promise<TestToken> {
-  const factory: TestToken__factory = await hre.ethers.getContractFactory('TestToken', minter)
-  return await factory.connect(minter).deploy()
 }

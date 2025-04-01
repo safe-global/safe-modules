@@ -7,7 +7,7 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments
   const deployerAccount = await getDeployerAccount(hre)
 
-  await deploy('AllowanceModule', {
+  await deploy('TestToken', {
     from: deployerAccount,
     args: [],
     log: true,
@@ -15,6 +15,6 @@ const deploy: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })
 }
 
-deploy.tags = ['AllowanceModule']
+deploy.tags = ['TestToken']
 
 export default deploy

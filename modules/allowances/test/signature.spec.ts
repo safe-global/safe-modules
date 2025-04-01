@@ -1,14 +1,16 @@
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { BigNumberish, TypedDataEncoder, ZeroAddress } from 'ethers'
 
 import setup from './test-helpers/setup'
+import { deployments } from 'hardhat'
 
 describe('signature', () => {
-  it('Generates expected transfer hash', async () => {
-    const { allowanceModule, alice } = await loadFixture(setup)
+  const setupTests = deployments.createFixture(async ({ deployments }) => {
+    return setup(deployments)
+  })
 
-    const allowanceAddress = await allowanceModule.getAddress()
+  it('Generates expected transfer hash', async () => {
+    const { allowanceModule, alice } = await setupTests()
 
     const transfer = {
       safe: '0x0000000000000000000000000000000000000010',
@@ -20,7 +22,7 @@ describe('signature', () => {
       nonce: 0,
     }
 
-    const hash = calculateTransferHash(allowanceAddress, (await alice.provider.getNetwork()).chainId, transfer)
+    const hash = calculateTransferHash(await allowanceModule.getAddress(), (await alice.provider.getNetwork()).chainId, transfer)
 
     expect(
       await allowanceModule.generateTransferHash(

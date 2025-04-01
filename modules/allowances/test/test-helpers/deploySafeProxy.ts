@@ -1,26 +1,8 @@
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers'
-import { AbiCoder, concat, getCreate2Address, Interface, keccak256, ZeroAddress, ZeroHash } from 'ethers'
+import { Interface, ZeroAddress } from 'ethers'
 
-import { ArtifactSafe, ArtifactSafeProxy, ArtifactSafeProxyFactory } from './artifacts'
+import ArtifactSafe from '../../build/artifacts/@safe-global/safe-contracts/contracts/Safe.sol/Safe.json'
 
-export default async function deploySafeProxy(
-  factory: string,
-  mastercopy: string,
-  owner: string,
-  deployer: SignerWithAddress,
-): Promise<string> {
-  const initializer = calculateInitializer(owner)
-
-  const iface = new Interface(ArtifactSafeProxyFactory.abi)
-  await deployer.sendTransaction({
-    to: factory,
-    data: iface.encodeFunctionData('createProxyWithNonce', [mastercopy, initializer, ZeroHash]),
-  })
-
-  return calculateProxyAddress(initializer, factory, mastercopy)
-}
-
-function calculateInitializer(owner: string): string {
+export function calculateInitializer(owner: string): string {
   const iface = new Interface(ArtifactSafe.abi)
 
   const initializer = iface.encodeFunctionData('setup', [
@@ -35,12 +17,4 @@ function calculateInitializer(owner: string): string {
   ])
 
   return initializer
-}
-
-function calculateProxyAddress(initializer: string, factory: string, mastercopy: string): string {
-  const salt = keccak256(concat([keccak256(initializer), ZeroHash]))
-
-  const deploymentData = concat([ArtifactSafeProxy.bytecode, AbiCoder.defaultAbiCoder().encode(['address'], [mastercopy])])
-
-  return getCreate2Address(factory, salt, keccak256(deploymentData))
 }

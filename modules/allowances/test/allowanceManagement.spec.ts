@@ -1,13 +1,16 @@
-import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
-
 import execAllowanceTransfer from './test-helpers/execAllowanceTransfer'
 import execSafeTransaction from './test-helpers/execSafeTransaction'
 import setup from './test-helpers/setup'
+import { deployments } from 'hardhat'
 
 describe('AllowanceModule allowanceManagement', () => {
+  const setupTests = deployments.createFixture(async ({ deployments }) => {
+    return setup(deployments)
+  })
+
   it('Add delegates and removes first delegate', async () => {
-    const { safe, allowanceModule, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()
@@ -34,7 +37,7 @@ describe('AllowanceModule allowanceManagement', () => {
   })
 
   it('Add delegates and removes second delegate', async () => {
-    const { safe, allowanceModule, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()
@@ -61,7 +64,7 @@ describe('AllowanceModule allowanceManagement', () => {
   })
 
   it('Add and remove delegate and then try to execute', async () => {
-    const { safe, allowanceModule, token, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()
@@ -105,7 +108,7 @@ describe('AllowanceModule allowanceManagement', () => {
   })
 
   it('Cannot set delegate without allowance configured', async () => {
-    const { safe, allowanceModule, token, owner, alice, bob } = await loadFixture(setup)
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
     const allowanceAddress = await allowanceModule.getAddress()

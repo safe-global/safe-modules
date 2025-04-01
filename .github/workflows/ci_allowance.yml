@@ -5,7 +5,7 @@ on:
       - 'modules/allowances/**'
 
 jobs:
-  tests:
+  coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +24,21 @@ jobs:
         with:
           path-to-lcov: modules/allowances/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: pnpm
+      - run: |
+          pnpm install
+          pnpm run --filter "@safe-global/safe-allowance-module" test:all
   lint:
     runs-on: ubuntu-latest
     steps:
