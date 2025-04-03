@@ -11,12 +11,16 @@ export default async function execAllowanceTransfer(
     to,
     amount,
     spender,
+    paymentToken = ZeroAddress,
+    payment = 0,
   }: {
     safe: string
     token: string
     to: string
     amount: number | bigint
     spender: SignerWithAddress
+    paymentToken?: string
+    payment?: number | bigint
   },
 ) {
   const address = await module.getAddress()
@@ -24,20 +28,11 @@ export default async function execAllowanceTransfer(
 
   const [, , , , nonce] = await module.getTokenAllowance(safe, spender.address, token)
 
-  const { domain, types, message } = paramsToSign(address, chainId, { safe, token, to, amount }, nonce)
+  const { domain, types, message } = paramsToSign(address, chainId, { safe, token, to, amount, paymentToken, payment }, nonce)
 
   const signature = await spender.signTypedData(domain, types, message)
 
-  return module.executeAllowanceTransfer(
-    safe,
-    token,
-    to,
-    amount,
-    ZeroAddress, // paymentToken
-    0, // payment
-    spender.address,
-    signature,
-  )
+  return module.executeAllowanceTransfer(safe, token, to, amount, paymentToken, payment, spender.address, signature)
 }
 
 function paramsToSign(
@@ -48,11 +43,15 @@ function paramsToSign(
     token,
     to,
     amount,
+    paymentToken = ZeroAddress,
+    payment = 0,
   }: {
     safe: string
     token: string
     to: string
     amount: number | bigint
+    paymentToken?: string
+    payment?: number | bigint
   },
   nonce: bigint,
 ) {
@@ -74,8 +73,8 @@ function paramsToSign(
     token,
     to,
     amount,
-    paymentToken: ZeroAddress,
-    payment: 0,
+    paymentToken,
+    payment,
     nonce,
   }
 

@@ -8,7 +8,7 @@ import { DeploymentsExtension } from 'hardhat-deploy/types'
 export default async function setup(deployments: DeploymentsExtension) {
   await hre.deployments.fixture()
 
-  const [owner, alice, bob] = await hre.ethers.getSigners()
+  const [owner, alice, bob, charlie] = await hre.ethers.getSigners()
 
   const safeSingleton = await deployments.get('Safe')
   const factoryDeployment = await deployments.get('SafeProxyFactory')
@@ -42,5 +42,6 @@ export default async function setup(deployments: DeploymentsExtension) {
     owner,
     alice,
     bob,
+    charlie,
   }
 }
