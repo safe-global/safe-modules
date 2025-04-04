@@ -32,7 +32,7 @@ contract AllowanceModule is SignatureDecoder {
     //     "AllowanceTransfer(address safe,address token,address to,uint96 amount,address paymentToken,uint96 payment,uint16 nonce)"
     // );
 
-    // Safe -> Delegate -> Allowance
+    // Safe -> Delegate -> Token -> Allowance
     mapping(address => mapping(address => mapping(address => Allowance))) public allowances;
     // Safe -> Delegate -> Tokens
     mapping(address => mapping(address => address[])) public tokens;
