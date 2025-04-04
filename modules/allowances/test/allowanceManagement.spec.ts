@@ -162,7 +162,88 @@ describe('AllowanceModule allowanceManagement', () => {
     ).to.be.revertedWith('newSpent > allowance.spent && newSpent <= allowance.amount')
   })
 
-  it('Cannot set delegate without allowance configured', async () => {
+  it('Get delegates from non-zero start index', async () => {
+    const { safe, allowanceModule, owner, alice, bob, charlie } = await setupTests()
+
+    const safeAddress = await safe.getAddress()
+    const allowanceAddress = await allowanceModule.getAddress()
+
+    // add alice as delegate
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    // add bob as delegate
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(bob.address), owner)
+
+    // add charlie as delegate
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(charlie.address), owner)
+
+    const [delegates, next] = await allowanceModule.getDelegates(safeAddress, `0x${bob.address.slice(-12)}`, 10)
+
+    expect(delegates).to.deep.equal([bob.address, alice.address])
+    expect(next).to.equal(0)
+  })
+
+  it('Save allowances even after removing delegate', async () => {
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
+
+    const safeAddress = await safe.getAddress()
+    const allowanceAddress = await allowanceModule.getAddress()
+    const tokenAddress = await token.getAddress()
+
+    expect(await safe.isModuleEnabled(allowanceAddress)).to.equal(true)
+
+    // add alice as delegate
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    // add allowance
+    await execSafeTransaction(safe, await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 1000, 0, 0), owner)
+
+    expect(1000).to.equal(await token.balanceOf(safeAddress))
+    expect(0).to.equal(await token.balanceOf(bob.address))
+
+    await execAllowanceTransfer(allowanceModule, {
+      safe: safeAddress,
+      token: tokenAddress,
+      to: bob.address,
+      amount: 50,
+      spender: alice,
+    })
+
+    expect(await token.balanceOf(safeAddress)).to.equal(950)
+    expect(await token.balanceOf(bob.address)).to.equal(50)
+
+    // remove alice
+    await execSafeTransaction(safe, await allowanceModule.removeDelegate.populateTransaction(alice.address, false), owner)
+
+    // Add alice as delegate again
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    const [amount, spent, resetTimeMin, lastResetMin, nonce] = await allowanceModule.getTokenAllowance(
+      safeAddress,
+      alice.address,
+      tokenAddress,
+    )
+
+    expect(amount).to.equal(1000)
+    expect(spent).to.equal(50)
+    expect(resetTimeMin).to.equal(0)
+    expect(lastResetMin).to.not.equal(0)
+    expect(nonce).to.equal(2)
+
+    // Work after adding delegate again as the allowances are not removed
+    await execAllowanceTransfer(allowanceModule, {
+      safe: safeAddress,
+      token: tokenAddress,
+      to: bob.address,
+      amount: 50,
+      spender: alice,
+    })
+
+    expect(await token.balanceOf(safeAddress)).to.equal(900)
+    expect(await token.balanceOf(bob.address)).to.equal(100)
+  })
+
+  it('Cannot set allowance without delegate configured', async () => {
     const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
@@ -189,6 +270,59 @@ describe('AllowanceModule allowanceManagement', () => {
 
     expect(1000).to.equal(await token.balanceOf(safeAddress))
     expect(0).to.equal(await token.balanceOf(bob.address))
+  })
+
+  it('Overwrite previous allowance', async () => {
+    const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
+
+    const safeAddress = await safe.getAddress()
+    const tokenAddress = await token.getAddress()
+
+    // add alice as delegate
+    await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
+
+    // add allowance
+    await execSafeTransaction(safe, await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 500, 1, 1), owner)
+
+    const [amount, spent, resetTimeMin, lastResetMin, nonce] = await allowanceModule.getTokenAllowance(
+      safeAddress,
+      alice.address,
+      tokenAddress,
+    )
+    expect(amount).to.equal(500)
+    expect(spent).to.equal(0)
+    expect(resetTimeMin).to.equal(1)
+    expect(lastResetMin).to.not.equal(0)
+    expect(nonce).to.equal(1)
+
+    expect(1000).to.equal(await token.balanceOf(safeAddress))
+    expect(0).to.equal(await token.balanceOf(bob.address))
+
+    await execAllowanceTransfer(allowanceModule, {
+      safe: safeAddress,
+      token: tokenAddress,
+      to: bob.address,
+      amount: 100,
+      spender: alice,
+    })
+
+    expect(900).to.equal(await token.balanceOf(safeAddress))
+    expect(100).to.equal(await token.balanceOf(bob.address))
+
+    // Overwrite allowance
+    await execSafeTransaction(safe, await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, 0, 0), owner)
+
+    const [newAmount, newSpent, newResetTimeMin, newLastResetMin, newNonce] = await allowanceModule.getTokenAllowance(
+      safeAddress,
+      alice.address,
+      tokenAddress,
+    )
+
+    expect(newAmount).to.equal(100)
+    expect(newSpent).to.equal(100)
+    expect(newResetTimeMin).to.equal(0)
+    expect(newLastResetMin).to.not.equal(0)
+    expect(newNonce).to.equal(2)
   })
 
   it('Add and reset allowance', async () => {
