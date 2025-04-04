@@ -27,7 +27,7 @@ describe('AllowanceModule allowanceManagement', () => {
     await expect(allowanceModule.connect(owner).addDelegate(collidingDelegateAddress)).to.be.revertedWith('currentDelegate == delegate')
   })
 
-  it('setAllowance reverts when delegate address equals address(0)', async () => {
+  it('Cannot set allowance for address(0)', async () => {
     const { token, allowanceModule } = await setupTests()
 
     const tokenAddress = await token.getAddress()
@@ -35,7 +35,7 @@ describe('AllowanceModule allowanceManagement', () => {
     await expect(allowanceModule.setAllowance(ZeroAddress, tokenAddress, 0, 0, 0)).to.be.revertedWith('delegate != address(0)')
   })
 
-  it('addDelegate reverts when delegate address equals address(0)', async () => {
+  it('Delegate address cannot be address(0)', async () => {
     const { allowanceModule } = await setupTests()
 
     await expect(allowanceModule.addDelegate(ZeroAddress)).to.be.revertedWith('index != uint(0)')
@@ -166,7 +166,6 @@ describe('AllowanceModule allowanceManagement', () => {
     const { safe, allowanceModule, owner, alice, bob, charlie } = await setupTests()
 
     const safeAddress = await safe.getAddress()
-    const allowanceAddress = await allowanceModule.getAddress()
 
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
@@ -183,7 +182,7 @@ describe('AllowanceModule allowanceManagement', () => {
     expect(next).to.equal(0)
   })
 
-  it('Save allowances even after removing delegate', async () => {
+  it('Explicitly save allowances even after removing delegate', async () => {
     const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
@@ -325,7 +324,7 @@ describe('AllowanceModule allowanceManagement', () => {
     expect(newNonce).to.equal(2)
   })
 
-  it('Add and reset allowance', async () => {
+  it('Reset allowance', async () => {
     const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
@@ -370,7 +369,7 @@ describe('AllowanceModule allowanceManagement', () => {
     expect(await token.balanceOf(bob.address)).to.equal(1000)
   })
 
-  it('Add and delete allowance', async () => {
+  it('Delete allowance', async () => {
     const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
 
     const safeAddress = await safe.getAddress()
@@ -478,7 +477,7 @@ describe('AllowanceModule allowanceManagement', () => {
     expect(await paymentToken.balanceOf(safeAddress)).to.equal(800)
   })
 
-  it('Revert when sum(payment, transfer amount) exceeds allowance amount', async () => {
+  it('Revert when total of payment and transfer amount exceeds allowance', async () => {
     const { safe, allowanceModule, token, owner, alice, bob, charlie } = await setupTests()
 
     const safeAddress = await safe.getAddress()

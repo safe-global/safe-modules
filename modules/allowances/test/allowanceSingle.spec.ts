@@ -281,7 +281,7 @@ describe('AllowanceModule allowanceSingle', () => {
 
     const transferHashData = await allowanceModule.generateTransferHash(safeAddress, tokenAddress, bob.address, 60, ZeroAddress, 0, 1)
 
-    const signature = await alice.signMessage(ethers.getBytes(transferHashData))
+    const signature = await alice.signMessage(hre.ethers.getBytes(transferHashData))
 
     await allowanceModule
       .connect(alice)
@@ -447,7 +447,7 @@ describe('AllowanceModule allowanceSingle', () => {
       await allowanceModule.setAllowance.populateTransaction(
         alice.address,
         ZeroAddress, // zero means ether
-        ethers.parseEther('2'),
+        hre.ethers.parseEther('2'),
         0,
         0,
       ),
@@ -456,7 +456,7 @@ describe('AllowanceModule allowanceSingle', () => {
 
     // load an existing allowance
     let [amount, spent, , ,] = await allowanceModule.getTokenAllowance(safeAddress, alice.address, ZeroAddress)
-    expect(ethers.parseEther('2')).to.equal(amount)
+    expect(hre.ethers.parseEther('2')).to.equal(amount)
     expect(OneEther).to.equal(await provider.getBalance(safeAddress))
     expect(0).to.equal(await provider.getBalance(bob))
 
@@ -486,7 +486,6 @@ describe('AllowanceModule allowanceSingle', () => {
 
     const safeAddress = await safe.getAddress()
     const tokenAddress = await token.getAddress()
-    const allowanceAddress = await allowanceModule.getAddress()
 
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
@@ -556,7 +555,7 @@ describe('AllowanceModule allowanceSingle', () => {
     await execSafeTransaction(safe, await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, 0, 0), owner)
 
     const transferHashData = await allowanceModule.generateTransferHash(safeAddress, tokenAddress, bob.address, 60, ZeroAddress, 0, 1)
-    const signature = await bob.signMessage(ethers.getBytes(transferHashData))
+    const signature = await bob.signMessage(hre.ethers.getBytes(transferHashData))
 
     await expect(
       allowanceModule.executeAllowanceTransfer(
@@ -583,7 +582,7 @@ describe('AllowanceModule allowanceSingle', () => {
     await execSafeTransaction(safe, await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, 0, 0), owner)
 
     const transferHashData = await allowanceModule.generateTransferHash(safeAddress, tokenAddress, bob.address, 60, ZeroAddress, 0, 1)
-    const signature = await alice.signMessage(ethers.getBytes(transferHashData))
+    const signature = await alice.signMessage(hre.ethers.getBytes(transferHashData))
 
     await expect(
       allowanceModule.executeAllowanceTransfer(
@@ -601,16 +600,12 @@ describe('AllowanceModule allowanceSingle', () => {
 
   it('Reverts if ecrecover fails', async () => {
     const { safe, allowanceModule, token, owner, alice, bob } = await setupTests()
-    const safeAddress = await safe.getAddress()
     const tokenAddress = await token.getAddress()
     // add alice as delegate
     await execSafeTransaction(safe, await allowanceModule.addDelegate.populateTransaction(alice.address), owner)
 
     // create an allowance for alice
     await execSafeTransaction(safe, await allowanceModule.setAllowance.populateTransaction(alice.address, tokenAddress, 100, 0, 0), owner)
-
-    const transferHashData = await allowanceModule.generateTransferHash(safeAddress, tokenAddress, bob.address, 60, ZeroAddress, 0, 1)
-    const signature = await alice.signMessage(ethers.getBytes(transferHashData))
 
     await expect(
       allowanceModule.executeAllowanceTransfer(safe, token, bob.address, 60, ZeroAddress, 0, alice.address, `0x${'00'.repeat(64)}1f`),
