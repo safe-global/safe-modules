@@ -129,6 +129,10 @@ The test cases in [userstories](./test/userstories) directory demonstrates the u
 - [For version 0.2.0](docs/v0.2.0/audit.md)
 - [For version 0.2.1](docs/v0.2.1/audit.md)
 
+## Privacy
+
+WebAuthn signatures include an [Authenticator Attestation Globally Unique Identifier or _**AAGUID**_](https://w3c.github.io/webauthn/#aaguid) which indicating the type (e.g. make and model) of the authenticator. Because this AAGUID is required for signature verification, it is published on-chain and can be used to determine the kind of authenticator that is being used (for example, that you are using a passkey stored in an iCloud keychain, or a YubiKey 5).
+
 ## Security and Liability
 
 All contracts are WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
