@@ -131,7 +131,7 @@ The test cases in [userstories](./test/userstories) directory demonstrates the u
 
 ## Privacy
 
-WebAuthn signatures include an [Authenticator Attestation Globally Unique Identifier or _**AAGUID**_](https://w3c.github.io/webauthn/#aaguid) which indicating the type (e.g. make and model) of the authenticator. Because this AAGUID is required for signature verification, it is published on-chain and can be used to determine the kind of authenticator that is being used (for example, that you are using a passkey stored in an iCloud keychain, or a YubiKey 5).
+WebAuthn attestations include an [Authenticator Attestation Globally Unique Identifier or _**AAGUID**_](https://w3c.github.io/webauthn/#aaguid) which indicates the type (e.g. make and model) of the authenticator. Because this AAGUID is required for signature verification, it is published on-chain and can be used to determine the kind of authenticator that is being used by a given passkey Safe owner (for example, that you are using a passkey stored in an iCloud keychain, or a YubiKey 5, to control your Safe).
 
 ## Security and Liability
 
